@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, FlatList } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../store/useAppStore';
 
 export default function HistoryScreen() {
   const { history } = useAppStore();
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
       <FlatList
         data={history}
         keyExtractor={item => item.id.toString()}
@@ -30,6 +31,6 @@ export default function HistoryScreen() {
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }

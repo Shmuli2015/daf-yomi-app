@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Switch, TouchableOpacity, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../store/useAppStore';
 import * as Notifications from 'expo-notifications';
 import { resetDB } from '../db/database';
@@ -57,7 +58,8 @@ export default function SettingsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-gray-50 p-5">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
+      <View className="flex-1 p-5">
       <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
         <Text className="text-xl font-bold mb-4 text-right">התראות</Text>
         
@@ -95,5 +97,6 @@ export default function SettingsScreen() {
         </TouchableOpacity>
       </View>
     </View>
+    </SafeAreaView>
   );
 }

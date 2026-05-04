@@ -13,6 +13,7 @@ const Tab = createBottomTabNavigator();
 export default function AppNavigator() {
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         tabBarActiveTintColor: '#1e293b',
         tabBarInactiveTintColor: '#94a3b8',
@@ -47,19 +48,9 @@ export default function AppNavigator() {
       })}
     >
       <Tab.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ title: 'ראשי', headerShown: false }} 
-      />
-      <Tab.Screen 
-        name="Calendar" 
-        component={CalendarScreen} 
-        options={{ title: 'לוח שנה' }} 
-      />
-      <Tab.Screen 
-        name="History" 
-        component={HistoryScreen} 
-        options={{ title: 'היסטוריה' }} 
+        name="Settings" 
+        component={SettingsScreen} 
+        options={{ title: 'הגדרות' }} 
       />
       <Tab.Screen 
         name="Stats" 
@@ -67,9 +58,19 @@ export default function AppNavigator() {
         options={{ title: 'סטטיסטיקות' }} 
       />
       <Tab.Screen 
-        name="Settings" 
-        component={SettingsScreen} 
-        options={{ title: 'הגדרות' }} 
+        name="History" 
+        component={HistoryScreen} 
+        options={{ title: 'היסטוריה' }} 
+      />
+      <Tab.Screen 
+        name="Calendar" 
+        component={CalendarScreen} 
+        options={{ title: 'לוח שנה', headerShown: false }} 
+      />
+      <Tab.Screen 
+        name="Home" 
+        component={HomeScreen} 
+        options={{ title: 'ראשי', headerShown: false }} 
       />
     </Tab.Navigator>
   );
