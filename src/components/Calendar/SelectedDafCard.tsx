@@ -52,28 +52,32 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
       <View className="space-y-4">
           <TouchableOpacity 
             onPress={onToggle}
-            activeOpacity={0.8}
-            className={`py-5 rounded-2xl flex-row-reverse justify-center items-center shadow-xl ${
-              isLearned ? 'bg-green-500 shadow-green-200' : isFuture ? 'bg-amber-500 shadow-amber-200' : 'bg-blue-600 shadow-blue-200'
+            activeOpacity={0.9}
+            className={`py-6 rounded-[28px] flex-row-reverse justify-center items-center shadow-2xl ${
+              isLearned ? 'bg-green-500 shadow-green-300' : isFuture ? 'bg-amber-500 shadow-amber-300' : 'bg-blue-600 shadow-blue-300'
             }`}
           >
-            {isLearned ? (
-              <Ionicons name="checkmark-done-circle" size={24} color="white" className="ml-3" />
-            ) : (
-              <Ionicons name="book" size={22} color="white" className="ml-3" />
-            )}
-            <Text className="text-lg font-black text-white">
-              {isLearned ? 'סיום הדף!' : isFuture ? 'למדתי מראש' : 'סמן כנלמד'}
+            <View className="bg-white/20 p-2 rounded-full ml-4">
+                <Ionicons 
+                    name={isLearned ? "checkmark-done" : isFuture ? "calendar" : "book"} 
+                    size={22} 
+                    color="white" 
+                />
+            </View>
+            <Text className="text-xl font-black text-white tracking-tight">
+              {isLearned ? 'אשריך! סיימת' : isFuture ? 'למדתי מראש' : 'סמן כנלמד'}
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             onPress={handleOpenSefaria}
             activeOpacity={0.7}
-            className="py-4 border-2 border-slate-100 rounded-2xl flex-row-reverse justify-center items-center mt-3"
+            className="py-5 bg-slate-50 border border-slate-100 rounded-[28px] flex-row-reverse justify-center items-center mt-4"
           >
-            <Ionicons name="open-outline" size={20} color="#64748b" className="ml-2" />
-            <Text className="text-slate-600 font-bold text-base">פתח בספריא (Sefaria)</Text>
+            <View className="bg-white p-2 rounded-full shadow-sm ml-3 border border-slate-100">
+                <Ionicons name="open-outline" size={18} color="#3b82f6" />
+            </View>
+            <Text className="text-slate-700 font-black text-lg tracking-tight">פתח בספריא (Sefaria)</Text>
           </TouchableOpacity>
       </View>
     </View>
