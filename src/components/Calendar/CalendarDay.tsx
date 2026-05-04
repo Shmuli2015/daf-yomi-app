@@ -19,33 +19,26 @@ const CalendarDay = ({ hdate, isCurrentMonth, learned, isToday, isSelected, onPr
     <TouchableOpacity 
       onPress={() => onPress(hdate)}
       activeOpacity={0.6}
-      className="w-[14.28%] h-16 justify-center items-center"
+      className="w-[14.28%] h-14 justify-center items-center my-1"
     >
       <View className={`
-        w-11 h-11 rounded-2xl justify-center items-center
-        ${learned ? 'bg-green-500 shadow-lg shadow-green-200' : ''}
-        ${isToday && !learned ? 'bg-blue-600 shadow-lg shadow-blue-200' : ''}
-        ${isSelected && !learned && !isToday ? 'bg-slate-100 border-2 border-slate-200' : ''}
-        ${!learned && !isToday && !isSelected ? 'bg-transparent' : ''}
-        ${!isCurrentMonth ? 'opacity-10' : 'opacity-100'}
+        w-11 h-11 rounded-full justify-center items-center
+        ${learned ? 'bg-green-500' : isToday ? 'bg-blue-100' : 'bg-transparent'}
+        ${isSelected ? 'border-2 border-slate-600 shadow-sm' : 'border-2 border-transparent'}
+        ${!isCurrentMonth ? 'opacity-30' : 'opacity-100'}
       `}>
         <Text className={`
-          text-base font-black
-          ${learned || (isToday && !learned) ? 'text-white' : 'text-slate-800'}
+          text-base font-bold
+          ${learned ? 'text-white' : isToday ? 'text-blue-700' : 'text-slate-700'}
         `}>
           {gematriya}
         </Text>
         <Text className={`
-          text-[8px] font-bold -mt-0.5
-          ${learned || (isToday && !learned) ? 'text-white/70' : 'text-slate-400'}
+          text-[9px] font-medium -mt-0.5
+          ${learned ? 'text-green-100' : isToday ? 'text-blue-400' : 'text-slate-400'}
         `}>
           {gregDay}
         </Text>
-        
-        {/* Selection Indicator Dot if not today/learned */}
-        {isSelected && !learned && !isToday && (
-          <View className="absolute -bottom-1 w-1.5 h-1.5 bg-slate-400 rounded-full" />
-        )}
       </View>
     </TouchableOpacity>
   );

@@ -21,7 +21,6 @@ export default function CalendarScreen() {
 
         <CalendarLegend />
         
-        <View className="h-20" />
       </ScrollView>
     </SafeAreaView>
   );

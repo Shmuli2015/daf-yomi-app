@@ -42,18 +42,18 @@ const DafDetailModal = ({
           onPress={onClose}
         />
         <View 
-          style={{ paddingBottom: insets.bottom + 24 }}
-          className="bg-white rounded-t-[50px] p-8 shadow-2xl absolute bottom-0 left-0 right-0"
+          style={{ paddingBottom: insets.bottom + 16 }}
+          className="bg-white rounded-t-[40px] p-6 shadow-2xl absolute bottom-0 left-0 right-0"
         >
           {/* Handle */}
-          <View className="w-16 h-1.5 bg-slate-100 rounded-full self-center mb-8" />
+          <View className="w-12 h-1 bg-slate-100 rounded-full self-center mb-4" />
           
           {/* Close Button */}
           <TouchableOpacity 
             onPress={onClose}
-            className="absolute right-8 top-8 z-10 bg-slate-50 p-2 rounded-full"
+            className="absolute right-6 top-6 z-10 bg-slate-50 p-1.5 rounded-full"
           >
-            <Ionicons name="close" size={24} color="#94a3b8" />
+            <Ionicons name="close" size={20} color="#94a3b8" />
           </TouchableOpacity>
 
           {selectedDate && dafInfo && (

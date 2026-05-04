@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppStore } from '../store/useAppStore';
-import { getDafByDate } from '../utils/dafYomi';
+import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import CalendarDay from './Calendar/CalendarDay';
 import SelectedDafCard from './Calendar/SelectedDafCard';
 import DafDetailModal from './Calendar/DafDetailModal';
@@ -20,7 +20,7 @@ interface DayData {
 
 export default function HebrewCalendar() {
   const { history, toggleAnyDafLearned } = useAppStore();
-  const [currentHDate, setCurrentHDate] = useState(new HDate());
+  const [currentHDate, setCurrentHDate] = useState(new HDate(new Date()));
   const [selectedDate, setSelectedDate] = useState<HDate | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -41,8 +41,8 @@ export default function HebrewCalendar() {
         hdate: d,
         isCurrentMonth: false,
         learned: isLearned(d),
-        isToday: isSameDay(d, new HDate()),
-        dateKey: d.greg().toISOString().split('T')[0]
+        isToday: isSameDay(d, new HDate(new Date())),
+        dateKey: getDateStr(d.greg())
       });
     }
     
@@ -52,8 +52,8 @@ export default function HebrewCalendar() {
         hdate: d,
         isCurrentMonth: true,
         learned: isLearned(d),
-        isToday: isSameDay(d, new HDate()),
-        dateKey: d.greg().toISOString().split('T')[0]
+        isToday: isSameDay(d, new HDate(new Date())),
+        dateKey: getDateStr(d.greg())
       });
       d = d.next();
     }
@@ -65,7 +65,7 @@ export default function HebrewCalendar() {
             isCurrentMonth: false,
             learned: isLearned(d),
             isToday: isSameDay(d, new HDate()),
-            dateKey: d.greg().toISOString().split('T')[0]
+            dateKey: getDateStr(d.greg())
         });
         d = d.next();
     }
@@ -74,7 +74,7 @@ export default function HebrewCalendar() {
   }, [currentHDate, history]);
 
   function isLearned(hdate: HDate) {
-    const dateStr = hdate.greg().toISOString().split('T')[0];
+    const dateStr = getDateStr(hdate.greg());
     return history.some(r => r.date === dateStr && r.status === 'learned');
   }
 
@@ -160,7 +160,7 @@ export default function HebrewCalendar() {
         onToggle={() => {
           if (selectedDate && selectedDafInfo) {
             toggleAnyDafLearned(
-              selectedDate.greg().toISOString().split('T')[0], 
+              getDateStr(selectedDate.greg()), 
               selectedDafInfo.masechet, 
               selectedDafInfo.daf
             );

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { getDailyRecord, getAllRecords, updateDailyRecord, getSettings, updateSettings, DailyRecord, SettingsRecord } from '../db/database';
-import { getDafByDate } from '../utils/dafYomi';
+import { getDafByDate, getDateStr } from '../utils/dafYomi';
 
 interface AppState {
   currentDate: Date;
@@ -22,16 +22,17 @@ interface AppState {
 function calculateStreak(records: DailyRecord[]): number {
   if (records.length === 0) return 0;
   let streak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const todayStr = getDateStr(now);
 
   // Sort by date descending
   const sorted = [...records].sort((a, b) => b.date.localeCompare(a.date));
   
-  let expectedDate = new Date(today);
+  let expectedDate = new Date(now);
+  expectedDate.setHours(0, 0, 0, 0);
   
   // Check if today is learned
-  const todayRecord = sorted.find(r => r.date === today.toISOString().split('T')[0]);
+  const todayRecord = sorted.find(r => r.date === todayStr);
   if (!todayRecord || todayRecord.status !== 'learned') {
     // If today is not learned, streak could be ongoing from yesterday
     expectedDate.setDate(expectedDate.getDate() - 1);
@@ -40,12 +41,12 @@ function calculateStreak(records: DailyRecord[]): number {
   for (let i = 0; i < sorted.length; i++) {
     const recordDate = new Date(sorted[i].date);
     if (sorted[i].status !== 'learned') {
-        if(sorted[i].date === today.toISOString().split('T')[0]) continue;
+        if(sorted[i].date === todayStr) continue;
         break;
     }
     
     // Allow if it matches expected date
-    if (recordDate.toISOString().split('T')[0] === expectedDate.toISOString().split('T')[0]) {
+    if (getDateStr(recordDate) === getDateStr(expectedDate)) {
       streak++;
       expectedDate.setDate(expectedDate.getDate() - 1);
     } else if (recordDate < expectedDate) {
@@ -68,13 +69,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadInitialData: () => {
     const today = new Date();
-    const dateStr = today.toISOString().split('T')[0];
+    const dateStr = getDateStr(today);
     const dafInfo = getDafByDate(today);
     
-    const record = getDailyRecord(dateStr);
     const history = getAllRecords();
     const settings = getSettings();
     const streak = calculateStreak(history);
+    
+    // Find today's record from history for consistency
+    const record = history.find(r => r.date === dateStr) || null;
 
     set({
       currentDate: today,
@@ -91,7 +94,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   markTodayAsLearned: () => {
     const { currentDate, todayMasechet, todayDafNum } = get();
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = getDateStr(currentDate);
     
     updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned');
     
@@ -112,6 +115,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   updateNotificationSettings: (hour: number, minute: number, shabbat: boolean) => {
     updateSettings(hour, minute, shabbat);
+    get().loadInitialData();
+  },
+
+  clearAllHistory: () => {
+    const { initDB } = require('../db/database');
+    const SQLite = require('expo-sqlite');
+    const db = SQLite.openDatabaseSync('dafYomi.db');
+    db.runSync('DELETE FROM daily_daf');
     get().loadInitialData();
   }
 }));

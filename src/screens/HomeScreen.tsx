@@ -7,6 +7,7 @@ import { format, subDays } from 'date-fns';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import HomeHeader from '../components/HomeHeader';
 import HomeContent from '../components/HomeContent';
+import { getDateStr } from '../utils/dafYomi';
 
 export default function HomeScreen() {
   const [showConfetti, setShowConfetti] = React.useState(false);
@@ -29,7 +30,7 @@ export default function HomeScreen() {
     if (!isLearned) {
       setShowConfetti(true);
     }
-    toggleAnyDafLearned(currentDate.toISOString().split('T')[0], todayMasechet, todayDafNum);
+    toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
   };
   const hDate = new HDate(currentDate);
   const hebrewDateStr = hDate.renderGematriya();
@@ -37,7 +38,7 @@ export default function HomeScreen() {
 
   const last7Days = Array.from({ length: 7 }).map((_, i) => {
     const d = subDays(currentDate, 6 - i);
-    const dateStr = d.toISOString().split('T')[0];
+    const dateStr = getDateStr(d);
     const record = history.find(r => r.date === dateStr);
     return {
       date: d,
