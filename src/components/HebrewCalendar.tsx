@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import { useAppStore } from '../store/useAppStore';
 import { getDafByDate } from '../utils/dafYomi';
 import CalendarDay from './Calendar/CalendarDay';
 import SelectedDafCard from './Calendar/SelectedDafCard';
+import DafDetailModal from './Calendar/DafDetailModal';
 
 const DAYS_OF_WEEK = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
@@ -18,9 +19,10 @@ interface DayData {
 }
 
 export default function HebrewCalendar() {
-  const { history } = useAppStore();
+  const { history, toggleAnyDafLearned } = useAppStore();
   const [currentHDate, setCurrentHDate] = useState(new HDate());
-  const [selectedDate, setSelectedDate] = useState<HDate | null>(new HDate());
+  const [selectedDate, setSelectedDate] = useState<HDate | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
 
   const calendarData = useMemo(() => {
     const year = currentHDate.getFullYear();
@@ -140,20 +142,31 @@ export default function HebrewCalendar() {
               learned={day.learned}
               isToday={day.isToday}
               isSelected={isSameDay(day.hdate, selectedDate)}
-              onPress={(hd) => setSelectedDate(hd)}
+              onPress={(hd) => {
+                setSelectedDate(hd);
+                setModalVisible(true);
+              }}
             />
           ))}
         </View>
       </View>
 
-      {/* Selected Day Info */}
-      {selectedDate && selectedDafInfo && (
-        <SelectedDafCard 
-          selectedDate={selectedDate}
-          dafInfo={selectedDafInfo}
-          isLearned={isLearned(selectedDate)}
-        />
-      )}
+      <DafDetailModal 
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        selectedDate={selectedDate}
+        dafInfo={selectedDafInfo}
+        isLearned={selectedDate ? isLearned(selectedDate) : false}
+        onToggle={() => {
+          if (selectedDate && selectedDafInfo) {
+            toggleAnyDafLearned(
+              selectedDate.greg().toISOString().split('T')[0], 
+              selectedDafInfo.masechet, 
+              selectedDafInfo.daf
+            );
+          }
+        }}
+      />
     </View>
   );
 }

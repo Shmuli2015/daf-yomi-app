@@ -19,7 +19,7 @@ export default function HomeScreen() {
     todayDafNum, 
     todaySefariaUrl,
     streak, 
-    toggleTodayAsLearned, 
+    toggleAnyDafLearned, 
     history 
   } = useAppStore();
 
@@ -29,7 +29,7 @@ export default function HomeScreen() {
     if (!isLearned) {
       setShowConfetti(true);
     }
-    toggleTodayAsLearned();
+    toggleAnyDafLearned(currentDate.toISOString().split('T')[0], todayMasechet, todayDafNum);
   };
   const hDate = new HDate(currentDate);
   const hebrewDateStr = hDate.renderGematriya();

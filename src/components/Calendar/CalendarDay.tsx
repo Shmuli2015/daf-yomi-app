@@ -18,30 +18,34 @@ const CalendarDay = ({ hdate, isCurrentMonth, learned, isToday, isSelected, onPr
   return (
     <TouchableOpacity 
       onPress={() => onPress(hdate)}
-      activeOpacity={0.7}
-      className="w-[14.28%] h-14 justify-center items-center my-1"
+      activeOpacity={0.6}
+      className="w-[14.28%] h-16 justify-center items-center"
     >
       <View className={`
-        w-12 h-12 rounded-2xl justify-center items-center
-        ${learned ? 'bg-green-500 shadow-md shadow-green-200' : ''}
-        ${isToday && !learned ? 'bg-blue-50 border-2 border-blue-500' : ''}
-        ${isSelected && !learned && !isToday ? 'bg-slate-100 border border-slate-300' : ''}
-        ${!isCurrentMonth ? 'opacity-20' : 'opacity-100'}
+        w-11 h-11 rounded-2xl justify-center items-center
+        ${learned ? 'bg-green-500 shadow-lg shadow-green-200' : ''}
+        ${isToday && !learned ? 'bg-blue-600 shadow-lg shadow-blue-200' : ''}
+        ${isSelected && !learned && !isToday ? 'bg-slate-100 border-2 border-slate-200' : ''}
+        ${!learned && !isToday && !isSelected ? 'bg-transparent' : ''}
+        ${!isCurrentMonth ? 'opacity-10' : 'opacity-100'}
       `}>
         <Text className={`
-          text-base font-bold
-          ${learned ? 'text-white' : 'text-slate-800'}
-          ${isToday && !learned ? 'text-blue-600' : ''}
+          text-base font-black
+          ${learned || (isToday && !learned) ? 'text-white' : 'text-slate-800'}
         `}>
           {gematriya}
         </Text>
         <Text className={`
-          text-[9px] font-medium -mt-1
-          ${learned ? 'text-green-100' : 'text-slate-400'}
-          ${isToday && !learned ? 'text-blue-400' : ''}
+          text-[8px] font-bold -mt-0.5
+          ${learned || (isToday && !learned) ? 'text-white/70' : 'text-slate-400'}
         `}>
           {gregDay}
         </Text>
+        
+        {/* Selection Indicator Dot if not today/learned */}
+        {isSelected && !learned && !isToday && (
+          <View className="absolute -bottom-1 w-1.5 h-1.5 bg-slate-400 rounded-full" />
+        )}
       </View>
     </TouchableOpacity>
   );
