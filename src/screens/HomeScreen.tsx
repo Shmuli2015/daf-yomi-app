@@ -17,6 +17,7 @@ export default function HomeScreen() {
     todayRecord, 
     todayMasechet, 
     todayDafNum, 
+    todaySefariaUrl,
     streak, 
     toggleTodayAsLearned, 
     history 
@@ -53,13 +54,13 @@ export default function HomeScreen() {
         hebrewDateStr={hebrewDateStr}
         todayMasechet={todayMasechet}
         todayDafNum={todayDafNum}
+        sefariaUrl={todaySefariaUrl}
       />
 
       <HomeContent 
         isLearned={isLearned}
         handleToggle={handleToggle}
         streak={streak}
-        last7Days={last7Days}
       />
 
       {showConfetti && (

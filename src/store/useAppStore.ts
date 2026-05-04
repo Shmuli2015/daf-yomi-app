@@ -10,6 +10,7 @@ interface AppState {
   todayDafText: string;
   todayMasechet: string;
   todayDafNum: string;
+  todaySefariaUrl: string;
   streak: number;
   
   loadInitialData: () => void;
@@ -62,6 +63,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   todayDafText: '',
   todayMasechet: '',
   todayDafNum: '',
+  todaySefariaUrl: '',
   streak: 0,
 
   loadInitialData: () => {
@@ -82,6 +84,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       todayDafText: dafInfo.fullText,
       todayMasechet: dafInfo.masechet,
       todayDafNum: dafInfo.daf,
+      todaySefariaUrl: dafInfo.sefariaUrl,
       streak
     });
   },
