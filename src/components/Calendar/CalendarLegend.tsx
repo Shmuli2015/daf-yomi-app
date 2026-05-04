@@ -1,39 +1,60 @@
 import React from 'react';
 import { View, Text } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
-const LegendItem = ({ label, description, colorClass, dotColor, border }: { label: string, description: string, colorClass: string, dotColor: string, border?: boolean }) => (
-  <View className={`flex-1 min-w-[100px] p-4 rounded-3xl ${colorClass} ${border ? 'border border-slate-100' : ''}`}>
-    <View className="flex-row justify-end items-center mb-2">
-      <Text className="text-slate-800 font-bold text-sm mr-2">{label}</Text>
-      <View className={`w-2 h-2 rounded-full ${dotColor}`} />
+const LegendItem = ({ 
+  label, 
+  description, 
+  icon, 
+  iconColor, 
+  bgColor 
+}: { 
+  label: string, 
+  description: string, 
+  icon: keyof typeof Ionicons.glyphMap, 
+  iconColor: string, 
+  bgColor: string 
+}) => (
+  <View className={`flex-row-reverse items-center p-4 rounded-[24px] ${bgColor} mb-3 border border-white/50 shadow-sm shadow-slate-100`}>
+    <View className="bg-white/80 p-2.5 rounded-2xl shadow-sm">
+      <Ionicons name={icon} size={20} color={iconColor} />
     </View>
-    <Text className="text-slate-500 text-[10px] text-right leading-tight">{description}</Text>
+    <View className="mr-4 flex-1 items-end">
+      <Text className="text-slate-900 font-black text-base">{label}</Text>
+      <Text className="text-slate-500 text-xs font-bold">{description}</Text>
+    </View>
   </View>
 );
 
 const CalendarLegend = () => {
   return (
-    <View className="mt-8 px-2">
-      <Text className="text-xl font-bold text-slate-800 text-right mb-4 px-2">מקרא</Text>
-      <View className="flex-row-reverse flex-wrap gap-3">
+    <View className="mt-10 px-4">
+      <View className="flex-row-reverse items-center mb-6">
+        <View className="w-1.5 h-6 bg-blue-500 rounded-full ml-3" />
+        <Text className="text-2xl font-black text-slate-900 text-right">סטטוס לימוד</Text>
+      </View>
+      
+      <View className="space-y-1">
         <LegendItem 
-          label="הושלם" 
-          description="דף שנלמד במועדו" 
-          colorClass="bg-green-50" 
-          dotColor="bg-green-500" 
+          label="דף שנלמד" 
+          description="דף שסומן כנלמד במערכת" 
+          icon="checkmark-circle" 
+          iconColor="#22c55e" 
+          bgColor="bg-green-50" 
         />
         <LegendItem 
-          label="היום" 
-          description="התאריך הנוכחי" 
-          colorClass="bg-blue-50" 
-          dotColor="bg-blue-500" 
+          label="הספק היום" 
+          description="הלימוד המיועד להיום" 
+          icon="calendar" 
+          iconColor="#3b82f6" 
+          bgColor="bg-blue-50" 
         />
         <LegendItem 
-          label="לא הושלם" 
-          description="טרם סומן כנלמד" 
-          colorClass="bg-white" 
-          dotColor="bg-slate-300" 
-          border
+          label="טרם הושלם" 
+          description="דפים הממתינים ללימוד" 
+          icon="time-outline" 
+          iconColor="#94a3b8" 
+          bgColor="bg-slate-50" 
         />
       </View>
     </View>
