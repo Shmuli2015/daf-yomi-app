@@ -14,6 +14,7 @@ interface AppState {
   
   loadInitialData: () => void;
   markTodayAsLearned: () => void;
+  toggleTodayAsLearned: () => void;
   updateNotificationSettings: (hour: number, minute: number, shabbat: boolean) => void;
 }
 
@@ -90,6 +91,17 @@ export const useAppStore = create<AppState>((set, get) => ({
     const dateStr = currentDate.toISOString().split('T')[0];
     
     updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned');
+    
+    // Refresh data
+    get().loadInitialData();
+  },
+
+  toggleTodayAsLearned: () => {
+    const { currentDate, todayMasechet, todayDafNum, todayRecord } = get();
+    const dateStr = currentDate.toISOString().split('T')[0];
+    const newStatus = todayRecord?.status === 'learned' ? 'missed' : 'learned';
+    
+    updateDailyRecord(dateStr, todayMasechet, todayDafNum, newStatus);
     
     // Refresh data
     get().loadInitialData();

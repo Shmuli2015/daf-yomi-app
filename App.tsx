@@ -19,6 +19,8 @@ Notifications.setNotificationHandler({
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 export default function App() {
   const [isReady, setIsReady] = useState(false);
   const loadInitialData = useAppStore(state => state.loadInitialData);
@@ -58,8 +60,10 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <AppNavigator />
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <AppNavigator />
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

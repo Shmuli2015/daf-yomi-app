@@ -6,21 +6,50 @@ import HistoryScreen from '../screens/HistoryScreen';
 import StatsScreen from '../screens/StatsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
+import { Ionicons } from '@expo/vector-icons';
+
 const Tab = createBottomTabNavigator();
 
 export default function AppNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={{
-        tabBarActiveTintColor: '#22c55e',
-        tabBarInactiveTintColor: 'gray',
+      screenOptions={({ route }) => ({
+        tabBarActiveTintColor: '#1e293b',
+        tabBarInactiveTintColor: '#94a3b8',
         headerTitleAlign: 'center',
-      }}
+        tabBarStyle: {
+          borderTopWidth: 1,
+          borderTopColor: '#f1f5f9',
+          backgroundColor: 'white',
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.05,
+          shadowRadius: 10,
+        },
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: any;
+
+          if (route.name === 'Home') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Calendar') {
+            iconName = focused ? 'calendar' : 'calendar-outline';
+          } else if (route.name === 'History') {
+            iconName = focused ? 'time' : 'time-outline';
+          } else if (route.name === 'Stats') {
+            iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-outline';
+          }
+
+          return <Ionicons name={iconName} size={24} color={color} />;
+        },
+      })}
     >
       <Tab.Screen 
         name="Home" 
         component={HomeScreen} 
-        options={{ title: 'ראשי' }} 
+        options={{ title: 'ראשי', headerShown: false }} 
       />
       <Tab.Screen 
         name="Calendar" 
