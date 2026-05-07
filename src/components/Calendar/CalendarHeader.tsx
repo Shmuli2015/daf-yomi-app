@@ -1,16 +1,48 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { THEME } from '../../theme';
 
 const CalendarHeader = () => {
   return (
-    <View className="mb-6 px-4">
-      <Text className="text-4xl font-black text-slate-900 text-right mb-2">לוח שנה</Text>
-      <View className="flex-row justify-end items-center">
-        <Text className="text-slate-500 text-right mr-2">מעקב למידה לפי תאריך עברי</Text>
-        <View className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+    <View style={styles.container}>
+      <View style={styles.row}>
+        <View style={styles.accentBar} />
+        <Text style={styles.title}>לוח שנה</Text>
       </View>
+      <Text style={styles.subtitle}>מעקב למידה לפי תאריך עברי</Text>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 20,
+    paddingHorizontal: 4,
+    alignItems: 'flex-end',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 6,
+  },
+  accentBar: {
+    width: 4,
+    height: 32,
+    backgroundColor: THEME.colors.accent,
+    borderRadius: 2,
+  },
+  title: {
+    fontSize: 34,
+    fontWeight: '900',
+    color: THEME.colors.primary,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: THEME.colors.textSecondary,
+    fontWeight: '600',
+  },
+});
 
 export default CalendarHeader;

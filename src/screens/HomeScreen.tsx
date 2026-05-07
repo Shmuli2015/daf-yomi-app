@@ -1,37 +1,35 @@
-import React, { useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React from 'react';
+import { ScrollView } from 'react-native';
 import { useAppStore } from '../store/useAppStore';
 import { HDate } from '@hebcal/core';
 import { format, subDays } from 'date-fns';
-
 import ConfettiCannon from 'react-native-confetti-cannon';
 import HomeHeader from '../components/HomeHeader';
 import HomeContent from '../components/HomeContent';
 import { getDateStr } from '../utils/dafYomi';
+import { THEME } from '../theme';
 
 export default function HomeScreen() {
   const [showConfetti, setShowConfetti] = React.useState(false);
-  const explosion = React.useRef<any>(null);
 
-  const { 
-    currentDate, 
-    todayRecord, 
-    todayMasechet, 
-    todayDafNum, 
+  const {
+    currentDate,
+    todayRecord,
+    todayMasechet,
+    todayDafNum,
     todaySefariaUrl,
-    streak, 
-    toggleAnyDafLearned, 
-    history 
+    streak,
+    toggleAnyDafLearned,
+    history,
   } = useAppStore();
 
   const isLearned = todayRecord?.status === 'learned';
 
   const handleToggle = () => {
-    if (!isLearned) {
-      setShowConfetti(true);
-    }
+    if (!isLearned) setShowConfetti(true);
     toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
   };
+
   const hDate = new HDate(currentDate);
   const hebrewDateStr = hDate.renderGematriya();
   const gregorianDateStr = format(currentDate, 'dd/MM/yyyy');
@@ -44,13 +42,17 @@ export default function HomeScreen() {
       date: d,
       dateStr,
       status: record?.status || 'missed',
-      dayName: format(d, 'EEEEEE')
+      dayName: format(d, 'EEEEEE'),
     };
   });
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerStyle={{ paddingBottom: 40 }}>
-      <HomeHeader 
+    <ScrollView
+      style={{ flex: 1, backgroundColor: THEME.colors.background }}
+      contentContainerStyle={{ paddingBottom: 100 }}
+      showsVerticalScrollIndicator={false}
+    >
+      <HomeHeader
         gregorianDateStr={gregorianDateStr}
         hebrewDateStr={hebrewDateStr}
         todayMasechet={todayMasechet}
@@ -58,17 +60,17 @@ export default function HomeScreen() {
         sefariaUrl={todaySefariaUrl}
       />
 
-      <HomeContent 
+      <HomeContent
         isLearned={isLearned}
         handleToggle={handleToggle}
         streak={streak}
+        last7Days={last7Days}
       />
 
-
       {showConfetti && (
-        <ConfettiCannon 
-          count={200} 
-          origin={{x: -10, y: 0}} 
+        <ConfettiCannon
+          count={200}
+          origin={{ x: -10, y: 0 }}
           fadeOut={true}
           fallSpeed={3000}
           onAnimationEnd={() => setShowConfetti(false)}
