@@ -1,9 +1,7 @@
 import('@hebcal/learning').then(learning => {
   import('@hebcal/core').then(core => {
     let current = new core.HDate(new Date('2020-01-05'));
-    const masechtot = [];
-    let lastMasechet = '';
-    let maxDaf = 0;
+    const map = {};
 
     for(let i=0; i<2711; i++) {
       const ev = new learning.DafYomiEvent(current);
@@ -17,23 +15,19 @@ import('@hebcal/learning').then(learning => {
       const partsHe = textHe.split(' דף ');
       const mHe = partsHe[0];
       
-      if (mEn !== lastMasechet) {
-        if (lastMasechet) {
-          masechtot[masechtot.length - 1].pages = maxDaf;
-        }
-        masechtot.push({ en: mEn, he: mHe, pages: 0 });
-        lastMasechet = mEn;
-        maxDaf = 0;
-      }
+      // key: Hebrew Masechet + English Daf number (easier to use programmatically)
+      const key = `${mHe}_${dEn}`;
       
-      if (dEn > maxDaf) maxDaf = dEn;
+      // format date as YYYY-MM-DD
+      const g = current.greg();
+      const dateStr = `${g.getFullYear()}-${String(g.getMonth()+1).padStart(2,'0')}-${String(g.getDate()).padStart(2,'0')}`;
+      
+      map[key] = dateStr;
       
       current = current.next();
     }
-    if (lastMasechet) {
-      masechtot[masechtot.length - 1].pages = maxDaf;
-    }
 
-    console.log(JSON.stringify(masechtot, null, 2));
+    const fs = require('fs');
+    fs.writeFileSync('./src/data/dafDates.json', JSON.stringify(map));
   });
 });

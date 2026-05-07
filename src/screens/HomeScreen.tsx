@@ -64,6 +64,7 @@ export default function HomeScreen() {
         streak={streak}
       />
 
+
       {showConfetti && (
         <ConfettiCannon 
           count={200} 
