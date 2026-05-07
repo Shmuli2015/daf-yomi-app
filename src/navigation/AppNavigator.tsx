@@ -3,7 +3,6 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import HomeScreen from '../screens/HomeScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import HistoryScreen from '../screens/HistoryScreen';
-import StatsScreen from '../screens/StatsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 import { Ionicons } from '@expo/vector-icons';
@@ -37,8 +36,6 @@ export default function AppNavigator() {
             iconName = focused ? 'calendar' : 'calendar-outline';
           } else if (route.name === 'History') {
             iconName = focused ? 'time' : 'time-outline';
-          } else if (route.name === 'Stats') {
-            iconName = focused ? 'stats-chart' : 'stats-chart-outline';
           } else if (route.name === 'Settings') {
             iconName = focused ? 'settings' : 'settings-outline';
           }
@@ -51,11 +48,6 @@ export default function AppNavigator() {
         name="Settings" 
         component={SettingsScreen} 
         options={{ title: 'הגדרות' }} 
-      />
-      <Tab.Screen 
-        name="Stats" 
-        component={StatsScreen} 
-        options={{ title: 'סטטיסטיקות' }} 
       />
       <Tab.Screen 
         name="History" 
