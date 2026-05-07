@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, numberToGematria } from '../../data/shas';
 import { getMasechetProgress, getDafDateStr, isDafLearnedByDate, getMasechetDafim } from '../../utils/shas';
@@ -76,7 +77,7 @@ function MasechetModal({ masechet, onClose }: { masechet: typeof SHAS_MASECHTOT[
 
   return (
     <Modal visible={true} animationType="slide" presentationStyle="pageSheet">
-      <SafeAreaView className="flex-1 bg-gray-50">
+      <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
         <View className="p-4 border-b border-gray-200 bg-white flex-row-reverse justify-between items-center">
           <Text className="text-xl font-black text-gray-800 text-right">מסכת {masechet.he}</Text>
           <TouchableOpacity onPress={onClose} className="p-2">

@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../store/useAppStore';
 import * as Notifications from 'expo-notifications';
 import { resetDB } from '../db/database';
+import { SettingItem } from '../components/Settings/SettingItem';
+import { SectionHeader } from '../components/Settings/SectionHeader';
+import { TimePickerModal } from '../components/Settings/TimePickerModal';
 
 export default function SettingsScreen() {
   const { settings, updateNotificationSettings, loadInitialData } = useAppStore();
   const [shabbatEnabled, setShabbatEnabled] = useState(false);
   const [hour, setHour] = useState(7);
   const [minute, setMinute] = useState(30);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -23,34 +27,39 @@ export default function SettingsScreen() {
     updateNotificationSettings(newHour, newMin, newShabbat);
     
     // Schedule notification
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: "🕯️ הגיע זמן הדף היומי",
-        body: "אל תשכח לסמן את הלימוד של היום!",
-      },
-      trigger: {
-        hour: newHour,
-        minute: newMin,
-        repeats: true,
-      } as any, // expo-notifications types vary slightly
-    });
-    Alert.alert("הגדרות נשמרו", "התראות עודכנו בהצלחה");
+    try {
+      await Notifications.cancelAllScheduledNotificationsAsync();
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: "🕯️ הגיע זמן הדף היומי",
+          body: "אל תשכח לסמן את הלימוד של היום!",
+          sound: true,
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+        },
+        trigger: {
+          hour: newHour,
+          minute: newMin,
+          repeats: true,
+        } as any,
+      });
+    } catch (error) {
+      console.error("Failed to schedule notification:", error);
+    }
   };
 
   const handleReset = () => {
     Alert.alert(
       "מחיקת נתונים",
-      "האם אתה בטוח שברצונך למחוק את כל הנתונים?",
+      "האם אתה בטוח שברצונך למחוק את כל היסטוריית הלימוד? פעולה זו אינה ניתנת לביטול.",
       [
         { text: "ביטול", style: "cancel" },
         { 
-          text: "מחק", 
+          text: "מחק הכל", 
           style: "destructive", 
           onPress: () => {
             resetDB();
             loadInitialData();
-            Alert.alert("נמחק", "הנתונים נמחקו בהצלחה");
+            Alert.alert("הצלחנו", "הנתונים נמחקו בהצלחה");
           } 
         }
       ]
@@ -58,45 +67,73 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'left', 'right']}>
-      <View className="flex-1 p-5">
-      <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 mb-6">
-        <Text className="text-xl font-bold mb-4 text-right">התראות</Text>
-        
-        <View className="flex-row justify-between items-center mb-4">
-          <Switch 
-            value={shabbatEnabled} 
-            onValueChange={(val) => {
+    <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
+      <View className="px-6 pt-4 pb-2 border-b border-slate-100 bg-white">
+        <Text className="text-3xl font-black text-slate-900 text-right">הגדרות</Text>
+      </View>
+
+      <ScrollView className="flex-1">
+        <SectionHeader title="התראות" />
+        <View className="bg-white overflow-hidden rounded-2xl mx-4 border border-slate-100 shadow-sm shadow-slate-200">
+          <SettingItem 
+            icon="notifications-outline" 
+            title="התראות יומיות" 
+            description="קבל תזכורת יומית ללימוד"
+            type="switch"
+            value={true}
+            onPress={() => {}} 
+          />
+          <SettingItem 
+            icon="time-outline" 
+            title="זמן התראה" 
+            description="בחר מתי לקבל את התזכורת"
+            value={`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`}
+            onPress={() => setShowTimePicker(true)}
+          />
+          <SettingItem 
+            icon="sunny-outline" 
+            title="התראות בשבת" 
+            description="שלח התראות גם בימי שבת וחג"
+            type="switch"
+            value={shabbatEnabled}
+            onPress={(val: boolean) => {
               setShabbatEnabled(val);
               saveSettings(hour, minute, val);
-            }} 
-          />
-          <Text className="text-gray-700 text-lg">התראות בשבת</Text>
-        </View>
-
-        <View className="flex-row justify-between items-center mt-2 pt-4 border-t border-gray-100">
-          <TouchableOpacity 
-            className="bg-blue-100 px-4 py-2 rounded-lg"
-            onPress={() => {
-              // Basic hour increment for MVP
-              const nextHour = (hour + 1) % 24;
-              setHour(nextHour);
-              saveSettings(nextHour, minute, shabbatEnabled);
             }}
-          >
-            <Text className="text-blue-700 font-bold">{hour.toString().padStart(2, '0')}:{minute.toString().padStart(2, '0')}</Text>
-          </TouchableOpacity>
-          <Text className="text-gray-700 text-lg">שעת התראה</Text>
+          />
         </View>
-      </View>
 
-      <View className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-        <Text className="text-xl font-bold mb-4 text-right">מתקדם</Text>
-        <TouchableOpacity onPress={handleReset} className="bg-red-50 p-4 rounded-xl items-center">
-          <Text className="text-red-600 font-bold text-lg">מחק את כל הנתונים</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
+        <SectionHeader title="מתקדם" />
+        <View className="bg-white overflow-hidden rounded-2xl mx-4 border border-slate-100 shadow-sm shadow-slate-200">
+          <SettingItem 
+            icon="trash-outline" 
+            title="איפוס נתונים" 
+            description="מחק את כל היסטוריית הלימוד שלך"
+            isDestructive
+            onPress={handleReset}
+          />
+        </View>
+
+        <View className="py-10 items-center">
+          <View className="bg-indigo-50 px-4 py-1.5 rounded-full mb-2">
+            <Text className="text-indigo-600 font-bold text-xs">V1.0.4</Text>
+          </View>
+          <Text className="text-slate-400 text-xs font-semibold">פותח באהבה ע״י דף יומי</Text>
+        </View>
+      </ScrollView>
+
+      <TimePickerModal 
+        visible={showTimePicker}
+        onClose={() => setShowTimePicker(false)}
+        hour={hour}
+        minute={minute}
+        setHour={setHour}
+        setMinute={setMinute}
+        onSave={() => {
+          saveSettings(hour, minute, shabbatEnabled);
+          setShowTimePicker(false);
+        }}
+      />
     </SafeAreaView>
   );
 }
