@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Alert, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Alert, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../store/useAppStore';
 import * as Notifications from 'expo-notifications';
@@ -12,6 +12,7 @@ import { DayScheduleList, DaySchedule } from '../components/Settings/DaySchedule
 import { SettingsFooter } from '../components/Settings/SettingsFooter';
 import { THEME } from '../theme';
 import ConfirmModal from '../components/ConfirmModal';
+import SuccessModal from '../components/SuccessModal';
 
 const DEFAULT_SCHEDULES: DaySchedule[] = Array.from({ length: 7 }, (_, i) => ({
   enabled: i < 6,
@@ -24,11 +25,13 @@ const fmtTime = (h: number, m: number) =>
 
 export default function SettingsScreen() {
   const { settings, updateNotificationSettings, loadInitialData } = useAppStore();
-  const [shabbatEnabled, setShabbatEnabled] = useState(false);
   const [hour, setHour] = useState(7);
   const [minute, setMinute] = useState(30);
+  const [showSecularDate, setShowSecularDate] = useState(true);
+  const [showConfettiPref, setShowConfettiPref] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [notifMode, setNotifMode] = useState<'daily' | 'custom'>('daily');
   const [daySchedules, setDaySchedules] = useState<DaySchedule[]>(DEFAULT_SCHEDULES);
   const [editingDay, setEditingDay] = useState<number | null>(null);
@@ -37,7 +40,8 @@ export default function SettingsScreen() {
     if (settings) {
       setHour(settings.notification_hour);
       setMinute(settings.notification_minute);
-      setShabbatEnabled(settings.enable_shabbat_notifications === 1);
+      setShowSecularDate(settings.show_secular_date === 1);
+      setShowConfettiPref(settings.show_confetti === 1);
     }
   }, [settings]);
 
@@ -114,7 +118,7 @@ export default function SettingsScreen() {
     } else {
       setHour(newHour);
       setMinute(newMinute);
-      updateNotificationSettings(newHour, newMinute, shabbatEnabled);
+      updateNotificationSettings(newHour, newMinute, showSecularDate, showConfettiPref);
       scheduleNotifications(newHour, newMinute, notifMode, daySchedules);
     }
     setShowTimePicker(false);
@@ -125,7 +129,7 @@ export default function SettingsScreen() {
     resetDB();
     loadInitialData();
     setShowResetModal(false);
-    Alert.alert('הצלחנו', 'הנתונים נמחקו בהצלחה');
+    setShowSuccessModal(true);
   };
 
   return (
@@ -168,6 +172,33 @@ export default function SettingsScreen() {
             )}
           </View>
 
+          <SectionHeader title="תצוגה והעדפות" />
+          <View style={styles.card}>
+            <SettingItem
+              icon="calendar-outline"
+              title="הצג תאריך לועזי"
+              description="הצגת התאריך הלועזי לצד העברי"
+              type="switch"
+              value={showSecularDate}
+              onPress={(val) => {
+                setShowSecularDate(val);
+                updateNotificationSettings(hour, minute, val, showConfettiPref);
+              }}
+            />
+            <SettingItem
+              icon="sparkles-outline"
+              title="אפקטים חגיגיים"
+              description="הצגת קונפטי בסיום לימוד דף"
+              type="switch"
+              value={showConfettiPref}
+              onPress={(val) => {
+                setShowConfettiPref(val);
+                updateNotificationSettings(hour, minute, showSecularDate, val);
+              }}
+            />
+          </View>
+
+
           <SectionHeader title="נתונים ופרטיות" />
           <View style={styles.card}>
             <SettingItem
@@ -178,6 +209,10 @@ export default function SettingsScreen() {
               onPress={() => setShowResetModal(true)}
             />
           </View>
+
+          <Text style={styles.privacyNote}>
+            הנתונים שלך נשמרים באופן מקומי בלבד על המכשיר שלך.
+          </Text>
 
           <SettingsFooter />
         </View>
@@ -197,6 +232,12 @@ export default function SettingsScreen() {
         onConfirm={onConfirmReset}
         onCancel={() => setShowResetModal(false)}
       />
+      <SuccessModal
+        visible={showSuccessModal}
+        title="הצלחנו!"
+        message="הנתונים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי."
+        onClose={() => setShowSuccessModal(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -214,5 +255,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: THEME.colors.border,
     ...THEME.shadow.card,
+  },
+  privacyNote: {
+    color: THEME.colors.textMuted,
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 24,
+    marginHorizontal: 40,
+    lineHeight: 18,
+    opacity: 0.8,
   },
 });

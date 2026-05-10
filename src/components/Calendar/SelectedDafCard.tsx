@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Linking, StyleSheet, Animated } from 'rea
 import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import { THEME } from '../../theme';
+import { useAppStore } from '../../store/useAppStore';
 
 interface SelectedDafCardProps {
   selectedDate: HDate;
@@ -17,6 +18,7 @@ interface SelectedDafCardProps {
 }
 
 const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: SelectedDafCardProps) => {
+  const { settings } = useAppStore();
   const isFuture = dafInfo.dateString > new Date().toISOString().split('T')[0];
 
   const scale = useRef(new Animated.Value(0.9)).current;
@@ -46,7 +48,7 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
       <View style={styles.dateRow}>
         <View style={styles.dateInfo}>
           <Text style={styles.hebDate}>{cleanHebDate}</Text>
-          <Text style={styles.gregDate}>{gregDateStr}</Text>
+          {settings?.show_secular_date === 1 && <Text style={styles.gregDate}>{gregDateStr}</Text>}
         </View>
         <View style={styles.dateBadge}>
           <Text style={styles.dateBadgeText}>סדר הלימוד</Text>

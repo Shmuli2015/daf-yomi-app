@@ -17,10 +17,12 @@ export interface SettingsRecord {
   id: number;
   notification_hour: number;
   notification_minute: number;
-  enable_shabbat_notifications: number;
+  show_secular_date: number;
+  show_confetti: number;
 }
 
 export function initDB() {
+  // 1. Create tables if they don't exist
   db.execSync(`
     CREATE TABLE IF NOT EXISTS daily_daf (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,11 +37,25 @@ export function initDB() {
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY CHECK (id = 1),
       notification_hour INTEGER DEFAULT 7,
-      notification_minute INTEGER DEFAULT 30,
-      enable_shabbat_notifications INTEGER DEFAULT 0
+      notification_minute INTEGER DEFAULT 30
     );
-    INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute, enable_shabbat_notifications)
-    VALUES (1, 7, 30, 0);
+  `);
+
+  // 2. Migration for existing tables
+  const tableInfo: any[] = db.getAllSync('PRAGMA table_info(settings);');
+  const columns = tableInfo.map(c => c.name);
+  
+  if (!columns.includes('show_secular_date')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN show_secular_date INTEGER DEFAULT 1;');
+  }
+  if (!columns.includes('show_confetti')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN show_confetti INTEGER DEFAULT 1;');
+  }
+
+  // 3. Ensure default settings exist
+  db.execSync(`
+    INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)
+    VALUES (1, 7, 30);
   `);
 }
 
@@ -70,10 +86,10 @@ export function getSettings(): SettingsRecord {
   return db.getFirstSync('SELECT * FROM settings WHERE id = 1') as SettingsRecord;
 }
 
-export function updateSettings(hour: number, minute: number, shabbat: boolean) {
+export function updateSettings(hour: number, minute: number, showSecular: boolean, showConfetti: boolean) {
   db.runSync(
-    'UPDATE settings SET notification_hour = ?, notification_minute = ?, enable_shabbat_notifications = ? WHERE id = 1',
-    [hour, minute, shabbat ? 1 : 0]
+    'UPDATE settings SET notification_hour = ?, notification_minute = ?, show_secular_date = ?, show_confetti = ? WHERE id = 1',
+    [hour, minute, showSecular ? 1 : 0, showConfetti ? 1 : 0]
   );
 }
 

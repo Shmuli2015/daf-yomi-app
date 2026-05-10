@@ -14,6 +14,7 @@ interface HomeHeaderProps {
   isLearned?: boolean;
   handleToggle?: () => void;
   masechetProgressPct?: number;
+  showSecularDate?: boolean;
 }
 
 export default function HomeHeader({
@@ -24,7 +25,8 @@ export default function HomeHeader({
   sefariaUrl,
   isLearned,
   handleToggle,
-  masechetProgressPct = 0
+  masechetProgressPct = 0,
+  showSecularDate = true
 }: HomeHeaderProps) {
   const insets = useSafeAreaInsets();
   const [showConfirm, setShowConfirm] = useState(false);
@@ -51,7 +53,7 @@ export default function HomeHeader({
     <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroTranslateY }], paddingTop: insets.top + 24 }}>
       <View style={styles.datesContainer}>
         <Text style={styles.hebrewDate}>{cleanHebrewDate}</Text>
-        <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>
+        {showSecularDate && <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>}
       </View>
 
       <Animated.View style={[styles.dafCard, { transform: [{ scale: cardScale }], opacity: cardOpacity }]}>

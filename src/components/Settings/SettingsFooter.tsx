@@ -16,7 +16,6 @@ export const SettingsFooter = () => (
 const styles = StyleSheet.create({
   footer: {
     marginTop: 48,
-    paddingBottom: 24,
     alignItems: 'center',
     gap: 12,
   },

@@ -26,6 +26,7 @@ export default function HomeScreen({ navigation }: any) {
     streak,
     toggleAnyDafLearned,
     history,
+    settings,
   } = useAppStore();
 
   React.useEffect(() => {
@@ -35,7 +36,7 @@ export default function HomeScreen({ navigation }: any) {
   const isLearned = todayRecord?.status === 'learned';
 
   const handleToggle = () => {
-    if (!isLearned) setShowConfetti(true);
+    if (!isLearned && settings?.show_confetti) setShowConfetti(true);
     toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
   };
 
@@ -81,6 +82,7 @@ export default function HomeScreen({ navigation }: any) {
           isLearned={isLearned}
           handleToggle={handleToggle}
           masechetProgressPct={masechetProgressPct}
+          showSecularDate={settings?.show_secular_date === 1}
         />
 
         <View style={{ height: 24 }} />
