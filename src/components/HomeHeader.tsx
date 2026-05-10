@@ -56,11 +56,11 @@ export default function HomeHeader({
 
       <Animated.View style={[styles.dafCard, { transform: [{ scale: cardScale }], opacity: cardOpacity }]}>
         <View style={styles.cardHeader}>
-          <View style={styles.dafBadgeSmall}>
-            <Text style={styles.dafBadgeText}>{todayDafNum}</Text>
-          </View>
           <View style={styles.dailyStudyBadge}>
             <Text style={styles.dailyStudyText}>הלימוד היומי</Text>
+          </View>
+          <View style={styles.dafBadgeSmall}>
+            <Text style={styles.dafBadgeText}>{todayDafNum}</Text>
           </View>
         </View>
 
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: '900',
     color: THEME.colors.textPrimary,
-    textAlign: 'right',
+    textAlign: 'left',
     letterSpacing: -1,
     marginBottom: 24,
   },
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
   progressText: {
     color: THEME.colors.textSecondary,
     fontSize: 12,
-    textAlign: 'right',
+    textAlign: 'left',
     marginBottom: 8,
     fontWeight: '600',
   },
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     height: 4,
     backgroundColor: THEME.colors.border,
     borderRadius: 2,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
   },
   progressBarFill: {
     height: '100%',
@@ -225,7 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   mainButton: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
@@ -252,7 +252,7 @@ const styles = StyleSheet.create({
     color: THEME.colors.textPrimary,
   },
   sefariaButton: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
