@@ -13,7 +13,6 @@ const RING_RADIUS = 56;
 const STROKE_WIDTH = 13;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-// Animated SVG circle using RN Animated
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 function ShasRing({ progress }: { progress: number }) {
@@ -25,7 +24,7 @@ function ShasRing({ progress }: { progress: number }) {
       duration: 1300,
       delay: 300,
       easing: Easing.out(Easing.cubic),
-      useNativeDriver: false, // SVG props require JS driver
+      useNativeDriver: false,
     }).start();
   }, [progress]);
 
@@ -104,8 +103,6 @@ export default function HistoryScreen() {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-
-        {/* Page Header */}
         <View style={styles.pageHeader}>
           <View style={styles.headerRow}>
             <View style={styles.accentBar} />
@@ -114,7 +111,6 @@ export default function HistoryScreen() {
           <Text style={styles.pageSubtitle}>מעקב לימוד של כל מסכתות הש״ס</Text>
         </View>
 
-        {/* Progress Hero Card */}
         <Animated.View style={[styles.heroCard, { opacity: cardOpacity, transform: [{ translateY: cardTranslateY }] }]}>
           <View style={styles.ringSection}>
             <View style={styles.ringContainer}>

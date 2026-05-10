@@ -31,7 +31,6 @@ export default function HomeContent({
 
   return (
     <Animated.View style={[styles.container, { opacity: contentOpacity, transform: [{ translateY: contentTranslateY }] }]}>
-      {/* Streak Section */}
       <View style={styles.streakCard}>
         <View style={styles.streakHeader}>
           <Text style={styles.streakTitle}>רצף לימוד</Text>
@@ -43,14 +42,13 @@ export default function HomeContent({
         
         <View style={styles.chartContainer}>
           {last7Days.map((day, index) => {
-            // Basic dynamic height for the bars based on status and index
             const isToday = index === last7Days.length - 1;
             const isLearned = day.status === 'learned';
             let barHeight = 10;
             if (isLearned) {
-              barHeight = 40 + (index * 5); // Just a dummy varied height
+              barHeight = 40 + (index * 5);
             } else if (isToday) {
-              barHeight = 80; // Today highlighted
+              barHeight = 80;
             }
             
             return (
@@ -67,7 +65,6 @@ export default function HomeContent({
         </View>
       </View>
 
-      {/* Grid Section */}
       <View style={styles.gridContainer}>
         <View style={styles.gridRow}>
           <View style={styles.gridItem}>
@@ -103,7 +100,6 @@ export default function HomeContent({
         </View>
       </View>
       
-      {/* Milestones Header (from screenshot) */}
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>ציוני דרך</Text>
         <Text style={styles.sectionLink}>צפה בכל ההישגים</Text>
@@ -181,7 +177,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.surface,
     borderRadius: 20,
     padding: 16,
-    flexDirection: 'row-reverse', // RTL
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: THEME.colors.border,
@@ -207,7 +203,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   sectionHeader: {
-    flexDirection: 'row-reverse', // RTL
+    flexDirection: 'row-reverse',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 16,

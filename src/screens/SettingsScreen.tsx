@@ -73,7 +73,6 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {/* App Branding Header */}
         <View style={styles.brandHeader}>
           <View style={styles.brandDecorCircle} />
           <View style={styles.brandRow}>
@@ -87,7 +86,6 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Notifications Section */}
         <SectionHeader title="התראות" />
         <View style={styles.card}>
           <SettingItem
@@ -118,7 +116,6 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* Advanced Section */}
         <SectionHeader title="מתקדם" />
         <View style={styles.card}>
           <SettingItem
@@ -130,7 +127,6 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* Footer */}
         <View style={styles.footer}>
           <View style={styles.versionBadge}>
             <Text style={styles.versionText}>V1.0.4</Text>

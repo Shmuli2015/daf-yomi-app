@@ -55,11 +55,10 @@ export default function HomeHeader({
         <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>
       </View>
 
-      {/* Floating Card */}
       <Animated.View style={[styles.dafCard, { transform: [{ scale: cardScale }], opacity: cardOpacity }]}>
         <View style={styles.cardHeader}>
           <View style={styles.dafBadgeSmall}>
-            <Text style={styles.dafBadgeText}>דף {todayDafNum}</Text>
+            <Text style={styles.dafBadgeText}>{todayDafNum}</Text>
           </View>
           <View style={styles.dailyStudyBadge}>
             <Text style={styles.dailyStudyText}>הלימוד היומי</Text>
@@ -170,13 +169,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   dailyStudyBadge: {
-    backgroundColor: 'rgba(29, 78, 216, 0.2)', // a subtle blue tint, or could be surface
+    backgroundColor: 'rgba(29, 78, 216, 0.2)',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
   dailyStudyText: {
-    color: '#60A5FA', // light blue
+    color: '#60A5FA',
     fontSize: 12,
     fontWeight: '700',
   },
