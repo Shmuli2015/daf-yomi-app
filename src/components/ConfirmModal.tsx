@@ -73,6 +73,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: THEME.colors.border,
+    // @ts-ignore
+    direction: 'rtl',
   },
   iconContainer: {
     width: 64,
@@ -98,7 +100,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   footer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 12,
     width: '100%',
   },

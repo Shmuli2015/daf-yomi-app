@@ -2,7 +2,6 @@ import React from 'react';
 import { View, TouchableOpacity, Modal, Pressable, StyleSheet } from 'react-native';
 import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import SelectedDafCard from './SelectedDafCard';
 import { THEME } from '../../theme';
 
@@ -28,7 +27,6 @@ const DafDetailModal = ({
   isLearned,
   onToggle,
 }: DafDetailModalProps) => {
-  const insets = useSafeAreaInsets();
 
   return (
     <Modal
@@ -42,7 +40,6 @@ const DafDetailModal = ({
         
         <View style={styles.container}>
           <Pressable style={styles.panel} onPress={(e) => e.stopPropagation()}>
-            {/* Close button */}
             <TouchableOpacity
               onPress={onClose}
               style={styles.closeBtn}
@@ -85,7 +82,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.surface,
     borderRadius: 32,
     paddingHorizontal: 20,
-    paddingTop: 40,
+    paddingTop: 52,
     paddingBottom: 24,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 20 },
@@ -95,11 +92,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     overflow: 'hidden',
+    // @ts-ignore
+    direction: 'rtl',
   },
   closeBtn: {
     position: 'absolute',
-    right: 16,
-    top: 16,
+    left: 12,
+    top: 12,
     zIndex: 10,
     width: 32,
     height: 32,

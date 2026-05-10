@@ -33,13 +33,15 @@ export default function HebrewCalendar() {
   const gridOpacity = useRef(new Animated.Value(1)).current;
 
   const animateGridChange = (direction: 'next' | 'prev', changeFn: () => void) => {
-    const outDir = direction === 'next' ? -40 : 40;
+    const isRTL = I18nManager.isRTL;
+    const outDir = direction === 'next' ? (isRTL ? 40 : -40) : (isRTL ? -40 : 40);
+    
     Animated.parallel([
       Animated.timing(gridOpacity, { toValue: 0, duration: 170, useNativeDriver: true }),
       Animated.timing(gridTranslateX, { toValue: outDir, duration: 170, easing: Easing.out(Easing.ease), useNativeDriver: true }),
     ]).start(() => {
       changeFn();
-      gridTranslateX.setValue(direction === 'next' ? 40 : -40);
+      gridTranslateX.setValue(direction === 'next' ? (isRTL ? -40 : 40) : (isRTL ? 40 : -40));
       Animated.parallel([
         Animated.timing(gridOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
         Animated.timing(gridTranslateX, { toValue: 0, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true }),
@@ -121,10 +123,9 @@ export default function HebrewCalendar() {
 
   return (
     <View style={styles.card}>
-      {/* Month Navigator */}
       <View style={styles.navRow}>
-        <TouchableOpacity onPress={goNextMonth} style={styles.navBtn} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={20} color={THEME.colors.textSecondary} />
+        <TouchableOpacity onPress={goPrevMonth} style={styles.navBtn} activeOpacity={0.7}>
+          <Ionicons name="chevron-forward" size={20} color={THEME.colors.textSecondary} />
         </TouchableOpacity>
         <View style={styles.monthCenter}>
           <Text style={styles.monthName}>{monthName}</Text>
@@ -140,19 +141,17 @@ export default function HebrewCalendar() {
             )}
           </View>
         </View>
-        <TouchableOpacity onPress={goPrevMonth} style={styles.navBtn} activeOpacity={0.7}>
-          <Ionicons name="chevron-forward" size={20} color={THEME.colors.textSecondary} />
+        <TouchableOpacity onPress={goNextMonth} style={styles.navBtn} activeOpacity={0.7}>
+          <Ionicons name="chevron-back" size={20} color={THEME.colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
-      {/* Week day labels */}
       <View style={styles.weekLabels}>
         {DAYS_OF_WEEK.map((day, index) => (
           <Text key={index} style={styles.weekLabel}>{day}</Text>
         ))}
       </View>
 
-      {/* Animated grid */}
       <Animated.View style={{ transform: [{ translateX: gridTranslateX }], opacity: gridOpacity }}>
         <View style={styles.grid}>
           {calendarData.map((day, index) => (
@@ -183,6 +182,7 @@ export default function HebrewCalendar() {
             } else {
               setShowConfetti(true);
               toggleAnyDafLearned(getDateStr(selectedDate.greg()), selectedDafInfo.masechet, selectedDafInfo.daf);
+              setModalVisible(false);
             }
           }
         }}
@@ -197,6 +197,7 @@ export default function HebrewCalendar() {
             toggleAnyDafLearned(getDateStr(selectedDate.greg()), selectedDafInfo.masechet, selectedDafInfo.daf);
           }
           setShowConfirm(false);
+          setModalVisible(false);
         }}
         onCancel={() => setShowConfirm(false)}
       />
@@ -233,6 +234,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 16,
     elevation: 5,
+    // @ts-ignore
+    direction: 'rtl',
   },
   navRow: {
     flexDirection: 'row',
@@ -265,7 +268,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   yearRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     marginTop: 2,
   },

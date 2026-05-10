@@ -44,12 +44,12 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
   return (
     <Animated.View style={[styles.container, { transform: [{ scale }], opacity }]}>
       <View style={styles.dateRow}>
-        <View style={styles.dateBadge}>
-          <Text style={styles.dateBadgeText}>סדר הלימוד</Text>
-        </View>
         <View style={styles.dateInfo}>
           <Text style={styles.hebDate}>{cleanHebDate}</Text>
           <Text style={styles.gregDate}>{gregDateStr}</Text>
+        </View>
+        <View style={styles.dateBadge}>
+          <Text style={styles.dateBadgeText}>סדר הלימוד</Text>
         </View>
       </View>
 
@@ -68,7 +68,7 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
           activeOpacity={0.85}
           style={[styles.toggleBtn, { backgroundColor: toggleBg, borderColor: toggleBorder }]}
         >
-          <View style={[styles.toggleIconWrapper, { backgroundColor: 'rgba(255,255,255,0.6)' }]}>
+          <View style={styles.toggleIconWrapper}>
             <Ionicons name={toggleIconName} size={18} color={toggleIconColor} />
           </View>
           <Text style={[styles.toggleText, { color: toggleTextColor }]}>{toggleLabel}</Text>
@@ -92,7 +92,7 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
 const styles = StyleSheet.create({
   container: { paddingTop: 0 },
   dateRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 12,
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
-  dateInfo: { alignItems: 'flex-end' },
+  dateInfo: { alignItems: 'flex-start' },
   hebDate: { fontSize: 14, fontWeight: '900', color: THEME.colors.primary },
   gregDate: { fontSize: 9, fontWeight: '600', color: THEME.colors.textMuted, marginTop: 1 },
   dafInfoCard: {
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   dafText: { fontSize: 18, fontWeight: '800', color: THEME.colors.accent },
   actions: { gap: 8 },
   toggleBtn: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
   },
   toggleText: { fontSize: 15, fontWeight: '900', letterSpacing: -0.1 },
   sefariaBtn: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
@@ -168,7 +168,6 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: THEME.colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
