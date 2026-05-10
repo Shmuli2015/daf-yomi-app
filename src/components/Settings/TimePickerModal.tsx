@@ -12,7 +12,7 @@ interface TimePickerModalProps {
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-const MINUTES = ['00', '10', '20', '30', '40', '50']; // steps of 10
+const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']; // steps of 5
 
 export const TimePickerModal = ({
   visible,
@@ -23,17 +23,17 @@ export const TimePickerModal = ({
 }: TimePickerModalProps) => {
   const [selectedHour, setSelectedHour] = React.useState(hour);
   // Store as index (0-5), e.g. minute=30 → index=3
-  const [selectedMinuteIndex, setSelectedMinuteIndex] = React.useState(Math.round(minute / 10) % 6);
+  const [selectedMinuteIndex, setSelectedMinuteIndex] = React.useState(Math.round(minute / 5) % 12);
 
   React.useEffect(() => {
     if (visible) {
       setSelectedHour(hour);
-      setSelectedMinuteIndex(Math.round(minute / 10) % 6);
+      setSelectedMinuteIndex(Math.round(minute / 5) % 12);
     }
   }, [visible, hour, minute]);
 
   const handleSave = () => {
-    onSave(selectedHour, selectedMinuteIndex * 10);
+    onSave(selectedHour, selectedMinuteIndex * 5);
   };
 
   return (

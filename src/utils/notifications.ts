@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
 
 export type DaySchedule = { enabled: boolean; hour: number; minute: number };
 
@@ -19,51 +20,59 @@ export async function scheduleNotifications(
     await Notifications.cancelAllScheduledNotificationsAsync();
     if (!enabled) return;
 
+    const content: Notifications.NotificationContentInput = {
+      title: '📖 זמן הלימוד היומי הגיע',
+      body: 'הדף היומי מחכה לך. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️',
+      sound: true,
+      priority: Notifications.AndroidNotificationPriority.MAX,
+    };
+
+    const isAndroid = Platform.OS === 'android';
+
     if (mode === 'daily') {
       await Notifications.scheduleNotificationAsync({
-        content: {
-          title: '📖 זמן הלימוד היומי הגיע',
-          subtitle: 'בוא נשמור על הרצף! ✨',
-          body: 'הדף היומי מחכה לך. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️',
-          sound: true,
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          categoryIdentifier: 'study-reminder',
-        },
-        trigger: {
-          channelId: 'default',
-          type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-          hour: globalHour,
-          minute: globalMin,
-          second: 0,
-          repeats: true,
-        },
+        content,
+        trigger: isAndroid
+          ? {
+              channelId: 'default',
+              type: Notifications.SchedulableTriggerInputTypes.DAILY,
+              hour: globalHour,
+              minute: globalMin,
+            }
+          : {
+              type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+              hour: globalHour,
+              minute: globalMin,
+              second: 0,
+              repeats: true,
+            },
       });
     } else {
       for (let i = 0; i < schedules.length; i++) {
         const s = schedules[i];
         if (!s.enabled) continue;
         await Notifications.scheduleNotificationAsync({
-          content: {
-            title: '📖 זמן הלימוד היומי הגיע',
-            subtitle: 'בוא נשמור על הרצף! ✨',
-            body: 'הדף היומי מחכה לך. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️',
-            sound: true,
-            priority: Notifications.AndroidNotificationPriority.MAX,
-            categoryIdentifier: 'study-reminder',
-          },
-          trigger: {
-            channelId: 'default',
-            type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
-            weekday: i + 1,
-            hour: s.hour,
-            minute: s.minute,
-            second: 0,
-            repeats: true,
-          },
+          content,
+          trigger: isAndroid
+            ? {
+                channelId: 'default',
+                type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+                weekday: i + 1,
+                hour: s.hour,
+                minute: s.minute,
+              }
+            : {
+                type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+                weekday: i + 1,
+                hour: s.hour,
+                minute: s.minute,
+                second: 0,
+                repeats: true,
+              },
         });
       }
     }
   } catch (error) {
-    console.error('Failed to schedule notification:', error);
+    console.error('Failed to schedule notification:', error instanceof Error ? error.message : error);
   }
 }

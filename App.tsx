@@ -36,14 +36,6 @@ Notifications.setNotificationCategoryAsync('study-reminder', [
   },
 ]);
 
-if (Platform.OS === 'android') {
-  Notifications.setNotificationChannelAsync('default', {
-    name: 'default',
-    importance: Notifications.AndroidImportance.MAX,
-    vibrationPattern: [0, 250, 250, 250],
-    lightColor: '#FF231F7C',
-  });
-}
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 const MIN_SPLASH_MS = 1800;
@@ -62,6 +54,15 @@ export default function App() {
 
         if (isExpoGo) {
           console.log('Running in Expo Go - Push notifications (remote) are restricted.');
+        }
+
+        if (Platform.OS === 'android') {
+          await Notifications.setNotificationChannelAsync('default', {
+            name: 'default',
+            importance: Notifications.AndroidImportance.MAX,
+            vibrationPattern: [0, 250, 250, 250],
+            lightColor: '#FF231F7C',
+          });
         }
 
         const { status } = await Notifications.requestPermissionsAsync();
