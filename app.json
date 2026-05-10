@@ -20,7 +20,11 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "notification": {
+        "icon": "./assets/icon.png",
+        "color": "#C9963C"
+      }
     },
     "web": {
       "favicon": "./assets/favicon.png"

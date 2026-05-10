@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { I18nManager } from 'react-native';
+import { I18nManager, Platform } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
 
 I18nManager.allowRTL(true);
@@ -16,11 +16,20 @@ Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
     shouldPlaySound: true,
-    shouldSetBadge: false,
+    shouldSetBadge: true,
     shouldShowBanner: true,
     shouldShowList: true,
   }),
 });
+
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'default',
+    importance: Notifications.AndroidImportance.MAX,
+    vibrationPattern: [0, 250, 250, 250],
+    lightColor: '#FF231F7C',
+  });
+}
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 const MIN_SPLASH_MS = 1800;
@@ -45,6 +54,14 @@ export default function App() {
         if (status !== 'granted') {
           console.log('Notification permissions not granted');
         }
+
+        // Listener for when a notification is clicked
+        const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+          console.log('Notification clicked:', response);
+          // כאן אפשר להוסיף ניווט למסך ספציפי אם נרצה בעתיד
+        });
+
+        return () => subscription.remove();
       } catch (e) {
         console.warn('Notification setup error:', e);
       } finally {

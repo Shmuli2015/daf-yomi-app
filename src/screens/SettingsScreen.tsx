@@ -52,11 +52,12 @@ export default function SettingsScreen() {
       if (mode === 'daily') {
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: '🕯️ הגיע זמן הדף היומי',
-            body: 'אל תשכח לסמן את הלימוד של היום!',
+            title: '📖 זמן הלימוד שלך הגיע',
+            body: 'מסע דף: דף יומי מחכה לך. בוא נשמור על הרצף! ✨',
             sound: true,
           },
           trigger: {
+            channelId: 'default',
             type: Notifications.SchedulableTriggerInputTypes.DAILY,
             hour: globalHour,
             minute: globalMin,
@@ -68,11 +69,12 @@ export default function SettingsScreen() {
           if (!s.enabled) continue;
           await Notifications.scheduleNotificationAsync({
             content: {
-              title: '🕯️ הגיע זמן הדף היומי',
-              body: 'אל תשכח לסמן את הלימוד של היום!',
+              title: '📖 זמן הלימוד שלך הגיע',
+              body: 'מסע דף: דף יומי מחכה לך. בוא נשמור על הרצף! ✨',
               sound: true,
             },
             trigger: {
+              channelId: 'default',
               type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
               weekday: i + 1,
               hour: s.hour,
