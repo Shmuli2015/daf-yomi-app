@@ -191,7 +191,7 @@ function MasechetModal({
 const styles = StyleSheet.create({
   container: { paddingHorizontal: 20 },
   gridRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },

@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   pageHeader: {
     paddingHorizontal: 20,
     marginBottom: 20,
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   headerRow: {
     flexDirection: 'row',

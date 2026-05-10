@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   ringSection: { alignItems: 'center', marginBottom: 20 },
   statsRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
   },
