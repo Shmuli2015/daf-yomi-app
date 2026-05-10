@@ -32,39 +32,36 @@ const DafDetailModal = ({
 
   return (
     <Modal
-      animationType="slide"
+      animationType="fade"
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.overlay}>
-        <Pressable style={styles.backdrop} onPress={onClose} />
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <View style={styles.backdrop} />
+        
+        <View style={styles.container}>
+          <Pressable style={styles.panel} onPress={(e) => e.stopPropagation()}>
+            {/* Close button */}
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeBtn}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={18} color={THEME.colors.textSecondary} />
+            </TouchableOpacity>
 
-        {/* Bottom sheet panel */}
-        <View style={[styles.panel, { paddingBottom: insets.bottom + 20 }]}>
-          {/* Gold accent top border + handle */}
-          <View style={styles.topAccent} />
-          <View style={styles.handle} />
-
-          {/* Close button */}
-          <TouchableOpacity
-            onPress={onClose}
-            style={styles.closeBtn}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="close" size={18} color={THEME.colors.textSecondary} />
-          </TouchableOpacity>
-
-          {selectedDate && dafInfo && (
-            <SelectedDafCard
-              selectedDate={selectedDate}
-              dafInfo={dafInfo}
-              isLearned={isLearned}
-              onToggle={onToggle}
-            />
-          )}
+            {selectedDate && dafInfo && (
+              <SelectedDafCard
+                selectedDate={selectedDate}
+                dafInfo={dafInfo}
+                isLearned={isLearned}
+                onToggle={onToggle}
+              />
+            )}
+          </Pressable>
         </View>
-      </View>
+      </Pressable>
     </Modal>
   );
 };
@@ -72,49 +69,42 @@ const DafDetailModal = ({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(20,28,46,0.72)',
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(15, 23, 42, 0.85)',
+  },
+  container: {
+    width: '90%',
+    maxWidth: 360,
+    zIndex: 1,
   },
   panel: {
     backgroundColor: THEME.colors.surface,
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
+    borderRadius: 32,
     paddingHorizontal: 20,
-    paddingTop: 0,
-    shadowColor: THEME.colors.primary,
-    shadowOffset: { width: 0, height: -8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 16,
-  },
-  topAccent: {
-    height: 3,
-    backgroundColor: THEME.colors.accent,
-    borderTopLeftRadius: 36,
-    borderTopRightRadius: 36,
-    marginBottom: 0,
-    opacity: 0.7,
-  },
-  handle: {
-    width: 40,
-    height: 4,
-    backgroundColor: THEME.colors.border,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 10,
-    marginBottom: 12,
+    paddingTop: 40,
+    paddingBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.4,
+    shadowRadius: 30,
+    elevation: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
   },
   closeBtn: {
     position: 'absolute',
-    right: 20,
-    top: 20,
+    right: 16,
+    top: 16,
     zIndex: 10,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: THEME.colors.background,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,

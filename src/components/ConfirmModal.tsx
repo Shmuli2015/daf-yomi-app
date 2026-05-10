@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   confirmButton: {
-    flex: 1.5,
+    flex: 1,
     backgroundColor: THEME.colors.danger,
     paddingVertical: 14,
     borderRadius: 14,

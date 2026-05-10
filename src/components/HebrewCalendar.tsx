@@ -2,10 +2,12 @@ import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { useAppStore } from '../store/useAppStore';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import CalendarDay from './Calendar/CalendarDay';
 import DafDetailModal from './Calendar/DafDetailModal';
+import ConfirmModal from './ConfirmModal';
 import { THEME } from '../theme';
 
 const DAYS_OF_WEEK = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
@@ -23,6 +25,8 @@ export default function HebrewCalendar() {
   const [currentHDate, setCurrentHDate] = useState(new HDate(new Date()));
   const [selectedDate, setSelectedDate] = useState<HDate | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const gridTranslateX = useRef(new Animated.Value(0)).current;
   const gridOpacity = useRef(new Animated.Value(1)).current;
@@ -96,6 +100,19 @@ export default function HebrewCalendar() {
   const monthName = Locale.gettext(HDate.getMonthName(currentHDate.getMonth(), currentHDate.getFullYear()), 'he').replace(/[\u0591-\u05C7]/g, '');
   const yearName = currentHDate.renderGematriya().split(' ').pop();
 
+  const goToToday = () => {
+    const today = new HDate(new Date());
+    if (currentHDate.getMonth() === today.getMonth() && currentHDate.getFullYear() === today.getFullYear()) return;
+
+    const direction = (today.getFullYear() > currentHDate.getFullYear() || 
+                      (today.getFullYear() === currentHDate.getFullYear() && today.getMonth() > currentHDate.getMonth())) 
+                      ? 'next' : 'prev';
+    
+    animateGridChange(direction, () => {
+      setCurrentHDate(today);
+    });
+  };
+
   const selectedDafInfo = useMemo(() => {
     if (!selectedDate) return null;
     return getDafByDate(selectedDate.greg());
@@ -110,7 +127,17 @@ export default function HebrewCalendar() {
         </TouchableOpacity>
         <View style={styles.monthCenter}>
           <Text style={styles.monthName}>{monthName}</Text>
-          <Text style={styles.yearName}>{yearName}</Text>
+          <View style={styles.yearRow}>
+            <Text style={styles.yearName}>{yearName}</Text>
+            {!isSameDay(new HDate(new Date()), new HDate(1, currentHDate.getMonth(), currentHDate.getFullYear())) && (
+              <>
+                <View style={styles.dot} />
+                <TouchableOpacity onPress={goToToday} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  <Text style={styles.todayText}>היום</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
         </View>
         <TouchableOpacity onPress={goPrevMonth} style={styles.navBtn} activeOpacity={0.7}>
           <Ionicons name="chevron-forward" size={20} color={THEME.colors.textSecondary} />
@@ -149,10 +176,39 @@ export default function HebrewCalendar() {
         isLearned={selectedDate ? isLearned(selectedDate) : false}
         onToggle={() => {
           if (selectedDate && selectedDafInfo) {
-            toggleAnyDafLearned(getDateStr(selectedDate.greg()), selectedDafInfo.masechet, selectedDafInfo.daf);
+            const currentlyLearned = isLearned(selectedDate);
+            if (currentlyLearned) {
+              setShowConfirm(true);
+            } else {
+              setShowConfetti(true);
+              toggleAnyDafLearned(getDateStr(selectedDate.greg()), selectedDafInfo.masechet, selectedDafInfo.daf);
+            }
           }
         }}
       />
+
+      <ConfirmModal
+        visible={showConfirm}
+        title="ביטול לימוד"
+        message="האם אתה בטוח שברצונך לבטל את סימון הדף כנלמד?"
+        onConfirm={() => {
+          if (selectedDate && selectedDafInfo) {
+            toggleAnyDafLearned(getDateStr(selectedDate.greg()), selectedDafInfo.masechet, selectedDafInfo.daf);
+          }
+          setShowConfirm(false);
+        }}
+        onCancel={() => setShowConfirm(false)}
+      />
+
+      {showConfetti && (
+        <ConfettiCannon
+          count={200}
+          origin={{ x: -10, y: 0 }}
+          fadeOut={true}
+          fallSpeed={3000}
+          onAnimationEnd={() => setShowConfetti(false)}
+        />
+      )}
     </View>
   );
 }
@@ -199,7 +255,25 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     letterSpacing: 1,
     textTransform: 'uppercase',
-    marginTop: 1,
+  },
+  yearRow: {
+    flexDirection: 'row-reverse',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  dot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: THEME.colors.textMuted,
+    marginHorizontal: 6,
+    opacity: 0.5,
+  },
+  todayText: {
+    fontSize: 11,
+    color: THEME.colors.accent,
+    fontWeight: '800',
+    letterSpacing: 0.5,
   },
   weekLabels: {
     flexDirection: 'row-reverse',
