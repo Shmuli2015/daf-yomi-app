@@ -20,6 +20,8 @@ export interface SettingsRecord {
   show_secular_date: number;
   show_confetti: number;
   notifications_enabled: number;
+  notif_mode: string;
+  day_schedules: string | null;
 }
 
 export function initDB() {
@@ -54,6 +56,12 @@ export function initDB() {
   }
   if (!columns.includes('notifications_enabled')) {
     db.execSync('ALTER TABLE settings ADD COLUMN notifications_enabled INTEGER DEFAULT 1;');
+  }
+  if (!columns.includes('notif_mode')) {
+    db.execSync("ALTER TABLE settings ADD COLUMN notif_mode TEXT DEFAULT 'daily';");
+  }
+  if (!columns.includes('day_schedules')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN day_schedules TEXT DEFAULT NULL;');
   }
 
   // 3. Ensure default settings exist
@@ -95,11 +103,13 @@ export function updateSettings(
   minute: number,
   showSecular: boolean,
   showConfetti: boolean,
-  notificationsEnabled: boolean
+  notificationsEnabled: boolean,
+  notifMode: string = 'daily',
+  daySchedules: string | null = null
 ) {
   db.runSync(
-    'UPDATE settings SET notification_hour = ?, notification_minute = ?, show_secular_date = ?, show_confetti = ?, notifications_enabled = ? WHERE id = 1',
-    [hour, minute, showSecular ? 1 : 0, showConfetti ? 1 : 0, notificationsEnabled ? 1 : 0]
+    'UPDATE settings SET notification_hour = ?, notification_minute = ?, show_secular_date = ?, show_confetti = ?, notifications_enabled = ?, notif_mode = ?, day_schedules = ? WHERE id = 1',
+    [hour, minute, showSecular ? 1 : 0, showConfetti ? 1 : 0, notificationsEnabled ? 1 : 0, notifMode, daySchedules]
   );
 }
 

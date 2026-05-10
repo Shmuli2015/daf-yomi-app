@@ -5,9 +5,10 @@ import AppNavigator from './src/navigation/AppNavigator';
 
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
-import { initDB } from './src/db/database';
+import { initDB, getSettings } from './src/db/database';
 import { useAppStore } from './src/store/useAppStore';
 import * as Notifications from 'expo-notifications';
+import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from './src/utils/notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SplashScreen from './src/components/SplashScreen';
@@ -66,6 +67,19 @@ export default function App() {
         const { status } = await Notifications.requestPermissionsAsync();
         if (status !== 'granted') {
           console.log('Notification permissions not granted');
+        } else {
+          // Restore scheduled notifications after every cold start / reboot
+          const s = getSettings();
+          const daySchedules: DaySchedule[] = s.day_schedules
+            ? JSON.parse(s.day_schedules)
+            : DEFAULT_SCHEDULES;
+          await scheduleNotifications(
+            s.notification_hour,
+            s.notification_minute,
+            (s.notif_mode as 'daily' | 'custom') || 'daily',
+            daySchedules,
+            s.notifications_enabled === 1
+          );
         }
 
         // Listener for when a notification is clicked or an action is performed

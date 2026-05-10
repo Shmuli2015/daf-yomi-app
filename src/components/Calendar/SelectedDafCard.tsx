@@ -32,7 +32,10 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
   }, []);
 
   const cleanHebDate = selectedDate.renderGematriya().replace(/[\u0591-\u05C7]/g, '');
-  const gregDateStr = new Date(dafInfo.dateString).toLocaleDateString('he-IL', {
+  const gregObj = selectedDate.greg();
+  const gregDateStr = new Date(
+    gregObj.getFullYear(), gregObj.getMonth(), gregObj.getDate()
+  ).toLocaleDateString('he-IL', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
 

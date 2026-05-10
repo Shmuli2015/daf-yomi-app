@@ -21,7 +21,9 @@ interface AppState {
     minute: number,
     showSecular: boolean,
     showConfetti: boolean,
-    notificationsEnabled: boolean
+    notificationsEnabled: boolean,
+    notifMode?: string,
+    daySchedules?: string | null
   ) => void;
 }
 
@@ -125,9 +127,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     minute: number,
     showSecular: boolean,
     showConfetti: boolean,
-    notificationsEnabled: boolean
+    notificationsEnabled: boolean,
+    notifMode?: string,
+    daySchedules?: string | null
   ) => {
-    updateSettings(hour, minute, showSecular, showConfetti, notificationsEnabled);
+    updateSettings(hour, minute, showSecular, showConfetti, notificationsEnabled, notifMode, daySchedules);
     get().loadInitialData();
   },
 
