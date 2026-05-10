@@ -1,21 +1,21 @@
 export const THEME = {
   colors: {
-    background: '#F5F2EA',
-    surface: '#FFFFFF',
-    primary: '#1E293B',
-    accent: '#C9963C',
-    accentLight: '#FDF3DC',
+    background: '#121212', // Dark background
+    surface: '#1E1E1E',    // Card background
+    primary: '#E0E0E0',    // Main text
+    accent: '#C9963C',     // Gold accent
+    accentLight: 'rgba(201,150,60,0.1)',
     accentBorder: 'rgba(201,150,60,0.25)',
-    success: '#22C55E',
-    successLight: '#DCFCE7',
+    success: '#10B981',    // Green for buttons
+    successLight: 'rgba(16,185,129,0.15)',
     danger: '#EF4444',
     dangerLight: '#FEE2E2',
-    muted: '#94A3B8',
-    textPrimary: '#1E293B',
-    textSecondary: '#64748B',
-    textMuted: '#94A3B8',
-    border: '#E8E3D8',
-    tabBar: '#1E293B',
+    muted: '#6B7280',      // Muted text
+    textPrimary: '#FFFFFF',
+    textSecondary: '#A1A1AA',
+    textMuted: '#52525B',
+    border: '#27272A',
+    tabBar: '#18181B',     // Bottom tab bar
   },
   radius: {
     sm: 12,

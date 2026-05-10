@@ -9,6 +9,8 @@ interface HomeHeaderProps {
   todayMasechet: string;
   todayDafNum: string;
   sefariaUrl: string;
+  isLearned?: boolean;
+  handleToggle?: () => void;
 }
 
 export default function HomeHeader({
@@ -17,6 +19,8 @@ export default function HomeHeader({
   todayMasechet,
   todayDafNum,
   sefariaUrl,
+  isLearned,
+  handleToggle
 }: HomeHeaderProps) {
   const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
 
@@ -39,41 +43,60 @@ export default function HomeHeader({
 
   return (
     <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroTranslateY }] }}>
-      {/* Dark navy hero */}
-      <View style={styles.hero}>
-        <View style={styles.decorCircle1} />
-        <View style={styles.decorCircle2} />
-
-        <View style={styles.topRow}>
-          <View style={styles.datePill}>
-            <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>
-          </View>
-          <View style={styles.hebrewDateContainer}>
-            <Text style={styles.hebrewDate}>{cleanHebrewDate}</Text>
-            <View style={styles.goldUnderline} />
-          </View>
+      <View style={styles.topNav}>
+        <View style={styles.leftNav}>
+          <Ionicons name="notifications-outline" size={24} color={THEME.colors.textPrimary} />
+          <Ionicons name="search-outline" size={24} color={THEME.colors.textPrimary} style={{ marginLeft: 16 }} />
         </View>
-
-        <View style={styles.labelRow}>
-          <View style={styles.labelLine} />
-          <Text style={styles.labelText}>הדף היומי</Text>
-          <View style={styles.labelLine} />
+        <View style={styles.rightNav}>
+          <Text style={styles.appTitle}>מסע דף</Text>
+          <Ionicons name="book" size={24} color={THEME.colors.accent} style={{ marginLeft: 8 }} />
         </View>
       </View>
 
-      {/* Floating white card */}
+      <View style={styles.datesContainer}>
+        <Text style={styles.hebrewDate}>{cleanHebrewDate}</Text>
+        <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>
+      </View>
+
+      {/* Floating Card */}
       <Animated.View style={[styles.dafCard, { transform: [{ scale: cardScale }], opacity: cardOpacity }]}>
-        <Text style={styles.masechetName}>{todayMasechet}</Text>
-        <View style={styles.dafBadge}>
-          <Text style={styles.dafNumber}>{todayDafNum}</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.dafBadgeSmall}>
+            <Text style={styles.dafBadgeText}>דף {todayDafNum}</Text>
+          </View>
+          <View style={styles.dailyStudyBadge}>
+            <Text style={styles.dailyStudyText}>הלימוד היומי</Text>
+          </View>
         </View>
+
+        <Text style={styles.masechetName}>{todayMasechet}</Text>
+
+        <View style={styles.progressSection}>
+          <Text style={styles.progressText}>45% מהמסכת</Text>
+          <View style={styles.progressBarBg}>
+            <View style={styles.progressBarFill} />
+          </View>
+        </View>
+
+        <TouchableOpacity
+          onPress={handleToggle}
+          style={[styles.mainButton, isLearned ? styles.buttonDone : styles.buttonPending]}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="checkmark-circle-outline" size={22} color={isLearned ? THEME.colors.textPrimary : 'white'} />
+          <Text style={[styles.mainButtonText, isLearned ? styles.buttonTextDone : styles.buttonTextPending]}>
+            {isLearned ? 'סימנתי כנלמד' : 'סיימתי את הדף'}
+          </Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           onPress={() => Linking.openURL(sefariaUrl)}
           style={styles.sefariaButton}
           activeOpacity={0.75}
         >
-          <Ionicons name="book-outline" size={16} color={THEME.colors.accent} />
-          <Text style={styles.sefariaText}>ללימוד בספריא</Text>
+          <Ionicons name="open-outline" size={18} color={THEME.colors.textPrimary} />
+          <Text style={styles.sefariaText}>למד בספריא</Text>
         </TouchableOpacity>
       </Animated.View>
     </Animated.View>
@@ -81,141 +104,157 @@ export default function HomeHeader({
 }
 
 const styles = StyleSheet.create({
-  hero: {
-    backgroundColor: THEME.colors.primary,
-    paddingTop: 58,
-    paddingBottom: 76,
-    paddingHorizontal: 24,
-    overflow: 'hidden',
-  },
-  decorCircle1: {
-    position: 'absolute',
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: 'rgba(201,150,60,0.06)',
-    top: -70,
-    right: -60,
-  },
-  decorCircle2: {
-    position: 'absolute',
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(255,255,255,0.025)',
-    bottom: 10,
-    left: -50,
-  },
-  topRow: {
+  topNav: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 20,
   },
-  datePill: {
-    backgroundColor: 'rgba(255,255,255,0.09)',
-    paddingHorizontal: 13,
-    paddingVertical: 7,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.12)',
+  leftNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  gregorianDate: {
-    color: 'rgba(255,255,255,0.65)',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 0.8,
+  rightNav: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  hebrewDateContainer: {
-    alignItems: 'flex-end',
-  },
-  hebrewDate: {
-    color: 'white',
+  appTitle: {
+    color: THEME.colors.textPrimary,
     fontSize: 22,
     fontWeight: '900',
     letterSpacing: -0.5,
   },
-  goldUnderline: {
-    width: 32,
-    height: 2.5,
-    backgroundColor: THEME.colors.accent,
-    borderRadius: 2,
-    marginTop: 5,
-    alignSelf: 'flex-end',
-  },
-  labelRow: {
-    flexDirection: 'row',
+  datesContainer: {
     alignItems: 'center',
-    gap: 12,
+    marginBottom: 24,
   },
-  labelLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(201,150,60,0.2)',
-  },
-  labelText: {
+  hebrewDate: {
     color: THEME.colors.accent,
-    fontSize: 10,
-    fontWeight: '900',
-    letterSpacing: 3.5,
-    textTransform: 'uppercase',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  gregorianDate: {
+    color: THEME.colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '500',
   },
   dafCard: {
     backgroundColor: THEME.colors.surface,
     marginHorizontal: 20,
-    marginTop: -52,
-    borderRadius: 36,
-    paddingVertical: 28,
-    paddingHorizontal: 28,
-    alignItems: 'center',
-    shadowColor: '#1E293B',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.13,
-    shadowRadius: 28,
-    elevation: 10,
+    borderRadius: 24,
+    padding: 24,
     borderWidth: 1,
-    borderColor: 'rgba(232,227,216,0.7)',
+    borderColor: THEME.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 8,
   },
-  masechetName: {
-    fontSize: 42,
-    fontWeight: '900',
-    color: THEME.colors.primary,
-    textAlign: 'center',
-    letterSpacing: -1,
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
-  dafBadge: {
-    backgroundColor: THEME.colors.accent,
-    paddingHorizontal: 30,
-    paddingVertical: 10,
-    borderRadius: 9999,
-    marginBottom: 20,
-    shadowColor: THEME.colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 5,
+  dafBadgeSmall: {
+    backgroundColor: THEME.colors.background,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
   },
-  dafNumber: {
-    color: 'white',
-    fontSize: 24,
+  dafBadgeText: {
+    color: THEME.colors.textPrimary,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  dailyStudyBadge: {
+    backgroundColor: 'rgba(29, 78, 216, 0.2)', // a subtle blue tint, or could be surface
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  dailyStudyText: {
+    color: '#60A5FA', // light blue
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  masechetName: {
+    fontSize: 36,
     fontWeight: '900',
-    letterSpacing: -0.5,
+    color: THEME.colors.textPrimary,
+    textAlign: 'right',
+    letterSpacing: -1,
+    marginBottom: 24,
+  },
+  progressSection: {
+    marginBottom: 24,
+  },
+  progressText: {
+    color: THEME.colors.textSecondary,
+    fontSize: 12,
+    textAlign: 'right',
+    marginBottom: 8,
+    fontWeight: '600',
+  },
+  progressBarBg: {
+    height: 4,
+    backgroundColor: THEME.colors.border,
+    borderRadius: 2,
+    flexDirection: 'row-reverse',
+  },
+  progressBarFill: {
+    width: '45%',
+    height: '100%',
+    backgroundColor: THEME.colors.accent,
+    borderRadius: 2,
+  },
+  mainButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 16,
+    gap: 8,
+    marginBottom: 16,
+  },
+  buttonPending: {
+    backgroundColor: THEME.colors.success,
+  },
+  buttonDone: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: THEME.colors.success,
+  },
+  mainButtonText: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  buttonTextPending: {
+    color: 'white',
+  },
+  buttonTextDone: {
+    color: THEME.colors.textPrimary,
   },
   sefariaButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
-    backgroundColor: THEME.colors.accentLight,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 14,
+    paddingVertical: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(201,150,60,0.22)',
+    borderColor: THEME.colors.border,
+    backgroundColor: THEME.colors.background,
   },
   sefariaText: {
-    color: THEME.colors.primary,
+    color: THEME.colors.textPrimary,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
   },
 });

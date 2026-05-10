@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   },
   bar: {
     flexDirection: 'row',
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: THEME.colors.tabBar,
     borderRadius: 28,
     height: BAR_HEIGHT,
     alignItems: 'center',

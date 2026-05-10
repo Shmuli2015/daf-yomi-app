@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   brandHeader: {
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: THEME.colors.background,
     paddingTop: 28,
     paddingBottom: 28,
     paddingHorizontal: 24,
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    shadowColor: THEME.colors.primary,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 10,

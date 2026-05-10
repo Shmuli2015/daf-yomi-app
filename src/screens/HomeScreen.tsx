@@ -58,11 +58,11 @@ export default function HomeScreen() {
         todayMasechet={todayMasechet}
         todayDafNum={todayDafNum}
         sefariaUrl={todaySefariaUrl}
+        isLearned={isLearned}
+        handleToggle={handleToggle}
       />
 
       <HomeContent
-        isLearned={isLearned}
-        handleToggle={handleToggle}
         streak={streak}
         last7Days={last7Days}
       />

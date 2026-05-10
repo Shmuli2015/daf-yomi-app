@@ -60,11 +60,11 @@ export default function SplashScreen({ isReady, onFinish }: SplashScreenProps) {
         </Animated.View>
 
         <Animated.View style={{ transform: [{ scale: shimmer }] }}>
-          <Text style={styles.title}>דף יומי</Text>
+          <Text style={styles.title}>מסע דף</Text>
         </Animated.View>
 
         <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity }]}>
-          לימוד יומי של גמרא
+          המסע שלך בש"ס - צעד אחר צעד
         </Animated.Text>
 
         <Animated.View style={[styles.dividerRow, { transform: [{ scaleX: dividerScale }] }]}>
@@ -80,7 +80,7 @@ export default function SplashScreen({ isReady, onFinish }: SplashScreenProps) {
 const styles = StyleSheet.create({
   container: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: THEME.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
