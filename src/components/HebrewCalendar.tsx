@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, Dimensions, I18nManager } from 'react-native';
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -11,6 +11,7 @@ import ConfirmModal from './ConfirmModal';
 import { THEME } from '../theme';
 
 const DAYS_OF_WEEK = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 interface DayData {
   hdate: HDate;
@@ -201,13 +202,20 @@ export default function HebrewCalendar() {
       />
 
       {showConfetti && (
-        <ConfettiCannon
-          count={200}
-          origin={{ x: -10, y: 0 }}
-          fadeOut={true}
-          fallSpeed={3000}
-          onAnimationEnd={() => setShowConfetti(false)}
-        />
+        <View 
+          style={styles.confettiContainer}
+          pointerEvents="none"
+        >
+          <ConfettiCannon
+            count={200}
+            origin={{ x: SCREEN_WIDTH / 2, y: -50 }}
+            fadeOut={true}
+            fallSpeed={3500}
+            explosionSpeed={350}
+            colors={[THEME.colors.accent, '#FFFFFF', '#FFD700', THEME.colors.success]}
+            onAnimationEnd={() => setShowConfetti(false)}
+          />
+        </View>
       )}
     </View>
   );
@@ -276,7 +284,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   weekLabels: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: 8,
   },
@@ -290,7 +298,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   grid: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     flexWrap: 'wrap',
+  },
+  confettiContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // @ts-ignore
+    direction: 'ltr',
   },
 });

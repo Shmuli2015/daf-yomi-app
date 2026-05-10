@@ -1,6 +1,6 @@
-import React from 'react';
-import { ScrollView, View } from 'react-native';
+import { ScrollView, View, Dimensions, I18nManager, StyleSheet } from 'react-native';
 import { useAppStore } from '../store/useAppStore';
+import React, { useState } from 'react';
 import { HDate } from '@hebcal/core';
 import { format, subDays } from 'date-fns';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -11,8 +11,10 @@ import { getDateStr } from '../utils/dafYomi';
 import { getMasechetProgress, getMasechetDafim, getTotalShasProgress } from '../utils/shas';
 import { THEME } from '../theme';
 
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+
 export default function HomeScreen({ navigation }: any) {
-  const [showConfetti, setShowConfetti] = React.useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const {
     currentDate,
@@ -64,47 +66,71 @@ export default function HomeScreen({ navigation }: any) {
   }, [history, currentDate]);
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: THEME.colors.background }}
-      contentContainerStyle={{ paddingBottom: 40 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <HomeHeader
-        gregorianDateStr={gregorianDateStr}
-        hebrewDateStr={hebrewDateStr}
-        todayMasechet={todayMasechet}
-        todayDafNum={todayDafNum}
-        sefariaUrl={todaySefariaUrl}
-        isLearned={isLearned}
-        handleToggle={handleToggle}
-        masechetProgressPct={masechetProgressPct}
-      />
+    <View style={{ flex: 1, backgroundColor: THEME.colors.background }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <HomeHeader
+          gregorianDateStr={gregorianDateStr}
+          hebrewDateStr={hebrewDateStr}
+          todayMasechet={todayMasechet}
+          todayDafNum={todayDafNum}
+          sefariaUrl={todaySefariaUrl}
+          isLearned={isLearned}
+          handleToggle={handleToggle}
+          masechetProgressPct={masechetProgressPct}
+        />
 
-      <View style={{ height: 24 }} />
+        <View style={{ height: 24 }} />
 
-      <ShasBanner
-        learnedCount={shasProgress.learnedCount}
-        totalPages={shasProgress.totalPages}
-        percentage={shasProgress.percentage}
-        onPress={() => navigation.navigate('History')}
-      />
+        <ShasBanner
+          learnedCount={shasProgress.learnedCount}
+          totalPages={shasProgress.totalPages}
+          percentage={shasProgress.percentage}
+          onPress={() => navigation.navigate('History')}
+        />
 
-      <View style={{ height: 24 }} />
+        <View style={{ height: 24 }} />
 
-      <HomeContent
-        streak={streak}
-        last7Days={last7Days}
-      />
+        <HomeContent
+          streak={streak}
+          last7Days={last7Days}
+        />
+      </ScrollView>
 
       {showConfetti && (
-        <ConfettiCannon
-          count={200}
-          origin={{ x: -10, y: 0 }}
-          fadeOut={true}
-          fallSpeed={3000}
-          onAnimationEnd={() => setShowConfetti(false)}
-        />
+        <View 
+          style={styles.confettiContainer}
+          pointerEvents="none"
+        >
+          <ConfettiCannon
+            count={200}
+            origin={{ x: SCREEN_WIDTH / 2, y: -50 }}
+            fadeOut={true}
+            fallSpeed={3500}
+            explosionSpeed={350}
+            colors={[THEME.colors.accent, '#FFFFFF', '#FFD700', THEME.colors.success]}
+            onAnimationEnd={() => setShowConfetti(false)}
+          />
+        </View>
       )}
-    </ScrollView>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  confettiContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1000,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // @ts-ignore
+    direction: 'ltr',
+  },
+});

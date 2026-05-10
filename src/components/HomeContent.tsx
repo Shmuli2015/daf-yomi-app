@@ -43,7 +43,7 @@ export default function HomeContent({
         </View>
         
         <View style={styles.chartContainer}>
-          {[...last7Days].reverse().map((day, index) => {
+          {[...last7Days].map((day, index) => {
             const isToday = index === 0;
             const isLearned = day.status === 'learned';
             let barHeight = 16;
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     ...THEME.shadow.cardMedium,
   },
   streakHeader: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 32,
@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   streakValueContainer: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'baseline',
     gap: 6,
   },
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
     backgroundColor: THEME.colors.surface,
     borderRadius: 20,
     padding: 16,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: THEME.colors.border,
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   gridTextContainer: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
   },
   gridTitle: {
     color: THEME.colors.textPrimary,
@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   sectionHeader: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 16,

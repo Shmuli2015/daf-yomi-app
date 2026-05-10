@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 24,
     padding: 20,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(201,150,60,0.1)',
@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
     gap: 10,
@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   statsRow: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'baseline',
   },
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     height: 6,
     backgroundColor: THEME.colors.background,
     borderRadius: 3,
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     overflow: 'hidden',
   },
   progressBarFill: {
@@ -117,6 +117,6 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   chevronContainer: {
-    marginLeft: 10,
+    marginEnd: 10,
   },
 });
