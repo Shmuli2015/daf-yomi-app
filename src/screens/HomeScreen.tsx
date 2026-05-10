@@ -1,16 +1,17 @@
 import React from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { useAppStore } from '../store/useAppStore';
 import { HDate } from '@hebcal/core';
 import { format, subDays } from 'date-fns';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import HomeHeader from '../components/HomeHeader';
 import HomeContent from '../components/HomeContent';
+import ShasBanner from '../components/ShasBanner';
 import { getDateStr } from '../utils/dafYomi';
-import { getMasechetProgress, getMasechetDafim } from '../utils/shas';
+import { getMasechetProgress, getMasechetDafim, getTotalShasProgress } from '../utils/shas';
 import { THEME } from '../theme';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }: any) {
   const [showConfetti, setShowConfetti] = React.useState(false);
 
   const {
@@ -44,6 +45,8 @@ export default function HomeScreen() {
   const masechetLearned = getMasechetProgress(todayMasechet, history);
   const masechetProgressPct = masechetTotal > 0 ? Math.round((masechetLearned / masechetTotal) * 100) : 0;
 
+  const shasProgress = getTotalShasProgress(history);
+
   const last7Days = React.useMemo(() => {
     const daysHe = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
     return Array.from({ length: 7 }).map((_, i) => {
@@ -76,6 +79,17 @@ export default function HomeScreen() {
         handleToggle={handleToggle}
         masechetProgressPct={masechetProgressPct}
       />
+
+      <View style={{ height: 24 }} />
+
+      <ShasBanner
+        learnedCount={shasProgress.learnedCount}
+        totalPages={shasProgress.totalPages}
+        percentage={shasProgress.percentage}
+        onPress={() => navigation.navigate('History')}
+      />
+
+      <View style={{ height: 24 }} />
 
       <HomeContent
         streak={streak}

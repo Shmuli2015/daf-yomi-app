@@ -36,3 +36,10 @@ export function getMasechetProgress(masechetHe: string, history: DailyRecord[]) 
 export function isDafLearnedByDate(dateStr: string, history: DailyRecord[]) {
   return history.some(r => r.date === dateStr && r.status === 'learned');
 }
+
+export function getTotalShasProgress(history: DailyRecord[]) {
+  const totalPages = 2711;
+  const learnedCount = history.filter(r => r.status === 'learned').length;
+  const percentage = Math.round((learnedCount / totalPages) * 100);
+  return { learnedCount, totalPages, percentage };
+}
