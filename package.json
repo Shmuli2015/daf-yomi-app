@@ -1,7 +1,8 @@
 {
   "name": "daf-yomi-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.ts",
+  "author": "Shmuel Rosenberg",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
