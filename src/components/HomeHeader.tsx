@@ -44,10 +44,6 @@ export default function HomeHeader({
   return (
     <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroTranslateY }] }}>
       <View style={styles.topNav}>
-        <View style={styles.leftNav}>
-          <Ionicons name="notifications-outline" size={24} color={THEME.colors.textPrimary} />
-          <Ionicons name="search-outline" size={24} color={THEME.colors.textPrimary} style={{ marginLeft: 16 }} />
-        </View>
         <View style={styles.rightNav}>
           <Text style={styles.appTitle}>מסע דף</Text>
           <Ionicons name="book" size={24} color={THEME.colors.accent} style={{ marginLeft: 8 }} />
@@ -106,7 +102,7 @@ export default function HomeHeader({
 const styles = StyleSheet.create({
   topNav: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingTop: 60,
