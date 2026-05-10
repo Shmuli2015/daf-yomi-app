@@ -69,7 +69,7 @@ export const SettingItem = ({
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
@@ -79,7 +79,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.03)',
   },
   left: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
     gap: 16,
@@ -92,13 +92,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textBlock: {
-    alignItems: 'flex-end',
+    alignItems: 'flex-start',
     flex: 1,
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
     letterSpacing: -0.3,
+    textAlign: 'right',
   },
   description: {
     fontSize: 13,
@@ -106,9 +107,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
     lineHeight: 18,
     opacity: 0.8,
+    textAlign: 'right',
   },
   right: {
-    paddingLeft: 12,
+    paddingStart: 12,
   },
   arrowRow: {
     flexDirection: 'row',

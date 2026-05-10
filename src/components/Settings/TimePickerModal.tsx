@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
     marginVertical: 16,
   },
   wheelRow: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     gap: 12,
   },

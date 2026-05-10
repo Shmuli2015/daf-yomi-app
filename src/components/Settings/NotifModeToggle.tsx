@@ -41,7 +41,7 @@ export const NotifModeToggle = ({ mode, onChange }: Props) => (
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     gap: 8,
     paddingHorizontal: 20,
     paddingVertical: 14,
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.04)',
   },
   btn: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,

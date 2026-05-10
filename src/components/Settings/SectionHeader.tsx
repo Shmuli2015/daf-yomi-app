@@ -11,7 +11,7 @@ export const SectionHeader = ({ title }: { title: string }) => (
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 28,

@@ -59,7 +59,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   row: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
@@ -98,7 +98,7 @@ const styles = StyleSheet.create({
     color: THEME.colors.textMuted,
   },
   timeChip: {
-    flexDirection: 'row-reverse',
+    flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
     backgroundColor: THEME.colors.accentLight,
