@@ -9,6 +9,7 @@ import { SettingItem } from '../components/Settings/SettingItem';
 import { SectionHeader } from '../components/Settings/SectionHeader';
 import { TimePickerModal } from '../components/Settings/TimePickerModal';
 import { THEME } from '../theme';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function SettingsScreen() {
   const { settings, updateNotificationSettings, loadInitialData } = useAppStore();
@@ -16,6 +17,7 @@ export default function SettingsScreen() {
   const [hour, setHour] = useState(7);
   const [minute, setMinute] = useState(30);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -48,23 +50,16 @@ export default function SettingsScreen() {
   };
 
   const handleReset = () => {
-    Alert.alert(
-      'מחיקת נתונים',
-      'האם אתה בטוח שברצונך למחוק את כל היסטוריית הלימוד? פעולה זו אינה ניתנת לביטול.',
-      [
-        { text: 'ביטול', style: 'cancel' },
-        {
-          text: 'מחק הכל',
-          style: 'destructive',
-          onPress: () => {
-            resetDB();
-            loadInitialData();
-            Alert.alert('הצלחנו', 'הנתונים נמחקו בהצלחה');
-          },
-        },
-      ]
-    );
+    setShowResetModal(true);
   };
+
+  const onConfirmReset = () => {
+    resetDB();
+    loadInitialData();
+    setShowResetModal(false);
+    Alert.alert('הצלחנו', 'הנתונים נמחקו בהצלחה');
+  };
+
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -73,65 +68,45 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.brandHeader}>
-          <View style={styles.brandDecorCircle} />
-          <View style={styles.brandRow}>
-            <View style={styles.brandIcon}>
-              <Ionicons name="book" size={28} color={THEME.colors.accent} />
-            </View>
-            <View style={styles.brandText}>
-              <Text style={styles.brandTitle}>דף יומי</Text>
-              <Text style={styles.brandSubtitle}>לימוד יומי של גמרא</Text>
-            </View>
+
+
+        <View style={styles.settingsBody}>
+          <SectionHeader title="התראות ותזכורות" />
+          <View style={styles.card}>
+            <SettingItem
+              icon="notifications-outline"
+              title="תזכורת יומית"
+              description="קבל התראה בשעה היעודה"
+              type="switch"
+              value={true}
+              onPress={() => {}}
+            />
+            <SettingItem
+              icon="time-outline"
+              title="זמן ההתראה"
+              description="מתי תרצה ללמוד היום?"
+              value={`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`}
+              onPress={() => setShowTimePicker(true)}
+            />
+
           </View>
-        </View>
 
-        <SectionHeader title="התראות" />
-        <View style={styles.card}>
-          <SettingItem
-            icon="notifications-outline"
-            title="התראות יומיות"
-            description="קבל תזכורת יומית ללימוד"
-            type="switch"
-            value={true}
-            onPress={() => {}}
-          />
-          <SettingItem
-            icon="time-outline"
-            title="זמן התראה"
-            description="בחר מתי לקבל את התזכורת"
-            value={`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`}
-            onPress={() => setShowTimePicker(true)}
-          />
-          <SettingItem
-            icon="sunny-outline"
-            title="התראות בשבת"
-            description="שלח התראות גם בימי שבת וחג"
-            type="switch"
-            value={shabbatEnabled}
-            onPress={(val: boolean) => {
-              setShabbatEnabled(val);
-              saveSettings(hour, minute, val);
-            }}
-          />
-        </View>
-
-        <SectionHeader title="מתקדם" />
-        <View style={styles.card}>
-          <SettingItem
-            icon="trash-outline"
-            title="איפוס נתונים"
-            description="מחק את כל היסטוריית הלימוד שלך"
-            isDestructive
-            onPress={handleReset}
-          />
-        </View>
-
-        <View style={styles.footer}>
-          <View style={styles.versionBadge}>
-            <Text style={styles.versionText}>V1.0.4</Text>
+          <SectionHeader title="נתונים ופרטיות" />
+          <View style={styles.card}>
+            <SettingItem
+              icon="trash-outline"
+              title="איפוס נתונים"
+              description="מחיקת כל התקדמות הלימוד"
+              isDestructive
+              onPress={handleReset}
+            />
           </View>
-          <Text style={styles.footerText}>פותח באהבה ע״י דף יומי</Text>
+
+          <View style={styles.footer}>
+            <View style={styles.footerDivider} />
+            <Text style={styles.footerText}>פותח באהבה ע״י שמואל רוזנברג</Text>
+
+          </View>
         </View>
       </ScrollView>
 
@@ -140,12 +115,19 @@ export default function SettingsScreen() {
         onClose={() => setShowTimePicker(false)}
         hour={hour}
         minute={minute}
-        setHour={setHour}
-        setMinute={setMinute}
-        onSave={() => {
-          saveSettings(hour, minute, shabbatEnabled);
+        onSave={(newHour, newMinute) => {
+          setHour(newHour);
+          setMinute(newMinute);
+          saveSettings(newHour, newMinute, shabbatEnabled);
           setShowTimePicker(false);
         }}
+      />
+      <ConfirmModal
+        visible={showResetModal}
+        title="מחיקת נתונים"
+        message="האם אתה בטוח שברצונך למחוק את כל היסטוריית הלימוד? פעולה זו אינה ניתנת לביטול."
+        onConfirm={onConfirmReset}
+        onCancel={() => setShowResetModal(false)}
       />
     </SafeAreaView>
   );
@@ -160,89 +142,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    paddingBottom: 100,
+    paddingBottom: 40,
   },
-  brandHeader: {
-    backgroundColor: THEME.colors.background,
-    paddingTop: 28,
-    paddingBottom: 28,
-    paddingHorizontal: 24,
-    overflow: 'hidden',
-  },
-  brandDecorCircle: {
-    position: 'absolute',
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: 'rgba(201,150,60,0.07)',
-    top: -60,
-    left: -40,
-  },
-  brandRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    gap: 16,
-  },
-  brandIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 18,
-    backgroundColor: 'rgba(201,150,60,0.15)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(201,150,60,0.3)',
-  },
-  brandText: {
-    alignItems: 'flex-end',
-  },
-  brandTitle: {
-    fontSize: 26,
-    fontWeight: '900',
-    color: THEME.colors.accent,
-    letterSpacing: -0.5,
-  },
-  brandSubtitle: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.5)',
-    fontWeight: '600',
-    marginTop: 2,
+  settingsBody: {
+    marginTop: 10,
   },
   card: {
     backgroundColor: THEME.colors.surface,
     marginHorizontal: 20,
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: THEME.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
+    ...THEME.shadow.card,
   },
   footer: {
-    paddingTop: 32,
-    paddingBottom: 16,
+    marginTop: 48,
+    paddingBottom: 24,
     alignItems: 'center',
-    gap: 6,
+    gap: 12,
   },
-  versionBadge: {
-    backgroundColor: THEME.colors.accentLight,
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 9999,
-    borderWidth: 1,
-    borderColor: 'rgba(201,150,60,0.2)',
-  },
-  versionText: {
-    color: THEME.colors.accent,
-    fontSize: 11,
-    fontWeight: '800',
+  footerDivider: {
+    width: 40,
+    height: 1,
+    backgroundColor: THEME.colors.border,
+    marginBottom: 4,
   },
   footerText: {
     color: THEME.colors.textMuted,
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
+    textAlign: 'center',
   },
+
 });

@@ -1,27 +1,41 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal, Pressable, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-native';
 import { THEME } from '../../theme';
+import { WheelPicker } from './WheelPicker';
 
 interface TimePickerModalProps {
   visible: boolean;
   onClose: () => void;
   hour: number;
   minute: number;
-  setHour: (h: number) => void;
-  setMinute: (m: number) => void;
-  onSave: () => void;
+  onSave: (h: number, m: number) => void;
 }
+
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const MINUTES = ['00', '10', '20', '30', '40', '50']; // steps of 10
 
 export const TimePickerModal = ({
   visible,
   onClose,
   hour,
   minute,
-  setHour,
-  setMinute,
   onSave,
 }: TimePickerModalProps) => {
+  const [selectedHour, setSelectedHour] = React.useState(hour);
+  // Store as index (0-5), e.g. minute=30 → index=3
+  const [selectedMinuteIndex, setSelectedMinuteIndex] = React.useState(Math.round(minute / 10) % 6);
+
+  React.useEffect(() => {
+    if (visible) {
+      setSelectedHour(hour);
+      setSelectedMinuteIndex(Math.round(minute / 10) % 6);
+    }
+  }, [visible, hour, minute]);
+
+  const handleSave = () => {
+    onSave(selectedHour, selectedMinuteIndex * 10);
+  };
+
   return (
     <Modal
       transparent
@@ -29,65 +43,38 @@ export const TimePickerModal = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <Pressable style={styles.backdrop} onPress={onClose}>
-        <Pressable style={styles.card}>
-          {/* Top accent bar */}
-          <View style={styles.topAccent} />
+      <View style={styles.backdrop}>
+        {/* Dismiss backdrop — only outside the card */}
+        <TouchableWithoutFeedback onPress={onClose}>
+          <View style={StyleSheet.absoluteFill} />
+        </TouchableWithoutFeedback>
 
+        {/* Card — plain View so scroll gestures reach the ScrollView */}
+        <View style={styles.card}>
+          <View style={styles.topAccent} />
           <Text style={styles.title}>בחר שעת התראה</Text>
 
-          {/* Time picker */}
-          <View style={styles.pickerRow}>
-            {/* Hours */}
-            <View style={styles.pickerColumn}>
-              <TouchableOpacity
-                onPress={() => setHour((hour + 1) % 24)}
-                style={styles.chevronBtn}
-                activeOpacity={0.6}
-              >
-                <Ionicons name="chevron-up" size={28} color={THEME.colors.accent} />
-              </TouchableOpacity>
-              <View style={styles.timeDisplay}>
-                <Text style={styles.timeNumber}>{hour.toString().padStart(2, '0')}</Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setHour((hour + 23) % 24)}
-                style={styles.chevronBtn}
-                activeOpacity={0.6}
-              >
-                <Ionicons name="chevron-down" size={28} color={THEME.colors.accent} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.colon}>:</Text>
-
-            {/* Minutes */}
-            <View style={styles.pickerColumn}>
-              <TouchableOpacity
-                onPress={() => setMinute((minute + 5) % 60)}
-                style={styles.chevronBtn}
-                activeOpacity={0.6}
-              >
-                <Ionicons name="chevron-up" size={28} color={THEME.colors.accent} />
-              </TouchableOpacity>
-              <View style={styles.timeDisplay}>
-                <Text style={styles.timeNumber}>{minute.toString().padStart(2, '0')}</Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => setMinute((minute + 55) % 60)}
-                style={styles.chevronBtn}
-                activeOpacity={0.6}
-              >
-                <Ionicons name="chevron-down" size={28} color={THEME.colors.accent} />
-              </TouchableOpacity>
+          <View style={styles.pickerWrapper}>
+            <View style={styles.wheelRow}>
+              <WheelPicker
+                items={HOURS}
+                selectedIndex={selectedHour}
+                onIndexChange={setSelectedHour}
+              />
+              <Text style={styles.colon}>:</Text>
+              <WheelPicker
+                items={MINUTES}
+                selectedIndex={selectedMinuteIndex}
+                onIndexChange={setSelectedMinuteIndex}
+              />
             </View>
           </View>
 
-          <TouchableOpacity style={styles.saveBtn} onPress={onSave} activeOpacity={0.85}>
+          <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
             <Text style={styles.saveBtnText}>שמור</Text>
           </TouchableOpacity>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 };
@@ -95,88 +82,72 @@ export const TimePickerModal = ({
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(30,41,59,0.55)',
+    backgroundColor: 'rgba(12,12,12,0.85)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 32,
   },
   card: {
     backgroundColor: THEME.colors.surface,
     width: '100%',
-    borderRadius: 28,
+    maxWidth: 340,
+    borderRadius: 32,
     overflow: 'hidden',
-    shadowColor: THEME.colors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
+    borderWidth: 1,
+    borderColor: THEME.colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.5,
     shadowRadius: 24,
-    elevation: 12,
+    elevation: 20,
   },
   topAccent: {
     height: 4,
     backgroundColor: THEME.colors.accent,
   },
   title: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: THEME.colors.primary,
-    textAlign: 'center',
-    marginTop: 24,
-    marginBottom: 28,
-  },
-  pickerRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 28,
-    gap: 8,
-  },
-  pickerColumn: {
-    alignItems: 'center',
-  },
-  chevronBtn: {
-    padding: 8,
-    opacity: 0.9,
-  },
-  timeDisplay: {
-    width: 80,
-    height: 72,
-    borderRadius: 20,
-    backgroundColor: THEME.colors.accentLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    borderColor: 'rgba(201,150,60,0.25)',
-    marginVertical: 4,
-  },
-  timeNumber: {
-    fontSize: 38,
+    fontSize: 22,
     fontWeight: '900',
-    color: THEME.colors.accent,
-    letterSpacing: -1,
+    color: THEME.colors.textPrimary,
+    textAlign: 'center',
+    marginTop: 32,
+    marginBottom: 8,
+  },
+  pickerWrapper: {
+    height: 240,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 16,
+  },
+  wheelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   colon: {
-    fontSize: 38,
+    fontSize: 32,
     fontWeight: '900',
-    color: THEME.colors.border,
-    marginTop: -8,
+    color: THEME.colors.accent,
+    opacity: 0.5,
+    marginTop: -4,
   },
   saveBtn: {
     backgroundColor: THEME.colors.accent,
-    marginHorizontal: 24,
-    marginBottom: 24,
-    paddingVertical: 16,
-    borderRadius: 18,
+    marginHorizontal: 32,
+    marginBottom: 32,
+    paddingVertical: 18,
+    borderRadius: 20,
     alignItems: 'center',
     shadowColor: THEME.colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
     shadowRadius: 12,
-    elevation: 5,
+    elevation: 8,
   },
   saveBtnText: {
     color: 'white',
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 0.5,
   },
 });

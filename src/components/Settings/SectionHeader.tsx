@@ -11,25 +11,23 @@ export const SectionHeader = ({ title }: { title: string }) => (
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 8,
-    paddingHorizontal: 20,
-    marginTop: 24,
-    marginBottom: 8,
+    gap: 12,
+    paddingHorizontal: 28,
+    marginTop: 32,
+    marginBottom: 12,
   },
   accentBar: {
-    width: 3,
-    height: 14,
+    width: 4,
+    height: 20,
     backgroundColor: THEME.colors.accent,
     borderRadius: 2,
   },
   text: {
-    color: THEME.colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 1.5,
+    color: THEME.colors.textPrimary,
+    fontSize: 16,
+    fontWeight: '900',
+    letterSpacing: -0.2,
   },
 });
