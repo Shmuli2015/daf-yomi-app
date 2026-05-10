@@ -22,6 +22,20 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Define notification categories for interactive buttons
+Notifications.setNotificationCategoryAsync('study-reminder', [
+  {
+    identifier: 'finish-daf',
+    buttonTitle: '✅ סיימתי את הדף!',
+    options: { opensAppToForeground: true },
+  },
+  {
+    identifier: 'later',
+    buttonTitle: '⏰ הזכר לי מאוחר יותר',
+    options: { opensAppToForeground: false },
+  },
+]);
+
 if (Platform.OS === 'android') {
   Notifications.setNotificationChannelAsync('default', {
     name: 'default',
@@ -55,10 +69,29 @@ export default function App() {
           console.log('Notification permissions not granted');
         }
 
-        // Listener for when a notification is clicked
+        // Listener for when a notification is clicked or an action is performed
         const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-          console.log('Notification clicked:', response);
-          // כאן אפשר להוסיף ניווט למסך ספציפי אם נרצה בעתיד
+          const { actionIdentifier } = response;
+          
+          if (actionIdentifier === 'finish-daf') {
+            const { markTodayAsLearned } = useAppStore.getState();
+            markTodayAsLearned();
+            // Optional: Show a success message if the app opens
+          } else if (actionIdentifier === 'later') {
+            // Re-schedule for 1 hour later
+            Notifications.scheduleNotificationAsync({
+              content: {
+                title: '⏰ תזכורת נוספת',
+                body: 'ביקשת שנזכיר לך שוב ללמוד את הדף היומי... ✨',
+                sound: true,
+              },
+              trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+                seconds: 3600,
+                repeats: false
+              },
+            });
+          }
         });
 
         return () => subscription.remove();

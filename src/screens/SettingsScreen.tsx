@@ -56,15 +56,20 @@ export default function SettingsScreen() {
       if (mode === 'daily') {
         await Notifications.scheduleNotificationAsync({
           content: {
-            title: '📖 זמן הלימוד שלך הגיע',
-            body: 'מסע דף: דף יומי מחכה לך. בוא נשמור על הרצף! ✨',
+            title: '📖 זמן הלימוד היומי הגיע',
+            subtitle: 'בוא נשמור על הרצף! ✨',
+            body: 'הדף היומי מחכה לך. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️',
             sound: true,
+            priority: Notifications.AndroidNotificationPriority.MAX,
+            categoryIdentifier: 'study-reminder',
           },
           trigger: {
             channelId: 'default',
-            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
             hour: globalHour,
             minute: globalMin,
+            second: 0,
+            repeats: true,
           },
         });
       } else {
@@ -73,16 +78,21 @@ export default function SettingsScreen() {
           if (!s.enabled) continue;
           await Notifications.scheduleNotificationAsync({
             content: {
-              title: '📖 זמן הלימוד שלך הגיע',
-              body: 'מסע דף: דף יומי מחכה לך. בוא נשמור על הרצף! ✨',
+              title: '📖 זמן הלימוד היומי הגיע',
+              subtitle: 'בוא נשמור על הרצף! ✨',
+              body: 'הדף היומי מחכה לך. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️',
               sound: true,
+              priority: Notifications.AndroidNotificationPriority.MAX,
+              categoryIdentifier: 'study-reminder',
             },
             trigger: {
               channelId: 'default',
-              type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
+              type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
               weekday: i + 1,
               hour: s.hour,
               minute: s.minute,
+              second: 0,
+              repeats: true,
             },
           });
         }
