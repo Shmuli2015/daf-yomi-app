@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HebrewCalendar from '../components/HebrewCalendar';
 import CalendarHeader from '../components/Calendar/CalendarHeader';
-import CalendarLegend from '../components/Calendar/CalendarLegend';
+
 import { THEME } from '../theme';
 
 export default function CalendarScreen() {
@@ -16,7 +16,6 @@ export default function CalendarScreen() {
       >
         <CalendarHeader />
         <HebrewCalendar />
-        <CalendarLegend />
       </ScrollView>
     </SafeAreaView>
   );
