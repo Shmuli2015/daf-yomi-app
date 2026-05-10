@@ -19,6 +19,7 @@ export interface SettingsRecord {
   notification_minute: number;
   show_secular_date: number;
   show_confetti: number;
+  notifications_enabled: number;
 }
 
 export function initDB() {
@@ -50,6 +51,9 @@ export function initDB() {
   }
   if (!columns.includes('show_confetti')) {
     db.execSync('ALTER TABLE settings ADD COLUMN show_confetti INTEGER DEFAULT 1;');
+  }
+  if (!columns.includes('notifications_enabled')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN notifications_enabled INTEGER DEFAULT 1;');
   }
 
   // 3. Ensure default settings exist
@@ -86,10 +90,16 @@ export function getSettings(): SettingsRecord {
   return db.getFirstSync('SELECT * FROM settings WHERE id = 1') as SettingsRecord;
 }
 
-export function updateSettings(hour: number, minute: number, showSecular: boolean, showConfetti: boolean) {
+export function updateSettings(
+  hour: number,
+  minute: number,
+  showSecular: boolean,
+  showConfetti: boolean,
+  notificationsEnabled: boolean
+) {
   db.runSync(
-    'UPDATE settings SET notification_hour = ?, notification_minute = ?, show_secular_date = ?, show_confetti = ? WHERE id = 1',
-    [hour, minute, showSecular ? 1 : 0, showConfetti ? 1 : 0]
+    'UPDATE settings SET notification_hour = ?, notification_minute = ?, show_secular_date = ?, show_confetti = ?, notifications_enabled = ? WHERE id = 1',
+    [hour, minute, showSecular ? 1 : 0, showConfetti ? 1 : 0, notificationsEnabled ? 1 : 0]
   );
 }
 

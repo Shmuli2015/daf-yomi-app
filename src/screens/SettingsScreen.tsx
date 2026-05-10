@@ -33,15 +33,17 @@ export default function SettingsScreen() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [notifMode, setNotifMode] = useState<'daily' | 'custom'>('daily');
-  const [daySchedules, setDaySchedules] = useState<DaySchedule[]>(DEFAULT_SCHEDULES);
+   const [daySchedules, setDaySchedules] = useState<DaySchedule[]>(DEFAULT_SCHEDULES);
   const [editingDay, setEditingDay] = useState<number | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  useEffect(() => {
+   useEffect(() => {
     if (settings) {
       setHour(settings.notification_hour);
       setMinute(settings.notification_minute);
       setShowSecularDate(settings.show_secular_date === 1);
       setShowConfettiPref(settings.show_confetti === 1);
+      setNotificationsEnabled(settings.notifications_enabled === 1);
     }
   }, [settings]);
 
@@ -49,10 +51,13 @@ export default function SettingsScreen() {
     globalHour: number,
     globalMin: number,
     mode: 'daily' | 'custom',
-    schedules: DaySchedule[]
+    schedules: DaySchedule[],
+    enabled: boolean
   ) => {
     try {
       await Notifications.cancelAllScheduledNotificationsAsync();
+      if (!enabled) return;
+
       if (mode === 'daily') {
         await Notifications.scheduleNotificationAsync({
           content: {
@@ -104,14 +109,14 @@ export default function SettingsScreen() {
 
   const handleModeChange = (mode: 'daily' | 'custom') => {
     setNotifMode(mode);
-    scheduleNotifications(hour, minute, mode, daySchedules);
+    scheduleNotifications(hour, minute, mode, daySchedules, notificationsEnabled);
   };
 
   const handleToggleDay = (index: number) => {
     const updated = [...daySchedules];
     updated[index] = { ...updated[index], enabled: !updated[index].enabled };
     setDaySchedules(updated);
-    scheduleNotifications(hour, minute, notifMode, updated);
+    scheduleNotifications(hour, minute, notifMode, updated, notificationsEnabled);
   };
 
   const handleEditDayTime = (index: number) => {
@@ -124,12 +129,18 @@ export default function SettingsScreen() {
       const updated = [...daySchedules];
       updated[editingDay] = { ...updated[editingDay], hour: newHour, minute: newMinute };
       setDaySchedules(updated);
-      scheduleNotifications(hour, minute, notifMode, updated);
+      scheduleNotifications(hour, minute, notifMode, updated, notificationsEnabled);
     } else {
-      setHour(newHour);
+       setHour(newHour);
       setMinute(newMinute);
-      updateNotificationSettings(newHour, newMinute, showSecularDate, showConfettiPref);
-      scheduleNotifications(newHour, newMinute, notifMode, daySchedules);
+      updateNotificationSettings(
+        newHour,
+        newMinute,
+        showSecularDate,
+        showConfettiPref,
+        notificationsEnabled
+      );
+      scheduleNotifications(newHour, newMinute, notifMode, daySchedules, notificationsEnabled);
     }
     setShowTimePicker(false);
     setEditingDay(null);
@@ -152,39 +163,47 @@ export default function SettingsScreen() {
         <View style={styles.body}>
           <SectionHeader title="התראות ותזכורות" />
           <View style={styles.card}>
-            <SettingItem
+           <SettingItem
               icon="notifications-outline"
               title="תזכורת יומית"
               description="קבל התראה בשעה היעודה"
               type="switch"
-              value={true}
-              onPress={() => {}}
+              value={notificationsEnabled}
+              onPress={(val) => {
+                setNotificationsEnabled(val);
+                updateNotificationSettings(hour, minute, showSecularDate, showConfettiPref, val);
+                scheduleNotifications(hour, minute, notifMode, daySchedules, val);
+              }}
             />
-            <NotifModeToggle mode={notifMode} onChange={handleModeChange} />
-            {notifMode === 'daily' && (
-              <SettingItem
-                icon="time-outline"
-                title="זמן ההתראה"
-                description="מתי תרצה ללמוד כל יום?"
-                value={fmtTime(hour, minute)}
-                onPress={() => {
-                  setEditingDay(null);
-                  setShowTimePicker(true);
-                }}
-              />
-            )}
-            {notifMode === 'custom' && (
-              <DayScheduleList
-                schedules={daySchedules}
-                onToggleDay={handleToggleDay}
-                onEditTime={handleEditDayTime}
-              />
+            {notificationsEnabled && (
+              <>
+                <NotifModeToggle mode={notifMode} onChange={handleModeChange} />
+                {notifMode === 'daily' && (
+                  <SettingItem
+                    icon="time-outline"
+                    title="זמן ההתראה"
+                    description="מתי תרצה ללמוד כל יום?"
+                    value={fmtTime(hour, minute)}
+                    onPress={() => {
+                      setEditingDay(null);
+                      setShowTimePicker(true);
+                    }}
+                  />
+                )}
+                {notifMode === 'custom' && (
+                  <DayScheduleList
+                    schedules={daySchedules}
+                    onToggleDay={handleToggleDay}
+                    onEditTime={handleEditDayTime}
+                  />
+                )}
+              </>
             )}
           </View>
 
           <SectionHeader title="תצוגה והעדפות" />
           <View style={styles.card}>
-            <SettingItem
+             <SettingItem
               icon="calendar-outline"
               title="הצג תאריך לועזי"
               description="הצגת התאריך הלועזי לצד העברי"
@@ -192,10 +211,10 @@ export default function SettingsScreen() {
               value={showSecularDate}
               onPress={(val) => {
                 setShowSecularDate(val);
-                updateNotificationSettings(hour, minute, val, showConfettiPref);
+                updateNotificationSettings(hour, minute, val, showConfettiPref, notificationsEnabled);
               }}
             />
-            <SettingItem
+             <SettingItem
               icon="sparkles-outline"
               title="אפקטים חגיגיים"
               description="הצגת קונפטי בסיום לימוד דף"
@@ -203,7 +222,7 @@ export default function SettingsScreen() {
               value={showConfettiPref}
               onPress={(val) => {
                 setShowConfettiPref(val);
-                updateNotificationSettings(hour, minute, showSecularDate, val);
+                updateNotificationSettings(hour, minute, showSecularDate, val, notificationsEnabled);
               }}
             />
           </View>

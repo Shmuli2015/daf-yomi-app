@@ -16,7 +16,13 @@ interface AppState {
   loadInitialData: () => void;
   markTodayAsLearned: () => void;
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => void;
-  updateNotificationSettings: (hour: number, minute: number, showSecular: boolean, showConfetti: boolean) => void;
+  updateNotificationSettings: (
+    hour: number,
+    minute: number,
+    showSecular: boolean,
+    showConfetti: boolean,
+    notificationsEnabled: boolean
+  ) => void;
 }
 
 function calculateStreak(records: DailyRecord[]): number {
@@ -114,8 +120,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().loadInitialData();
   },
 
-  updateNotificationSettings: (hour: number, minute: number, showSecular: boolean, showConfetti: boolean) => {
-    updateSettings(hour, minute, showSecular, showConfetti);
+  updateNotificationSettings: (
+    hour: number,
+    minute: number,
+    showSecular: boolean,
+    showConfetti: boolean,
+    notificationsEnabled: boolean
+  ) => {
+    updateSettings(hour, minute, showSecular, showConfetti, notificationsEnabled);
     get().loadInitialData();
   },
 
