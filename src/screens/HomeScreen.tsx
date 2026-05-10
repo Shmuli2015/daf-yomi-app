@@ -7,6 +7,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import HomeHeader from '../components/HomeHeader';
 import HomeContent from '../components/HomeContent';
 import { getDateStr } from '../utils/dafYomi';
+import { getMasechetProgress, getMasechetDafim } from '../utils/shas';
 import { THEME } from '../theme';
 
 export default function HomeScreen() {
@@ -34,6 +35,10 @@ export default function HomeScreen() {
   const hebrewDateStr = hDate.renderGematriya();
   const gregorianDateStr = format(currentDate, 'dd/MM/yyyy');
 
+  const masechetTotal = getMasechetDafim(todayMasechet).length;
+  const masechetLearned = getMasechetProgress(todayMasechet, history);
+  const masechetProgressPct = masechetTotal > 0 ? Math.round((masechetLearned / masechetTotal) * 100) : 0;
+
   const last7Days = Array.from({ length: 7 }).map((_, i) => {
     const d = subDays(currentDate, 6 - i);
     const dateStr = getDateStr(d);
@@ -60,6 +65,7 @@ export default function HomeScreen() {
         sefariaUrl={todaySefariaUrl}
         isLearned={isLearned}
         handleToggle={handleToggle}
+        masechetProgressPct={masechetProgressPct}
       />
 
       <HomeContent

@@ -11,6 +11,7 @@ interface HomeHeaderProps {
   sefariaUrl: string;
   isLearned?: boolean;
   handleToggle?: () => void;
+  masechetProgressPct?: number;
 }
 
 export default function HomeHeader({
@@ -20,7 +21,8 @@ export default function HomeHeader({
   todayDafNum,
   sefariaUrl,
   isLearned,
-  handleToggle
+  handleToggle,
+  masechetProgressPct = 0
 }: HomeHeaderProps) {
   const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
 
@@ -68,9 +70,9 @@ export default function HomeHeader({
         <Text style={styles.masechetName}>{todayMasechet}</Text>
 
         <View style={styles.progressSection}>
-          <Text style={styles.progressText}>45% מהמסכת</Text>
+          <Text style={styles.progressText}>{masechetProgressPct}% מהמסכת</Text>
           <View style={styles.progressBarBg}>
-            <View style={styles.progressBarFill} />
+            <View style={[styles.progressBarFill, { width: `${masechetProgressPct}%` }]} />
           </View>
         </View>
 
@@ -204,7 +206,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row-reverse',
   },
   progressBarFill: {
-    width: '45%',
     height: '100%',
     backgroundColor: THEME.colors.accent,
     borderRadius: 2,
