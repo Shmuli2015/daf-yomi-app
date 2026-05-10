@@ -1,6 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { I18nManager } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
+
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
 import { initDB } from './src/db/database';
 import { useAppStore } from './src/store/useAppStore';
 import * as Notifications from 'expo-notifications';
