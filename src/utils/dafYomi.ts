@@ -27,6 +27,7 @@ export function getDafByDate(date: Date) {
   // Extract masechet and daf (Hebrew)
   const withoutPrefixHeb = textHebrew.replace('דַּף יוֹמִי: ', '');
   const partsHeb = withoutPrefixHeb.split(' דף ');
+  const masechetClean = (partsHeb[0] || 'לא ידוע').replace(/[\u0591-\u05C7]/g, '');
   
   // Extract masechet and daf (English)
   const withoutPrefixEng = textEnglish.replace('Daf Yomi: ', '');
@@ -38,7 +39,7 @@ export function getDafByDate(date: Date) {
   const sefariaUrl = `https://www.sefaria.org/${masechetEng.replace(/ /g, '_')}.${dafNumEng}a?lang=he`;
 
   return {
-    masechet: partsHeb[0] || 'לא ידוע',
+    masechet: masechetClean,
     daf: partsHeb[1] ? `דף ${partsHeb[1]}` : '',
     masechetEn: masechetEng,
     dafEn: dafNumEng,

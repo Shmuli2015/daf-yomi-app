@@ -20,39 +20,40 @@ interface AppState {
 }
 
 function calculateStreak(records: DailyRecord[]): number {
-  if (records.length === 0) return 0;
+  const learnedRecords = records
+    .filter(r => r.status === 'learned')
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  if (learnedRecords.length === 0) return 0;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayStr = getDateStr(today);
+  
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+  yesterday.setHours(0, 0, 0, 0);
+  const yesterdayStr = getDateStr(yesterday);
+
+  // If the latest learned record is not today or yesterday, streak is 0
+  const latestDateStr = learnedRecords[0].date;
+  if (latestDateStr !== todayStr && latestDateStr !== yesterdayStr) {
+    return 0;
+  }
+
   let streak = 0;
-  const now = new Date();
-  const todayStr = getDateStr(now);
+  let currentDateToCheck = new Date(latestDateStr);
+  currentDateToCheck.setHours(0, 0, 0, 0);
 
-  // Sort by date descending
-  const sorted = [...records].sort((a, b) => b.date.localeCompare(a.date));
-  
-  let expectedDate = new Date(now);
-  expectedDate.setHours(0, 0, 0, 0);
-  
-  // Check if today is learned
-  const todayRecord = sorted.find(r => r.date === todayStr);
-  if (!todayRecord || todayRecord.status !== 'learned') {
-    // If today is not learned, streak could be ongoing from yesterday
-    expectedDate.setDate(expectedDate.getDate() - 1);
-  }
-
-  for (let i = 0; i < sorted.length; i++) {
-    const recordDate = new Date(sorted[i].date);
-    if (sorted[i].status !== 'learned') {
-        if(sorted[i].date === todayStr) continue;
-        break;
-    }
-    
-    // Allow if it matches expected date
-    if (getDateStr(recordDate) === getDateStr(expectedDate)) {
+  for (const record of learnedRecords) {
+    if (record.date === getDateStr(currentDateToCheck)) {
       streak++;
-      expectedDate.setDate(expectedDate.getDate() - 1);
-    } else if (recordDate < expectedDate) {
-      break; // Gap found
+      currentDateToCheck.setDate(currentDateToCheck.getDate() - 1);
+    } else {
+      break;
     }
   }
+
   return streak;
 }
 

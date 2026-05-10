@@ -1,6 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, Linking, StyleSheet, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ConfirmModal from './ConfirmModal';
 import { THEME } from '../theme';
 
 interface HomeHeaderProps {
@@ -24,6 +26,8 @@ export default function HomeHeader({
   handleToggle,
   masechetProgressPct = 0
 }: HomeHeaderProps) {
+  const insets = useSafeAreaInsets();
+  const [showConfirm, setShowConfirm] = useState(false);
   const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
 
   const heroOpacity = useRef(new Animated.Value(0)).current;
@@ -44,14 +48,7 @@ export default function HomeHeader({
   }, []);
 
   return (
-    <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroTranslateY }] }}>
-      <View style={styles.topNav}>
-        <View style={styles.rightNav}>
-          <Text style={styles.appTitle}>מסע דף</Text>
-          <Ionicons name="book" size={24} color={THEME.colors.accent} style={{ marginLeft: 8 }} />
-        </View>
-      </View>
-
+    <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroTranslateY }], paddingTop: insets.top + 24 }}>
       <View style={styles.datesContainer}>
         <Text style={styles.hebrewDate}>{cleanHebrewDate}</Text>
         <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>
@@ -77,15 +74,32 @@ export default function HomeHeader({
         </View>
 
         <TouchableOpacity
-          onPress={handleToggle}
+          onPress={() => {
+            if (isLearned) {
+              setShowConfirm(true);
+            } else {
+              handleToggle?.();
+            }
+          }}
           style={[styles.mainButton, isLearned ? styles.buttonDone : styles.buttonPending]}
           activeOpacity={0.8}
         >
           <Ionicons name="checkmark-circle-outline" size={22} color={isLearned ? THEME.colors.textPrimary : 'white'} />
           <Text style={[styles.mainButtonText, isLearned ? styles.buttonTextDone : styles.buttonTextPending]}>
-            {isLearned ? 'סימנתי כנלמד' : 'סיימתי את הדף'}
+            {isLearned ? 'סיימתי את הדף' : 'סמן כנלמד'}
           </Text>
         </TouchableOpacity>
+
+        <ConfirmModal
+          visible={showConfirm}
+          title="ביטול לימוד"
+          message="האם אתה בטוח שברצונך לבטל את סימון הדף כנלמד?"
+          onConfirm={() => {
+            setShowConfirm(false);
+            handleToggle?.();
+          }}
+          onCancel={() => setShowConfirm(false)}
+        />
 
         <TouchableOpacity
           onPress={() => Linking.openURL(sefariaUrl)}
@@ -211,7 +225,7 @@ const styles = StyleSheet.create({
     borderRadius: 2,
   },
   mainButton: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
@@ -238,7 +252,7 @@ const styles = StyleSheet.create({
     color: THEME.colors.textPrimary,
   },
   sefariaButton: {
-    flexDirection: 'row',
+    flexDirection: 'row-reverse',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,

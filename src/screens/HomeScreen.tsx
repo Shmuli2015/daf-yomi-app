@@ -19,10 +19,15 @@ export default function HomeScreen() {
     todayMasechet,
     todayDafNum,
     todaySefariaUrl,
+    loadInitialData,
     streak,
     toggleAnyDafLearned,
     history,
   } = useAppStore();
+
+  React.useEffect(() => {
+    loadInitialData();
+  }, []);
 
   const isLearned = todayRecord?.status === 'learned';
 
@@ -39,22 +44,26 @@ export default function HomeScreen() {
   const masechetLearned = getMasechetProgress(todayMasechet, history);
   const masechetProgressPct = masechetTotal > 0 ? Math.round((masechetLearned / masechetTotal) * 100) : 0;
 
-  const last7Days = Array.from({ length: 7 }).map((_, i) => {
-    const d = subDays(currentDate, 6 - i);
-    const dateStr = getDateStr(d);
-    const record = history.find(r => r.date === dateStr);
-    return {
-      date: d,
-      dateStr,
-      status: record?.status || 'missed',
-      dayName: format(d, 'EEEEEE'),
-    };
-  });
+  const last7Days = React.useMemo(() => {
+    const daysHe = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+    return Array.from({ length: 7 }).map((_, i) => {
+      const d = subDays(currentDate, 6 - i);
+      const dateStr = getDateStr(d);
+      const record = history.find(r => r.date === dateStr);
+      return {
+        date: d,
+        dateStr,
+        status: record?.status || 'missed',
+        dayName: format(d, 'EEEEEE'),
+        dayNameHe: daysHe[d.getDay()],
+      };
+    });
+  }, [history, currentDate]);
 
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: THEME.colors.background }}
-      contentContainerStyle={{ paddingBottom: 100 }}
+      contentContainerStyle={{ paddingBottom: 40 }}
       showsVerticalScrollIndicator={false}
     >
       <HomeHeader
