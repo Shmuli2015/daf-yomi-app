@@ -20,11 +20,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "predictiveBackGestureEnabled": false,
-      "notification": {
-        "icon": "./assets/icon.png",
-        "color": "#C9963C"
-      }
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -32,7 +28,14 @@
     "plugins": [
       "expo-sqlite",
       "@react-native-community/datetimepicker",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#C9963C"
+        }
+      ]
     ],
     "extra": {
       "eas": {
