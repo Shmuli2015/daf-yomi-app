@@ -1,17 +1,27 @@
-import { ScrollView, View, Dimensions, I18nManager, StyleSheet } from 'react-native';
-import { useAppStore } from '../store/useAppStore';
-import React, { useMemo, useState } from 'react';
-import { HDate } from '@hebcal/core';
-import { format, subDays } from 'date-fns';
-import ConfettiCannon from 'react-native-confetti-cannon';
-import HomeHeader from '../components/HomeHeader';
-import HomeContent from '../components/HomeContent';
-import ShasBanner from '../components/ShasBanner';
-import { getDateStr } from '../utils/dafYomi';
-import { getMasechetProgress, getMasechetDafim, getTotalShasProgress } from '../utils/shas';
-import { useTheme } from '../theme';
+import {
+  ScrollView,
+  View,
+  Dimensions,
+  I18nManager,
+  StyleSheet,
+} from "react-native";
+import { useAppStore } from "../store/useAppStore";
+import React, { useMemo, useState } from "react";
+import { HDate } from "@hebcal/core";
+import { format, subDays } from "date-fns";
+import ConfettiCannon from "react-native-confetti-cannon";
+import HomeHeader from "../components/HomeHeader";
+import HomeContent from "../components/HomeContent";
+import ShasBanner from "../components/ShasBanner";
+import { getDateStr } from "../utils/dafYomi";
+import {
+  getMasechetProgress,
+  getMasechetDafim,
+  getTotalShasProgress,
+} from "../utils/shas";
+import { useTheme } from "../theme";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 export default function HomeScreen({ navigation }: any) {
   const theme = useTheme();
@@ -35,7 +45,7 @@ export default function HomeScreen({ navigation }: any) {
     loadInitialData();
   }, []);
 
-  const isLearned = todayRecord?.status === 'learned';
+  const isLearned = todayRecord?.status === "learned";
 
   const handleToggle = () => {
     if (!isLearned && settings?.show_confetti) setShowConfetti(true);
@@ -44,25 +54,26 @@ export default function HomeScreen({ navigation }: any) {
 
   const hDate = new HDate(currentDate);
   const hebrewDateStr = hDate.renderGematriya();
-  const gregorianDateStr = format(currentDate, 'dd/MM/yyyy');
+  const gregorianDateStr = format(currentDate, "dd/MM/yyyy");
 
   const masechetTotal = getMasechetDafim(todayMasechet).length;
   const masechetLearned = getMasechetProgress(todayMasechet, history);
-  const masechetProgressPct = masechetTotal > 0 ? Math.round((masechetLearned / masechetTotal) * 100) : 0;
+  const masechetProgressPct =
+    masechetTotal > 0 ? Math.round((masechetLearned / masechetTotal) * 100) : 0;
 
   const shasProgress = getTotalShasProgress(history);
 
   const last7Days = React.useMemo(() => {
-    const daysHe = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
+    const daysHe = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
     return Array.from({ length: 7 }).map((_, i) => {
       const d = subDays(currentDate, 6 - i);
       const dateStr = getDateStr(d);
-      const record = history.find(r => r.date === dateStr);
+      const record = history.find((r) => r.date === dateStr);
       return {
         date: d,
         dateStr,
-        status: record?.status || 'missed',
-        dayName: format(d, 'EEEEEE'),
+        status: record?.status || "missed",
+        dayName: format(d, "EEEEEE"),
         dayNameHe: daysHe[d.getDay()],
       };
     });
@@ -93,29 +104,28 @@ export default function HomeScreen({ navigation }: any) {
           learnedCount={shasProgress.learnedCount}
           totalPages={shasProgress.totalPages}
           percentage={shasProgress.percentage}
-          onPress={() => navigation.navigate('History')}
+          onPress={() => navigation.navigate("History")}
         />
 
         <View style={{ height: 24 }} />
 
-        <HomeContent
-          streak={streak}
-          last7Days={last7Days}
-        />
+        <HomeContent streak={streak} last7Days={last7Days} />
       </ScrollView>
 
       {showConfetti && (
-        <View 
-          style={styles.confettiContainer}
-          pointerEvents="none"
-        >
+        <View style={styles.confettiContainer} pointerEvents="none">
           <ConfettiCannon
             count={200}
             origin={{ x: SCREEN_WIDTH / 2, y: -50 }}
             fadeOut={true}
             fallSpeed={3500}
             explosionSpeed={350}
-            colors={[theme.colors.accent, '#FFFFFF', '#FFD700', theme.colors.success]}
+            colors={[
+              theme.colors.accent,
+              "#FFFFFF",
+              "#FFD700",
+              theme.colors.success,
+            ]}
             onAnimationEnd={() => setShowConfetti(false)}
           />
         </View>
@@ -127,15 +137,15 @@ export default function HomeScreen({ navigation }: any) {
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     confettiContainer: {
-      position: 'absolute',
+      position: "absolute",
       top: 0,
       left: 0,
       right: 0,
       bottom: 0,
       zIndex: 1000,
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: "center",
+      alignItems: "center",
       // @ts-ignore
-      direction: 'ltr',
+      direction: "ltr",
     },
   });

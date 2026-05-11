@@ -1,34 +1,45 @@
-import React, { useMemo as useReactMemo } from 'react';
-import { ScrollView, View, Text, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import MasechetGrid from '../components/Shas/MasechetGrid';
-import ShasProgressHero from '../components/Shas/ShasProgressHero';
-import { useAppStore } from '../store/useAppStore';
-import { SHAS_MASECHTOT } from '../data/shas';
-import { getMasechetProgress, getMasechetDafim } from '../utils/shas';
-import { useTheme } from '../theme';
+import React, { useMemo as useReactMemo } from "react";
+import { ScrollView, View, Text, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import MasechetGrid from "../components/Shas/MasechetGrid";
+import ShasProgressHero from "../components/Shas/ShasProgressHero";
+import { useAppStore } from "../store/useAppStore";
+import { SHAS_MASECHTOT } from "../data/shas";
+import { getMasechetProgress, getMasechetDafim } from "../utils/shas";
+import { useTheme } from "../theme";
 
 export default function HistoryScreen() {
   const theme = useTheme();
   const styles = useReactMemo(() => createStyles(theme), [theme]);
   const { history } = useAppStore();
 
-  const totalDafim = useReactMemo(() => SHAS_MASECHTOT.reduce((acc, m) => acc + m.pages, 0), []);
-  const learnedDafim = useReactMemo(() => history.filter(r => r.status === 'learned').length, [history]);
+  const totalDafim = useReactMemo(
+    () => SHAS_MASECHTOT.reduce((acc, m) => acc + m.pages, 0),
+    [],
+  );
+  const learnedDafim = useReactMemo(
+    () => history.filter((r) => r.status === "learned").length,
+    [history],
+  );
   const completedMasechtos = useReactMemo(
-    () => SHAS_MASECHTOT.filter(m => {
-      const total = getMasechetDafim(m.he).length;
-      return total > 0 && getMasechetProgress(m.he, history) === total;
-    }).length,
-    [history]
+    () =>
+      SHAS_MASECHTOT.filter((m) => {
+        const total = getMasechetDafim(m.he).length;
+        return total > 0 && getMasechetProgress(m.he, history) === total;
+      }).length,
+    [history],
   );
 
   const progress = totalDafim > 0 ? learnedDafim / totalDafim : 0;
   const percentage = (progress * 100).toFixed(1);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.pageHeader}>
           <View style={styles.headerRow}>
             <View style={styles.accentBar} />
@@ -59,11 +70,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     pageHeader: {
       paddingHorizontal: 20,
       marginBottom: 20,
-      alignItems: 'flex-start',
+      alignItems: "flex-start",
     },
     headerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       gap: 12,
       marginBottom: 4,
     },
@@ -75,14 +86,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     pageTitle: {
       fontSize: 30,
-      fontWeight: '900',
+      fontWeight: "900",
       color: theme.colors.primary,
       letterSpacing: -0.5,
     },
     pageSubtitle: {
       fontSize: 13,
       color: theme.colors.textSecondary,
-      fontWeight: '600',
+      fontWeight: "600",
     },
   });
-
