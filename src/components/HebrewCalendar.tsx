@@ -8,10 +8,10 @@ import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import CalendarDay from './Calendar/CalendarDay';
 import DafDetailModal from './Calendar/DafDetailModal';
 import ConfirmModal from './ConfirmModal';
-import { THEME } from '../theme';
+import { useTheme } from '../theme';
 
 const DAYS_OF_WEEK = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface DayData {
   hdate: HDate;
@@ -22,6 +22,9 @@ interface DayData {
 }
 
 export default function HebrewCalendar() {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const { history, toggleAnyDafLearned } = useAppStore();
   const [currentHDate, setCurrentHDate] = useState(new HDate(new Date()));
   const [selectedDate, setSelectedDate] = useState<HDate | null>(null);
@@ -125,7 +128,7 @@ export default function HebrewCalendar() {
     <View style={styles.card}>
       <View style={styles.navRow}>
         <TouchableOpacity onPress={goPrevMonth} style={styles.navBtn} activeOpacity={0.7}>
-          <Ionicons name="chevron-forward" size={20} color={THEME.colors.textSecondary} />
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
         </TouchableOpacity>
         <View style={styles.monthCenter}>
           <Text style={styles.monthName}>{monthName}</Text>
@@ -142,7 +145,7 @@ export default function HebrewCalendar() {
           </View>
         </View>
         <TouchableOpacity onPress={goNextMonth} style={styles.navBtn} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={20} color={THEME.colors.textSecondary} />
+          <Ionicons name="chevron-back" size={20} color={theme.colors.textSecondary} />
         </TouchableOpacity>
       </View>
 
@@ -213,7 +216,7 @@ export default function HebrewCalendar() {
             fadeOut={true}
             fallSpeed={3500}
             explosionSpeed={350}
-            colors={[THEME.colors.accent, '#FFFFFF', '#FFD700', THEME.colors.success]}
+            colors={[theme.colors.accent, '#FFFFFF', '#FFD700', theme.colors.success]}
             onAnimationEnd={() => setShowConfetti(false)}
           />
         </View>
@@ -222,98 +225,99 @@ export default function HebrewCalendar() {
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: THEME.colors.surface,
-    borderRadius: 32,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-    shadowColor: THEME.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 5,
-    // @ts-ignore
-    direction: 'rtl',
-  },
-  navRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  navBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: THEME.colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-  },
-  monthCenter: { alignItems: 'center' },
-  monthName: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: THEME.colors.primary,
-    letterSpacing: -0.3,
-  },
-  yearName: {
-    fontSize: 11,
-    color: THEME.colors.accent,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  yearRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: THEME.colors.textMuted,
-    marginHorizontal: 6,
-    opacity: 0.5,
-  },
-  todayText: {
-    fontSize: 11,
-    color: THEME.colors.accent,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  weekLabels: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 8,
-  },
-  weekLabel: {
-    width: '14.28%',
-    textAlign: 'center',
-    fontSize: 11,
-    fontWeight: '900',
-    color: THEME.colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  confettiContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // @ts-ignore
-    direction: 'ltr',
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    card: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 32,
+      padding: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 16,
+      elevation: 5,
+      // @ts-ignore
+      direction: 'rtl',
+    },
+    navRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    navBtn: {
+      width: 40,
+      height: 40,
+      borderRadius: 14,
+      backgroundColor: theme.colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    monthCenter: { alignItems: 'center' },
+    monthName: {
+      fontSize: 22,
+      fontWeight: '900',
+      color: theme.colors.primary,
+      letterSpacing: -0.3,
+    },
+    yearName: {
+      fontSize: 11,
+      color: theme.colors.accent,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+    },
+    yearRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 2,
+    },
+    dot: {
+      width: 3,
+      height: 3,
+      borderRadius: 1.5,
+      backgroundColor: theme.colors.textMuted,
+      marginHorizontal: 6,
+      opacity: 0.5,
+    },
+    todayText: {
+      fontSize: 11,
+      color: theme.colors.accent,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+    },
+    weekLabels: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: 8,
+    },
+    weekLabel: {
+      width: '14.28%',
+      textAlign: 'center',
+      fontSize: 11,
+      fontWeight: '900',
+      color: theme.colors.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    confettiContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000,
+      justifyContent: 'center',
+      alignItems: 'center',
+      // @ts-ignore
+      direction: 'ltr',
+    },
+  });

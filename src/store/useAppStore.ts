@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getDailyRecord, getAllRecords, updateDailyRecord, getSettings, updateSettings, DailyRecord, SettingsRecord } from '../db/database';
+import { getDailyRecord, getAllRecords, updateDailyRecord, getSettings, updateSettings, updateThemeMode, DailyRecord, SettingsRecord } from '../db/database';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 
 interface AppState {
@@ -25,6 +25,8 @@ interface AppState {
     notifMode?: string,
     daySchedules?: string | null
   ) => void;
+
+  updateThemeMode: (themeMode: string) => void;
 }
 
 function calculateStreak(records: DailyRecord[]): number {
@@ -132,6 +134,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     daySchedules?: string | null
   ) => {
     updateSettings(hour, minute, showSecular, showConfetti, notificationsEnabled, notifMode, daySchedules);
+    get().loadInitialData();
+  },
+
+  updateThemeMode: (themeMode: string) => {
+    updateThemeMode(themeMode);
     get().loadInitialData();
   },
 

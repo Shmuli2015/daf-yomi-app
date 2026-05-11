@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native';
-import { THEME } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface WheelPickerProps {
   items: string[];
@@ -25,6 +25,8 @@ export const WheelPicker = ({
   onIndexChange,
   itemHeight = ITEM_HEIGHT,
 }: WheelPickerProps) => {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const scrollRef = useRef<ScrollView>(null);
   const lastScrolledIndex = useRef<number>(-1);
   const count = items.length;
@@ -115,33 +117,34 @@ export const WheelPicker = ({
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    width: 80,
-    overflow: 'hidden',
-  },
-  item: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  itemText: {
-    fontSize: 22,
-    color: 'rgba(255,255,255,0.2)',
-    fontWeight: '600',
-  },
-  selectedItemText: {
-    color: THEME.colors.accent,
-    fontSize: 28,
-    fontWeight: '900',
-  },
-  selectionHighlight: {
-    position: 'absolute',
-    left: 6,
-    right: 6,
-    borderTopWidth: 1.5,
-    borderBottomWidth: 1.5,
-    borderColor: 'rgba(201,150,60,0.35)',
-    zIndex: 1,
-    backgroundColor: 'rgba(201,150,60,0.05)',
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    container: {
+      width: 80,
+      overflow: 'hidden',
+    },
+    item: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    itemText: {
+      fontSize: 22,
+      color: theme.colors.textMuted,
+      fontWeight: '600',
+    },
+    selectedItemText: {
+      color: theme.colors.accent,
+      fontSize: 28,
+      fontWeight: '900',
+    },
+    selectionHighlight: {
+      position: 'absolute',
+      left: 6,
+      right: 6,
+      borderTopWidth: 1.5,
+      borderBottomWidth: 1.5,
+      borderColor: theme.colors.accentBorder,
+      zIndex: 1,
+      backgroundColor: theme.colors.accentLight,
+    },
+  });

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, TouchableOpacity, Modal, Pressable, StyleSheet } from 'react-native';
 import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import SelectedDafCard from './SelectedDafCard';
-import { THEME } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface DafDetailModalProps {
   visible: boolean;
@@ -27,6 +27,8 @@ const DafDetailModal = ({
   isLearned,
   onToggle,
 }: DafDetailModalProps) => {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <Modal
@@ -45,7 +47,7 @@ const DafDetailModal = ({
               style={styles.closeBtn}
               activeOpacity={0.7}
             >
-              <Ionicons name="close" size={18} color={THEME.colors.textSecondary} />
+              <Ionicons name="close" size={18} color={theme.colors.textSecondary} />
             </TouchableOpacity>
 
             {selectedDate && dafInfo && (
@@ -63,52 +65,53 @@ const DafDetailModal = ({
   );
 };
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-  },
-  container: {
-    width: '90%',
-    maxWidth: 360,
-    zIndex: 1,
-  },
-  panel: {
-    backgroundColor: THEME.colors.surface,
-    borderRadius: 32,
-    paddingHorizontal: 20,
-    paddingTop: 52,
-    paddingBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.4,
-    shadowRadius: 30,
-    elevation: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    overflow: 'hidden',
-    // @ts-ignore
-    direction: 'rtl',
-  },
-  closeBtn: {
-    position: 'absolute',
-    left: 12,
-    top: 12,
-    zIndex: 10,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    backdrop: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: 'rgba(15, 23, 42, 0.85)',
+    },
+    container: {
+      width: '90%',
+      maxWidth: 360,
+      zIndex: 1,
+    },
+    panel: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 32,
+      paddingHorizontal: 20,
+      paddingTop: 52,
+      paddingBottom: 24,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 20 },
+      shadowOpacity: 0.4,
+      shadowRadius: 30,
+      elevation: 24,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      overflow: 'hidden',
+      // @ts-ignore
+      direction: 'rtl',
+    },
+    closeBtn: {
+      position: 'absolute',
+      left: 12,
+      top: 12,
+      zIndex: 10,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+  });
 
 export default DafDetailModal;

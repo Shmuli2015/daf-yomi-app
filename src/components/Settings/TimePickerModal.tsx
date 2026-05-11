@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-native';
-import { THEME } from '../../theme';
+import { useTheme } from '../../theme';
 import { WheelPicker } from './WheelPicker';
 
 interface TimePickerModalProps {
@@ -21,6 +21,8 @@ export const TimePickerModal = ({
   minute,
   onSave,
 }: TimePickerModalProps) => {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [selectedHour, setSelectedHour] = React.useState(hour);
   // Store as index (0-5), e.g. minute=30 → index=3
   const [selectedMinuteIndex, setSelectedMinuteIndex] = React.useState(Math.round(minute / 5) % 12);
@@ -79,75 +81,72 @@ export const TimePickerModal = ({
   );
 };
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(12,12,12,0.85)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  card: {
-    backgroundColor: THEME.colors.surface,
-    width: '100%',
-    maxWidth: 340,
-    borderRadius: 32,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
-    elevation: 20,
-  },
-  topAccent: {
-    height: 4,
-    backgroundColor: THEME.colors.accent,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: THEME.colors.textPrimary,
-    textAlign: 'center',
-    marginTop: 32,
-    marginBottom: 8,
-  },
-  pickerWrapper: {
-    height: 240,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginVertical: 16,
-  },
-  wheelRow: {
-    flexDirection: 'row-reverse',
-    alignItems: 'center',
-    gap: 12,
-  },
-  colon: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: THEME.colors.accent,
-    opacity: 0.5,
-    marginTop: -4,
-  },
-  saveBtn: {
-    backgroundColor: THEME.colors.accent,
-    marginHorizontal: 32,
-    marginBottom: 32,
-    paddingVertical: 18,
-    borderRadius: 20,
-    alignItems: 'center',
-    shadowColor: THEME.colors.accent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  saveBtnText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0.5,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor:
+        theme.colors.surface === '#1E1E1E'
+          ? 'rgba(12,12,12,0.85)'
+          : 'rgba(15,23,42,0.45)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 32,
+    },
+    card: {
+      backgroundColor: theme.colors.surface,
+      width: '100%',
+      maxWidth: 340,
+      borderRadius: 32,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      ...theme.shadow.cardMedium,
+      elevation: 20,
+    },
+    topAccent: {
+      height: 4,
+      backgroundColor: theme.colors.accent,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: '900',
+      color: theme.colors.textPrimary,
+      textAlign: 'center',
+      marginTop: 32,
+      marginBottom: 8,
+    },
+    pickerWrapper: {
+      height: 240,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginVertical: 16,
+    },
+    wheelRow: {
+      flexDirection: 'row-reverse',
+      alignItems: 'center',
+      gap: 12,
+    },
+    colon: {
+      fontSize: 32,
+      fontWeight: '900',
+      color: theme.colors.accent,
+      opacity: 0.5,
+      marginTop: -4,
+    },
+    saveBtn: {
+      backgroundColor: theme.colors.accent,
+      marginHorizontal: 32,
+      marginBottom: 32,
+      paddingVertical: 18,
+      borderRadius: 20,
+      alignItems: 'center',
+      ...theme.shadow.gold,
+    },
+    saveBtnText: {
+      color: '#FFFFFF',
+      fontSize: 18,
+      fontWeight: '900',
+      letterSpacing: 0.5,
+    },
+  });

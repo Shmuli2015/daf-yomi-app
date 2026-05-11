@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -11,7 +11,7 @@ import {
   getMasechetDafim,
   stripNiqqud 
 } from '../../utils/shas';
-import { THEME } from '../../theme';
+import { useTheme } from '../../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -24,6 +24,9 @@ export default function MasechetModal({
   masechet,
   onClose,
 }: MasechetModalProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const { history, toggleAnyDafLearned } = useAppStore();
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -93,67 +96,68 @@ export default function MasechetModal({
   );
 }
 
-const styles = StyleSheet.create({
-  modalSafe: { flex: 1, backgroundColor: THEME.colors.background },
-  modalHandle: {
-    width: 40,
-    height: 4,
-    backgroundColor: THEME.colors.border,
-    borderRadius: 2,
-    alignSelf: 'center',
-    marginTop: 12,
-    marginBottom: 4,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.border,
-    backgroundColor: THEME.colors.surface,
-  },
-  modalTitle: { fontSize: 20, fontWeight: '900', color: THEME.colors.primary },
-  closeBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: THEME.colors.background,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-  },
-  closeBtnText: { color: THEME.colors.accent, fontWeight: '700', fontSize: 14 },
-  modalScroll: { flex: 1 },
-  modalContent: { padding: 20 },
-  dafGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  dafCell: {
-    width: 48,
-    height: 48,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 14,
-    borderWidth: 1.5,
-  },
-  dafCellDefault: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.border,
-  },
-  dafCellLearned: {
-    backgroundColor: THEME.colors.accentLight,
-    borderColor: 'rgba(201,150,60,0.4)',
-  },
-  dafText: { fontSize: 15, fontWeight: '800' },
-  dafTextDefault: { color: THEME.colors.textSecondary },
-  dafTextLearned: { color: THEME.colors.accent },
-  confettiContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 9999,
-    // @ts-ignore
-    direction: 'ltr',
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    modalSafe: { flex: 1, backgroundColor: theme.colors.background },
+    modalHandle: {
+      width: 40,
+      height: 4,
+      backgroundColor: theme.colors.border,
+      borderRadius: 2,
+      alignSelf: 'center',
+      marginTop: 12,
+      marginBottom: 4,
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+    },
+    modalTitle: { fontSize: 20, fontWeight: '900', color: theme.colors.primary },
+    closeBtn: {
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: theme.colors.background,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    closeBtnText: { color: theme.colors.accent, fontWeight: '700', fontSize: 14 },
+    modalScroll: { flex: 1 },
+    modalContent: { padding: 20 },
+    dafGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    dafCell: {
+      width: 48,
+      height: 48,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 14,
+      borderWidth: 1.5,
+    },
+    dafCellDefault: {
+      backgroundColor: theme.colors.surface,
+      borderColor: theme.colors.border,
+    },
+    dafCellLearned: {
+      backgroundColor: theme.colors.accentLight,
+      borderColor: 'rgba(201,150,60,0.4)',
+    },
+    dafText: { fontSize: 15, fontWeight: '800' },
+    dafTextDefault: { color: theme.colors.textSecondary },
+    dafTextLearned: { color: theme.colors.accent },
+    confettiContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 9999,
+      // @ts-ignore
+      direction: 'ltr',
+    },
+  });

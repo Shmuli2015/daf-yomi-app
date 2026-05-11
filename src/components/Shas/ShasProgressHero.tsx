@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
-import { THEME } from '../../theme';
+import { useTheme } from '../../theme';
 import ShasRing from './ShasRing';
 import StatPill from './StatPill';
 
@@ -19,6 +19,9 @@ export default function ShasProgressHero({
   completedMasechtos,
   totalDafim,
 }: ShasProgressHeroProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const cardOpacity = useRef(new Animated.Value(0)).current;
   const cardTranslateY = useRef(new Animated.Value(16)).current;
 
@@ -46,27 +49,28 @@ export default function ShasProgressHero({
   );
 }
 
-const styles = StyleSheet.create({
-  heroCard: {
-    backgroundColor: THEME.colors.surface,
-    marginHorizontal: 20,
-    borderRadius: 28,
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.07,
-    shadowRadius: 14,
-    elevation: 4,
-  },
-  ringSection: { alignItems: 'center', marginBottom: 20 },
-  statsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statDivider: { width: 1, height: 32, backgroundColor: THEME.colors.border },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    heroCard: {
+      backgroundColor: theme.colors.surface,
+      marginHorizontal: 20,
+      borderRadius: 28,
+      paddingVertical: 24,
+      paddingHorizontal: 20,
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.07,
+      shadowRadius: 14,
+      elevation: 4,
+    },
+    ringSection: { alignItems: 'center', marginBottom: 20 },
+    statsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    statDivider: { width: 1, height: 32, backgroundColor: theme.colors.border },
+  });

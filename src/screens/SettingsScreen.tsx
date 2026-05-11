@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../store/useAppStore';
@@ -6,10 +6,11 @@ import { resetDB } from '../db/database';
 import { SettingItem } from '../components/Settings/SettingItem';
 import { SectionHeader } from '../components/Settings/SectionHeader';
 import { TimePickerModal } from '../components/Settings/TimePickerModal';
+import { ThemeModeModal } from '../components/Settings/ThemeModeModal';
 import { NotifModeToggle } from '../components/Settings/NotifModeToggle';
 import { DayScheduleList, DaySchedule } from '../components/Settings/DayScheduleList';
 import { SettingsFooter } from '../components/Settings/SettingsFooter';
-import { THEME } from '../theme';
+import { ThemeMode, useTheme } from '../theme';
 import ConfirmModal from '../components/ConfirmModal';
 import SuccessModal from '../components/SuccessModal';
 import { scheduleNotifications, DEFAULT_SCHEDULES } from '../utils/notifications';
@@ -18,7 +19,9 @@ const fmtTime = (h: number, m: number) =>
   `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 
 export default function SettingsScreen() {
-  const { settings, updateNotificationSettings, loadInitialData } = useAppStore();
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const { settings, updateNotificationSettings, updateThemeMode, loadInitialData } = useAppStore();
   const [hour, setHour] = useState(7);
   const [minute, setMinute] = useState(30);
   const [showSecularDate, setShowSecularDate] = useState(true);
@@ -30,6 +33,8 @@ export default function SettingsScreen() {
   const [daySchedules, setDaySchedules] = useState<DaySchedule[]>(DEFAULT_SCHEDULES);
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
+  const [showThemeModal, setShowThemeModal] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -39,6 +44,7 @@ export default function SettingsScreen() {
       setShowConfettiPref(settings.show_confetti === 1);
       setNotificationsEnabled(settings.notifications_enabled === 1);
       setNotifMode((settings.notif_mode as 'daily' | 'custom') || 'daily');
+      setThemeMode(((settings.theme_mode as ThemeMode) || 'system'));
       if (settings.day_schedules) {
         try {
           setDaySchedules(JSON.parse(settings.day_schedules));
@@ -103,7 +109,7 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.colors.background }]} edges={['top']}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -152,6 +158,13 @@ export default function SettingsScreen() {
           <SectionHeader title="תצוגה והעדפות" />
           <View style={styles.card}>
             <SettingItem
+              icon={themeMode === 'dark' ? 'moon-outline' : themeMode === 'light' ? 'sunny-outline' : 'contrast-outline'}
+              title="מצב תצוגה"
+              description="בחר מצב בהיר/כהה או לפי המערכת"
+              value={themeMode === 'system' ? 'מערכת' : themeMode === 'dark' ? 'כהה' : 'בהיר'}
+              onPress={() => setShowThemeModal(true)}
+            />
+            <SettingItem
               icon="calendar-outline"
               title="הצג תאריך לועזי"
               description="הצגת התאריך הלועזי לצד העברי"
@@ -195,6 +208,15 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
+      <ThemeModeModal
+        visible={showThemeModal}
+        value={themeMode}
+        onClose={() => setShowThemeModal(false)}
+        onSelect={(mode) => {
+          setThemeMode(mode);
+          updateThemeMode(mode);
+        }}
+      />
       <TimePickerModal
         visible={showTimePicker}
         onClose={() => { setShowTimePicker(false); setEditingDay(null); }}
@@ -219,27 +241,28 @@ export default function SettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: THEME.colors.background },
-  scroll: { flex: 1 },
-  content: { paddingBottom: 40 },
-  body: { marginTop: 10 },
-  card: {
-    backgroundColor: THEME.colors.surface,
-    marginHorizontal: 20,
-    borderRadius: 24,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-    ...THEME.shadow.card,
-  },
-  privacyNote: {
-    color: THEME.colors.textMuted,
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 24,
-    marginHorizontal: 40,
-    lineHeight: 18,
-    opacity: 0.8,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    safe: { flex: 1 },
+    scroll: { flex: 1 },
+    content: { paddingBottom: 40 },
+    body: { marginTop: 10 },
+    card: {
+      backgroundColor: theme.colors.surface,
+      marginHorizontal: 20,
+      borderRadius: 24,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      ...theme.shadow.card,
+    },
+    privacyNote: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      textAlign: 'center',
+      marginTop: 24,
+      marginHorizontal: 40,
+      lineHeight: 18,
+      opacity: 0.8,
+    },
+  });

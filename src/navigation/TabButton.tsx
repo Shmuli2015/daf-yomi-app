@@ -1,7 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { THEME } from '../theme';
+import { useTheme } from '../theme';
 import { TAB_CONFIG } from './tabConfig';
 
 type Props = {
@@ -11,6 +11,8 @@ type Props = {
 };
 
 export default function TabButton({ isFocused, config, onPress }: Props) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePress = () => {
@@ -31,7 +33,7 @@ export default function TabButton({ isFocused, config, onPress }: Props) {
         <Ionicons
           name={isFocused ? config.activeIcon : config.inactiveIcon}
           size={22}
-          color={isFocused ? THEME.colors.accent : THEME.colors.textSecondary}
+          color={isFocused ? theme.colors.accent : theme.colors.textSecondary}
         />
         <Text style={[
           styles.tabLabel,
@@ -44,31 +46,32 @@ export default function TabButton({ isFocused, config, onPress }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  tab: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tabContent: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-  },
-  tabContentActive: {
-    backgroundColor: THEME.colors.accentLight,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  tabLabelInactive: {
-    color: THEME.colors.textSecondary,
-  },
-  tabLabelActive: {
-    color: THEME.colors.accent,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    tab: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    tabContent: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+    },
+    tabContentActive: {
+      backgroundColor: theme.colors.accentLight,
+    },
+    tabLabel: {
+      fontSize: 11,
+      fontWeight: '600',
+      marginTop: 4,
+    },
+    tabLabelInactive: {
+      color: theme.colors.textSecondary,
+    },
+    tabLabelActive: {
+      color: theme.colors.accent,
+    },
+  });

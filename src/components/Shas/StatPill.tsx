@@ -1,6 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { Animated, Text, StyleSheet } from 'react-native';
-import { THEME } from '../../theme';
+import { useTheme } from '../../theme';
 
 interface StatPillProps {
   label: string;
@@ -9,6 +9,9 @@ interface StatPillProps {
 }
 
 export default function StatPill({ label, value, delay }: StatPillProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(12)).current;
 
@@ -27,21 +30,22 @@ export default function StatPill({ label, value, delay }: StatPillProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  statPill: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: THEME.colors.accent,
-    letterSpacing: -0.5,
-  },
-  statLabel: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: THEME.colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.3,
-    textAlign: 'center',
-    marginTop: 2,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    statPill: { flex: 1, alignItems: 'center', paddingHorizontal: 8 },
+    statValue: {
+      fontSize: 22,
+      fontWeight: '900',
+      color: theme.colors.accent,
+      letterSpacing: -0.5,
+    },
+    statLabel: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: theme.colors.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.3,
+      textAlign: 'center',
+      marginTop: 2,
+    },
+  });

@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Linking, StyleSheet, Animated } from 'react-native';
 import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
-import { THEME } from '../../theme';
+import { useTheme } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
 
 interface SelectedDafCardProps {
@@ -18,6 +18,8 @@ interface SelectedDafCardProps {
 }
 
 const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: SelectedDafCardProps) => {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const { settings } = useAppStore();
   const isFuture = dafInfo.dateString > new Date().toISOString().split('T')[0];
 
@@ -39,10 +41,10 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
     day: 'numeric', month: 'long', year: 'numeric',
   });
 
-  const toggleBg = isLearned ? THEME.colors.successLight : THEME.colors.accentLight;
+  const toggleBg = isLearned ? theme.colors.successLight : theme.colors.accentLight;
   const toggleBorder = isLearned ? '#BBF7D0' : 'rgba(201,150,60,0.3)';
-  const toggleIconColor = isLearned ? THEME.colors.success : THEME.colors.accent;
-  const toggleTextColor = isLearned ? '#16A34A' : THEME.colors.accent;
+  const toggleIconColor = isLearned ? theme.colors.success : theme.colors.accent;
+  const toggleTextColor = isLearned ? '#16A34A' : theme.colors.accent;
   const toggleIconName = isLearned ? 'checkmark-done' : isFuture ? 'calendar-outline' : 'book-outline';
   const toggleLabel = isLearned ? 'אשריך! סיימת' : isFuture ? 'למדתי מראש' : 'סמן כנלמד';
 
@@ -85,7 +87,7 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
           style={styles.sefariaBtn}
         >
           <View style={styles.sefariaIconWrapper}>
-            <Ionicons name="open-outline" size={16} color={THEME.colors.textSecondary} />
+            <Ionicons name="open-outline" size={16} color={theme.colors.textSecondary} />
           </View>
           <Text style={styles.sefariaText}>פתח בספריא (Sefaria)</Text>
         </TouchableOpacity>
@@ -94,89 +96,90 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
   );
 };
 
-const styles = StyleSheet.create({
-  container: { paddingTop: 0 },
-  dateRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dateBadge: {
-    backgroundColor: THEME.colors.accentLight,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(201,150,60,0.15)',
-  },
-  dateBadgeText: {
-    color: THEME.colors.accent,
-    fontSize: 9,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-  },
-  dateInfo: { alignItems: 'flex-start' },
-  hebDate: { fontSize: 14, fontWeight: '900', color: THEME.colors.primary },
-  gregDate: { fontSize: 9, fontWeight: '600', color: THEME.colors.textMuted, marginTop: 1 },
-  dafInfoCard: {
-    backgroundColor: THEME.colors.background,
-    borderRadius: 20,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-  },
-  masechetName: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: THEME.colors.primary,
-    letterSpacing: -0.4,
-    marginBottom: 4,
-  },
-  dafRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  dafDivider: { width: 20, height: 1.2, backgroundColor: 'rgba(201,150,60,0.3)', borderRadius: 1 },
-  dafText: { fontSize: 18, fontWeight: '800', color: THEME.colors.accent },
-  actions: { gap: 8 },
-  toggleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    gap: 8,
-  },
-  toggleIconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  toggleText: { fontSize: 15, fontWeight: '900', letterSpacing: -0.1 },
-  sefariaBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    backgroundColor: THEME.colors.background,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: THEME.colors.border,
-    gap: 6,
-  },
-  sefariaIconWrapper: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sefariaText: { color: THEME.colors.textSecondary, fontWeight: '700', fontSize: 13 },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    container: { paddingTop: 0 },
+    dateRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    dateBadge: {
+      backgroundColor: theme.colors.accentLight,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(201,150,60,0.15)',
+    },
+    dateBadgeText: {
+      color: theme.colors.accent,
+      fontSize: 9,
+      fontWeight: '900',
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+    },
+    dateInfo: { alignItems: 'flex-start' },
+    hebDate: { fontSize: 14, fontWeight: '900', color: theme.colors.primary },
+    gregDate: { fontSize: 9, fontWeight: '600', color: theme.colors.textMuted, marginTop: 1 },
+    dafInfoCard: {
+      backgroundColor: theme.colors.background,
+      borderRadius: 20,
+      paddingVertical: 16,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    masechetName: {
+      fontSize: 28,
+      fontWeight: '900',
+      color: theme.colors.primary,
+      letterSpacing: -0.4,
+      marginBottom: 4,
+    },
+    dafRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+    dafDivider: { width: 20, height: 1.2, backgroundColor: 'rgba(201,150,60,0.3)', borderRadius: 1 },
+    dafText: { fontSize: 18, fontWeight: '800', color: theme.colors.accent },
+    actions: { gap: 8 },
+    toggleBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      gap: 8,
+    },
+    toggleIconWrapper: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    toggleText: { fontSize: 15, fontWeight: '900', letterSpacing: -0.1 },
+    sefariaBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      backgroundColor: theme.colors.background,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      gap: 6,
+    },
+    sefariaIconWrapper: {
+      width: 26,
+      height: 26,
+      borderRadius: 13,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    sefariaText: { color: theme.colors.textSecondary, fontWeight: '700', fontSize: 13 },
+  });
 
 export default SelectedDafCard;

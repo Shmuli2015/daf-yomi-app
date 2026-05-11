@@ -1,95 +1,99 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, TextStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { THEME } from '../../theme';
+import { useTheme } from '../../theme';
 
 const LegendItem = ({
   label,
   icon,
   iconColor,
   isLast,
+  dividerColor,
+  labelStyle,
 }: {
   label: string;
   icon: keyof typeof Ionicons.glyphMap;
   iconColor: string;
   isLast?: boolean;
+  dividerColor: string;
+  labelStyle: TextStyle;
 }) => (
-  <View style={[styles.legendItem, !isLast && styles.itemBorder]}>
-    <View style={styles.legendText}>
-      <Text style={styles.legendLabel}>{label}</Text>
+  <View style={[itemStyles.item, !isLast && { borderBottomWidth: 1, borderBottomColor: dividerColor }]}>
+    <View style={itemStyles.textContainer}>
+      <Text style={labelStyle}>{label}</Text>
     </View>
-    <View style={[styles.iconWrapper, { backgroundColor: 'rgba(255,255,255,0.03)' }]}>
+    <View style={itemStyles.iconWrapper}>
       <Ionicons name={icon} size={18} color={iconColor} />
     </View>
   </View>
 );
 
-const CalendarLegend = () => {
-  return (
-    <View style={styles.container}>
-      <View style={styles.mainCard}>
-        <LegendItem
-          label="דף שנלמד"
-          icon="checkmark-circle"
-          iconColor={THEME.colors.accent}
-        />
-        <LegendItem
-          label="הלימוד להיום"
-          icon="calendar"
-          iconColor={THEME.colors.textPrimary}
-        />
-        <LegendItem
-          label="טרם נלמד"
-          icon="ellipse-outline"
-          iconColor={THEME.colors.textMuted}
-          isLast
-        />
-      </View>
-    </View>
-  );
-};
-
-const styles = StyleSheet.create({
-  container: {
-    marginTop: 32,
-    paddingHorizontal: 20,
-    marginBottom: 40,
-  },
-  mainCard: {
-    backgroundColor: THEME.colors.surface,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    paddingVertical: 8,
-    ...THEME.shadow.card,
-  },
-  legendItem: {
+const itemStyles = StyleSheet.create({
+  item: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 20,
     gap: 16,
   },
-  itemBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  iconWrapper: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  legendText: {
-    flex: 1,
-    alignItems: 'flex-end',
-  },
-  legendLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: THEME.colors.textPrimary,
-  },
+  textContainer: { flex: 1, alignItems: 'flex-end' },
+  iconWrapper: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
 });
+
+const CalendarLegend = () => {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.mainCard}>
+        <LegendItem
+          label="דף שנלמד"
+          icon="checkmark-circle"
+          iconColor={theme.colors.accent}
+          dividerColor={theme.colors.border}
+          labelStyle={styles.legendLabel}
+        />
+        <LegendItem
+          label="הלימוד להיום"
+          icon="calendar"
+          iconColor={theme.colors.textPrimary}
+          dividerColor={theme.colors.border}
+          labelStyle={styles.legendLabel}
+        />
+        <LegendItem
+          label="טרם נלמד"
+          icon="ellipse-outline"
+          iconColor={theme.colors.textMuted}
+          isLast
+          dividerColor={theme.colors.border}
+          labelStyle={styles.legendLabel}
+        />
+      </View>
+    </View>
+  );
+};
+
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    container: {
+      marginTop: 32,
+      paddingHorizontal: 20,
+      marginBottom: 40,
+    },
+    mainCard: {
+      backgroundColor: theme.colors.surface,
+      borderRadius: 24,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      paddingVertical: 8,
+      ...theme.shadow.card,
+    },
+    legendLabel: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: theme.colors.textPrimary,
+    },
+  });
 
 export default CalendarLegend;

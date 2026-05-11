@@ -1,4 +1,47 @@
-export const THEME = {
+import React, { createContext, useContext, useMemo } from 'react';
+import { useColorScheme } from 'react-native';
+
+export type ThemeMode = 'system' | 'light' | 'dark';
+export type ThemeScheme = 'light' | 'dark';
+
+export type Theme = {
+  colors: {
+    background: string;
+    surface: string;
+    primary: string;
+    accent: string;
+    accentLight: string;
+    accentBorder: string;
+    success: string;
+    successLight: string;
+    danger: string;
+    dangerLight: string;
+    muted: string;
+    textPrimary: string;
+    textSecondary: string;
+    textMuted: string;
+    border: string;
+    progressTrack: string;
+    tabBar: string;
+  };
+  radius: {
+    sm: number;
+    md: number;
+    lg: number;
+    xl: number;
+    xxl: number;
+    full: number;
+  };
+  shadow: {
+    card: any;
+    cardMedium: any;
+    hero: any;
+    gold: any;
+    tabBar: any;
+  };
+};
+
+export const DARK_THEME: Theme = {
   colors: {
     background: '#121212',
     surface: '#1E1E1E',
@@ -15,6 +58,7 @@ export const THEME = {
     textSecondary: '#A1A1AA',
     textMuted: '#52525B',
     border: '#27272A',
+    progressTrack: '#3F3F46',
     tabBar: '#18181B',
   },
   radius: {
@@ -62,4 +106,50 @@ export const THEME = {
       elevation: 8,
     },
   },
-} as const;
+};
+
+export const LIGHT_THEME: Theme = {
+  ...DARK_THEME,
+  colors: {
+    ...DARK_THEME.colors,
+    background: '#F8FAFC',
+    surface: '#FFFFFF',
+    primary: '#0F172A',
+    textPrimary: '#0F172A',
+    textSecondary: '#334155',
+    textMuted: '#64748B',
+    border: '#E2E8F0',
+    progressTrack: '#CBD5E1',
+    tabBar: '#FFFFFF',
+    accentLight: 'rgba(201,150,60,0.14)',
+  },
+};
+
+export function resolveThemeScheme(mode: ThemeMode, systemScheme: ThemeScheme): ThemeScheme {
+  if (mode === 'light' || mode === 'dark') return mode;
+  return systemScheme;
+}
+
+const ThemeContext = createContext<Theme>(DARK_THEME);
+
+export function ThemeProvider({
+  mode,
+  children,
+}: {
+  mode: ThemeMode;
+  children: React.ReactNode;
+}) {
+  const system = (useColorScheme() || 'dark') as ThemeScheme;
+  const scheme = resolveThemeScheme(mode, system);
+
+  const theme = useMemo(() => (scheme === 'dark' ? DARK_THEME : LIGHT_THEME), [scheme]);
+
+  return React.createElement(ThemeContext.Provider, { value: theme }, children as any);
+}
+
+export function useTheme(): Theme {
+  return useContext(ThemeContext);
+}
+
+// Backwards-compatible export (legacy code). Prefer `useTheme()`.
+export const THEME = DARK_THEME;

@@ -1,6 +1,6 @@
 import { ScrollView, View, Dimensions, I18nManager, StyleSheet } from 'react-native';
 import { useAppStore } from '../store/useAppStore';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { HDate } from '@hebcal/core';
 import { format, subDays } from 'date-fns';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -9,11 +9,13 @@ import HomeContent from '../components/HomeContent';
 import ShasBanner from '../components/ShasBanner';
 import { getDateStr } from '../utils/dafYomi';
 import { getMasechetProgress, getMasechetDafim, getTotalShasProgress } from '../utils/shas';
-import { THEME } from '../theme';
+import { useTheme } from '../theme';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 export default function HomeScreen({ navigation }: any) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const {
@@ -67,7 +69,7 @@ export default function HomeScreen({ navigation }: any) {
   }, [history, currentDate]);
 
   return (
-    <View style={{ flex: 1, backgroundColor: THEME.colors.background }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -113,7 +115,7 @@ export default function HomeScreen({ navigation }: any) {
             fadeOut={true}
             fallSpeed={3500}
             explosionSpeed={350}
-            colors={[THEME.colors.accent, '#FFFFFF', '#FFD700', THEME.colors.success]}
+            colors={[theme.colors.accent, '#FFFFFF', '#FFD700', theme.colors.success]}
             onAnimationEnd={() => setShowConfetti(false)}
           />
         </View>
@@ -122,17 +124,18 @@ export default function HomeScreen({ navigation }: any) {
   );
 }
 
-const styles = StyleSheet.create({
-  confettiContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    zIndex: 1000,
-    justifyContent: 'center',
-    alignItems: 'center',
-    // @ts-ignore
-    direction: 'ltr',
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    confettiContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000,
+      justifyContent: 'center',
+      alignItems: 'center',
+      // @ts-ignore
+      direction: 'ltr',
+    },
+  });

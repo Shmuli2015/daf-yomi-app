@@ -12,6 +12,8 @@ import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from './src/uti
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SplashScreen from './src/components/SplashScreen';
+import { ThemeProvider, ThemeMode, DARK_THEME, LIGHT_THEME, resolveThemeScheme } from './src/theme';
+import { useColorScheme } from 'react-native';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -44,6 +46,8 @@ export default function App() {
   const [isReady, setIsReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const loadInitialData = useAppStore(state => state.loadInitialData);
+  const themeMode = (useAppStore(state => state.settings?.theme_mode) || 'system') as ThemeMode;
+  const systemScheme = (useColorScheme() || 'dark') as 'dark' | 'light';
   const startTime = useRef(Date.now());
 
   useEffect(() => {
@@ -122,9 +126,35 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
+      <ThemeProvider mode={themeMode}>
+        <NavigationContainer
+          theme={{
+            dark: resolveThemeScheme(themeMode, systemScheme) === 'dark',
+            colors: {
+              ...(resolveThemeScheme(themeMode, systemScheme) === 'dark'
+                ? {
+                    primary: DARK_THEME.colors.accent,
+                    background: DARK_THEME.colors.background,
+                    card: DARK_THEME.colors.surface,
+                    text: DARK_THEME.colors.textPrimary,
+                    border: DARK_THEME.colors.border,
+                    notification: DARK_THEME.colors.accent,
+                  }
+                : {
+                    primary: LIGHT_THEME.colors.accent,
+                    background: LIGHT_THEME.colors.background,
+                    card: LIGHT_THEME.colors.surface,
+                    text: LIGHT_THEME.colors.textPrimary,
+                    border: LIGHT_THEME.colors.border,
+                    notification: LIGHT_THEME.colors.accent,
+                  }),
+            },
+            fonts: undefined as any,
+          }}
+        >
+          <AppNavigator />
+        </NavigationContainer>
+      </ThemeProvider>
       {showSplash && (
         <SplashScreen
           isReady={isReady}
