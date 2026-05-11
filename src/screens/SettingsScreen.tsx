@@ -92,7 +92,7 @@ export default function SettingsScreen() {
     [updateNotificationSettings],
   );
 
-  const handleModeChange = (mode: "daily" | "custom") => {
+  const handleModeChange = useCallback((mode: "daily" | "custom") => {
     setNotifMode(mode);
     saveAndSchedule(
       hour,
@@ -103,9 +103,9 @@ export default function SettingsScreen() {
       showSecularDate,
       showConfettiPref,
     );
-  };
+  }, [hour, minute, daySchedules, notificationsEnabled, showSecularDate, showConfettiPref, saveAndSchedule]);
 
-  const handleToggleDay = (index: number) => {
+  const handleToggleDay = useCallback((index: number) => {
     const updated = [...daySchedules];
     updated[index] = { ...updated[index], enabled: !updated[index].enabled };
     setDaySchedules(updated);
@@ -118,14 +118,14 @@ export default function SettingsScreen() {
       showSecularDate,
       showConfettiPref,
     );
-  };
+  }, [daySchedules, hour, minute, notifMode, notificationsEnabled, showSecularDate, showConfettiPref, saveAndSchedule]);
 
-  const handleEditDayTime = (index: number) => {
+  const handleEditDayTime = useCallback((index: number) => {
     setEditingDay(index);
     setShowTimePicker(true);
-  };
+  }, []);
 
-  const handleTimeSave = (newHour: number, newMinute: number) => {
+  const handleTimeSave = useCallback((newHour: number, newMinute: number) => {
     if (editingDay !== null) {
       const updated = [...daySchedules];
       updated[editingDay] = {
@@ -158,14 +158,88 @@ export default function SettingsScreen() {
     }
     setShowTimePicker(false);
     setEditingDay(null);
-  };
+  }, [editingDay, daySchedules, hour, minute, notifMode, notificationsEnabled, showSecularDate, showConfettiPref, saveAndSchedule]);
 
-  const onConfirmReset = () => {
+  const onConfirmReset = useCallback(() => {
     resetDB();
     loadInitialData();
     setShowResetModal(false);
     setShowSuccessModal(true);
-  };
+  }, [loadInitialData]);
+
+  const handleNotificationsToggle = useCallback((val: boolean) => {
+    setNotificationsEnabled(val);
+    saveAndSchedule(
+      hour,
+      minute,
+      notifMode,
+      daySchedules,
+      val,
+      showSecularDate,
+      showConfettiPref,
+    );
+  }, [hour, minute, notifMode, daySchedules, showSecularDate, showConfettiPref, saveAndSchedule]);
+
+  const handleSecularDateToggle = useCallback((val: boolean) => {
+    setShowSecularDate(val);
+    updateNotificationSettings(
+      hour,
+      minute,
+      val,
+      showConfettiPref,
+      notificationsEnabled,
+      notifMode,
+      JSON.stringify(daySchedules),
+    );
+  }, [hour, minute, showConfettiPref, notificationsEnabled, notifMode, daySchedules, updateNotificationSettings]);
+
+  const handleConfettiToggle = useCallback((val: boolean) => {
+    setShowConfettiPref(val);
+    updateNotificationSettings(
+      hour,
+      minute,
+      showSecularDate,
+      val,
+      notificationsEnabled,
+      notifMode,
+      JSON.stringify(daySchedules),
+    );
+  }, [hour, minute, showSecularDate, notificationsEnabled, notifMode, daySchedules, updateNotificationSettings]);
+
+  const handleThemeModeSelect = useCallback((mode: ThemeMode) => {
+    setThemeMode(mode);
+    updateThemeMode(mode);
+  }, [updateThemeMode]);
+
+  const handleTimePickerOpen = useCallback(() => {
+    setEditingDay(null);
+    setShowTimePicker(true);
+  }, []);
+
+  const handleTimePickerClose = useCallback(() => {
+    setShowTimePicker(false);
+    setEditingDay(null);
+  }, []);
+
+  const handleThemeModalOpen = useCallback(() => {
+    setShowThemeModal(true);
+  }, []);
+
+  const handleThemeModalClose = useCallback(() => {
+    setShowThemeModal(false);
+  }, []);
+
+  const handleResetModalOpen = useCallback(() => {
+    setShowResetModal(true);
+  }, []);
+
+  const handleResetModalClose = useCallback(() => {
+    setShowResetModal(false);
+  }, []);
+
+  const handleSuccessModalClose = useCallback(() => {
+    setShowSuccessModal(false);
+  }, []);
 
   return (
     <SafeAreaView
@@ -186,18 +260,7 @@ export default function SettingsScreen() {
               description="קבל התראה בשעה היעודה"
               type="switch"
               value={notificationsEnabled}
-              onPress={(val) => {
-                setNotificationsEnabled(val);
-                saveAndSchedule(
-                  hour,
-                  minute,
-                  notifMode,
-                  daySchedules,
-                  val,
-                  showSecularDate,
-                  showConfettiPref,
-                );
-              }}
+              onPress={handleNotificationsToggle}
             />
             {notificationsEnabled && (
               <>
@@ -208,10 +271,7 @@ export default function SettingsScreen() {
                     title="זמן ההתראה"
                     description="מתי תרצה ללמוד כל יום?"
                     value={fmtTime(hour, minute)}
-                    onPress={() => {
-                      setEditingDay(null);
-                      setShowTimePicker(true);
-                    }}
+                    onPress={handleTimePickerOpen}
                   />
                 )}
                 {notifMode === "custom" && (
@@ -244,7 +304,7 @@ export default function SettingsScreen() {
                     ? "כהה"
                     : "בהיר"
               }
-              onPress={() => setShowThemeModal(true)}
+              onPress={handleThemeModalOpen}
             />
             <SettingItem
               icon="calendar-outline"
@@ -252,18 +312,7 @@ export default function SettingsScreen() {
               description="הצגת התאריך הלועזי לצד העברי"
               type="switch"
               value={showSecularDate}
-              onPress={(val) => {
-                setShowSecularDate(val);
-                updateNotificationSettings(
-                  hour,
-                  minute,
-                  val,
-                  showConfettiPref,
-                  notificationsEnabled,
-                  notifMode,
-                  JSON.stringify(daySchedules),
-                );
-              }}
+              onPress={handleSecularDateToggle}
             />
             <SettingItem
               icon="sparkles-outline"
@@ -271,18 +320,7 @@ export default function SettingsScreen() {
               description="הצגת קונפטי בסיום לימוד דף"
               type="switch"
               value={showConfettiPref}
-              onPress={(val) => {
-                setShowConfettiPref(val);
-                updateNotificationSettings(
-                  hour,
-                  minute,
-                  showSecularDate,
-                  val,
-                  notificationsEnabled,
-                  notifMode,
-                  JSON.stringify(daySchedules),
-                );
-              }}
+              onPress={handleConfettiToggle}
             />
           </View>
 
@@ -293,7 +331,7 @@ export default function SettingsScreen() {
               title="איפוס נתונים"
               description="מחיקת כל התקדמות הלימוד"
               isDestructive
-              onPress={() => setShowResetModal(true)}
+              onPress={handleResetModalOpen}
             />
           </View>
 
@@ -308,18 +346,12 @@ export default function SettingsScreen() {
       <ThemeModeModal
         visible={showThemeModal}
         value={themeMode}
-        onClose={() => setShowThemeModal(false)}
-        onSelect={(mode) => {
-          setThemeMode(mode);
-          updateThemeMode(mode);
-        }}
+        onClose={handleThemeModalClose}
+        onSelect={handleThemeModeSelect}
       />
       <TimePickerModal
         visible={showTimePicker}
-        onClose={() => {
-          setShowTimePicker(false);
-          setEditingDay(null);
-        }}
+        onClose={handleTimePickerClose}
         hour={editingDay !== null ? daySchedules[editingDay].hour : hour}
         minute={editingDay !== null ? daySchedules[editingDay].minute : minute}
         onSave={handleTimeSave}
@@ -329,13 +361,13 @@ export default function SettingsScreen() {
         title="מחיקת נתונים"
         message="האם אתה בטוח שברצונך למחוק את כל היסטוריית הלימוד? פעולה זו אינה ניתנת לביטול."
         onConfirm={onConfirmReset}
-        onCancel={() => setShowResetModal(false)}
+        onCancel={handleResetModalClose}
       />
       <SuccessModal
         visible={showSuccessModal}
         title="הצלחנו!"
         message="הנתונים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי."
-        onClose={() => setShowSuccessModal(false)}
+        onClose={handleSuccessModalClose}
       />
     </SafeAreaView>
   );

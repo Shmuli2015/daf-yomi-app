@@ -6,7 +6,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useAppStore } from "../store/useAppStore";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import { HDate } from "@hebcal/core";
 import { format, subDays } from "date-fns";
 import ConfettiCannon from "react-native-confetti-cannon";
@@ -14,11 +14,8 @@ import HomeHeader from "../components/HomeHeader";
 import HomeContent from "../components/HomeContent";
 import ShasBanner from "../components/ShasBanner";
 import { getDateStr } from "../utils/dafYomi";
-import {
-  getMasechetProgress,
-  getMasechetDafim,
-  getTotalShasProgress,
-} from "../utils/shas";
+import { getMasechetDafim } from "../utils/shas";
+import { getMasechetProgressFromCache } from "../utils/progressCache";
 import { useTheme } from "../theme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -39,6 +36,7 @@ export default function HomeScreen({ navigation }: any) {
     toggleAnyDafLearned,
     history,
     settings,
+    progressCache,
   } = useAppStore();
 
   React.useEffect(() => {
@@ -47,23 +45,27 @@ export default function HomeScreen({ navigation }: any) {
 
   const isLearned = todayRecord?.status === "learned";
 
-  const handleToggle = () => {
+  const handleToggle = useCallback(() => {
     if (!isLearned && settings?.show_confetti) setShowConfetti(true);
     toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
-  };
+  }, [isLearned, settings, currentDate, todayMasechet, todayDafNum, toggleAnyDafLearned]);
 
-  const hDate = new HDate(currentDate);
-  const hebrewDateStr = hDate.renderGematriya();
-  const gregorianDateStr = format(currentDate, "dd/MM/yyyy");
+  const hDate = useMemo(() => new HDate(currentDate), [currentDate]);
+  const hebrewDateStr = useMemo(() => hDate.renderGematriya(), [hDate]);
+  const gregorianDateStr = useMemo(() => format(currentDate, "dd/MM/yyyy"), [currentDate]);
 
-  const masechetTotal = getMasechetDafim(todayMasechet).length;
-  const masechetLearned = getMasechetProgress(todayMasechet, history);
-  const masechetProgressPct =
-    masechetTotal > 0 ? Math.round((masechetLearned / masechetTotal) * 100) : 0;
+  const masechetProgressPct = useMemo(() => {
+    const total = getMasechetDafim(todayMasechet).length;
+    if (!progressCache) return 0;
+    const progress = getMasechetProgressFromCache(progressCache, todayMasechet);
+    return total > 0 ? Math.round((progress.learned / total) * 100) : 0;
+  }, [todayMasechet, progressCache]);
 
-  const shasProgress = getTotalShasProgress(history);
+  const shasProgress = useMemo(() => {
+    return progressCache?.totalShasProgress || { learnedCount: 0, totalPages: 2711, percentage: 0 };
+  }, [progressCache]);
 
-  const last7Days = React.useMemo(() => {
+  const last7Days = useMemo(() => {
     const daysHe = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
     return Array.from({ length: 7 }).map((_, i) => {
       const d = subDays(currentDate, 6 - i);

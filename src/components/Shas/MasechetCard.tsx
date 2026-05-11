@@ -18,7 +18,7 @@ interface MasechetCardProps {
   onPress: () => void;
 }
 
-export default function MasechetCard({
+const MasechetCard = React.memo(function MasechetCard({
   data,
   index,
   onPress,
@@ -79,7 +79,9 @@ export default function MasechetCard({
       </TouchableOpacity>
     </Animated.View>
   );
-}
+});
+
+export default MasechetCard;
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({

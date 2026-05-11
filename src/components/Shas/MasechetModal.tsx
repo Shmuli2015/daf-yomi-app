@@ -1,16 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, numberToGematria } from '../../data/shas';
 import { 
-  getMasechetProgress, 
   getDafDateStr, 
   isDafLearnedByDate, 
   getMasechetDafim,
   stripNiqqud 
 } from '../../utils/shas';
+import { getMasechetProgressFromCache } from '../../utils/progressCache';
 import { useTheme } from '../../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -27,24 +27,28 @@ export default function MasechetModal({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { history, toggleAnyDafLearned } = useAppStore();
+  const history = useAppStore(state => state.history);
+  const progressCache = useAppStore(state => state.progressCache);
+  const toggleAnyDafLearned = useAppStore(state => state.toggleAnyDafLearned);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const dafimArray = getMasechetDafim(masechet.he);
+  const dafimArray = useMemo(() => getMasechetDafim(masechet.he), [masechet.he]);
 
-  const handleToggleDaf = (dafNum: number) => {
+  const handleToggleDaf = useCallback((dafNum: number) => {
     const dateStr = getDafDateStr(masechet.he, dafNum);
     if (!dateStr) return;
 
     const isCurrentlyLearned = isDafLearnedByDate(dateStr, history);
-    const learnedBefore = getMasechetProgress(masechet.he, history);
+    const learnedBefore = progressCache 
+      ? getMasechetProgressFromCache(progressCache, masechet.he).learned 
+      : 0;
     const dafHeStr = `דף ${numberToGematria(dafNum)}`;
     toggleAnyDafLearned(dateStr, masechet.he, dafHeStr);
 
     if (!isCurrentlyLearned && learnedBefore + 1 === dafimArray.length) {
       setTimeout(() => setShowConfetti(true), 200);
     }
-  };
+  }, [masechet.he, history, progressCache, dafimArray.length, toggleAnyDafLearned]);
 
   return (
     <Modal visible={true} animationType="slide" presentationStyle="pageSheet">

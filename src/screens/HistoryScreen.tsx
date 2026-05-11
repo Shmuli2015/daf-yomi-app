@@ -5,29 +5,32 @@ import MasechetGrid from "../components/Shas/MasechetGrid";
 import ShasProgressHero from "../components/Shas/ShasProgressHero";
 import { useAppStore } from "../store/useAppStore";
 import { SHAS_MASECHTOT } from "../data/shas";
-import { getMasechetProgress, getMasechetDafim } from "../utils/shas";
 import { useTheme } from "../theme";
 
 export default function HistoryScreen() {
   const theme = useTheme();
   const styles = useReactMemo(() => createStyles(theme), [theme]);
-  const { history } = useAppStore();
+  const progressCache = useAppStore(state => state.progressCache);
 
   const totalDafim = useReactMemo(
     () => SHAS_MASECHTOT.reduce((acc, m) => acc + m.pages, 0),
     [],
   );
+  
   const learnedDafim = useReactMemo(
-    () => history.filter((r) => r.status === "learned").length,
-    [history],
+    () => progressCache?.totalShasProgress.learnedCount || 0,
+    [progressCache],
   );
+  
   const completedMasechtos = useReactMemo(
-    () =>
-      SHAS_MASECHTOT.filter((m) => {
-        const total = getMasechetDafim(m.he).length;
-        return total > 0 && getMasechetProgress(m.he, history) === total;
-      }).length,
-    [history],
+    () => {
+      if (!progressCache) return 0;
+      return SHAS_MASECHTOT.filter((m) => {
+        const progress = progressCache.masechetProgress.get(m.he);
+        return progress && progress.total > 0 && progress.learned === progress.total;
+      }).length;
+    },
+    [progressCache],
   );
 
   const progress = totalDafim > 0 ? learnedDafim / totalDafim : 0;

@@ -16,7 +16,7 @@ interface SederSectionProps {
   children?: React.ReactNode;
 }
 
-export default function SederSection({
+const SederSection = React.memo(function SederSection({
   sederName,
   percentage,
   learnedDafim,
@@ -77,16 +77,18 @@ export default function SederSection({
       )}
     </View>
   );
-}
+});
+
+export default SederSection;
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     container: {
       marginBottom: 16,
-      backgroundColor: theme.colors.cardBackground,
+      backgroundColor: theme.colors.surface,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: theme.colors.cardBorder,
+      borderColor: theme.colors.border,
       overflow: 'hidden',
     },
     headerContainer: {
@@ -137,7 +139,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     progressBarContainer: {
       height: 6,
-      backgroundColor: theme.colors.progressBg,
+      backgroundColor: theme.colors.progressTrack,
       borderRadius: 3,
       overflow: 'hidden',
     },

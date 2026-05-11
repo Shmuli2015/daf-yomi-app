@@ -15,7 +15,7 @@ interface HomeContentProps {
   last7Days: DayRecord[];
 }
 
-export default function HomeContent({
+const HomeContent = React.memo(function HomeContent({
   streak,
   last7Days,
 }: HomeContentProps) {
@@ -83,7 +83,9 @@ export default function HomeContent({
       </View>
     </Animated.View>
   );
-}
+});
+
+export default HomeContent;
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({

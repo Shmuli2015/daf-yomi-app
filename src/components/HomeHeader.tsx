@@ -17,7 +17,7 @@ interface HomeHeaderProps {
   showSecularDate?: boolean;
 }
 
-export default function HomeHeader({
+const HomeHeader = React.memo(function HomeHeader({
   gregorianDateStr,
   hebrewDateStr,
   todayMasechet,
@@ -120,7 +120,9 @@ export default function HomeHeader({
       </Animated.View>
     </Animated.View>
   );
-}
+});
+
+export default HomeHeader;
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({

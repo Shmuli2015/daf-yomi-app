@@ -13,7 +13,7 @@ export interface SettingItemProps {
   isDestructive?: boolean;
 }
 
-export const SettingItem = ({
+export const SettingItem = React.memo(function SettingItem({
   icon,
   title,
   description,
@@ -21,7 +21,7 @@ export const SettingItem = ({
   onPress,
   type = 'arrow',
   isDestructive = false,
-}: SettingItemProps) => {
+}: SettingItemProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -68,7 +68,7 @@ export const SettingItem = ({
       </View>
     </TouchableOpacity>
   );
-};
+});
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
-import { getDailyRecord, getAllRecords, updateDailyRecord, getSettings, updateSettings, updateThemeMode, DailyRecord, SettingsRecord } from '../db/database';
+import { getAllRecords, updateDailyRecord, getSettings, updateSettings, updateThemeMode, DailyRecord, SettingsRecord } from '../db/database';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
+import { buildProgressCache, ProgressCache } from '../utils/progressCache';
 
 interface AppState {
   currentDate: Date;
@@ -12,8 +13,11 @@ interface AppState {
   todayDafNum: string;
   todaySefariaUrl: string;
   streak: number;
+  progressCache: ProgressCache | null;
   
   loadInitialData: () => void;
+  refreshHistory: () => void;
+  refreshSettings: () => void;
   markTodayAsLearned: () => void;
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => void;
   updateNotificationSettings: (
@@ -29,44 +33,6 @@ interface AppState {
   updateThemeMode: (themeMode: string) => void;
 }
 
-function calculateStreak(records: DailyRecord[]): number {
-  const learnedRecords = records
-    .filter(r => r.status === 'learned')
-    .sort((a, b) => b.date.localeCompare(a.date));
-
-  if (learnedRecords.length === 0) return 0;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = getDateStr(today);
-  
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(0, 0, 0, 0);
-  const yesterdayStr = getDateStr(yesterday);
-
-  // If the latest learned record is not today or yesterday, streak is 0
-  const latestDateStr = learnedRecords[0].date;
-  if (latestDateStr !== todayStr && latestDateStr !== yesterdayStr) {
-    return 0;
-  }
-
-  let streak = 0;
-  let currentDateToCheck = new Date(latestDateStr);
-  currentDateToCheck.setHours(0, 0, 0, 0);
-
-  for (const record of learnedRecords) {
-    if (record.date === getDateStr(currentDateToCheck)) {
-      streak++;
-      currentDateToCheck.setDate(currentDateToCheck.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-}
-
 export const useAppStore = create<AppState>((set, get) => ({
   currentDate: new Date(),
   todayRecord: null,
@@ -77,6 +43,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   todayDafNum: '',
   todaySefariaUrl: '',
   streak: 0,
+  progressCache: null,
 
   loadInitialData: () => {
     const today = new Date();
@@ -85,7 +52,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     const history = getAllRecords();
     const settings = getSettings();
-    const streak = calculateStreak(history);
+    const cache = buildProgressCache(history);
     
     // Find today's record from history for consistency
     const record = history.find(r => r.date === dateStr) || null;
@@ -99,8 +66,29 @@ export const useAppStore = create<AppState>((set, get) => ({
       todayMasechet: dafInfo.masechet,
       todayDafNum: dafInfo.daf,
       todaySefariaUrl: dafInfo.sefariaUrl,
-      streak
+      streak: cache.streak,
+      progressCache: cache
     });
+  },
+
+  refreshHistory: () => {
+    const { currentDate } = get();
+    const dateStr = getDateStr(currentDate);
+    const history = getAllRecords();
+    const cache = buildProgressCache(history);
+    const record = history.find(r => r.date === dateStr) || null;
+
+    set({
+      todayRecord: record,
+      history,
+      streak: cache.streak,
+      progressCache: cache
+    });
+  },
+
+  refreshSettings: () => {
+    const settings = getSettings();
+    set({ settings });
   },
 
   markTodayAsLearned: () => {
@@ -109,8 +97,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned');
     
-    // Refresh data
-    get().loadInitialData();
+    // Refresh only history, not settings
+    get().refreshHistory();
   },
 
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => {
@@ -120,8 +108,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     updateDailyRecord(dateStr, masechet, daf, newStatus);
     
-    // Refresh data
-    get().loadInitialData();
+    // Refresh only history, not settings
+    get().refreshHistory();
   },
 
   updateNotificationSettings: (
@@ -134,12 +122,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     daySchedules?: string | null
   ) => {
     updateSettings(hour, minute, showSecular, showConfetti, notificationsEnabled, notifMode, daySchedules);
-    get().loadInitialData();
+    // Only refresh settings, not history
+    get().refreshSettings();
   },
 
   updateThemeMode: (themeMode: string) => {
     updateThemeMode(themeMode);
-    get().loadInitialData();
+    get().refreshSettings();
   },
 
   clearAllHistory: () => {

@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, SEDARIM, Seder } from '../../data/shas';
-import { getMasechetProgress, getMasechetDafim, getSederProgress } from '../../utils/shas';
+import { getMasechetProgressFromCache, getSederProgressFromCache } from '../../utils/progressCache';
 import MasechetModal from './MasechetModal';
 import MasechetCard, { MasechetData } from './MasechetCard';
 import SederSection from './SederSection';
@@ -10,7 +10,7 @@ import SederSection from './SederSection';
 
 
 export default function MasechetGrid() {
-  const { history } = useAppStore();
+  const progressCache = useAppStore(state => state.progressCache);
   const [selectedMasechet, setSelectedMasechet] = useState<typeof SHAS_MASECHTOT[0] | null>(null);
   const [expandedSedarim, setExpandedSedarim] = useState<Set<Seder>>(new Set());
 
@@ -31,16 +31,28 @@ export default function MasechetGrid() {
       {SEDARIM.map((seder) => {
         const sederMasechtot = SHAS_MASECHTOT.filter(m => m.seder === seder.id);
         
-        const masechetData: MasechetData[] = sederMasechtot.map(m => {
-          const total = getMasechetDafim(m.he).length;
-          const learned = getMasechetProgress(m.he, history);
-          const percent = total > 0 ? Math.round((learned / total) * 100) : 0;
-          return { m, total, learned, percent, isCompleted: total > 0 && learned === total };
-        }).filter(d => d.total > 0);
+        const masechetData: MasechetData[] = useMemo(() => {
+          if (!progressCache) return [];
+          
+          return sederMasechtot.map(m => {
+            const progress = getMasechetProgressFromCache(progressCache, m.he);
+            const percent = progress.total > 0 ? Math.round((progress.learned / progress.total) * 100) : 0;
+            return { 
+              m, 
+              total: progress.total, 
+              learned: progress.learned, 
+              percent, 
+              isCompleted: progress.total > 0 && progress.learned === progress.total 
+            };
+          }).filter(d => d.total > 0);
+        }, [progressCache, seder.id]);
 
         if (masechetData.length === 0) return null;
 
-        const sederProgress = getSederProgress(seder.id, history);
+        const sederProgress = progressCache 
+          ? getSederProgressFromCache(progressCache, seder.id)
+          : { percentage: 0, learnedDafim: 0, totalDafim: 0, completedMasechtot: 0, totalMasechtot: 0 };
+        
         const isExpanded = expandedSedarim.has(seder.id);
 
         return (
