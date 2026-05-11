@@ -1,44 +1,62 @@
-export const SHAS_MASECHTOT = [
-  { en: "Berachot", he: "ברכות", pages: 63 },
-  { en: "Shabbat", he: "שבת", pages: 156 },
-  { en: "Eruvin", he: "עירובין", pages: 104 },
-  { en: "Pesachim", he: "פסחים", pages: 120 },
-  { en: "Shekalim", he: "שקלים", pages: 21 },
-  { en: "Yoma", he: "יומא", pages: 87 },
-  { en: "Sukkah", he: "סוכה", pages: 55 },
-  { en: "Beitzah", he: "ביצה", pages: 39 },
-  { en: "Rosh Hashana", he: "ראש השנה", pages: 34 },
-  { en: "Taanit", he: "תענית", pages: 30 },
-  { en: "Megillah", he: "מגילה", pages: 31 },
-  { en: "Moed Katan", he: "מועד קטן", pages: 28 },
-  { en: "Chagigah", he: "חגיגה", pages: 26 },
-  { en: "Yevamot", he: "יבמות", pages: 121 },
-  { en: "Ketubot", he: "כתובות", pages: 111 },
-  { en: "Nedarim", he: "נדרים", pages: 90 },
-  { en: "Nazir", he: "נזיר", pages: 65 },
-  { en: "Sotah", he: "סוטה", pages: 48 },
-  { en: "Gitin", he: "גיטין", pages: 89 },
-  { en: "Kiddushin", he: "קידושין", pages: 81 },
-  { en: "Baba Kamma", he: "בבא קמא", pages: 118 },
-  { en: "Baba Metzia", he: "בבא מציעא", pages: 118 },
-  { en: "Baba Batra", he: "בבא בתרא", pages: 175 },
-  { en: "Sanhedrin", he: "סנהדרין", pages: 112 },
-  { en: "Makkot", he: "מכות", pages: 23 },
-  { en: "Shevuot", he: "שבועות", pages: 48 },
-  { en: "Avodah Zarah", he: "עבודה זרה", pages: 75 },
-  { en: "Horayot", he: "הוריות", pages: 13 },
-  { en: "Zevachim", he: "זבחים", pages: 119 },
-  { en: "Menachot", he: "מנחות", pages: 109 },
-  { en: "Chullin", he: "חולין", pages: 141 },
-  { en: "Bechorot", he: "בכורות", pages: 60 },
-  { en: "Arachin", he: "ערכין", pages: 33 },
-  { en: "Temurah", he: "תמורה", pages: 33 },
-  { en: "Keritot", he: "כריתות", pages: 27 },
-  { en: "Meilah", he: "מעילה", pages: 21 },
-  { en: "Kinnim", he: "קינים", pages: 3 },
-  { en: "Tamid", he: "תמיד", pages: 8 },
-  { en: "Midot", he: "מדות", pages: 4 },
-  { en: "Niddah", he: "נדה", pages: 72 }
+export type Seder = "zeraim" | "moed" | "nashim" | "nezikin" | "kodashim" | "taharot";
+
+export interface Masechet {
+  en: string;
+  he: string;
+  pages: number;
+  seder: Seder;
+}
+
+export const SEDARIM = [
+  { id: "zeraim" as Seder, he: "זרעים", en: "Zeraim" },
+  { id: "moed" as Seder, he: "מועד", en: "Moed" },
+  { id: "nashim" as Seder, he: "נשים", en: "Nashim" },
+  { id: "nezikin" as Seder, he: "נזיקין", en: "Nezikin" },
+  { id: "kodashim" as Seder, he: "קדשים", en: "Kodashim" },
+  { id: "taharot" as Seder, he: "טהרות", en: "Taharot" },
+];
+
+export const SHAS_MASECHTOT: Masechet[] = [
+  { en: "Berachot", he: "ברכות", pages: 63, seder: "zeraim" },
+  { en: "Shabbat", he: "שבת", pages: 156, seder: "moed" },
+  { en: "Eruvin", he: "עירובין", pages: 104, seder: "moed" },
+  { en: "Pesachim", he: "פסחים", pages: 120, seder: "moed" },
+  { en: "Shekalim", he: "שקלים", pages: 21, seder: "moed" },
+  { en: "Yoma", he: "יומא", pages: 87, seder: "moed" },
+  { en: "Sukkah", he: "סוכה", pages: 55, seder: "moed" },
+  { en: "Beitzah", he: "ביצה", pages: 39, seder: "moed" },
+  { en: "Rosh Hashana", he: "ראש השנה", pages: 34, seder: "moed" },
+  { en: "Taanit", he: "תענית", pages: 30, seder: "moed" },
+  { en: "Megillah", he: "מגילה", pages: 31, seder: "moed" },
+  { en: "Moed Katan", he: "מועד קטן", pages: 28, seder: "moed" },
+  { en: "Chagigah", he: "חגיגה", pages: 26, seder: "moed" },
+  { en: "Yevamot", he: "יבמות", pages: 121, seder: "nashim" },
+  { en: "Ketubot", he: "כתובות", pages: 111, seder: "nashim" },
+  { en: "Nedarim", he: "נדרים", pages: 90, seder: "nashim" },
+  { en: "Nazir", he: "נזיר", pages: 65, seder: "nashim" },
+  { en: "Sotah", he: "סוטה", pages: 48, seder: "nashim" },
+  { en: "Gitin", he: "גיטין", pages: 89, seder: "nashim" },
+  { en: "Kiddushin", he: "קידושין", pages: 81, seder: "nashim" },
+  { en: "Baba Kamma", he: "בבא קמא", pages: 118, seder: "nezikin" },
+  { en: "Baba Metzia", he: "בבא מציעא", pages: 118, seder: "nezikin" },
+  { en: "Baba Batra", he: "בבא בתרא", pages: 175, seder: "nezikin" },
+  { en: "Sanhedrin", he: "סנהדרין", pages: 112, seder: "nezikin" },
+  { en: "Makkot", he: "מכות", pages: 23, seder: "nezikin" },
+  { en: "Shevuot", he: "שבועות", pages: 48, seder: "nezikin" },
+  { en: "Avodah Zarah", he: "עבודה זרה", pages: 75, seder: "nezikin" },
+  { en: "Horayot", he: "הוריות", pages: 13, seder: "nezikin" },
+  { en: "Zevachim", he: "זבחים", pages: 119, seder: "kodashim" },
+  { en: "Menachot", he: "מנחות", pages: 109, seder: "kodashim" },
+  { en: "Chullin", he: "חולין", pages: 141, seder: "kodashim" },
+  { en: "Bechorot", he: "בכורות", pages: 60, seder: "kodashim" },
+  { en: "Arachin", he: "ערכין", pages: 33, seder: "kodashim" },
+  { en: "Temurah", he: "תמורה", pages: 33, seder: "kodashim" },
+  { en: "Keritot", he: "כריתות", pages: 27, seder: "kodashim" },
+  { en: "Meilah", he: "מעילה", pages: 21, seder: "kodashim" },
+  { en: "Kinnim", he: "קינים", pages: 3, seder: "kodashim" },
+  { en: "Tamid", he: "תמיד", pages: 8, seder: "kodashim" },
+  { en: "Midot", he: "מדות", pages: 4, seder: "kodashim" },
+  { en: "Niddah", he: "נדה", pages: 72, seder: "taharot" }
 ];
 
 export function numberToGematria(num: number): string {

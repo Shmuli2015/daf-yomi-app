@@ -1,6 +1,6 @@
 import { DailyRecord } from '../db/database';
 import dafDates from '../data/dafDates.json';
-import { SHAS_MASECHTOT, numberToGematria } from '../data/shas';
+import { SHAS_MASECHTOT, SEDARIM, Seder, numberToGematria } from '../data/shas';
 
 export function stripNiqqud(str: string) {
   return str.replace(/[\u0591-\u05C7]/g, '');
@@ -42,4 +42,38 @@ export function getTotalShasProgress(history: DailyRecord[]) {
   const learnedCount = history.filter(r => r.status === 'learned').length;
   const percentage = Math.round((learnedCount / totalPages) * 100);
   return { learnedCount, totalPages, percentage };
+}
+
+export function getSederProgress(seder: Seder, history: DailyRecord[]) {
+  const sederMasechtot = SHAS_MASECHTOT.filter(m => m.seder === seder);
+  
+  let totalDafim = 0;
+  let learnedDafim = 0;
+  let completedMasechtot = 0;
+  
+  for (const masechet of sederMasechtot) {
+    const dafim = getMasechetDafim(masechet.he);
+    const learned = getMasechetProgress(masechet.he, history);
+    
+    totalDafim += dafim.length;
+    learnedDafim += learned;
+    
+    if (dafim.length > 0 && learned === dafim.length) {
+      completedMasechtot++;
+    }
+  }
+  
+  const percentage = totalDafim > 0 ? Math.round((learnedDafim / totalDafim) * 100) : 0;
+  
+  return {
+    totalDafim,
+    learnedDafim,
+    completedMasechtot,
+    totalMasechtot: sederMasechtot.length,
+    percentage
+  };
+}
+
+export function getMasechtotBySeder(seder: Seder) {
+  return SHAS_MASECHTOT.filter(m => m.seder === seder);
 }
