@@ -88,7 +88,11 @@ export default function HomeHeader({
           style={[styles.mainButton, isLearned ? styles.buttonDone : styles.buttonPending]}
           activeOpacity={0.8}
         >
-          <Ionicons name="checkmark-circle-outline" size={22} color={isLearned ? theme.colors.textPrimary : 'white'} />
+          <Ionicons
+            name={isLearned ? 'checkmark-circle' : 'checkmark-circle-outline'}
+            size={22}
+            color={isLearned ? theme.colors.accent : '#FFFFFF'}
+          />
           <Text style={[styles.mainButtonText, isLearned ? styles.buttonTextDone : styles.buttonTextPending]}>
             {isLearned ? 'סיימתי את הדף' : 'סמן כנלמד'}
           </Text>
@@ -217,19 +221,19 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: 16,
     },
     buttonPending: {
-      backgroundColor: theme.colors.success,
+      backgroundColor: theme.colors.accent,
     },
     buttonDone: {
-      backgroundColor: 'transparent',
+      backgroundColor: theme.colors.background,
       borderWidth: 1,
-      borderColor: theme.colors.success,
+      borderColor: theme.colors.border,
     },
     mainButtonText: {
       fontSize: 16,
       fontWeight: '800',
     },
     buttonTextPending: {
-      color: 'white',
+      color: '#FFFFFF',
     },
     buttonTextDone: {
       color: theme.colors.textPrimary,
