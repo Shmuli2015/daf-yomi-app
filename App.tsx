@@ -9,6 +9,7 @@ import { initDB, getSettings } from './src/db/database';
 import { useAppStore } from './src/store/useAppStore';
 import * as Notifications from 'expo-notifications';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from './src/utils/notifications';
+import { getDafByDate } from './src/utils/dafYomi';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SplashScreen from './src/components/SplashScreen';
@@ -33,7 +34,7 @@ Notifications.setNotificationCategoryAsync('study-reminder', [
   },
   {
     identifier: 'later',
-    buttonTitle: '⏰ הזכר לי מאוחר יותר',
+    buttonTitle: '⏰ הזכר לי עוד שעה',
     options: { opensAppToForeground: false },
   },
 ]);
@@ -94,14 +95,14 @@ export default function App() {
           if (actionIdentifier === 'finish-daf') {
             const { markTodayAsLearned } = useAppStore.getState();
             markTodayAsLearned();
-            // Optional: Show a success message if the app opens
           } else if (actionIdentifier === 'later') {
-            // Re-schedule for 1 hour later
+            const dafInfo = getDafByDate(new Date());
             Notifications.scheduleNotificationAsync({
               content: {
                 title: '⏰ תזכורת נוספת',
-                body: 'ביקשת שנזכיר לך שוב ללמוד את הדף היומי... ✨',
+                body: `${dafInfo.masechet} ${dafInfo.daf} - ביקשת שנזכיר לך שוב... ✨`,
                 sound: true,
+                categoryIdentifier: 'study-reminder',
               },
               trigger: {
                 type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,

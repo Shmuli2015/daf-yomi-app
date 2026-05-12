@@ -7,6 +7,7 @@ export const SettingsFooter = () => (
   <View style={styles.footer}>
     <View style={styles.divider} />
     <Text style={styles.text}>פותח באהבה ע״י שמואל רוזנברג</Text>
+    <Text style={styles.text}>בהשראת AG</Text>
     {Constants.expoConfig?.version && (
       <Text style={styles.version}>גרסה {Constants.expoConfig.version}</Text>
     )}
