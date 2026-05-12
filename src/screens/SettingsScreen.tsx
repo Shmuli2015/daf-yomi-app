@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore } from "../store/useAppStore";
 import { resetDB } from "../db/database";
@@ -20,10 +20,14 @@ import SuccessModal from "../components/SuccessModal";
 import {
   scheduleNotifications,
   DEFAULT_SCHEDULES,
+  sendTestNotification,
+  getScheduledNotifications,
 } from "../utils/notifications";
 
 const fmtTime = (h: number, m: number) =>
   `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+
+const IS_DEV = __DEV__;
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -49,6 +53,7 @@ export default function SettingsScreen() {
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [scheduledCount, setScheduledCount] = useState<number>(0);
 
   useEffect(() => {
     if (settings) {
@@ -251,6 +256,28 @@ export default function SettingsScreen() {
     setShowGuideModal(false);
   }, []);
 
+  const handleTestNotification = useCallback(async () => {
+    await sendTestNotification();
+    Alert.alert("התראת בדיקה", "התראת בדיקה תגיע בעוד 5 שניות");
+  }, []);
+
+  const handleCheckScheduled = useCallback(async () => {
+    const notifications = await getScheduledNotifications();
+    setScheduledCount(notifications.length);
+    Alert.alert(
+      "התראות מתוזמנות",
+      `יש ${notifications.length} התראות מתוזמנות במערכת`
+    );
+  }, []);
+
+  useEffect(() => {
+    async function checkScheduled() {
+      const notifications = await getScheduledNotifications();
+      setScheduledCount(notifications.length);
+    }
+    checkScheduled();
+  }, [notificationsEnabled, hour, minute, notifMode, daySchedules]);
+
   return (
     <SafeAreaView
       style={[styles.safe, { backgroundColor: theme.colors.background }]}
@@ -339,6 +366,26 @@ export default function SettingsScreen() {
               onPress={handleConfettiToggle}
             />
           </View>
+
+          {IS_DEV && (
+            <>
+              <SectionHeader title="דיבאג והתראות" />
+              <View style={styles.card}>
+                <SettingItem
+                  icon="notifications-outline"
+                  title="שלח התראת בדיקה"
+                  description="בדוק שההתראות עובדות (תגיע בעוד 5 שניות)"
+                  onPress={handleTestNotification}
+                />
+                <SettingItem
+                  icon="list-outline"
+                  title="בדוק התראות מתוזמנות"
+                  description={`${scheduledCount} התראות מתוזמנות`}
+                  onPress={handleCheckScheduled}
+                />
+              </View>
+            </>
+          )}
 
           <SectionHeader title="נתונים ופרטיות" />
           <View style={styles.card}>

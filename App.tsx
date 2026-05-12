@@ -71,14 +71,25 @@ export default function App() {
         }
 
         const { status } = await Notifications.requestPermissionsAsync();
+        console.log('Notification permission status:', status);
+        
         if (status !== 'granted') {
           console.log('Notification permissions not granted');
         } else {
-          // Restore scheduled notifications after every cold start / reboot
+          console.log('Notification permissions granted, scheduling notifications...');
+          
           const s = getSettings();
+          console.log('Settings:', {
+            enabled: s.notifications_enabled === 1,
+            hour: s.notification_hour,
+            minute: s.notification_minute,
+            mode: s.notif_mode,
+          });
+          
           const daySchedules: DaySchedule[] = s.day_schedules
             ? JSON.parse(s.day_schedules)
             : DEFAULT_SCHEDULES;
+          
           await scheduleNotifications(
             s.notification_hour,
             s.notification_minute,
@@ -86,6 +97,8 @@ export default function App() {
             daySchedules,
             s.notifications_enabled === 1
           );
+          
+          console.log('Notifications scheduled successfully');
         }
 
         // Listener for when a notification is clicked or an action is performed
