@@ -8,6 +8,7 @@ import { SectionHeader } from "../components/Settings/SectionHeader";
 import { TimePickerModal } from "../components/Settings/TimePickerModal";
 import { ThemeModeModal } from "../components/Settings/ThemeModeModal";
 import { NotifModeToggle } from "../components/Settings/NotifModeToggle";
+import { GuideModal } from "../components/Settings/GuideModal";
 import {
   DayScheduleList,
   DaySchedule,
@@ -47,6 +48,7 @@ export default function SettingsScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -241,6 +243,14 @@ export default function SettingsScreen() {
     setShowSuccessModal(false);
   }, []);
 
+  const handleGuideModalOpen = useCallback(() => {
+    setShowGuideModal(true);
+  }, []);
+
+  const handleGuideModalClose = useCallback(() => {
+    setShowGuideModal(false);
+  }, []);
+
   return (
     <SafeAreaView
       style={[styles.safe, { backgroundColor: theme.colors.background }]}
@@ -307,6 +317,12 @@ export default function SettingsScreen() {
               onPress={handleThemeModalOpen}
             />
             <SettingItem
+              icon="help-circle-outline"
+              title="מדריך שימוש"
+              description="למד כיצד להשתמש בכל הפיצ'רים"
+              onPress={handleGuideModalOpen}
+            />
+            <SettingItem
               icon="calendar-outline"
               title="הצג תאריך לועזי"
               description="הצגת התאריך הלועזי לצד העברי"
@@ -348,6 +364,10 @@ export default function SettingsScreen() {
         value={themeMode}
         onClose={handleThemeModalClose}
         onSelect={handleThemeModeSelect}
+      />
+      <GuideModal
+        visible={showGuideModal}
+        onClose={handleGuideModalClose}
       />
       <TimePickerModal
         visible={showTimePicker}
