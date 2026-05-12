@@ -2,18 +2,20 @@
 
 **מסע דף** is a premium, modern mobile application designed for the global Daf Yomi community. Built with a focus on high-end aesthetics, Hebrew localization, and a seamless user experience, it helps you stay consistent on your journey through Shas.
 
+**Version:** See the `version` field in [`package.json`](./package.json). Expo picks it up in [`app.config.js`](./app.config.js), and the app shows it in Settings (via `expo-constants`), so one source of truth stays in sync.
+
 ---
 
 ## App Functions
 
 ### 🏠 Home Dashboard
 - **Today's Daf Display**: Shows the current day's Daf Yomi (tractate and page) with both Hebrew and Gregorian dates
-- **One-Tap Learning Tracker**: Mark today's Daf as learned/unlearned with a single tap
+- **Learning Tracker**: Use **Mark as learned** (`סמן כנלמד`) to record today's page; the control switches to **Finished** (`סיימתי את הדף`) and asks for confirmation before unsetting
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Direct link to view the Daf on Sefaria for online learning
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum
 - **7-Day Learning Widget**: Visual mini-calendar showing your last week's progress at a glance
-- **Shas Progress Banner**: Comprehensive progress bar displaying total pages learned out of 2,711 dafim
+- **Shas Progress Banner**: Overall progress across Shas; **tap the banner** to open the History screen for full tractate details
 - **Confetti Celebration**: Optional festive animation when marking a Daf as learned
 
 ### 📊 History & Progress Tracking
@@ -25,19 +27,19 @@
 - **Learned Pages Counter**: Real-time count of total pages learned across all of Shas
 
 ### 📅 Hebrew Calendar View
-- **Monthly Hebrew Calendar**: Beautiful calendar interface with Hebrew dates
-- **Learning History Visualization**: Color-coded dates showing which days you learned
-- **Date Navigation**: Browse through months to review your historical progress
-- **Hebrew Date Formatting**: Full Hebrew date display with proper gematria formatting
-- **Status Indicators**: Visual markers for learned, missed, and skipped days
+- **Monthly Hebrew Calendar**: Hebrew dates (gematria) with gregorian day numbers per cell
+- **Navigation**: Month arrows and a **Today** (`היום`) shortcut when you are viewing another month
+- **Learned days**: Highlighted with the accent color; **today** uses a lighter accent ring
+- **Day detail**: Tap a date to open a card with that day's Daf, Sefaria link, and learn/unlearn (with confirmation when clearing)
+- **Future dates**: Option to mark **learned ahead** (`למדתי מראש`) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
 - **Daily Notifications**: Configurable daily reminders at your preferred time
 - **Custom Day Schedules**: Set different notification times for each day of the week
 - **Notification Mode Toggle**: Switch between daily uniform time or custom per-day schedules
-- **Interactive Notification Actions**: 
-  - "✅ I finished the Daf!" button to mark as learned directly from notification
-  - "⏰ Remind me in an hour" button to snooze the reminder
+- **Interactive Notification Actions** (Hebrew in the app):  
+  - `✅ סיימתי את הדף!` — mark today's page as learned from the notification  
+  - `⏰ הזכר לי עוד שעה` — snooze for one hour
 - **Theme Selection**: Choose between Light, Dark, or System-based theme modes
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
 - **Confetti Effects Toggle**: Enable/disable celebration animations
@@ -48,7 +50,8 @@
 - **Daily Learning Reminders**: Scheduled notifications at your chosen time(s)
 - **Dynamic Daf Information**: Notifications show today's tractate and page number
 - **Interactive Actions**: Quick actions directly from notification tray
-- **Snooze Functionality**: "Remind me later" option schedules follow-up after 1 hour
+- **Snooze Functionality**: One-hour follow-up via `⏰ הזכר לי עוד שעה`
+- **Expo Go**: Local notification scheduling still runs, but behavior can differ from dev/production builds; use a **development build** for full parity
 - **Auto-scheduling**: Notifications automatically reschedule on device reboot
 - **Per-Day Customization**: Different notification times for different days of the week
 - **Hebrew Text**: All notifications in Hebrew for native speaker experience
@@ -109,6 +112,11 @@
    npm run start
    ```
 
+   For a **development client** build (custom native runtime), use:
+   ```bash
+   npm run start:dev
+   ```
+
 ### Run targets
 
 - **Android**:
@@ -137,4 +145,10 @@ We welcome contributions! If you have ideas for new features or want to report a
 ## License
 
 This project is licensed under the MIT License.
+
+---
+
+## Author
+
+Shmuel Rosenberg — see `package.json` (`author`) and the in-app Settings footer.
 

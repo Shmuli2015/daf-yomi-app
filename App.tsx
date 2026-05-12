@@ -25,6 +25,20 @@ Notifications.setNotificationHandler({
   }),
 });
 
+function dismissReminderFromTray(notificationId?: string): void {
+  setImmediate(() => {
+    const delayMs = Platform.OS === 'android' ? 300 : 50;
+    setTimeout(() => {
+      void (async () => {
+        if (notificationId) {
+          await Notifications.dismissNotificationAsync(notificationId).catch(() => {});
+        }
+        await Notifications.dismissAllNotificationsAsync().catch(() => {});
+      })();
+    }, delayMs);
+  });
+}
+
 void Notifications.setNotificationCategoryAsync('study-reminder', [
   {
     identifier: 'finish-daf',
@@ -113,11 +127,14 @@ export default function App() {
         responseSubRef.current?.remove();
         responseSubRef.current = Notifications.addNotificationResponseReceivedListener(response => {
           const { actionIdentifier } = response;
+          const notificationId = response.notification.request.identifier;
 
           if (actionIdentifier === 'finish-daf') {
+            dismissReminderFromTray(notificationId);
             const { markTodayAsLearned } = useAppStore.getState();
             markTodayAsLearned();
           } else if (actionIdentifier === 'later') {
+            dismissReminderFromTray(notificationId);
             const dafInfo = getDafByDate(new Date());
             void Notifications.scheduleNotificationAsync({
               content: {

@@ -11,9 +11,6 @@ export const DEFAULT_SCHEDULES: DaySchedule[] = Array.from({ length: 7 }, (_, i)
 }));
 
 async function checkAndRequestExactAlarmPermission(): Promise<boolean> {
-  // For Android 12+ (API 31+), exact alarms permission is needed
-  // However, expo-notifications will handle this automatically when scheduling
-  // We just return true to allow scheduling to proceed
   return true;
 }
 

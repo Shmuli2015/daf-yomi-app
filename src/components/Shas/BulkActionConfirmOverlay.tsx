@@ -1,8 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import { useTheme } from '../../theme';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export type BulkConfirmVariant = 'markAll' | 'unmarkAll';
 
@@ -19,8 +17,9 @@ export default function BulkActionConfirmOverlay({
   onConfirm,
   onCancel,
 }: BulkActionConfirmOverlayProps) {
+  const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createStyles(theme, windowWidth), [theme, windowWidth]);
 
   if (!variant) return null;
 
@@ -48,7 +47,7 @@ export default function BulkActionConfirmOverlay({
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
+const createStyles = (theme: ReturnType<typeof useTheme>, windowWidth: number) =>
   StyleSheet.create({
     overlay: {
       position: 'absolute',
@@ -66,7 +65,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderRadius: 20,
       padding: 24,
       marginHorizontal: 32,
-      width: SCREEN_WIDTH - 64,
+      width: windowWidth - 64,
       maxWidth: 400,
       borderWidth: 1,
       borderColor: theme.colors.border,

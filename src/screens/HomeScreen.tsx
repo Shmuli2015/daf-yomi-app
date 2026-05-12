@@ -1,9 +1,8 @@
 import {
   ScrollView,
   View,
-  Dimensions,
-  I18nManager,
   StyleSheet,
+  useWindowDimensions,
 } from "react-native";
 import { useAppStore } from "../store/useAppStore";
 import React, { useMemo, useState, useCallback } from "react";
@@ -18,9 +17,8 @@ import { getMasechetDafim } from "../utils/shas";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
 import { useTheme } from "../theme";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-
 export default function HomeScreen({ navigation }: any) {
+  const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -118,7 +116,7 @@ export default function HomeScreen({ navigation }: any) {
         <View style={styles.confettiContainer} pointerEvents="none">
           <ConfettiCannon
             count={200}
-            origin={{ x: SCREEN_WIDTH / 2, y: -50 }}
+            origin={{ x: windowWidth / 2, y: -50 }}
             fadeOut={true}
             fallSpeed={3500}
             explosionSpeed={350}

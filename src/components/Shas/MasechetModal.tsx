@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, Dimensions, BackHandler } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, BackHandler, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useAppStore } from '../../store/useAppStore';
@@ -15,8 +15,6 @@ import { useTheme } from '../../theme';
 import BulkActionConfirmOverlay from './BulkActionConfirmOverlay';
 import FullscreenLoadingOverlay from './FullscreenLoadingOverlay';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
 interface MasechetModalProps {
   masechet: typeof SHAS_MASECHTOT[0];
   onClose: () => void;
@@ -26,6 +24,7 @@ export default function MasechetModal({
   masechet,
   onClose,
 }: MasechetModalProps) {
+  const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -181,7 +180,7 @@ export default function MasechetModal({
           <View style={styles.confettiContainer} pointerEvents="none">
             <ConfettiCannon
               count={180}
-              origin={{ x: SCREEN_WIDTH / 2, y: -20 }}
+              origin={{ x: windowWidth / 2, y: -20 }}
               fadeOut={true}
               fallSpeed={3500}
               onAnimationEnd={() => setShowConfetti(false)}
