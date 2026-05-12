@@ -128,12 +128,6 @@
 
 ---
 
-## Screenshots
-
-Coming soon.
-
----
-
 ## Contributing
 
 We welcome contributions! If you have ideas for new features or want to report a bug, please open an issue or submit a pull request.
