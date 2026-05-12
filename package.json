@@ -5,6 +5,7 @@
   "author": "Shmuel Rosenberg",
   "scripts": {
     "start": "expo start",
+    "start:dev": "expo start --dev-client",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web"

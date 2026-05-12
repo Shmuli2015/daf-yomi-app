@@ -94,6 +94,28 @@ export function updateDailyRecord(dateStr: string, masechet: string, daf: string
   }
 }
 
+export function batchUpdateDailyRecords(
+  updates: Array<{ dateStr: string; masechet: string; daf: string; status: 'learned' | 'missed' }>
+) {
+  db.withTransactionSync(() => {
+    const now = new Date().toISOString();
+    for (const { dateStr, masechet, daf, status } of updates) {
+      const existing = getDailyRecord(dateStr);
+      if (existing) {
+        db.runSync(
+          'UPDATE daily_daf SET status = ?, learnedAt = ? WHERE date = ?',
+          [status, now, dateStr]
+        );
+      } else {
+        db.runSync(
+          'INSERT INTO daily_daf (date, masechet, daf, status, learnedAt) VALUES (?, ?, ?, ?, ?)',
+          [dateStr, masechet, daf, status, now]
+        );
+      }
+    }
+  });
+}
+
 export function getAllRecords(): DailyRecord[] {
   return db.getAllSync('SELECT * FROM daily_daf ORDER BY date DESC') as DailyRecord[];
 }

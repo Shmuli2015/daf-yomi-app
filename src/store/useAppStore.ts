@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, updateDailyRecord, getSettings, updateSettings, updateThemeMode, DailyRecord, SettingsRecord } from '../db/database';
+import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, DailyRecord, SettingsRecord } from '../db/database';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, ProgressCache } from '../utils/progressCache';
 
@@ -20,6 +20,8 @@ interface AppState {
   refreshSettings: () => void;
   markTodayAsLearned: () => void;
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => void;
+  batchMarkDafim: (updates: Array<{ dateStr: string; masechet: string; daf: string }>) => void;
+  batchUnmarkDafim: (updates: Array<{ dateStr: string; masechet: string; daf: string }>) => void;
   updateNotificationSettings: (
     hour: number,
     minute: number,
@@ -109,6 +111,20 @@ export const useAppStore = create<AppState>((set, get) => ({
     updateDailyRecord(dateStr, masechet, daf, newStatus);
     
     // Refresh only history, not settings
+    get().refreshHistory();
+  },
+
+  batchMarkDafim: (updates) => {
+    batchUpdateDailyRecords(
+      updates.map(u => ({ ...u, status: 'learned' as const }))
+    );
+    get().refreshHistory();
+  },
+
+  batchUnmarkDafim: (updates) => {
+    batchUpdateDailyRecords(
+      updates.map(u => ({ ...u, status: 'missed' as const }))
+    );
     get().refreshHistory();
   },
 

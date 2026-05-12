@@ -2,9 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { I18nManager, Platform } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
-
-I18nManager.allowRTL(true);
-I18nManager.forceRTL(true);
 import { initDB, getSettings } from './src/db/database';
 import { useAppStore } from './src/store/useAppStore';
 import * as Notifications from 'expo-notifications';
@@ -16,6 +13,9 @@ import SplashScreen from './src/components/SplashScreen';
 import { ThemeProvider, ThemeMode, DARK_THEME, LIGHT_THEME, resolveThemeScheme } from './src/theme';
 import { useColorScheme } from 'react-native';
 
+I18nManager.allowRTL(true);
+I18nManager.forceRTL(true);
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,
@@ -25,8 +25,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Define notification categories for interactive buttons
-Notifications.setNotificationCategoryAsync('study-reminder', [
+void Notifications.setNotificationCategoryAsync('study-reminder', [
   {
     identifier: 'finish-daf',
     buttonTitle: '✅ סיימתי את הדף!',
@@ -37,11 +36,11 @@ Notifications.setNotificationCategoryAsync('study-reminder', [
     buttonTitle: '⏰ הזכר לי עוד שעה',
     options: { opensAppToForeground: false },
   },
-]);
-
+]).catch(() => {});
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 const MIN_SPLASH_MS = 1800;
+const SPLASH_HARD_MAX_MS = 6000;
 
 export default function App() {
   const [isReady, setIsReady] = useState(false);
@@ -49,14 +48,31 @@ export default function App() {
   const loadInitialData = useAppStore(state => state.loadInitialData);
   const themeMode = (useAppStore(state => state.settings?.theme_mode) || 'system') as ThemeMode;
   const systemScheme = (useColorScheme() || 'dark') as 'dark' | 'light';
-  const startTime = useRef(Date.now());
+  const responseSubRef = useRef<Notifications.Subscription | undefined>(undefined);
 
   useEffect(() => {
-    async function setup() {
-      try {
-        initDB();
-        loadInitialData();
+    const startTime = Date.now();
+    try {
+      initDB();
+      loadInitialData();
+    } catch (e) {
+      console.warn('DB init error:', e);
+    }
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
+    const readyTimer = setTimeout(() => setIsReady(true), remaining);
+    const maxTimer = setTimeout(() => setIsReady(true), SPLASH_HARD_MAX_MS);
+    return () => {
+      clearTimeout(readyTimer);
+      clearTimeout(maxTimer);
+    };
+  }, [loadInitialData]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    void (async () => {
+      try {
         if (isExpoGo) {
           console.log('Running in Expo Go - Push notifications (remote) are restricted.');
         }
@@ -71,25 +87,16 @@ export default function App() {
         }
 
         const { status } = await Notifications.requestPermissionsAsync();
+        if (cancelled) return;
+
         console.log('Notification permission status:', status);
-        
-        if (status !== 'granted') {
-          console.log('Notification permissions not granted');
-        } else {
-          console.log('Notification permissions granted, scheduling notifications...');
-          
+
+        if (status === 'granted') {
           const s = getSettings();
-          console.log('Settings:', {
-            enabled: s.notifications_enabled === 1,
-            hour: s.notification_hour,
-            minute: s.notification_minute,
-            mode: s.notif_mode,
-          });
-          
           const daySchedules: DaySchedule[] = s.day_schedules
             ? JSON.parse(s.day_schedules)
             : DEFAULT_SCHEDULES;
-          
+
           await scheduleNotifications(
             s.notification_hour,
             s.notification_minute,
@@ -97,20 +104,22 @@ export default function App() {
             daySchedules,
             s.notifications_enabled === 1
           );
-          
+
           console.log('Notifications scheduled successfully');
         }
 
-        // Listener for when a notification is clicked or an action is performed
-        const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+        if (cancelled) return;
+
+        responseSubRef.current?.remove();
+        responseSubRef.current = Notifications.addNotificationResponseReceivedListener(response => {
           const { actionIdentifier } = response;
-          
+
           if (actionIdentifier === 'finish-daf') {
             const { markTodayAsLearned } = useAppStore.getState();
             markTodayAsLearned();
           } else if (actionIdentifier === 'later') {
             const dafInfo = getDafByDate(new Date());
-            Notifications.scheduleNotificationAsync({
+            void Notifications.scheduleNotificationAsync({
               content: {
                 title: '⏰ תזכורת נוספת',
                 body: `${dafInfo.masechet} ${dafInfo.daf} - ביקשת שנזכיר לך שוב... ✨`,
@@ -120,23 +129,22 @@ export default function App() {
               trigger: {
                 type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
                 seconds: 3600,
-                repeats: false
+                repeats: false,
               },
             });
           }
         });
-
-        return () => subscription.remove();
       } catch (e) {
         console.warn('Notification setup error:', e);
-      } finally {
-        const elapsed = Date.now() - startTime.current;
-        const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
-        setTimeout(() => setIsReady(true), remaining);
       }
-    }
-    setup();
-  }, [loadInitialData]);
+    })();
+
+    return () => {
+      cancelled = true;
+      responseSubRef.current?.remove();
+      responseSubRef.current = undefined;
+    };
+  }, []);
 
   return (
     <SafeAreaProvider>
@@ -170,10 +178,7 @@ export default function App() {
         </NavigationContainer>
       </ThemeProvider>
       {showSplash && (
-        <SplashScreen
-          isReady={isReady}
-          onFinish={() => setShowSplash(false)}
-        />
+        <SplashScreen isReady={isReady} onFinish={() => setShowSplash(false)} />
       )}
     </SafeAreaProvider>
   );

@@ -4,6 +4,7 @@ module.exports = {
   expo: {
     name: 'מסע דף',
     slug: 'daf-yomi-app',
+    scheme: 'dafyomi',
     version,
     orientation: 'portrait',
     icon: './assets/icon.png',
