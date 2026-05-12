@@ -4,28 +4,72 @@
 
 ---
 
-## Key Features
+## App Functions
 
-### Hebrew calendar integration
-- **Full Hebrew Support**: Track your study progress by the Hebrew date.
-- **Dynamic Mapping**: Automatically maps the daily Daf to both Hebrew and Secular calendars.
-- **Visual Insights**: A beautiful calendar view to see your monthly learning history.
+### 🏠 Home Dashboard
+- **Today's Daf Display**: Shows the current day's Daf Yomi (tractate and page) with both Hebrew and Gregorian dates
+- **One-Tap Learning Tracker**: Mark today's Daf as learned/unlearned with a single tap
+- **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
+- **Sefaria Integration**: Direct link to view the Daf on Sefaria for online learning
+- **Streak Counter**: Track your consecutive days of learning to maintain momentum
+- **7-Day Learning Widget**: Visual mini-calendar showing your last week's progress at a glance
+- **Shas Progress Banner**: Comprehensive progress bar displaying total pages learned out of 2,711 dafim
+- **Confetti Celebration**: Optional festive animation when marking a Daf as learned
 
-### Modern dashboard
-- **Streak Tracker**: Keep your momentum going with a stylized study streak indicator.
-- **Shas Progress Banner**: A high-end visual representation of your overall progress through the Talmud.
-- **Quick Action**: Mark today's Daf as learned with a single tap directly from the home screen.
+### 📊 History & Progress Tracking
+- **Complete Shas Overview**: Grid view of all 37 tractates (מסכתות) in the Talmud
+- **Masechet-by-Masechet Progress**: Individual progress bars for each tractate showing pages learned
+- **Completion Statistics**: Track total pages learned and completed tractates
+- **Interactive Masechet Details**: Tap any tractate to see detailed breakdown of dafim learned vs. remaining
+- **Visual Progress Hero**: Large progress ring displaying overall Shas completion percentage
+- **Learned Pages Counter**: Real-time count of total pages learned across all of Shas
 
-### Shas progress & history
-- **Masechet Grid**: A dedicated view showing every tractate in Shas with individual progress bars.
-- **Detailed History**: Browse through your entire study journey and revisit your milestones.
-- **Interactive Modals**: Tap on any tractate to see a detailed breakdown of pages learned vs. remaining.
+### 📅 Hebrew Calendar View
+- **Monthly Hebrew Calendar**: Beautiful calendar interface with Hebrew dates
+- **Learning History Visualization**: Color-coded dates showing which days you learned
+- **Date Navigation**: Browse through months to review your historical progress
+- **Hebrew Date Formatting**: Full Hebrew date display with proper gematria formatting
+- **Status Indicators**: Visual markers for learned, missed, and skipped days
 
-### Premium experience
-- **Festive Effects**: Celebrate your learning milestones with beautiful confetti animations.
-- **Dark Mode Aesthetics**: A sophisticated, dark-themed UI with gold and slate accents for a "Seforim-like" feel.
-- **Full RTL Support**: Optimized for Hebrew speakers with professional Right-to-Left layout and typography.
-- **Smart Settings**: Toggle between Secular/Hebrew dates, customize notifications, and manage study preferences.
+### ⚙️ Settings & Customization
+- **Daily Notifications**: Configurable daily reminders at your preferred time
+- **Custom Day Schedules**: Set different notification times for each day of the week
+- **Notification Mode Toggle**: Switch between daily uniform time or custom per-day schedules
+- **Interactive Notification Actions**: 
+  - "✅ I finished the Daf!" button to mark as learned directly from notification
+  - "⏰ Remind me in an hour" button to snooze the reminder
+- **Theme Selection**: Choose between Light, Dark, or System-based theme modes
+- **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
+- **Confetti Effects Toggle**: Enable/disable celebration animations
+- **Data Management**: Complete reset option to clear all learning history
+- **Privacy-First**: All data stored locally on device with SQLite database
+
+### 🔔 Smart Notifications
+- **Daily Learning Reminders**: Scheduled notifications at your chosen time(s)
+- **Dynamic Daf Information**: Notifications show today's tractate and page number
+- **Interactive Actions**: Quick actions directly from notification tray
+- **Snooze Functionality**: "Remind me later" option schedules follow-up after 1 hour
+- **Auto-scheduling**: Notifications automatically reschedule on device reboot
+- **Per-Day Customization**: Different notification times for different days of the week
+- **Hebrew Text**: All notifications in Hebrew for native speaker experience
+
+### 📱 User Experience
+- **Full RTL Support**: Complete Right-to-Left layout optimized for Hebrew
+- **Smooth Animations**: Powered by React Native Reanimated for fluid transitions
+- **Splash Screen**: Elegant branded loading screen on app launch
+- **Tab Navigation**: Intuitive bottom tab bar with Home, Calendar, History, and Settings
+- **Offline-First**: Full functionality without internet connection
+- **Platform Support**: Runs on iOS, Android, and Web
+- **Dark Mode**: Sophisticated dark theme with gold accents for premium "Seforim" aesthetic
+- **Light Mode**: Clean, bright interface for daytime use
+- **System Theme**: Automatically adapts to device theme settings
+
+### 💾 Data Persistence
+- **Local SQLite Database**: Lightning-fast local storage for all learning records
+- **Zustand State Management**: Reactive UI with efficient state updates
+- **Progress Caching**: Optimized calculations for instant performance
+- **Date-based Records**: Track every Daf by date with learned/missed/skipped status
+- **Settings Persistence**: All preferences saved and restored on app restart
 
 ---
 
