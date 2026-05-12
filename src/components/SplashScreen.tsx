@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, Animated, Easing } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { THEME } from '../theme';
+import { useTheme } from '../theme';
 
 interface SplashScreenProps {
   isReady: boolean;
@@ -9,6 +9,8 @@ interface SplashScreenProps {
 }
 
 export default function SplashScreen({ isReady, onFinish }: SplashScreenProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const scale = useRef(new Animated.Value(0.72)).current;
   const opacity = useRef(new Animated.Value(0)).current;
   const containerOpacity = useRef(new Animated.Value(1)).current;
@@ -56,7 +58,7 @@ export default function SplashScreen({ isReady, onFinish }: SplashScreenProps) {
 
       <Animated.View style={[styles.content, { transform: [{ scale }], opacity }]}>
         <Animated.View style={[styles.iconContainer, { transform: [{ scale: iconScale }] }]}>
-          <Ionicons name="book" size={52} color={THEME.colors.accent} />
+          <Ionicons name="book" size={52} color={theme.colors.accent} />
         </Animated.View>
 
         <Animated.View style={{ transform: [{ scale: shimmer }] }}>
@@ -77,78 +79,80 @@ export default function SplashScreen({ isReady, onFinish }: SplashScreenProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: THEME.colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 9999,
-  },
-  bgCircle1: {
-    position: 'absolute',
-    width: 320,
-    height: 320,
-    borderRadius: 160,
-    backgroundColor: 'rgba(201,150,60,0.05)',
-    top: -80,
-    right: -80,
-  },
-  bgCircle2: {
-    position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    bottom: -40,
-    left: -60,
-  },
-  content: {
-    alignItems: 'center',
-  },
-  iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 28,
-    backgroundColor: 'rgba(201,150,60,0.12)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 28,
-    borderWidth: 1.5,
-    borderColor: 'rgba(201,150,60,0.35)',
-  },
-  title: {
-    fontSize: 54,
-    fontWeight: '900',
-    color: THEME.colors.accent,
-    textAlign: 'center',
-    letterSpacing: -1.5,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.55)',
-    textAlign: 'center',
-    marginTop: 10,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 28,
-    gap: 8,
-  },
-  dividerLine: {
-    width: 36,
-    height: 1.5,
-    backgroundColor: 'rgba(201,150,60,0.4)',
-    borderRadius: 1,
-  },
-  dividerDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: THEME.colors.accent,
-    opacity: 0.7,
-  },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+  StyleSheet.create({
+    container: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.colors.background,
+      justifyContent: 'center',
+      alignItems: 'center',
+      zIndex: 9999,
+    },
+    bgCircle1: {
+      position: 'absolute',
+      width: 320,
+      height: 320,
+      borderRadius: 160,
+      backgroundColor: 'rgba(201,150,60,0.05)',
+      top: -80,
+      right: -80,
+    },
+    bgCircle2: {
+      position: 'absolute',
+      width: 240,
+      height: 240,
+      borderRadius: 120,
+      backgroundColor: theme.colors.textMuted.replace('1)', '0.03)'),
+      bottom: -40,
+      left: -60,
+    },
+    content: {
+      alignItems: 'center',
+    },
+    iconContainer: {
+      width: 100,
+      height: 100,
+      borderRadius: 28,
+      backgroundColor: theme.colors.accentLight,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 28,
+      borderWidth: 1.5,
+      borderColor: theme.colors.accentBorder,
+    },
+    title: {
+      fontSize: 54,
+      fontWeight: '900',
+      color: theme.colors.accent,
+      textAlign: 'center',
+      letterSpacing: -1.5,
+    },
+    subtitle: {
+      fontSize: 15,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      marginTop: 10,
+      fontWeight: '600',
+      letterSpacing: 0.5,
+      opacity: 0.7,
+    },
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 28,
+      gap: 8,
+    },
+    dividerLine: {
+      width: 36,
+      height: 1.5,
+      backgroundColor: theme.colors.accentBorder,
+      borderRadius: 1,
+    },
+    dividerDot: {
+      width: 5,
+      height: 5,
+      borderRadius: 3,
+      backgroundColor: theme.colors.accent,
+      opacity: 0.7,
+    },
+  });
