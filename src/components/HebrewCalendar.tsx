@@ -208,7 +208,18 @@ export default function HebrewCalendar() {
               learned={day.learned}
               isToday={day.isToday}
               isSelected={isSameDay(day.hdate, selectedDate)}
-              onPress={(hd) => { setSelectedDate(hd); setModalVisible(true); }}
+              onPress={(hd) => { 
+                setSelectedDate(hd); 
+                setModalVisible(true); 
+                if (!day.isCurrentMonth) {
+                  const direction = (hd.getFullYear() > currentHDate.getFullYear() || 
+                                    (hd.getFullYear() === currentHDate.getFullYear() && hd.getMonth() > currentHDate.getMonth())) 
+                                    ? 'next' : 'prev';
+                  animateGridChange(direction, () => {
+                    setCurrentHDate(new HDate(1, hd.getMonth(), hd.getFullYear()));
+                  });
+                }
+              }}
             />
           ))}
         </View>
