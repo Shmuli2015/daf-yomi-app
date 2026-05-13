@@ -26,21 +26,12 @@ const MasechetCard = React.memo(function MasechetCard({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const progressWidth = useRef(new Animated.Value(0)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
-  const cardTranslateY = useRef(new Animated.Value(18)).current;
+  const progressWidth = useRef(new Animated.Value(data.percent / 100)).current;
 
   useEffect(() => {
-    const delay = index * 22;
-    Animated.parallel([
-      Animated.timing(cardOpacity, { toValue: 1, duration: 360, delay, useNativeDriver: true }),
-      Animated.timing(cardTranslateY, { toValue: 0, duration: 360, delay, useNativeDriver: true }),
-    ]).start();
-
     Animated.timing(progressWidth, {
       toValue: data.percent / 100,
-      duration: 900,
-      delay: 400 + delay,
+      duration: 400,
       easing: Easing.out(Easing.quad),
       useNativeDriver: false,
     }).start();
@@ -52,9 +43,7 @@ const MasechetCard = React.memo(function MasechetCard({
   });
 
   return (
-    <Animated.View
-      style={[styles.cardWrapper, { opacity: cardOpacity, transform: [{ translateY: cardTranslateY }] }]}
-    >
+    <View style={styles.cardWrapper}>
       <TouchableOpacity
         activeOpacity={0.82}
         onPress={onPress}
@@ -77,7 +66,7 @@ const MasechetCard = React.memo(function MasechetCard({
           />
         </View>
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 });
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, I18nManager, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, I18nManager, useWindowDimensions, PanResponder } from 'react-native';
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -143,13 +143,31 @@ export default function HebrewCalendar() {
     });
   };
 
+  const swipeHandlers = useRef({ goNextMonth, goPrevMonth });
+  swipeHandlers.current = { goNextMonth, goPrevMonth };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dx) > 20 && Math.abs(gestureState.dx) > Math.abs(gestureState.dy);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dx > 50) {
+          swipeHandlers.current.goPrevMonth();
+        } else if (gestureState.dx < -50) {
+          swipeHandlers.current.goNextMonth();
+        }
+      },
+    })
+  ).current;
+
   const selectedDafInfo = useMemo(() => {
     if (!selectedDate) return null;
     return getDafByDate(selectedDate.greg());
   }, [selectedDate]);
 
   return (
-    <View style={styles.card}>
+    <View style={styles.card} {...panResponder.panHandlers}>
       <View style={styles.navRow}>
         <TouchableOpacity onPress={goPrevMonth} style={styles.navBtn} activeOpacity={0.7}>
           <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
