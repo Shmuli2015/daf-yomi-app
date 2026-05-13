@@ -26,7 +26,6 @@ export interface SettingsRecord {
 }
 
 export function initDB() {
-  // 1. Create tables if they don't exist
   db.execSync(`
     CREATE TABLE IF NOT EXISTS daily_daf (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,7 +44,6 @@ export function initDB() {
     );
   `);
 
-  // 2. Migration for existing tables
   const tableInfo: any[] = db.getAllSync('PRAGMA table_info(settings);');
   const columns = tableInfo.map(c => c.name);
   
@@ -68,7 +66,6 @@ export function initDB() {
     db.execSync("ALTER TABLE settings ADD COLUMN theme_mode TEXT DEFAULT 'system';");
   }
 
-  // 3. Ensure default settings exist
   db.execSync(`
     INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)
     VALUES (1, 7, 30);

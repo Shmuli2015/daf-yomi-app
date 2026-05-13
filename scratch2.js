@@ -14,11 +14,9 @@ import('@hebcal/learning').then(learning => {
       
       const partsHe = textHe.split(' דף ');
       const mHe = partsHe[0];
-      
-      // key: Hebrew Masechet + English Daf number (easier to use programmatically)
+
       const key = `${mHe}_${dEn}`;
-      
-      // format date as YYYY-MM-DD
+
       const g = current.greg();
       const dateStr = `${g.getFullYear()}-${String(g.getMonth()+1).padStart(2,'0')}-${String(g.getDate()).padStart(2,'0')}`;
       

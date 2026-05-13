@@ -55,8 +55,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const history = getAllRecords();
     const settings = getSettings();
     const cache = buildProgressCache(history);
-    
-    // Find today's record from history for consistency
+
     const record = history.find(r => r.date === dateStr) || null;
 
     set({
@@ -98,8 +97,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const dateStr = getDateStr(currentDate);
     
     updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned');
-    
-    // Refresh only history, not settings
+
     get().refreshHistory();
   },
 
@@ -109,8 +107,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const newStatus = existing?.status === 'learned' ? 'missed' : 'learned';
     
     updateDailyRecord(dateStr, masechet, daf, newStatus);
-    
-    // Refresh only history, not settings
+
     get().refreshHistory();
   },
 
@@ -138,7 +135,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     daySchedules?: string | null
   ) => {
     updateSettings(hour, minute, showSecular, showConfetti, notificationsEnabled, notifMode, daySchedules);
-    // Only refresh settings, not history
     get().refreshSettings();
   },
 

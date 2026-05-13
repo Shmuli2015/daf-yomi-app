@@ -77,7 +77,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: 'center',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      // @ts-ignore
       direction: 'rtl',
     },
     iconContainer: {

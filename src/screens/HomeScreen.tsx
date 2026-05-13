@@ -5,6 +5,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useAppStore } from "../store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import React, { useMemo, useState, useCallback } from "react";
 import { HDate } from "@hebcal/core";
 import { format, subDays } from "date-fns";
@@ -35,7 +36,21 @@ export default function HomeScreen({ navigation }: any) {
     history,
     settings,
     progressCache,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      currentDate: s.currentDate,
+      todayRecord: s.todayRecord,
+      todayMasechet: s.todayMasechet,
+      todayDafNum: s.todayDafNum,
+      todaySefariaUrl: s.todaySefariaUrl,
+      loadInitialData: s.loadInitialData,
+      streak: s.streak,
+      toggleAnyDafLearned: s.toggleAnyDafLearned,
+      history: s.history,
+      settings: s.settings,
+      progressCache: s.progressCache,
+    })),
+  );
 
   React.useEffect(() => {
     loadInitialData();
@@ -145,7 +160,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       zIndex: 1000,
       justifyContent: "center",
       alignItems: "center",
-      // @ts-ignore
       direction: "ltr",
     },
   });

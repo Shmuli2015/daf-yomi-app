@@ -3,7 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, I18nManager
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../store/useAppStore';
+import { buildLearnedDateSet } from '../utils/shas';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import CalendarDay from './Calendar/CalendarDay';
 import DafDetailModal from './Calendar/DafDetailModal';
@@ -25,7 +27,10 @@ export default function HebrewCalendar() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { history, toggleAnyDafLearned } = useAppStore();
+  const { history, toggleAnyDafLearned } = useAppStore(
+    useShallow((s) => ({ history: s.history, toggleAnyDafLearned: s.toggleAnyDafLearned })),
+  );
+  const learnedDateSet = useMemo(() => buildLearnedDateSet(history), [history]);
   const [currentHDate, setCurrentHDate] = useState(new HDate(new Date()));
   const [selectedDate, setSelectedDate] = useState<HDate | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -59,29 +64,48 @@ export default function HebrewCalendar() {
     const dayOfWeek = firstDayOfMonth.getDay();
     const days: DayData[] = [];
 
+    const todayHd = new HDate(new Date());
     const prevMonth = firstDayOfMonth.prev();
     for (let i = dayOfWeek - 1; i >= 0; i--) {
       const d = new HDate(prevMonth.getDate() - i, prevMonth.getMonth(), prevMonth.getFullYear());
-      days.push({ hdate: d, isCurrentMonth: false, learned: isLearned(d), isToday: isSameDay(d, new HDate(new Date())), dateKey: getDateStr(d.greg()) });
+      const dateKey = getDateStr(d.greg());
+      days.push({
+        hdate: d,
+        isCurrentMonth: false,
+        learned: learnedDateSet.has(dateKey),
+        isToday: isSameDay(d, todayHd),
+        dateKey,
+      });
     }
 
     let d = firstDayOfMonth;
     while (d.getMonth() === month) {
-      days.push({ hdate: d, isCurrentMonth: true, learned: isLearned(d), isToday: isSameDay(d, new HDate(new Date())), dateKey: getDateStr(d.greg()) });
+      const dateKey = getDateStr(d.greg());
+      days.push({
+        hdate: d,
+        isCurrentMonth: true,
+        learned: learnedDateSet.has(dateKey),
+        isToday: isSameDay(d, todayHd),
+        dateKey,
+      });
       d = d.next();
     }
 
     const remaining = 42 - days.length;
     for (let i = 1; i <= remaining; i++) {
-      days.push({ hdate: d, isCurrentMonth: false, learned: isLearned(d), isToday: isSameDay(d, new HDate()), dateKey: getDateStr(d.greg()) });
+      const dateKey = getDateStr(d.greg());
+      days.push({
+        hdate: d,
+        isCurrentMonth: false,
+        learned: learnedDateSet.has(dateKey),
+        isToday: isSameDay(d, new HDate()),
+        dateKey,
+      });
       d = d.next();
     }
     return days;
-  }, [currentHDate, history]);
+  }, [currentHDate, learnedDateSet]);
 
-  function isLearned(hdate: HDate) {
-    return history.some(r => r.date === getDateStr(hdate.greg()) && r.status === 'learned');
-  }
 
   function isSameDay(d1: HDate, d2: HDate | null) {
     if (!d2) return false;
@@ -157,9 +181,9 @@ export default function HebrewCalendar() {
 
       <Animated.View style={{ transform: [{ translateX: gridTranslateX }], opacity: gridOpacity }}>
         <View style={styles.grid}>
-          {calendarData.map((day, index) => (
+          {calendarData.map((day) => (
             <CalendarDay
-              key={index}
+              key={day.dateKey}
               hdate={day.hdate}
               isCurrentMonth={day.isCurrentMonth}
               learned={day.learned}
@@ -176,10 +200,12 @@ export default function HebrewCalendar() {
         onClose={() => setModalVisible(false)}
         selectedDate={selectedDate}
         dafInfo={selectedDafInfo}
-        isLearned={selectedDate ? isLearned(selectedDate) : false}
+        isLearned={
+          selectedDate ? learnedDateSet.has(getDateStr(selectedDate.greg())) : false
+        }
         onToggle={() => {
           if (selectedDate && selectedDafInfo) {
-            const currentlyLearned = isLearned(selectedDate);
+            const currentlyLearned = learnedDateSet.has(getDateStr(selectedDate.greg()));
             if (currentlyLearned) {
               setShowConfirm(true);
             } else {
@@ -238,7 +264,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       shadowOpacity: 0.08,
       shadowRadius: 16,
       elevation: 5,
-      // @ts-ignore
       direction: 'rtl',
     },
     navRow: {
@@ -317,7 +342,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       zIndex: 1000,
       justifyContent: 'center',
       alignItems: 'center',
-      // @ts-ignore
       direction: 'ltr',
     },
   });

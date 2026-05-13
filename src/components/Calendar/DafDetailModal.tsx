@@ -95,7 +95,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderWidth: 1,
       borderColor: theme.colors.border,
       overflow: 'hidden',
-      // @ts-ignore
       direction: 'rtl',
     },
     closeBtn: {

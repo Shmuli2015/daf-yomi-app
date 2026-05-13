@@ -32,10 +32,8 @@ export const WheelPicker = ({
   const count = items.length;
   const containerHeight = itemHeight * VISIBLE_ITEMS;
 
-  // Virtual list: items repeated MULTIPLIER times
   const virtualItems = Array.from({ length: count * MULTIPLIER }, (_, i) => items[i % count]);
 
-  // The "home" block in the middle of the virtual list
   const middleBlock = Math.floor(MULTIPLIER / 2) * count;
 
   const getOffset = useCallback(
@@ -44,7 +42,6 @@ export const WheelPicker = ({
   );
 
   useEffect(() => {
-    // Only scroll when selectedIndex changes externally (not from our own onIndexChange)
     if (selectedIndex !== lastScrolledIndex.current) {
       const timer = setTimeout(() => {
         scrollRef.current?.scrollTo({
@@ -65,7 +62,6 @@ export const WheelPicker = ({
       );
       const realIndex = virtualIndex % count;
 
-      // Always silently re-center to the middle block to avoid hitting list edges
       const centeredOffset = (middleBlock + realIndex) * itemHeight;
       scrollRef.current?.scrollTo({ y: centeredOffset, animated: false });
 
@@ -83,7 +79,6 @@ export const WheelPicker = ({
 
   return (
     <View style={[styles.container, { height: containerHeight }]}>
-      {/* Selection highlight band */}
       <View
         style={[styles.selectionHighlight, { height: itemHeight, top: itemHeight * 2 }]}
         pointerEvents="none"

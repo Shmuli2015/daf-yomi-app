@@ -12,7 +12,7 @@ interface TimePickerModalProps {
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
-const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']; // steps of 5
+const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
 
 export const TimePickerModal = ({
   visible,
@@ -24,7 +24,6 @@ export const TimePickerModal = ({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [selectedHour, setSelectedHour] = React.useState(hour);
-  // Store as index (0-5), e.g. minute=30 → index=3
   const [selectedMinuteIndex, setSelectedMinuteIndex] = React.useState(Math.round(minute / 5) % 12);
 
   React.useEffect(() => {
@@ -46,12 +45,10 @@ export const TimePickerModal = ({
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        {/* Dismiss backdrop — only outside the card */}
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={StyleSheet.absoluteFill} />
         </TouchableWithoutFeedback>
 
-        {/* Card — plain View so scroll gestures reach the ScrollView */}
         <View style={styles.card}>
           <View style={styles.topAccent} />
           <Text style={styles.title}>בחר שעת התראה</Text>

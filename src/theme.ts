@@ -151,5 +151,4 @@ export function useTheme(): Theme {
   return useContext(ThemeContext);
 }
 
-// Backwards-compatible export (legacy code). Prefer `useTheme()`.
 export const THEME = DARK_THEME;

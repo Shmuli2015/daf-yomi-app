@@ -2,13 +2,14 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, numberToGematria } from '../../data/shas';
-import { 
-  getDafDateStr, 
-  isDafLearnedByDate, 
+import {
+  getDafDateStr,
+  buildLearnedDateSet,
   getMasechetDafim,
-  stripNiqqud 
+  stripNiqqud,
 } from '../../utils/shas';
 import { getMasechetProgressFromCache } from '../../utils/progressCache';
 import { useTheme } from '../../theme';
@@ -28,11 +29,17 @@ export default function MasechetModal({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const history = useAppStore(state => state.history);
-  const progressCache = useAppStore(state => state.progressCache);
-  const toggleAnyDafLearned = useAppStore(state => state.toggleAnyDafLearned);
-  const batchMarkDafim = useAppStore(state => state.batchMarkDafim);
-  const batchUnmarkDafim = useAppStore(state => state.batchUnmarkDafim);
+  const { history, progressCache, toggleAnyDafLearned, batchMarkDafim, batchUnmarkDafim } =
+    useAppStore(
+      useShallow((s) => ({
+        history: s.history,
+        progressCache: s.progressCache,
+        toggleAnyDafLearned: s.toggleAnyDafLearned,
+        batchMarkDafim: s.batchMarkDafim,
+        batchUnmarkDafim: s.batchUnmarkDafim,
+      })),
+    );
+  const learnedDateSet = useMemo(() => buildLearnedDateSet(history), [history]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [pendingAction, setPendingAction] = useState<'markAll' | 'unmarkAll' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +58,7 @@ export default function MasechetModal({
     const dateStr = getDafDateStr(masechet.he, dafNum);
     if (!dateStr) return;
 
-    const isCurrentlyLearned = isDafLearnedByDate(dateStr, history);
+    const isCurrentlyLearned = learnedDateSet.has(dateStr);
     const learnedBefore = progressCache 
       ? getMasechetProgressFromCache(progressCache, masechet.he).learned 
       : 0;
@@ -61,7 +68,7 @@ export default function MasechetModal({
     if (!isCurrentlyLearned && learnedBefore + 1 === dafimArray.length) {
       setTimeout(() => setShowConfetti(true), 200);
     }
-  }, [masechet.he, history, progressCache, dafimArray.length, toggleAnyDafLearned]);
+  }, [masechet.he, learnedDateSet, progressCache, dafimArray.length, toggleAnyDafLearned]);
 
   const handleMarkAll = useCallback(() => {
     const updates = dafimArray
@@ -69,8 +76,7 @@ export default function MasechetModal({
         const dateStr = getDafDateStr(masechet.he, dafNum);
         if (!dateStr) return null;
 
-        const isLearned = isDafLearnedByDate(dateStr, history);
-        if (isLearned) return null;
+        if (learnedDateSet.has(dateStr)) return null;
 
         return {
           dateStr,
@@ -84,7 +90,7 @@ export default function MasechetModal({
       batchMarkDafim(updates);
       setTimeout(() => setShowConfetti(true), 200);
     }
-  }, [masechet.he, dafimArray, history, batchMarkDafim]);
+  }, [masechet.he, dafimArray, learnedDateSet, batchMarkDafim]);
 
   const handleUnmarkAll = useCallback(() => {
     const updates = dafimArray
@@ -92,8 +98,7 @@ export default function MasechetModal({
         const dateStr = getDafDateStr(masechet.he, dafNum);
         if (!dateStr) return null;
 
-        const isLearned = isDafLearnedByDate(dateStr, history);
-        if (!isLearned) return null;
+        if (!learnedDateSet.has(dateStr)) return null;
 
         return {
           dateStr,
@@ -106,7 +111,7 @@ export default function MasechetModal({
     if (updates.length > 0) {
       batchUnmarkDafim(updates);
     }
-  }, [masechet.he, dafimArray, history, batchUnmarkDafim]);
+  }, [masechet.he, dafimArray, learnedDateSet, batchUnmarkDafim]);
 
   const handleMarkAllPress = () => setPendingAction('markAll');
   const handleUnmarkAllPress = () => setPendingAction('unmarkAll');
@@ -162,7 +167,7 @@ export default function MasechetModal({
           <View style={styles.dafGrid}>
             {dafimArray.map(dafNum => {
               const dateStr = getDafDateStr(masechet.he, dafNum);
-              const isLearned = dateStr ? isDafLearnedByDate(dateStr, history) : false;
+              const isLearned = dateStr ? learnedDateSet.has(dateStr) : false;
               return (
                 <TouchableOpacity
                   key={dafNum}
@@ -295,7 +300,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       right: 0,
       bottom: 0,
       zIndex: 9999,
-      // @ts-ignore
       direction: 'ltr',
     },
   });

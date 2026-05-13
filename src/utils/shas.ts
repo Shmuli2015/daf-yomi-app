@@ -6,17 +6,23 @@ export function stripNiqqud(str: string) {
   return str.replace(/[\u0591-\u05C7]/g, '');
 }
 
+const masechetDafimByName = new Map<string, number[]>();
+
 export function getMasechetDafim(masechetHe: string): number[] {
   const masechetNameSafe = stripNiqqud(masechetHe);
+  const hit = masechetDafimByName.get(masechetNameSafe);
+  if (hit !== undefined) return hit;
+
   const keys = Object.keys(dafDates).filter(k => k.startsWith(masechetNameSafe + '_'));
-  return keys.map(k => parseInt(k.split('_')[1], 10)).sort((a, b) => a - b);
+  const dafim = keys.map(k => parseInt(k.split('_')[1], 10)).sort((a, b) => a - b);
+  masechetDafimByName.set(masechetNameSafe, dafim);
+  return dafim;
 }
 
 export function getDafDateStr(masechetHe: string, dafNum: number): string | null {
   const masechetNameSafe = stripNiqqud(masechetHe);
   const key = `${masechetNameSafe}_${dafNum}`;
-  // @ts-ignore
-  return dafDates[key] || null;
+  return (dafDates as Record<string, string | undefined>)[key] ?? null;
 }
 
 export function getMasechetProgress(masechetHe: string, history: DailyRecord[]) {
@@ -28,13 +34,20 @@ export function getMasechetProgress(masechetHe: string, history: DailyRecord[]) 
     if (dateStr) masechetDates.add(dateStr);
   }
 
-  // Count how many of these dates are marked as learned in history
   const learnedCount = history.filter(r => masechetDates.has(r.date) && r.status === 'learned').length;
   return learnedCount;
 }
 
 export function isDafLearnedByDate(dateStr: string, history: DailyRecord[]) {
   return history.some(r => r.date === dateStr && r.status === 'learned');
+}
+
+export function buildLearnedDateSet(history: DailyRecord[]): Set<string> {
+  const set = new Set<string>();
+  for (const r of history) {
+    if (r.status === 'learned') set.add(r.date);
+  }
+  return set;
 }
 
 export function getTotalShasProgress(history: DailyRecord[]) {

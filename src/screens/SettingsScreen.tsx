@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore } from "../store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { resetDB } from "../db/database";
 import { SettingItem } from "../components/Settings/SettingItem";
 import { SectionHeader } from "../components/Settings/SectionHeader";
@@ -32,12 +33,15 @@ const IS_DEV = __DEV__;
 export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const {
-    settings,
-    updateNotificationSettings,
-    updateThemeMode,
-    loadInitialData,
-  } = useAppStore();
+  const { settings, updateNotificationSettings, updateThemeMode, loadInitialData } =
+    useAppStore(
+      useShallow((s) => ({
+        settings: s.settings,
+        updateNotificationSettings: s.updateNotificationSettings,
+        updateThemeMode: s.updateThemeMode,
+        loadInitialData: s.loadInitialData,
+      })),
+    );
   const [hour, setHour] = useState(7);
   const [minute, setMinute] = useState(30);
   const [showSecularDate, setShowSecularDate] = useState(true);
@@ -74,7 +78,6 @@ export default function SettingsScreen() {
     }
   }, [settings]);
 
-  // Persist to DB and reschedule in one shot
   const saveAndSchedule = useCallback(
     (
       h: number,

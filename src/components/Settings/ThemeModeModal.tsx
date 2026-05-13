@@ -92,7 +92,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderWidth: 1,
       borderColor: theme.colors.border,
       paddingBottom: 6,
-      // @ts-ignore
       direction: 'rtl',
     },
     topAccent: {
