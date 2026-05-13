@@ -154,9 +154,9 @@ export default function HebrewCalendar() {
       },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dx > 50) {
-          swipeHandlers.current.goPrevMonth();
-        } else if (gestureState.dx < -50) {
           swipeHandlers.current.goNextMonth();
+        } else if (gestureState.dx < -50) {
+          swipeHandlers.current.goPrevMonth();
         }
       },
     })
