@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, BackHandler, useWindowDimensions } from 'react-native';
+import React, { useState, useMemo, useCallback } from 'react';
+import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useAppStore } from '../../store/useAppStore';
@@ -39,14 +39,13 @@ export default function MasechetModal({
 
   const dafimArray = useMemo(() => getMasechetDafim(masechet.he), [masechet.he]);
 
-  useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      onClose();
-      return true;
-    });
-    
-    return () => backHandler.remove();
-  }, [onClose]);
+  const handleRequestClose = useCallback(() => {
+    if (pendingAction !== null) {
+      setPendingAction(null);
+      return;
+    }
+    onClose();
+  }, [pendingAction, onClose]);
 
   const handleToggleDaf = useCallback((dafNum: number) => {
     const dateStr = getDafDateStr(masechet.he, dafNum);
@@ -133,7 +132,12 @@ export default function MasechetModal({
   const handleCancel = () => setPendingAction(null);
 
   return (
-    <Modal visible={true} animationType="slide" presentationStyle="pageSheet">
+    <Modal
+      visible
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={handleRequestClose}
+    >
       <SafeAreaView style={styles.modalSafe} edges={['bottom']}>
         <View style={styles.modalHandle} />
 

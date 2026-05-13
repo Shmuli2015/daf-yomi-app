@@ -51,7 +51,12 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <SafeAreaView style={styles.modalSafe} edges={['bottom']}>
         <View style={styles.modalHandle} />
 
