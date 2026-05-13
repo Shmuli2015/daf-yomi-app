@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import { useTheme } from '../theme';
 
 interface DayRecord {
@@ -22,18 +23,14 @@ const HomeContent = React.memo(function HomeContent({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const contentOpacity = useRef(new Animated.Value(0)).current;
-  const contentTranslateY = useRef(new Animated.Value(20)).current;
+  const showBars = useSharedValue(0);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(contentOpacity, { toValue: 1, duration: 400, delay: 300, useNativeDriver: true }),
-      Animated.timing(contentTranslateY, { toValue: 0, duration: 400, delay: 300, useNativeDriver: true }),
-    ]).start();
+    showBars.value = withDelay(400, withTiming(1, { duration: 600, easing: Easing.out(Easing.exp) }));
   }, []);
 
   return (
-    <Animated.View style={[styles.container, { opacity: contentOpacity, transform: [{ translateY: contentTranslateY }] }]}>
+    <Animated.View entering={FadeInDown.duration(400).delay(200).springify()} style={[styles.container]}>
       <View style={styles.streakCard}>
         <View style={styles.streakHeader}>
           <Text style={styles.streakTitle}>רצף לימוד</Text>
@@ -61,18 +58,22 @@ const HomeContent = React.memo(function HomeContent({
               opacity = 0.5;
             }
 
-            return (
-              <View key={index} style={styles.barColumn}>
-                <View 
-                  style={[
-                    styles.bar, 
-                    { 
-                      height: barHeight, 
-                      backgroundColor: barColor,
-                      opacity: opacity,
-                    }
-                  ]} 
-                />
+              const animatedBarStyle = useAnimatedStyle(() => ({
+                height: showBars.value * barHeight,
+              }));
+
+              return (
+                <View key={index} style={styles.barColumn}>
+                  <Animated.View 
+                    style={[
+                      styles.bar, 
+                      animatedBarStyle,
+                      { 
+                        backgroundColor: barColor,
+                        opacity: opacity,
+                      }
+                    ]} 
+                  />
                 <Text style={[styles.dayLabel, isToday && { color: theme.colors.accent, fontWeight: '800' }]}>
                   {day.dayNameHe}
                 </Text>

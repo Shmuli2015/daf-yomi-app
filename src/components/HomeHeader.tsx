@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Linking, StyleSheet, Animated, Easing } from 'react-native';
+import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import Animated, { FadeInDown, FadeInUp, useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, Easing, withSpring } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConfirmModal from './ConfirmModal';
@@ -34,31 +35,42 @@ const HomeHeader = React.memo(function HomeHeader({
   const [showConfirm, setShowConfirm] = useState(false);
   const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
 
-  const heroOpacity = useRef(new Animated.Value(0)).current;
-  const heroTranslateY = useRef(new Animated.Value(-24)).current;
-  const cardScale = useRef(new Animated.Value(0.88)).current;
-  const cardOpacity = useRef(new Animated.Value(0)).current;
+  const progressWidth = useSharedValue(0);
+  const pulseScale = useSharedValue(1);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(heroOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
-      Animated.timing(heroTranslateY, { toValue: 0, duration: 450, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-    ]).start();
+    progressWidth.value = withTiming(masechetProgressPct, { duration: 1000, easing: Easing.out(Easing.exp) });
+    
+    if (!isLearned) {
+      pulseScale.value = withRepeat(
+        withSequence(
+          withTiming(1.02, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
+      );
+    } else {
+      pulseScale.value = withSpring(1);
+    }
+  }, [masechetProgressPct, isLearned]);
 
-    Animated.parallel([
-      Animated.spring(cardScale, { toValue: 1, damping: 14, stiffness: 100, delay: 200, useNativeDriver: true }),
-      Animated.timing(cardOpacity, { toValue: 1, duration: 400, delay: 200, useNativeDriver: true }),
-    ]).start();
-  }, []);
+  const animatedProgressStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
+
+  const animatedButtonStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
 
   return (
-    <Animated.View style={{ opacity: heroOpacity, transform: [{ translateY: heroTranslateY }], paddingTop: insets.top + 24 }}>
+    <Animated.View entering={FadeInDown.duration(400).springify()} style={{ paddingTop: insets.top + 24 }}>
       <View style={styles.datesContainer}>
         <Text style={styles.hebrewDate}>{cleanHebrewDate}</Text>
         {showSecularDate && <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>}
       </View>
 
-      <Animated.View style={[styles.dafCard, { transform: [{ scale: cardScale }], opacity: cardOpacity }]}>
+      <Animated.View entering={FadeInUp.duration(500).delay(100).springify()} style={[styles.dafCard]}>
         <View style={styles.cardHeader}>
           <View style={styles.dailyStudyBadge}>
             <Text style={styles.dailyStudyText}>הלימוד היומי</Text>
@@ -73,30 +85,32 @@ const HomeHeader = React.memo(function HomeHeader({
         <View style={styles.progressSection}>
           <Text style={styles.progressText}>{masechetProgressPct}% מהמסכת</Text>
           <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: `${masechetProgressPct}%` }]} />
+            <Animated.View style={[styles.progressBarFill, animatedProgressStyle]} />
           </View>
         </View>
 
-        <TouchableOpacity
-          onPress={() => {
-            if (isLearned) {
-              setShowConfirm(true);
-            } else {
-              handleToggle?.();
-            }
-          }}
-          style={[styles.mainButton, isLearned ? styles.buttonDone : styles.buttonPending]}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name={isLearned ? 'checkmark-circle' : 'checkmark-circle-outline'}
-            size={22}
-            color={isLearned ? theme.colors.accent : '#FFFFFF'}
-          />
-          <Text style={[styles.mainButtonText, isLearned ? styles.buttonTextDone : styles.buttonTextPending]}>
-            {isLearned ? 'סיימתי את הדף' : 'סמן כנלמד'}
-          </Text>
-        </TouchableOpacity>
+        <Animated.View style={animatedButtonStyle}>
+          <TouchableOpacity
+            onPress={() => {
+              if (isLearned) {
+                setShowConfirm(true);
+              } else {
+                handleToggle?.();
+              }
+            }}
+            style={[styles.mainButton, isLearned ? styles.buttonDone : styles.buttonPending]}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={isLearned ? 'checkmark-circle' : 'checkmark-circle-outline'}
+              size={22}
+              color={isLearned ? theme.colors.accent : '#FFFFFF'}
+            />
+            <Text style={[styles.mainButtonText, isLearned ? styles.buttonTextDone : styles.buttonTextPending]}>
+              {isLearned ? 'סיימתי את הדף' : 'סמן כנלמד'}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         <ConfirmModal
           visible={showConfirm}

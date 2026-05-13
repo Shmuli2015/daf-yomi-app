@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { TouchableOpacity, StyleSheet } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, Easing } from 'react-native-reanimated';
 import { HDate } from '@hebcal/core';
 import { useTheme } from '../../theme';
 
@@ -19,33 +20,40 @@ const CalendarDay = ({ hdate, isCurrentMonth, learned, isToday, isSelected, onPr
   const gematriya = hdate.renderGematriya().split(' ')[0];
   const gregDay = hdate.greg().getDate();
 
-  const scale = useRef(new Animated.Value(1)).current;
-  const pulseOpacity = useRef(new Animated.Value(0.7)).current;
-  const pulseLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+  const scale = useSharedValue(1);
+  const pulseOpacity = useSharedValue(0);
 
   useEffect(() => {
-    pulseLoopRef.current?.stop();
     if (isToday) {
-      pulseLoopRef.current = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseOpacity, { toValue: 0.15, duration: 1100, useNativeDriver: true }),
-          Animated.timing(pulseOpacity, { toValue: 0.7, duration: 1100, useNativeDriver: true }),
-        ])
+      pulseOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.15, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.7, { duration: 1100, easing: Easing.inOut(Easing.ease) })
+        ),
+        -1,
+        true
       );
-      pulseLoopRef.current.start();
     } else {
-      Animated.timing(pulseOpacity, { toValue: 0, duration: 200, useNativeDriver: true }).start();
+      pulseOpacity.value = withTiming(0, { duration: 200 });
     }
-    return () => { pulseLoopRef.current?.stop(); };
   }, [isToday]);
 
   const handlePress = () => {
-    Animated.sequence([
-      Animated.spring(scale, { toValue: 0.8, damping: 8, stiffness: 300, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1, damping: 12, stiffness: 200, useNativeDriver: true }),
-    ]).start();
+    scale.value = withSequence(
+      withSpring(0.8, { damping: 10, stiffness: 400 }),
+      withSpring(1, { damping: 12, stiffness: 200 })
+    );
     onPress(hdate);
   };
+
+  const animatedContainerStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: isCurrentMonth ? 1 : 0.3,
+  }));
+
+  const animatedPulseStyle = useAnimatedStyle(() => ({
+    opacity: pulseOpacity.value,
+  }));
 
   const bg = learned ? theme.colors.accent : isToday ? theme.colors.accentLight : 'transparent';
   const textColor = learned ? 'white' : isToday ? theme.colors.accent : theme.colors.textPrimary;
@@ -54,9 +62,9 @@ const CalendarDay = ({ hdate, isCurrentMonth, learned, isToday, isSelected, onPr
 
   return (
     <TouchableOpacity onPress={handlePress} activeOpacity={1} style={styles.cell}>
-      <Animated.View style={{ transform: [{ scale }], opacity: isCurrentMonth ? 1 : 0.3 }}>
+      <Animated.View style={animatedContainerStyle}>
         {isToday && (
-          <Animated.View style={[styles.pulseRing, { opacity: pulseOpacity }]} />
+          <Animated.View style={[styles.pulseRing, animatedPulseStyle]} />
         )}
         <Animated.View
           style={[styles.circle, { backgroundColor: bg, borderColor, borderWidth: isSelected ? 1.5 : 0 }]}

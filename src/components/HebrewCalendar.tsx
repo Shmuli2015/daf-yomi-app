@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, I18nManager, useWindowDimensions, PanResponder } from 'react-native';
+import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -167,7 +168,7 @@ export default function HebrewCalendar() {
   }, [selectedDate]);
 
   return (
-    <View style={styles.card} {...panResponder.panHandlers}>
+    <Reanimated.View entering={FadeInDown.duration(400).springify()} style={styles.card} {...panResponder.panHandlers}>
       <View style={styles.navRow}>
         <TouchableOpacity onPress={goPrevMonth} style={styles.navBtn} activeOpacity={0.7}>
           <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
@@ -265,7 +266,7 @@ export default function HebrewCalendar() {
           />
         </View>
       )}
-    </View>
+    </Reanimated.View>
   );
 }
 

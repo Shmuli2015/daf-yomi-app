@@ -14,8 +14,10 @@ interface AppState {
   todaySefariaUrl: string;
   streak: number;
   progressCache: ProgressCache | null;
+  isAppReady: boolean;
   
   loadInitialData: () => void;
+  setAppReady: (ready: boolean) => void;
   refreshHistory: () => void;
   refreshSettings: () => void;
   markTodayAsLearned: () => void;
@@ -46,6 +48,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   todaySefariaUrl: '',
   streak: 0,
   progressCache: null,
+  isAppReady: false,
+
+  setAppReady: (ready) => set({ isAppReady: ready }),
 
   loadInitialData: () => {
     const today = new Date();

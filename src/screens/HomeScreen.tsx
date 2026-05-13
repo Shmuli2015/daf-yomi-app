@@ -36,6 +36,7 @@ export default function HomeScreen({ navigation }: any) {
     history,
     settings,
     progressCache,
+    isAppReady,
   } = useAppStore(
     useShallow((s) => ({
       currentDate: s.currentDate,
@@ -49,6 +50,7 @@ export default function HomeScreen({ navigation }: any) {
       history: s.history,
       settings: s.settings,
       progressCache: s.progressCache,
+      isAppReady: s.isAppReady,
     })),
   );
 
@@ -93,6 +95,10 @@ export default function HomeScreen({ navigation }: any) {
       };
     });
   }, [history, currentDate]);
+
+  if (!isAppReady) {
+    return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>

@@ -195,7 +195,13 @@ export default function App() {
         </NavigationContainer>
       </ThemeProvider>
       {showSplash && (
-        <SplashScreen isReady={isReady} onFinish={() => setShowSplash(false)} />
+        <SplashScreen 
+          isReady={isReady} 
+          onFinish={() => {
+            setShowSplash(false);
+            useAppStore.getState().setAppReady(true);
+          }} 
+        />
       )}
     </SafeAreaProvider>
   );

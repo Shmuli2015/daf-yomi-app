@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, FadeInDown } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 
@@ -14,18 +15,18 @@ export default function ShasBanner({ learnedCount, totalPages, percentage, onPre
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const scale = useRef(new Animated.Value(0.95)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const progressWidth = useSharedValue(0);
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.spring(scale, { toValue: 1, damping: 14, stiffness: 100, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-    ]).start();
-  }, []);
+    progressWidth.value = withTiming(percentage, { duration: 1000 });
+  }, [percentage]);
+
+  const animatedProgressStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value}%`,
+  }));
 
   return (
-    <Animated.View style={{ opacity, transform: [{ scale }] }}>
+    <Animated.View entering={FadeInDown.duration(400).springify()}>
       <TouchableOpacity style={styles.container} activeOpacity={0.9} onPress={onPress}>
         <View style={styles.content}>
           <View style={styles.header}>
@@ -42,7 +43,7 @@ export default function ShasBanner({ learnedCount, totalPages, percentage, onPre
             </View>
             
             <View style={styles.progressBarBg}>
-              <View style={[styles.progressBarFill, { width: `${percentage}%` }]} />
+              <Animated.View style={[styles.progressBarFill, animatedProgressStyle]} />
             </View>
           </View>
         </View>
