@@ -8,7 +8,7 @@ import { useAppStore } from "../store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import React, { useMemo, useState, useCallback } from "react";
 import { HDate } from "@hebcal/core";
-import { format, subDays } from "date-fns";
+import { format, subDays, addDays } from "date-fns";
 import ConfettiCannon from "react-native-confetti-cannon";
 import HomeHeader from "../components/HomeHeader";
 import HomeContent from "../components/HomeContent";
@@ -37,6 +37,7 @@ export default function HomeScreen({ navigation }: any) {
     settings,
     progressCache,
     isAppReady,
+    setCurrentDate,
   } = useAppStore(
     useShallow((s) => ({
       currentDate: s.currentDate,
@@ -51,6 +52,7 @@ export default function HomeScreen({ navigation }: any) {
       settings: s.settings,
       progressCache: s.progressCache,
       isAppReady: s.isAppReady,
+      setCurrentDate: s.setCurrentDate,
     })),
   );
 
@@ -69,11 +71,24 @@ export default function HomeScreen({ navigation }: any) {
   const hebrewDateStr = useMemo(() => hDate.renderGematriya(), [hDate]);
   const gregorianDateStr = useMemo(() => format(currentDate, "dd/MM/yyyy"), [currentDate]);
 
-  const masechetProgressPct = useMemo(() => {
+  const handlePrevDay = useCallback(() => {
+    setCurrentDate(subDays(currentDate, 1));
+  }, [currentDate, setCurrentDate]);
+
+  const handleNextDay = useCallback(() => {
+    setCurrentDate(addDays(currentDate, 1));
+  }, [currentDate, setCurrentDate]);
+
+  const isToday = useMemo(() => {
+    return getDateStr(currentDate) === getDateStr(new Date());
+  }, [currentDate]);
+
+  const masechetStats = useMemo(() => {
     const total = getMasechetDafim(todayMasechet).length;
-    if (!progressCache) return 0;
+    if (!progressCache) return { pct: 0, learned: 0, total };
     const progress = getMasechetProgressFromCache(progressCache, todayMasechet);
-    return total > 0 ? Math.round((progress.learned / total) * 100) : 0;
+    const pct = total > 0 ? Math.round((progress.learned / total) * 100) : 0;
+    return { pct, learned: progress.learned, total };
   }, [todayMasechet, progressCache]);
 
   const shasProgress = useMemo(() => {
@@ -115,11 +130,18 @@ export default function HomeScreen({ navigation }: any) {
           sefariaUrl={todaySefariaUrl}
           isLearned={isLearned}
           handleToggle={handleToggle}
-          masechetProgressPct={masechetProgressPct}
+          masechetProgressPct={masechetStats.pct}
+          masechetLearnedCount={masechetStats.learned}
+          masechetTotalCount={masechetStats.total}
           showSecularDate={settings?.show_secular_date === 1}
+          onPrevDay={handlePrevDay}
+          onNextDay={handleNextDay}
+          onTodayPress={() => loadInitialData()}
+          isToday={isToday}
         />
 
-        <View style={{ height: 24 }} />
+
+        <View style={{ height: 20 }} />
 
         <ShasBanner
           learnedCount={shasProgress.learnedCount}
@@ -128,10 +150,11 @@ export default function HomeScreen({ navigation }: any) {
           onPress={() => navigation.navigate("History")}
         />
 
-        <View style={{ height: 24 }} />
+        <View style={{ height: 20 }} />
 
         <HomeContent streak={streak} last7Days={last7Days} />
       </ScrollView>
+
 
       {showConfetti && (
         <View style={styles.confettiContainer} pointerEvents="none">

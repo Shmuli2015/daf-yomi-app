@@ -36,6 +36,7 @@ interface AppState {
   ) => void;
 
   updateThemeMode: (themeMode: string) => void;
+  setCurrentDate: (date: Date) => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -55,17 +56,25 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadInitialData: () => {
     const today = new Date();
-    const dateStr = getDateStr(today);
-    const dafInfo = getDafByDate(today);
-    
-    const history = getAllRecords();
-    const settings = getSettings();
-    const cache = buildProgressCache(history);
+    get().setCurrentDate(today);
+  },
 
+  setCurrentDate: (date: Date) => {
+    const dateStr = getDateStr(date);
+    const dafInfo = getDafByDate(date);
+    
+    // Check if history already loaded, if not, load it
+    let history = get().history;
+    if (history.length === 0) {
+      history = getAllRecords();
+    }
+    
+    const settings = get().settings || getSettings();
+    const cache = buildProgressCache(history);
     const record = history.find(r => r.date === dateStr) || null;
 
     set({
-      currentDate: today,
+      currentDate: date,
       todayRecord: record,
       history,
       settings,
@@ -80,18 +89,19 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   refreshHistory: () => {
     const { currentDate } = get();
-    const dateStr = getDateStr(currentDate);
     const history = getAllRecords();
     const cache = buildProgressCache(history);
+    const dateStr = getDateStr(currentDate);
     const record = history.find(r => r.date === dateStr) || null;
 
     set({
-      todayRecord: record,
       history,
-      streak: cache.streak,
-      progressCache: cache
+      progressCache: cache,
+      todayRecord: record,
+      streak: cache.streak
     });
   },
+
 
   refreshSettings: () => {
     const settings = getSettings();
