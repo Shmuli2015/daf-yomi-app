@@ -1,0 +1,45 @@
+name: Build Android APK
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 🏗 Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 🏗 Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 🏗 Install EAS CLI
+        run: npm install -g eas-cli
+
+      - name: 📦 Install dependencies
+        run: npm install
+
+      - name: 🚀 Build APK
+        run: eas build --platform android --profile preview --local --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📂 Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: ./*.apk
