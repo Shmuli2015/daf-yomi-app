@@ -1,5 +1,10 @@
 import React, { useLayoutEffect } from 'react';
 import { Platform, useColorScheme } from 'react-native';
+import {
+  StatusBar,
+  setStatusBarBackgroundColor,
+  setStatusBarTranslucent,
+} from 'expo-status-bar';
 import * as SystemUI from 'expo-system-ui';
 import * as NavigationBar from 'expo-navigation-bar';
 import { resolveThemeScheme, ThemeMode, useTheme } from '../theme';
@@ -17,10 +22,21 @@ export default function SystemChromeThemeSync({ themeMode }: Props) {
         await SystemUI.setBackgroundColorAsync(colors.background);
         if (Platform.OS === 'android') {
           await NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark');
+          await NavigationBar.setBackgroundColorAsync(colors.tabBar);
+          await NavigationBar.setBorderColorAsync(colors.border);
+          NavigationBar.setStyle(isDark ? 'dark' : 'light');
+          setStatusBarTranslucent(true);
+          setStatusBarBackgroundColor('transparent');
         }
       } catch {}
     })();
-  }, [colors.background, isDark]);
+  }, [colors.background, colors.tabBar, colors.border, isDark]);
 
-  return null;
+  return (
+    <StatusBar
+      style={isDark ? 'light' : 'dark'}
+      translucent
+      backgroundColor="transparent"
+    />
+  );
 }
