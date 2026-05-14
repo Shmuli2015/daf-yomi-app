@@ -49,21 +49,37 @@ const MasechetCard = React.memo(function MasechetCard({
         onPress={onPress}
         style={[styles.card, data.isCompleted ? styles.cardCompleted : styles.cardDefault]}
       >
-        {data.isCompleted && (
-          <View style={styles.completedBadge}>
-            <Text style={styles.completedBadgeText}>✓</Text>
+        <View style={styles.cardHeader}>
+          <Text style={styles.masechetName} numberOfLines={2}>
+            {stripNiqqud(data.m.he)}
+          </Text>
+          {data.isCompleted && (
+            <View style={styles.completedIconBox}>
+              <Text style={styles.completedCheck}>✓</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.cardBody}>
+          <View style={styles.statsRow}>
+            <Text style={styles.progressText}>
+              {`\u200E${data.learned} / ${data.total}\u200E`} דפים
+            </Text>
+            {!data.isCompleted && (
+              <View style={styles.percentPill}>
+                <Text style={styles.percentPillText}>{data.percent}%</Text>
+              </View>
+            )}
           </View>
-        )}
-        <Text style={styles.masechetName}>{stripNiqqud(data.m.he)}</Text>
-        <Text style={styles.progressText}>{data.learned} / {data.total} דפים</Text>
-        <View style={styles.progressTrack}>
-          <Animated.View
-            style={[
-              styles.progressFill,
-              data.isCompleted ? styles.progressFillCompleted : styles.progressFillDefault,
-              { width: barWidth },
-            ]}
-          />
+          <View style={styles.progressTrack}>
+            <Animated.View
+              style={[
+                styles.progressFill,
+                data.isCompleted ? styles.progressFillCompleted : styles.progressFillDefault,
+                { width: barWidth },
+              ]}
+            />
+          </View>
         </View>
       </TouchableOpacity>
     </View>
@@ -74,25 +90,62 @@ export default MasechetCard;
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    cardWrapper: { width: '48%' },
-    card: { borderRadius: 20, padding: 16, borderWidth: 1 },
+    cardWrapper: {
+      width: '47.5%', 
+    },
+    card: {
+      borderRadius: 20,
+      padding: 14,
+      borderWidth: 1,
+      minHeight: 100,
+      justifyContent: 'space-between',
+    },
     cardDefault: {
       backgroundColor: theme.colors.surface,
       borderColor: theme.colors.border,
-      shadowColor: theme.colors.primary,
-      shadowOffset: { width: 0, height: 2 },
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.05,
-      shadowRadius: 8,
+      shadowRadius: 10,
       elevation: 2,
     },
     cardCompleted: {
       backgroundColor: theme.colors.accentLight,
-      borderColor: 'rgba(201,150,60,0.35)',
+      borderColor: 'rgba(201,150,60,0.25)',
+      shadowColor: theme.colors.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 3,
     },
-    completedBadge: {
-      position: 'absolute',
-      top: 10,
-      end: 10,
+    cardHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: 12,
+      gap: 4,
+    },
+    masechetName: {
+      fontSize: 18,
+      fontWeight: '900',
+      color: theme.colors.primary,
+      flex: 1,
+      textAlign: 'left',
+    },
+    percentPill: {
+      backgroundColor: theme.colors.background,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+      borderRadius: 6,
+      borderWidth: 0.5,
+      borderColor: theme.colors.border,
+    },
+    percentPillText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: theme.colors.textMuted,
+    },
+    completedIconBox: {
       width: 22,
       height: 22,
       borderRadius: 11,
@@ -100,23 +153,28 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: 'center',
       justifyContent: 'center',
     },
-    completedBadgeText: { color: 'white', fontSize: 11, fontWeight: '900' },
-    masechetName: {
-      fontSize: 16,
-      fontWeight: '800',
-      color: theme.colors.textPrimary,
-      textAlign: 'left',
-      marginBottom: 4,
+    completedCheck: {
+      color: 'white',
+      fontSize: 12,
+      fontWeight: '900',
+    },
+    cardBody: {
+      width: '100%',
     },
     progressText: {
-      fontSize: 11,
-      color: theme.colors.textMuted,
-      fontWeight: '600',
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+      fontWeight: '700',
       textAlign: 'left',
+    },
+    statsRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: 8,
     },
     progressTrack: {
-      height: 5,
+      height: 6,
       backgroundColor: theme.colors.progressTrack,
       borderRadius: 3,
       overflow: 'hidden',
@@ -127,6 +185,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       height: '100%',
       borderRadius: 3,
     },
-    progressFillDefault: { backgroundColor: theme.colors.accent },
-    progressFillCompleted: { backgroundColor: theme.colors.accent },
+    progressFillDefault: {
+      backgroundColor: theme.colors.accent,
+    },
+    progressFillCompleted: {
+      backgroundColor: theme.colors.accent,
+    },
   });

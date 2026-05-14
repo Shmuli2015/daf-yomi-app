@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, SEDARIM, Seder } from '../../data/shas';
 import { getMasechetProgressFromCache, getSederProgressFromCache } from '../../utils/progressCache';
@@ -7,19 +7,12 @@ import MasechetModal from './MasechetModal';
 import MasechetCard, { MasechetData } from './MasechetCard';
 import SederSection from './SederSection';
 
-
-
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 export default function MasechetGrid() {
   const progressCache = useAppStore(state => state.progressCache);
   const [selectedMasechet, setSelectedMasechet] = useState<typeof SHAS_MASECHTOT[0] | null>(null);
   const [expandedSedarim, setExpandedSedarim] = useState<Set<Seder>>(new Set());
 
   const toggleSeder = (seder: Seder) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     setExpandedSedarim(prev => {
       const newSet = new Set(prev);
       if (newSet.has(seder)) {

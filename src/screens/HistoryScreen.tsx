@@ -22,7 +22,7 @@ export default function HistoryScreen() {
     [progressCache],
   );
   
-  const completedMasechtos = useReactMemo(
+  const completedMasechtot = useReactMemo(
     () => {
       if (!progressCache) return 0;
       return SHAS_MASECHTOT.filter((m) => {
@@ -55,7 +55,7 @@ export default function HistoryScreen() {
           progress={progress}
           percentage={percentage}
           learnedDafim={learnedDafim}
-          completedMasechtos={completedMasechtos}
+          completedMasechtot={completedMasechtot}
           totalDafim={totalDafim}
         />
 

@@ -1,4 +1,4 @@
-# מסע דף (Masa Daf) — Daf Yomi Tracker
+# מסע דף (Masa Daf) - Daf Yomi Tracker
 
 **מסע דף** is a premium, modern mobile application designed for the global Daf Yomi community. Built with a focus on high-end aesthetics, Hebrew localization, and a seamless user experience, it helps you stay consistent on your journey through Shas.
 
@@ -40,8 +40,8 @@
 - **Custom Day Schedules**: Set different notification times for each day of the week
 - **Notification Mode Toggle**: Switch between daily uniform time or custom per-day schedules
 - **Interactive Notification Actions** (Hebrew in the app):  
-  - `✅ סיימתי את הדף!` — mark today's page as learned from the notification  
-  - `⏰ הזכר לי עוד שעה` — snooze for one hour
+  - `✅ סיימתי את הדף!` - mark today's page as learned from the notification  
+  - `⏰ הזכר לי עוד שעה` - snooze for one hour
 - **Theme Selection**: Choose between Light, Dark, or System-based theme modes
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
 - **Confetti Effects Toggle**: Enable/disable celebration animations
@@ -165,5 +165,5 @@ This project is licensed under the MIT License.
 
 ## Author
 
-Shmuel Rosenberg — see `package.json` (`author`) and the in-app Settings footer.
+Shmuel Rosenberg - see `package.json` (`author`) and the in-app Settings footer.
 

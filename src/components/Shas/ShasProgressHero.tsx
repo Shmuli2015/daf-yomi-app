@@ -8,7 +8,7 @@ interface ShasProgressHeroProps {
   progress: number;
   percentage: string;
   learnedDafim: number;
-  completedMasechtos: number;
+  completedMasechtot: number;
   totalDafim: number;
 }
 
@@ -16,7 +16,7 @@ export default function ShasProgressHero({
   progress,
   percentage,
   learnedDafim,
-  completedMasechtos,
+  completedMasechtot,
   totalDafim,
 }: ShasProgressHeroProps) {
   const theme = useTheme();
@@ -41,7 +41,7 @@ export default function ShasProgressHero({
       <View style={styles.statsRow}>
         <StatPill label="דפים נלמדו" value={learnedDafim.toString()} delay={200} />
         <View style={styles.statDivider} />
-        <StatPill label="מסכתות הושלמו" value={completedMasechtos.toString()} delay={300} />
+        <StatPill label="מסכתות הושלמו" value={completedMasechtot.toString()} delay={300} />
         <View style={styles.statDivider} />
         <StatPill label="דפים בש״ס" value={totalDafim.toString()} delay={400} />
       </View>
