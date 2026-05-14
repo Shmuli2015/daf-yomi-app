@@ -158,7 +158,7 @@ const HomeHeader = React.memo(function HomeHeader({
             </View>
           </View>
 
-          <View style={styles.actionRow}>
+          <View style={styles.actionStack}>
             <Animated.View style={[styles.mainButtonContainer, animatedButtonStyle]}>
               <TouchableOpacity
                 onPress={() => {
@@ -333,14 +333,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.accent,
       borderRadius: 4,
     },
-    actionRow: {
-      flexDirection: 'row',
+    actionStack: {
       gap: 12,
     },
     mainButtonContainer: {
-      flex: 1.5,
+      alignSelf: 'stretch',
     },
     mainButton: {
+      alignSelf: 'stretch',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
@@ -367,7 +367,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.success,
     },
     secondaryButton: {
-      flex: 1,
+      alignSelf: 'stretch',
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
