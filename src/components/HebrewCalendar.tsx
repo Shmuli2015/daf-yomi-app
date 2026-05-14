@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, I18nManager, useWindowDimensions, PanResponder } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, useWindowDimensions, PanResponder } from 'react-native';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,16 +41,20 @@ export default function HebrewCalendar() {
   const gridTranslateX = useRef(new Animated.Value(0)).current;
   const gridOpacity = useRef(new Animated.Value(1)).current;
 
+  // translateX is always in screen coordinates (negative = toward screen left).
+  // forceRTL mirrors flex layout but not transforms; flipping by I18nManager.isRTL
+  // made month transitions feel backwards next to the RTL chrome (chevrons / swipe).
+  const SLIDE_PX = 40;
   const animateGridChange = (direction: 'next' | 'prev', changeFn: () => void) => {
-    const isRTL = I18nManager.isRTL;
-    const outDir = direction === 'next' ? (isRTL ? 40 : -40) : (isRTL ? -40 : 40);
-    
+    const outDir = direction === 'next' ? -SLIDE_PX : SLIDE_PX;
+    const enterFrom = direction === 'next' ? SLIDE_PX : -SLIDE_PX;
+
     Animated.parallel([
       Animated.timing(gridOpacity, { toValue: 0, duration: 170, useNativeDriver: true }),
       Animated.timing(gridTranslateX, { toValue: outDir, duration: 170, easing: Easing.out(Easing.ease), useNativeDriver: true }),
     ]).start(() => {
       changeFn();
-      gridTranslateX.setValue(direction === 'next' ? (isRTL ? -40 : 40) : (isRTL ? 40 : -40));
+      gridTranslateX.setValue(enterFrom);
       Animated.parallel([
         Animated.timing(gridOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
         Animated.timing(gridTranslateX, { toValue: 0, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true }),
@@ -131,6 +135,13 @@ export default function HebrewCalendar() {
   const monthName = Locale.gettext(HDate.getMonthName(currentHDate.getMonth(), currentHDate.getFullYear()), 'he').replace(/[\u0591-\u05C7]/g, '');
   const yearName = currentHDate.renderGematriya().split(' ').pop();
 
+  const isViewingTodayMonth = useMemo(() => {
+    const today = new HDate(new Date());
+    return (
+      currentHDate.getMonth() === today.getMonth() && currentHDate.getFullYear() === today.getFullYear()
+    );
+  }, [currentHDate]);
+
   const goToToday = () => {
     const today = new HDate(new Date());
     if (currentHDate.getMonth() === today.getMonth() && currentHDate.getFullYear() === today.getFullYear()) return;
@@ -175,17 +186,19 @@ export default function HebrewCalendar() {
         </TouchableOpacity>
         <View style={styles.monthCenter}>
           <Text style={styles.monthName}>{monthName}</Text>
-          <View style={styles.yearRow}>
-            <Text style={styles.yearName}>{yearName}</Text>
-            {!isSameDay(new HDate(new Date()), new HDate(1, currentHDate.getMonth(), currentHDate.getFullYear())) && (
-              <>
-                <View style={styles.dot} />
-                <TouchableOpacity onPress={goToToday} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                  <Text style={styles.todayText}>היום</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
+          <Text style={styles.yearName}>{yearName}</Text>
+          {!isViewingTodayMonth && (
+            <TouchableOpacity
+              onPress={goToToday}
+              style={styles.todayBtn}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel="חזרה לחודש של היום בלוח"
+            >
+              <Ionicons name="today-outline" size={18} color={theme.colors.accent} />
+              <Text style={styles.todayBtnLabel}>חזרה להיום</Text>
+            </TouchableOpacity>
+          )}
         </View>
         <TouchableOpacity onPress={goNextMonth} style={styles.navBtn} activeOpacity={0.7}>
           <Ionicons name="chevron-back" size={20} color={theme.colors.textSecondary} />
@@ -325,25 +338,26 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       fontWeight: '700',
       letterSpacing: 1,
       textTransform: 'uppercase',
-    },
-    yearRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
       marginTop: 2,
     },
-    dot: {
-      width: 3,
-      height: 3,
-      borderRadius: 1.5,
-      backgroundColor: theme.colors.textMuted,
-      marginHorizontal: 6,
-      opacity: 0.5,
+    todayBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      marginTop: 10,
+      paddingVertical: 8,
+      paddingHorizontal: 14,
+      borderRadius: 14,
+      backgroundColor: theme.colors.accentLight,
+      borderWidth: 1,
+      borderColor: theme.colors.accent,
     },
-    todayText: {
-      fontSize: 11,
+    todayBtnLabel: {
+      fontSize: 13,
       color: theme.colors.accent,
       fontWeight: '800',
-      letterSpacing: 0.5,
+      letterSpacing: 0.2,
     },
     weekLabels: {
       flexDirection: 'row',

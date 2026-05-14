@@ -3,6 +3,7 @@ import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MasechetGrid from "../components/Shas/MasechetGrid";
 import ShasProgressHero from "../components/Shas/ShasProgressHero";
+import ScreenTopGradient from "../components/ScreenTopGradient";
 import { useAppStore } from "../store/useAppStore";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { useTheme } from "../theme";
@@ -38,29 +39,32 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.pageHeader}>
-          <View style={styles.headerRow}>
-            <View style={styles.accentBar} />
-            <Text style={styles.pageTitle}>התקדמות בש״ס</Text>
+      <View style={styles.screenRoot}>
+        <ScreenTopGradient />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.pageHeader}>
+            <View style={styles.headerRow}>
+              <View style={styles.accentBar} />
+              <Text style={styles.pageTitle}>התקדמות בש״ס</Text>
+            </View>
+            <Text style={styles.pageSubtitle}>מעקב לימוד של כל מסכתות הש״ס</Text>
           </View>
-          <Text style={styles.pageSubtitle}>מעקב לימוד של כל מסכתות הש״ס</Text>
-        </View>
 
-        <ShasProgressHero
-          progress={progress}
-          percentage={percentage}
-          learnedDafim={learnedDafim}
-          completedMasechtot={completedMasechtot}
-          totalDafim={totalDafim}
-        />
+          <ShasProgressHero
+            progress={progress}
+            percentage={percentage}
+            learnedDafim={learnedDafim}
+            completedMasechtot={completedMasechtot}
+            totalDafim={totalDafim}
+          />
 
-        <MasechetGrid />
-      </ScrollView>
+          <MasechetGrid />
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -68,8 +72,9 @@ export default function HistoryScreen() {
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     safe: { flex: 1, backgroundColor: theme.colors.background },
-    scroll: { flex: 1 },
-    content: { paddingTop: 24, paddingBottom: 100 },
+    screenRoot: { flex: 1, position: "relative" },
+    scroll: { flex: 1, backgroundColor: "transparent" },
+    content: { paddingTop: 24, paddingBottom: 12 },
     pageHeader: {
       paddingHorizontal: 20,
       marginBottom: 20,

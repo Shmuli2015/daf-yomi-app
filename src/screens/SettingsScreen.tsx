@@ -17,6 +17,7 @@ import {
   DaySchedule,
 } from "../components/Settings/DayScheduleList";
 import { SettingsFooter } from "../components/Settings/SettingsFooter";
+import ScreenTopGradient from "../components/ScreenTopGradient";
 import { ThemeMode, useTheme } from "../theme";
 import ConfirmModal from "../components/ConfirmModal";
 import SuccessModal from "../components/SuccessModal";
@@ -321,9 +322,16 @@ export default function SettingsScreen() {
 
   if (!settings) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.accent} />
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>טוען הגדרות...</Text>
+      <View
+        style={[styles.loadingRoot, { backgroundColor: theme.colors.background }]}
+      >
+        <ScreenTopGradient />
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.accent} />
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
+            טוען הגדרות...
+          </Text>
+        </View>
       </View>
     );
   }
@@ -333,13 +341,25 @@ export default function SettingsScreen() {
       style={[styles.safe, { backgroundColor: theme.colors.background }]}
       edges={["top"]}
     >
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.body}>
-          <SectionHeader title="התראות ותזכורות" />
+      <View style={styles.screenRoot}>
+        <ScreenTopGradient />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.body}>
+            <View style={styles.pageHeader}>
+              <View style={styles.headerRow}>
+                <View style={styles.accentBar} />
+                <Text style={styles.pageTitle}>הגדרות</Text>
+              </View>
+              <Text style={styles.pageSubtitle}>
+                התראות, תצוגה וניהול נתונים
+              </Text>
+            </View>
+
+            <SectionHeader title="התראות ותזכורות" />
           <View style={styles.card}>
             <SettingItem
               icon="notifications-outline"
@@ -454,7 +474,8 @@ export default function SettingsScreen() {
 
           <SettingsFooter />
         </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       <ThemeModeModal
         visible={showThemeModal}
@@ -506,9 +527,42 @@ export default function SettingsScreen() {
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     safe: { flex: 1 },
-    scroll: { flex: 1 },
-    content: { paddingBottom: 40 },
-    body: { marginTop: 10 },
+    screenRoot: { flex: 1, position: "relative" },
+    scroll: { flex: 1, backgroundColor: "transparent" },
+    content: { paddingTop: 24, paddingBottom: 12 },
+    body: {},
+    pageHeader: {
+      paddingHorizontal: 20,
+      marginBottom: 20,
+      alignItems: "flex-start",
+    },
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      marginBottom: 4,
+    },
+    accentBar: {
+      width: 4,
+      height: 32,
+      backgroundColor: theme.colors.accent,
+      borderRadius: 2,
+    },
+    pageTitle: {
+      fontSize: 30,
+      fontWeight: "900",
+      color: theme.colors.primary,
+      letterSpacing: -0.5,
+    },
+    pageSubtitle: {
+      fontSize: 13,
+      color: theme.colors.textSecondary,
+      fontWeight: "600",
+    },
+    loadingRoot: {
+      flex: 1,
+      position: "relative",
+    },
     card: {
       backgroundColor: theme.colors.surface,
       marginHorizontal: 20,

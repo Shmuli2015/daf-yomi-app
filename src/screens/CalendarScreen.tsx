@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import HebrewCalendar from '../components/HebrewCalendar';
 import CalendarHeader from '../components/Calendar/CalendarHeader';
+import ScreenTopGradient from '../components/ScreenTopGradient';
 
 import { useTheme } from '../theme';
 
@@ -12,14 +13,17 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <CalendarHeader />
-        <HebrewCalendar />
-      </ScrollView>
+      <View style={styles.screenRoot}>
+        <ScreenTopGradient />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <CalendarHeader />
+          <HebrewCalendar />
+        </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
@@ -30,12 +34,17 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
+    screenRoot: {
+      flex: 1,
+      position: 'relative',
+    },
     scroll: {
       flex: 1,
+      backgroundColor: 'transparent',
     },
     content: {
-      paddingVertical: 24,
+      paddingTop: 24,
       paddingHorizontal: 20,
-      paddingBottom: 100,
+      paddingBottom: 12,
     },
   });
