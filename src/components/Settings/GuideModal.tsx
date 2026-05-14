@@ -149,7 +149,19 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
             theme={theme}
           />
 
+          <GuideSection
+            icon="apps-outline"
+            title="ווידג'טים למסך הבית (Android)"
+            items={[
+              'עקבו אחר הדף היומי ורצף הלימוד שלכם ישירות ממסך הבית של הטלפון',
+              'ניתן לסמן את הדף כנלמד בלחיצה אחת ישירות מהווידג\'ט מבלי לפתוח את האפליקציה',
+              'הווידג\'ט מתעדכן אוטומטית עם השינויים באפליקציה ולהפך',
+            ]}
+            theme={theme}
+          />
+
           <View style={styles.footer}>
+
             <View style={styles.footerDivider} />
             <Text style={styles.footerText}>
               אפשר לפתוח מחדש את המדריך בכל עת דרך «מדריך שימוש» במסך ההגדרות; בתחתית אותו מסך מופיעות זכויות היוצרים ומספר הגרסה
