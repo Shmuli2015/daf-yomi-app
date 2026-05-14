@@ -11,6 +11,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SplashScreen from './src/components/SplashScreen';
 import { ThemeProvider, ThemeMode, resolveThemeScheme, getNavigationThemeColors } from './src/theme';
 import { useColorScheme } from 'react-native';
+import SystemChromeThemeSync from './src/components/SystemChromeThemeSync';
 
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
@@ -52,6 +53,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider mode={themeMode}>
+        <SystemChromeThemeSync themeMode={themeMode} />
         <NavigationContainer
           theme={{
             dark: resolveThemeScheme(themeMode, systemScheme) === 'dark',
