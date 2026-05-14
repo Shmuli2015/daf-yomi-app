@@ -58,7 +58,7 @@ const HomeContent = React.memo(function HomeContent({
           <Text style={styles.chartTitle}>7 הימים האחרונים</Text>
           <View style={styles.chartContainer}>
             {[...last7Days].map((day, index) => {
-              const isToday = index === 6; // last item is today
+              const isToday = index === 6;
               const isLearned = day.status === 'learned';
               let barHeight = 12;
               let barColor: string = theme.colors.progressTrack;

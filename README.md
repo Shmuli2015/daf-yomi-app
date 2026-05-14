@@ -9,8 +9,9 @@
 ## App Functions
 
 ### 🏠 Home Dashboard
-- **Today's Daf Display**: Shows the current day's Daf Yomi (tractate and page) with both Hebrew and Gregorian dates
-- **Learning Tracker**: Use **Mark as learned** (`סמן כנלמד`) to record today's page; the control switches to **Finished** (`סיימתי את הדף`) and asks for confirmation before unsetting
+- **Day Navigation**: Prev/next arrows on the dashboard move between calendar days for that day's Daf; tap the dates to jump back to today, or use **Return to today** (`חזור להיום`) when you have moved away from the real calendar date
+- **Today's Daf Display**: Shows the Daf Yomi for the selected day (tractate and page) with both Hebrew and Gregorian dates (Gregorian respects the visibility toggle)
+- **Learning Tracker**: Use **Mark as learned** (`סמן כנלמד`) to record that day's page; the control switches to **Finished** (`סיימתי את הדף`) and asks for confirmation before unsetting
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Direct link to view the Daf on Sefaria for online learning
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum
@@ -36,11 +37,12 @@
 - **Future dates**: Option to mark **learned ahead** (`למדתי מראש`) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
-- **Daily Notifications**: Configurable daily reminders at your preferred time
-- **Custom Day Schedules**: Set different notification times for each day of the week
-- **Notification Mode Toggle**: Switch between daily uniform time or custom per-day schedules
+- **Notifications Master Switch**: Toggle **Daily reminder** (`תזכורת יומית`) on or off; when off, no reminders are scheduled
+- **Daily Notifications**: When reminders are enabled, choose one time for every day or set up per-day behavior
+- **Notification Mode**: **Every day** (`כל יום`) uses a single time for the whole week; **By weekday** (`לפי ימים`) lets you enable or disable each day and set a different time per enabled day
+- **In-App User Guide**: Open **User guide** (`מדריך שימוש`) for a Hebrew walkthrough of every major screen and feature
 - **Interactive Notification Actions** (Hebrew in the app):  
-  - `✅ סיימתי את הדף!` - mark today's page as learned from the notification  
+  - `✅ סיימתי את הדף!` - mark the current cycle page as learned from the notification  
   - `⏰ הזכר לי עוד שעה` - snooze for one hour
 - **Theme Selection**: Choose between Light, Dark, or System-based theme modes
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
@@ -49,13 +51,13 @@
 - **Privacy-First**: All data stored locally on device with SQLite database
 
 ### 🔔 Smart Notifications
-- **Daily Learning Reminders**: Scheduled notifications at your chosen time(s)
+- **Daily Learning Reminders**: Scheduled at your preferred time(s) while **Daily reminder** (`תזכורת יומית`) stays enabled
 - **Dynamic Daf Information**: Notifications show today's tractate and page number
 - **Interactive Actions**: Quick actions directly from notification tray
 - **Snooze Functionality**: One-hour follow-up via `⏰ הזכר לי עוד שעה`
 - **Expo Go**: Local notification scheduling still runs, but behavior can differ from dev/production builds; use a **development build** for full parity
 - **Auto-scheduling**: Notifications automatically reschedule on device reboot
-- **Per-Day Customization**: Different notification times for different days of the week
+- **Per-Day Customization**: In **By weekday** (`לפי ימים`) mode, turn individual weekdays on or off and assign each enabled day its own time
 - **Hebrew Text**: All notifications in Hebrew for native speaker experience
 
 ### 📱 User Experience

@@ -6,11 +6,6 @@ import { resolveThemeScheme, ThemeMode, useTheme } from '../theme';
 
 type Props = { themeMode: ThemeMode };
 
-/**
- * Keeps OS chrome in sync with the app theme. On Android (edge-to-edge), the
- * navigation bar is transparent; the root window color must match or the
- * gesture / inset strip looks wrong. Button style keeps icons readable.
- */
 export default function SystemChromeThemeSync({ themeMode }: Props) {
   const systemScheme = (useColorScheme() || 'dark') as 'light' | 'dark';
   const isDark = resolveThemeScheme(themeMode, systemScheme) === 'dark';
@@ -23,9 +18,7 @@ export default function SystemChromeThemeSync({ themeMode }: Props) {
         if (Platform.OS === 'android') {
           await NavigationBar.setButtonStyleAsync(isDark ? 'light' : 'dark');
         }
-      } catch {
-        // Dev client / unsupported: ignore
-      }
+      } catch {}
     })();
   }, [colors.background, isDark]);
 

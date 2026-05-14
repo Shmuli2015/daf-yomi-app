@@ -7,10 +7,6 @@ type ScreenTopGradientProps = {
   style?: StyleProp<ViewStyle>;
 };
 
-/**
- * Full-screen vertical wash: accent tint at the top fading into the app
- * background toward the bottom (covers the whole tab area).
- */
 export default function ScreenTopGradient({ style }: ScreenTopGradientProps) {
   const theme = useTheme();
   const bg = theme.colors.background;

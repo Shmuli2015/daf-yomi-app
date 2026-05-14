@@ -41,9 +41,6 @@ export default function HebrewCalendar() {
   const gridTranslateX = useRef(new Animated.Value(0)).current;
   const gridOpacity = useRef(new Animated.Value(1)).current;
 
-  // translateX is always in screen coordinates (negative = toward screen left).
-  // forceRTL mirrors flex layout but not transforms; flipping by I18nManager.isRTL
-  // made month transitions feel backwards next to the RTL chrome (chevrons / swipe).
   const SLIDE_PX = 40;
   const animateGridChange = (direction: 'next' | 'prev', changeFn: () => void) => {
     const outDir = direction === 'next' ? -SLIDE_PX : SLIDE_PX;

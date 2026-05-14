@@ -130,7 +130,6 @@ export default function SettingsScreen() {
           JSON.stringify(schedules),
         );
         await scheduleNotifications(h, m, mode, schedules, enabled);
-        // Small delay for smooth transition
         await new Promise((resolve) => setTimeout(resolve, 500));
       } catch (error) {
         console.error("Save error:", error);

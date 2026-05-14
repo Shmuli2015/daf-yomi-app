@@ -62,8 +62,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setCurrentDate: (date: Date) => {
     const dateStr = getDateStr(date);
     const dafInfo = getDafByDate(date);
-    
-    // Check if history already loaded, if not, load it
+
     let history = get().history;
     if (history.length === 0) {
       history = getAllRecords();
