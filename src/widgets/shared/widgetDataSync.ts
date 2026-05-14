@@ -1,12 +1,30 @@
-import { Platform } from 'react-native';
+import { createElement } from 'react';
+import { Appearance, Platform } from 'react-native';
 import { getDafByDate, getDateStr } from '../../utils/dafYomi';
-import { getAllRecords, updateDailyRecord, initDB } from '../../db/database';
+import { getAllRecords, updateDailyRecord, initDB, getSettings } from '../../db/database';
+import type { ThemeMode, ThemeScheme } from '../../theme';
+import { resolveThemeScheme } from '../../theme';
 import type { DafYomiWidgetProps } from '../android/DafYomiWidget';
+
+function resolveWidgetColorScheme(): ThemeScheme {
+  try {
+    initDB();
+    const settings = getSettings();
+    const raw = settings.theme_mode ?? 'system';
+    const mode = (['system', 'light', 'dark'].includes(raw) ? raw : 'system') as ThemeMode;
+    const system = (Appearance.getColorScheme() || 'dark') as ThemeScheme;
+    return resolveThemeScheme(mode, system);
+  } catch {
+    return 'dark';
+  }
+}
 
 export async function getWidgetData(): Promise<DafYomiWidgetProps> {
   try {
     initDB();
   } catch {}
+
+  const themeScheme = resolveWidgetColorScheme();
 
   const today = new Date();
   const dateStr = getDateStr(today);
@@ -38,6 +56,7 @@ export async function getWidgetData(): Promise<DafYomiWidgetProps> {
     daf: dafInfo.daf,
     isLearned,
     streak,
+    themeScheme,
   };
 }
 
@@ -58,13 +77,12 @@ export async function syncWidgetData(): Promise<void> {
   try {
     const { requestWidgetUpdate } = await import('react-native-android-widget');
     const { DafYomiWidget } = await import('../android/DafYomiWidget');
-    const React = await import('react');
 
     const data = await getWidgetData();
 
     await requestWidgetUpdate({
       widgetName: 'DafYomiWidget',
-      renderWidget: () => React.default.createElement(DafYomiWidget, data),
+      renderWidget: () => createElement(DafYomiWidget, data),
       widgetNotFound: () => {},
     });
   } catch (e) {

@@ -134,6 +134,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       updates.map(u => ({ ...u, status: 'learned' as const }))
     );
     get().refreshHistory();
+    syncWidgetData().catch(() => {});
   },
 
   batchUnmarkDafim: (updates) => {
@@ -141,6 +142,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       updates.map(u => ({ ...u, status: 'missed' as const }))
     );
     get().refreshHistory();
+    syncWidgetData().catch(() => {});
   },
 
   updateNotificationSettings: (
@@ -159,6 +161,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateThemeMode: (themeMode: string) => {
     updateThemeMode(themeMode);
     get().refreshSettings();
+    syncWidgetData().catch(() => {});
   },
 
   clearAllHistory: () => {
