@@ -130,6 +130,20 @@ export function resolveThemeScheme(mode: ThemeMode, systemScheme: ThemeScheme): 
   return systemScheme;
 }
 
+export function getNavigationThemeColors(mode: ThemeMode, systemScheme: ThemeScheme) {
+  const isDark = resolveThemeScheme(mode, systemScheme) === 'dark';
+  const themeColors = isDark ? DARK_THEME.colors : LIGHT_THEME.colors;
+  
+  return {
+    primary: themeColors.accent,
+    background: themeColors.background,
+    card: themeColors.surface,
+    text: themeColors.textPrimary,
+    border: themeColors.border,
+    notification: themeColors.accent,
+  };
+}
+
 const ThemeContext = createContext<Theme>(DARK_THEME);
 
 export function ThemeProvider({
