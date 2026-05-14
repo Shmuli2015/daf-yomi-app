@@ -1,5 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Alert, ActivityIndicator } from "react-native";
+import Animated, { FadeIn, FadeOut, useAnimatedStyle, withRepeat, withSequence, withTiming, useSharedValue } from "react-native-reanimated";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore } from "../store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
@@ -30,6 +32,32 @@ const fmtTime = (h: number, m: number) =>
 
 const IS_DEV = __DEV__;
 
+const PulsingBook = () => {
+  const theme = useTheme();
+  const scale = useSharedValue(1);
+
+  useEffect(() => {
+    scale.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 600 }),
+        withTiming(1, { duration: 600 })
+      ),
+      -1,
+      true
+    );
+  }, [scale]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <Ionicons name="book" size={40} color={theme.colors.accent} />
+    </Animated.View>
+  );
+};
+
 export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -58,6 +86,7 @@ export default function SettingsScreen() {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [scheduledCount, setScheduledCount] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (settings) {
@@ -79,7 +108,7 @@ export default function SettingsScreen() {
   }, [settings]);
 
   const saveAndSchedule = useCallback(
-    (
+    async (
       h: number,
       m: number,
       mode: "daily" | "custom",
@@ -88,16 +117,25 @@ export default function SettingsScreen() {
       secular: boolean,
       confetti: boolean,
     ) => {
-      updateNotificationSettings(
-        h,
-        m,
-        secular,
-        confetti,
-        enabled,
-        mode,
-        JSON.stringify(schedules),
-      );
-      scheduleNotifications(h, m, mode, schedules, enabled);
+      setIsSaving(true);
+      try {
+        updateNotificationSettings(
+          h,
+          m,
+          secular,
+          confetti,
+          enabled,
+          mode,
+          JSON.stringify(schedules),
+        );
+        await scheduleNotifications(h, m, mode, schedules, enabled);
+        // Small delay for smooth transition
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error("Save error:", error);
+      } finally {
+        setIsSaving(false);
+      }
     },
     [updateNotificationSettings],
   );
@@ -281,6 +319,15 @@ export default function SettingsScreen() {
     checkScheduled();
   }, [notificationsEnabled, hour, minute, notifMode, daySchedules]);
 
+  if (!settings) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.accent} />
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>טוען הגדרות...</Text>
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView
       style={[styles.safe, { backgroundColor: theme.colors.background }]}
@@ -439,6 +486,19 @@ export default function SettingsScreen() {
         message="הנתונים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי."
         onClose={handleSuccessModalClose}
       />
+
+      {isSaving && (
+        <Animated.View 
+          entering={FadeIn.duration(200)} 
+          exiting={FadeOut.duration(200)}
+          style={styles.overlay}
+        >
+          <View style={styles.loaderCard}>
+            <PulsingBook />
+            <Text style={styles.loaderText}>מעדכן הגדרות...</Text>
+          </View>
+        </Animated.View>
+      )}
     </SafeAreaView>
   );
 }
@@ -466,5 +526,40 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       marginHorizontal: 40,
       lineHeight: 18,
       opacity: 0.8,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      gap: 16,
+    },
+    loadingText: {
+      fontSize: 16,
+      fontWeight: "600",
+    },
+    overlay: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: "rgba(0,0,0,0.4)",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 9999,
+    },
+    loaderCard: {
+      backgroundColor: theme.colors.surface,
+      padding: 30,
+      borderRadius: 24,
+      alignItems: "center",
+      gap: 16,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.2,
+      shadowRadius: 20,
+      elevation: 10,
+      minWidth: 180,
+    },
+    loaderText: {
+      color: theme.colors.textPrimary,
+      fontWeight: "700",
+      fontSize: 16,
     },
   });
