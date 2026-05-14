@@ -40,23 +40,6 @@ module.exports = {
           color: '#C9963C',
         },
       ],
-      [
-        'react-native-android-widget',
-        {
-          widgets: [
-            {
-              name: 'DafYomiWidget',
-              label: 'מסע דף – דף יומי',
-              minWidth: '130dp',
-              minHeight: '60dp',
-              targetCellWidth: 3,
-              targetCellHeight: 2,
-              description: 'הדף היומי ואפשרות לסמן למדתי',
-              updatePeriodMillis: 1800000,
-            },
-          ],
-        },
-      ],
     ],
     extra: {
       eas: {

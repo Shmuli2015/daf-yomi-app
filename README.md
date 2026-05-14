@@ -15,10 +15,9 @@
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Direct link to view the Daf on Sefaria for online learning
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum
-- **7-Day Learning Widget**: Visual mini-calendar showing your last week's progress at a glance
+- **7-Day Progress Overview**: In-app mini chart of the last seven days so you can see your week at a glance
 - **Shas Progress Banner**: Overall progress across Shas; **tap the banner** to open the History screen for full tractate details
 - **Confetti Celebration**: Optional festive animation when marking a Daf as learned
-- **Home Screen Widgets (Android)**: Premium home screen widgets to track your daily progress and streak, with the ability to mark the Daf as learned directly from the home screen
 
 
 ### 📊 History & Progress Tracking
@@ -70,7 +69,6 @@
 - **Dark Mode**: Sophisticated dark theme with gold accents for premium "Seforim" aesthetic
 - **Light Mode**: Clean, bright interface for daytime use
 - **System Theme**: Automatically adapts to device theme settings
-- **Android Home Widget**: Native Android widget support for quick access to the daily Daf
 
 
 ### 💾 Data Persistence
@@ -90,7 +88,6 @@
 - **Database**: [Expo SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/) for lightning-fast local persistence.
 - **Calendar Logic**: [@hebcal/core](https://www.npmjs.com/package/@hebcal/core) & `@hebcal/learning`.
 - **Animations**: [React Native Reanimated](https://docs.expo.dev/versions/latest/sdk/reanimated/) & [react-native-confetti-cannon](https://www.npmjs.com/package/react-native-confetti-cannon).
-- **Widgets**: [react-native-android-widget](https://github.com/mrousavy/react-native-android-widget) for native Android home screen widgets.
 
 
 ---

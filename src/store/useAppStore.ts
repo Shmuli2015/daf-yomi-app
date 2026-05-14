@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, DailyRecord, SettingsRecord } from '../db/database';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, ProgressCache } from '../utils/progressCache';
-import { syncWidgetData } from '../widgets/shared/widgetDataSync';
 
 interface AppState {
   currentDate: Date;
@@ -114,7 +113,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned');
 
     get().refreshHistory();
-    syncWidgetData().catch(() => {});
   },
 
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => {
@@ -125,7 +123,6 @@ export const useAppStore = create<AppState>((set, get) => ({
     updateDailyRecord(dateStr, masechet, daf, newStatus);
 
     get().refreshHistory();
-    syncWidgetData().catch(() => {});
   },
 
   batchMarkDafim: (updates) => {
@@ -133,7 +130,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       updates.map(u => ({ ...u, status: 'learned' as const }))
     );
     get().refreshHistory();
-    syncWidgetData().catch(() => {});
   },
 
   batchUnmarkDafim: (updates) => {
@@ -141,7 +137,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       updates.map(u => ({ ...u, status: 'missed' as const }))
     );
     get().refreshHistory();
-    syncWidgetData().catch(() => {});
   },
 
   updateNotificationSettings: (
@@ -160,7 +155,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateThemeMode: (themeMode: string) => {
     updateThemeMode(themeMode);
     get().refreshSettings();
-    syncWidgetData().catch(() => {});
   },
 
   clearAllHistory: () => {
