@@ -12,9 +12,9 @@ export default function CalendarScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
-      <View style={styles.screenRoot}>
-        <ScreenTopGradient />
+    <View style={styles.outer}>
+      <ScreenTopGradient />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
@@ -23,20 +23,21 @@ export default function CalendarScreen() {
           <CalendarHeader />
           <HebrewCalendar />
         </ScrollView>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    safe: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    screenRoot: {
+    outer: {
       flex: 1,
       position: 'relative',
+      backgroundColor: theme.colors.background,
+    },
+    safeArea: {
+      flex: 1,
+      backgroundColor: 'transparent',
     },
     scroll: {
       flex: 1,

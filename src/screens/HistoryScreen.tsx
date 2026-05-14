@@ -38,9 +38,9 @@ export default function HistoryScreen() {
   const percentage = (progress * 100).toFixed(1);
 
   return (
-    <SafeAreaView style={styles.safe} edges={["top"]}>
-      <View style={styles.screenRoot}>
-        <ScreenTopGradient />
+    <View style={styles.outer}>
+      <ScreenTopGradient />
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.content}
@@ -64,15 +64,19 @@ export default function HistoryScreen() {
 
           <MasechetGrid />
         </ScrollView>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    safe: { flex: 1, backgroundColor: theme.colors.background },
-    screenRoot: { flex: 1, position: "relative" },
+    outer: {
+      flex: 1,
+      position: "relative",
+      backgroundColor: theme.colors.background,
+    },
+    safeArea: { flex: 1, backgroundColor: "transparent" },
     scroll: { flex: 1, backgroundColor: "transparent" },
     content: { paddingTop: 24, paddingBottom: 12 },
     pageHeader: {
