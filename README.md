@@ -6,6 +6,8 @@
 
 **Version:** See the `version` field in [`package.json`](./package.json). Expo picks it up in [`app.config.js`](./app.config.js), and the app shows it in Settings (via `expo-constants`), so one source of truth stays in sync.
 
+**App updates (APK sideload):** The app can notify users when a newer build is available and link to the published APK. Checks use the public GitHub Releases API (see [`src/services/appUpdate.ts`](./src/services/appUpdate.ts)). Repository and release file naming are configured under `expo.extra` in [`app.config.js`](./app.config.js) (`githubOwner`, `githubRepo`, `releaseApkBasename`, `updateCheckEnabled`).
+
 ---
 
 ## App Functions
@@ -38,6 +40,7 @@
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
+- **App updates** (<span dir="rtl" lang="he">עדכוני אפליקציה</span>): **Check for updates** (<span dir="rtl" lang="he">בדוק עדכונים</span>) verifies whether a newer published version exists; when one is available, users get an in-app prompt with a download link (install is manual, outside the store). Automatic checks are throttled (about once per 24 hours); manual checks bypass that throttle
 - **Notifications Master Switch**: Toggle **Daily reminder** (<span dir="rtl" lang="he">תזכורת יומית</span>) on or off; when off, no reminders are scheduled
 - **Daily Notifications**: When reminders are enabled, choose one time for every day or set up per-day behavior
 - **Notification Mode**: **Every day** (<span dir="rtl" lang="he">כל יום</span>) uses a single time for the whole week; **By weekday** (<span dir="rtl" lang="he">לפי ימים</span>) lets you enable or disable each day and set a different time per enabled day
@@ -146,10 +149,18 @@
 
 ## CI/CD
 
-The project uses **GitHub Actions** to automate the build process for Android:
-- **Build Android APK**: Automatically builds a preview APK on every push to the `main` branch or when triggered manually.
-- **Artifacts**: The generated APK is available as a build artifact in the GitHub Actions run.
+Workflow: [`.github/workflows/build-android.yml`](./.github/workflows/build-android.yml).
 
+- **Triggers**: Push of a version tag matching `v*` (for example `v1.0.12`), or **Run workflow** manually (`workflow_dispatch`).
+- **Build**: Local EAS Android preview APK (`eas build … --profile preview --local`); requires `EXPO_TOKEN` in repository secrets.
+- **GitHub Release (tags only)**: After the build, the APK is renamed to `{releaseApkBasename}-{version}.apk` (see `expo.extra.releaseApkBasename` in [`app.config.js`](./app.config.js), default branding prefix `masa-daf`) and attached to a **published** GitHub Release for that tag ([`softprops/action-gh-release`](https://github.com/softprops/action-gh-release)).
+- **Artifacts**: Every run uploads `*.apk` as a workflow artifact (short-lived); **users should download from Releases**, which matches what the in-app updater checks.
+
+**Maintainer checklist for a release**
+
+1. Bump `version` in [`package.json`](./package.json) (and commit).
+2. Create and push the tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
+3. Confirm the workflow run published the Release and that the APK asset name matches `releaseApkBasename`.
 
 ---
 

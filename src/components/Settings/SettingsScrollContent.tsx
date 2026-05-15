@@ -182,7 +182,7 @@ export default function SettingsScrollContent({
               <SettingItem
                 icon="download-outline"
                 title="בדוק עדכונים"
-                description="מחפש גרסה חדשה ב-GitHub (מומלץ מדי פעם)"
+                description="מוודא אם יש גרסה חדשה לאפליקציה (כדאי מדי פעם)"
                 onPress={onCheckAppUpdate}
               />
             </View>
