@@ -48,10 +48,12 @@ function calculateStreak(records: DailyRecord[]): number {
   yesterday.setHours(0, 0, 0, 0);
   const yesterdayStr = getDateStr(yesterday);
 
-  const latestDateStr = learnedRecords[0].date;
-  if (latestDateStr !== todayStr && latestDateStr !== yesterdayStr) {
+  const learnedDateSet = new Set(learnedRecords.map(r => r.date));
+  if (!learnedDateSet.has(todayStr) && !learnedDateSet.has(yesterdayStr)) {
     return 0;
   }
+
+  const latestDateStr = learnedRecords[0].date;
 
   let streak = 0;
   let currentDateToCheck = new Date(latestDateStr);
