@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,10 +6,13 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
+import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
+import InfoModal from '../InfoModal';
 
 interface GuideModalProps {
   visible: boolean;
@@ -49,8 +52,18 @@ const GuideSection = ({ icon, title, items, theme }: GuideSectionProps) => {
 export function GuideModal({ visible, onClose }: GuideModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const [mailHintVisible, setMailHintVisible] = useState(false);
+
+  const openSupportEmail = useCallback(async () => {
+    try {
+      await Linking.openURL(getSupportMailtoUrl());
+    } catch {
+      setMailHintVisible(true);
+    }
+  }, []);
 
   return (
+    <>
     <Modal
       visible={visible}
       animationType="slide"
@@ -74,7 +87,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
         >
           <View style={styles.introBox}>
             <Text style={styles.introText}>
-              ברוכים הבאים למסע דף! מדריך זה יעזור לכם להכיר את כל הפיצ'רים והאפשרויות באפליקציה.
+              ברוכים הבאים למסע דף! מדריך זה יעזור לכם להכיר את כל התכונות והאפשרויות באפליקציה.
             </Text>
           </View>
 
@@ -87,7 +100,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
               'רצף הלימוד (Streak) מציג כמה ימים רצופים למדת ללא הפסקה',
               'מד ההתקדמות מראה את אחוז ההתקדמות שלך במסכת הנוכחית',
               'לחץ על קישור ספריא כדי לפתוח את הדף באתר ספריא ללימוד אונליין',
-              'הווידג\'ט של 7 הימים האחרונים מציג באופן ויזואלי את הימים שבהם למדת בשבוע האחרון',
+              'רשימת שבעת הימים האחרונים מציגה באופן ויזואלי את הימים שבהם למדת בשבוע האחרון',
               'באנר ההתקדמות בש"ס מראה כמה דפים סומנו מתוך סך דפי הש"ס. לחיצה עליו פותחת את מסך ההיסטוריה',
             ]}
             theme={theme}
@@ -131,6 +144,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
               'הצגה או הסתרה של התאריך הלועזי לצד העברי',
               'אפקטים חגיגיים (קונפטי) בהדלקת או כיבוי בסימון דף כנלמד',
               'אפשרות לאיפוס מלא של נתוני הלימוד במידת הצורך',
+              `יצירת קשר ומשוב: ${SUPPORT_EMAIL}, או דרך מקטע «יצירת קשר» בהגדרות`,
             ]}
             theme={theme}
           />
@@ -148,16 +162,22 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
             theme={theme}
           />
 
-          <GuideSection
-            icon="apps-outline"
-            title="ווידג'טים למסך הבית (Android)"
-            items={[
-              'עקבו אחר הדף היומי ורצף הלימוד שלכם ישירות ממסך הבית של הטלפון',
-              'ניתן לסמן את הדף כנלמד בלחיצה אחת ישירות מהווידג\'ט מבלי לפתוח את האפליקציה',
-              'הווידג\'ט מתעדכן אוטומטית עם השינויים באפליקציה ולהפך',
-            ]}
-            theme={theme}
-          />
+          <View style={styles.contactBox}>
+            <View style={styles.contactHeader}>
+              <View style={styles.iconBox}>
+                <Ionicons name="mail-outline" size={22} color={theme.colors.accent} />
+              </View>
+              <Text style={styles.sectionTitle}>יצירת קשר ותמיכה</Text>
+            </View>
+            <Text style={styles.contactIntro}>
+              משוב, תמיכה טכנית והצעות לשיפור. לחצו על הכתובת לפתיחה באפליקציית הדוא״ל:
+            </Text>
+            <TouchableOpacity onPress={openSupportEmail} activeOpacity={0.75}>
+              <Text style={styles.contactEmail} selectable>
+                {SUPPORT_EMAIL}
+              </Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.footer}>
 
@@ -172,6 +192,15 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
         </ScrollView>
       </SafeAreaView>
     </Modal>
+
+    <InfoModal
+      visible={mailHintVisible}
+      onClose={() => setMailHintVisible(false)}
+      title="לא נפתחה אפליקציית המייל"
+      message="לפעמים המכשיר לא מפנה לאפליקציית דוא״ל. ניתן להעתיק את הכתובת ולכתוב אלינו מכל אפליקציה."
+      emphasis={SUPPORT_EMAIL}
+    />
+    </>
   );
 }
 
@@ -305,5 +334,33 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     footerEmoji: {
       fontSize: 20,
       marginTop: 4,
+    },
+    contactBox: {
+      backgroundColor: theme.colors.accentLight,
+      borderRadius: 16,
+      padding: 16,
+      marginBottom: 12,
+      borderWidth: 1,
+      borderColor: 'rgba(201,150,60,0.3)',
+    },
+    contactHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 12,
+    },
+    contactIntro: {
+      fontSize: 14,
+      lineHeight: 21,
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      fontWeight: '500',
+      marginBottom: 10,
+    },
+    contactEmail: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: theme.colors.accent,
+      textAlign: 'center',
     },
   });

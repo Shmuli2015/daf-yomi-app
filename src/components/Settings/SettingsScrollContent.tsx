@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ScrollView } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, ScrollView, Linking } from 'react-native';
 import { ThemeMode } from '../../theme';
 import { SettingItem } from './SettingItem';
 import { SectionHeader } from './SectionHeader';
@@ -8,10 +8,12 @@ import { DayScheduleList } from './DayScheduleList';
 import type { DaySchedule } from './DayScheduleList';
 import { SettingsFooter } from './SettingsFooter';
 import type { SettingsScreenStyles } from './settingsScreenStyles';
+import InfoModal from '../InfoModal';
 import {
   formatNotificationTime,
   getThemeModeSettingDisplay,
 } from '../../utils/settingsScreen';
+import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
 
 export type SettingsScrollContentProps = {
   styles: SettingsScreenStyles;
@@ -65,9 +67,19 @@ export default function SettingsScrollContent({
   onResetModalOpen,
 }: SettingsScrollContentProps) {
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
+  const [mailHintVisible, setMailHintVisible] = useState(false);
+
+  const openSupportEmail = useCallback(async () => {
+    try {
+      await Linking.openURL(getSupportMailtoUrl());
+    } catch {
+      setMailHintVisible(true);
+    }
+  }, []);
 
   return (
-    <ScrollView
+    <>
+      <ScrollView
       style={styles.scroll}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
@@ -147,6 +159,16 @@ export default function SettingsScrollContent({
           />
         </View>
 
+        <SectionHeader title="יצירת קשר" />
+        <View style={styles.card}>
+          <SettingItem
+            icon="mail-outline"
+            title="תמיכה ויצירת קשר"
+            description="משוב והצעות לשיפור"
+            onPress={openSupportEmail}
+          />
+        </View>
+
         {showDevSection && (
           <>
             <SectionHeader title="דיבאג והתראות" />
@@ -185,5 +207,14 @@ export default function SettingsScrollContent({
         <SettingsFooter />
       </View>
     </ScrollView>
+
+      <InfoModal
+        visible={mailHintVisible}
+        onClose={() => setMailHintVisible(false)}
+        title="לא נפתחה אפליקציית המייל"
+        message="לפעמים המכשיר לא מפנה לאפליקציית דוא״ל. ניתן להעתיק את הכתובת ולכתוב אלינו מכל אפליקציה."
+        emphasis={SUPPORT_EMAIL}
+      />
+    </>
   );
 }

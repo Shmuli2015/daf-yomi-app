@@ -39,7 +39,8 @@
 - **Notifications Master Switch**: Toggle **Daily reminder** (`תזכורת יומית`) on or off; when off, no reminders are scheduled
 - **Daily Notifications**: When reminders are enabled, choose one time for every day or set up per-day behavior
 - **Notification Mode**: **Every day** (`כל יום`) uses a single time for the whole week; **By weekday** (`לפי ימים`) lets you enable or disable each day and set a different time per enabled day
-- **In-App User Guide**: Open **User guide** (`מדריך שימוש`) for a Hebrew walkthrough of every major screen and feature
+- **In-App User Guide**: Open **User guide** (`מדריך שימוש`) for a Hebrew walkthrough of every major screen and feature; the guide includes the support email for feedback and questions
+- **Contact & support**: **Contact** (`יצירת קשר`) in Settings opens your mail app, or write to **[support.masa.daf@gmail.com](mailto:support.masa.daf@gmail.com)** for feedback, technical support, and suggestions
 - **Interactive Notification Actions** (Hebrew in the app):  
   - `✅ סיימתי את הדף!` - mark the current cycle page as learned from the notification  
   - `⏰ הזכר לי עוד שעה` - snooze for one hour
@@ -147,6 +148,14 @@ The project uses **GitHub Actions** to automate the build process for Android:
 - **Build Android APK**: Automatically builds a preview APK on every push to the `main` branch or when triggered manually.
 - **Artifacts**: The generated APK is available as a build artifact in the GitHub Actions run.
 
+
+---
+
+## Support & contact
+
+Questions, technical support, or ideas to improve the app: **[support.masa.daf@gmail.com](mailto:support.masa.daf@gmail.com)**  
+
+You can also use **Contact** (`יצירת קשר`) in the in-app Settings screen to start an email with a preset subject line.
 
 ---
 
