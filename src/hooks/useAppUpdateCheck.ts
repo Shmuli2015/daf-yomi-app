@@ -84,24 +84,12 @@ export function useAppUpdateCheck() {
 
   const checkManualAsync = useCallback(() => runRemoteCheck(true), [runRemoteCheck]);
 
-  const showPreviewMock = useCallback(() => {
-    if (!__DEV__) return;
-    setOffer({
-      latestVersion: '9.9.9',
-      downloadUrl: 'https://example.com',
-      rawTag: 'v9.9.9',
-      apkFileName: 'preview-demo.apk',
-    });
-    setVisible(true);
-  }, []);
-
   return {
     visible,
     offer,
     installedVersion,
     onDismissLater,
     checkManualAsync,
-    showPreviewMock,
     closeModal,
   };
 }

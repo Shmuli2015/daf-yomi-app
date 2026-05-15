@@ -84,7 +84,7 @@ export function useNotificationsSetup() {
               identifier: 'later-reminder',
               content: {
                 title: '⏰ תזכורת נוספת',
-                body: `${dafInfo.masechet} ${dafInfo.daf} - ביקשת שנזכיר לך שוב... ✨`,
+                body: `${dafInfo.masechet} ${dafInfo.daf}, ביקשת שנזכיר לך שוב... ✨`,
                 sound: true,
                 categoryIdentifier: 'study-reminder',
               },

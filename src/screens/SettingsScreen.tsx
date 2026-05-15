@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View, Alert } from 'react-native';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { useAppStore } from '../store/useAppStore';
@@ -58,7 +58,17 @@ export default function SettingsScreen() {
     emphasis?: string;
     iconName?: InfoModalIconName;
     actionLabel?: string;
+    compact?: boolean;
+    /** סגירה אוטומטית אחרי מילישניות (למשל מודל התראת בדיקה) */
+    autoCloseMs?: number;
   } | null>(null);
+
+  useEffect(() => {
+    const ms = updateFeedback?.autoCloseMs;
+    if (ms == null || ms <= 0) return;
+    const id = setTimeout(() => setUpdateFeedback(null), ms);
+    return () => clearTimeout(id);
+  }, [updateFeedback]);
 
   useEffect(() => {
     if (settings) {
@@ -257,23 +267,33 @@ export default function SettingsScreen() {
 
   const handleTestNotification = useCallback(async () => {
     await sendTestNotification();
-    Alert.alert('התראת בדיקה', 'התראת בדיקה תגיע בעוד 5 שניות');
+    setUpdateFeedback({
+      title: 'התראת בדיקה',
+      message: 'התראת בדיקה תגיע בעוד 5 שניות',
+      iconName: 'notifications-outline',
+      compact: true,
+      autoCloseMs: 3000,
+    });
   }, []);
 
   const handleCheckScheduled = useCallback(async () => {
     const notifications = await getScheduledNotifications();
     setScheduledCount(notifications.length);
-    Alert.alert('התראות מתוזמנות', `יש ${notifications.length} התראות מתוזמנות במערכת`);
+    setUpdateFeedback({
+      title: 'התראות מתוזמנות',
+      message: `יש ${notifications.length} התראות מתוזמנות במערכת`,
+      iconName: 'list-outline',
+      compact: true,
+    });
   }, []);
 
   const handleCheckAppUpdates = useCallback(async () => {
     if (!isUpdateCheckConfigured()) {
       setUpdateFeedback({
         title: 'בדיקת עדכונים',
-        message:
-          'החיבור לשרת העדכונים לא הוגדר בהגדרות האפליקציה. אם אתה מפתח הפרויקט, ודא שבקובץ app.config מוגדרים githubOwner, githubRepo.',
+        message: 'חיבור לשרת העדכונים לא מוגדר. יש להגדיר בקובץ app.config את githubOwner ואת githubRepo.',
         iconName: 'settings-outline',
-        actionLabel: 'הבנתי',
+        compact: true,
       });
       return;
     }
@@ -281,22 +301,20 @@ export default function SettingsScreen() {
     if (r === 'opened') return;
     if (r === 'dismissed') {
       setUpdateFeedback({
-        title: 'נזכיר כשיהיה חדש',
-        message:
-          'סימנת «אחר כך» על העדכון האחרון. לא נציג שוב את אותה גרסה; כשנפרסם עדכון חדש יותר, הוא יוצג שוב.',
+        title: 'העדכון נדחה',
+        message: 'כשתפורסם גרסה חדשה יותר, נציג שוב.',
         iconName: 'time-outline',
-        actionLabel: 'סגור',
+        compact: true,
       });
       return;
     }
     const ver = Constants.expoConfig?.version;
     setUpdateFeedback({
-      title: 'הכל עדכני',
-      message:
-        'גרסת מסע דף שלך תואמת לגרסה האחרונה שפורסמה. כשנוסיף שיפורים ונפרסם גרסה חדשה, תוכל לעדכן מכאן.',
-      emphasis: ver ? `גרסה מותקנת: ${ver}` : undefined,
+      title: 'אין עדכון חדש',
+      message: 'מותקנת אצלך הגרסה האחרונה שפורסמה.',
+      emphasis: ver ? `גרסה ${ver}` : undefined,
       iconName: 'checkmark-circle',
-      actionLabel: 'מצוין',
+      compact: true,
     });
   }, [updateCtl]);
 
@@ -344,7 +362,6 @@ export default function SettingsScreen() {
             onCheckScheduled={handleCheckScheduled}
             onResetModalOpen={() => setShowResetModal(true)}
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
-            onPreviewUpdateModal={__DEV__ ? updateCtl.showPreviewMock : undefined}
             onProbeGithubRelease={__DEV__ ? updateCtl.probeGithubRelease : undefined}
           />
         </View>
@@ -370,6 +387,7 @@ export default function SettingsScreen() {
         />
 
         <InfoModal
+          compact={updateFeedback?.compact}
           visible={updateFeedback != null}
           onClose={() => setUpdateFeedback(null)}
           title={updateFeedback?.title ?? ''}

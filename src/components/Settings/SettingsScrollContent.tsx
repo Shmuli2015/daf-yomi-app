@@ -40,7 +40,6 @@ export type SettingsScrollContentProps = {
   onCheckScheduled: () => void;
   onResetModalOpen: () => void;
   onCheckAppUpdate?: () => void;
-  onPreviewUpdateModal?: () => void;
   onProbeGithubRelease?: () => void;
 };
 
@@ -69,7 +68,6 @@ export default function SettingsScrollContent({
   onCheckScheduled,
   onResetModalOpen,
   onCheckAppUpdate,
-  onPreviewUpdateModal,
   onProbeGithubRelease,
 }: SettingsScrollContentProps) {
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
@@ -205,19 +203,11 @@ export default function SettingsScrollContent({
                 description={`${scheduledCount} התראות מתוזמנות`}
                 onPress={onCheckScheduled}
               />
-              {onPreviewUpdateModal ? (
-                <SettingItem
-                  icon="phone-portrait-outline"
-                  title="פריוויו מודל עדכון"
-                  description="מציג את חלון העדכון ללא רשת (בדיקת UI)"
-                  onPress={onPreviewUpdateModal}
-                />
-              ) : null}
               {onProbeGithubRelease ? (
                 <SettingItem
                   icon="cloud-outline"
                   title="בדוק תגובת GitHub"
-                  description="מציג טאג ושם APK מה-release האחרון"
+                  description="מציג טאג ושם APK מהפרסום האחרון"
                   onPress={onProbeGithubRelease}
                 />
               ) : null}
@@ -240,7 +230,7 @@ export default function SettingsScrollContent({
           הנתונים שלך נשמרים באופן מקומי בלבד על המכשיר שלך.
         </Text>
 
-        <SettingsFooter onVersionLongPress={__DEV__ ? onPreviewUpdateModal : undefined} />
+        <SettingsFooter />
       </View>
     </ScrollView>
 

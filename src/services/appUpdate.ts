@@ -172,11 +172,11 @@ export async function probeLatestReleaseForDev(): Promise<{
 }> {
   const extra = getAppExtra();
   if (!extra.githubOwner || !extra.githubRepo) {
-    return { ok: false, detail: 'חסר githubOwner/githubRepo ב-expo.extra' };
+    return { ok: false, detail: 'חסר githubOwner ו githubRepo בהגדרות expo.extra' };
   }
   const release = await fetchLatestGitHubRelease(extra.githubOwner, extra.githubRepo);
   if (!release?.tag_name) {
-    return { ok: false, detail: 'לא התקבלה תגובה תקינה מ-GitHub' };
+    return { ok: false, detail: 'לא התקבלה תגובה תקינה מ GitHub' };
   }
   const basename = extra.releaseApkBasename ?? '';
   const apkNames =
@@ -192,9 +192,9 @@ export async function probeLatestReleaseForDev(): Promise<{
   if (chosenUrl && chosenName) {
     detail = `נבחר: ${chosenName}`;
   } else if (apkNames.length) {
-    detail = `APK ב-release: ${apkNames.join(', ')}`;
+    detail = `APK בפרסום: ${apkNames.join(', ')}`;
   } else {
-    detail = 'אין נכס .apk ב-release';
+    detail = 'אין קובץ APK בפרסום';
   }
 
   return {

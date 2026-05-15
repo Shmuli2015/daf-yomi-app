@@ -1,12 +1,11 @@
-import React, { createContext, useCallback, useContext, useMemo } from 'react';
-import { Alert } from 'react-native';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import InfoModal, { type InfoModalIconName } from '../components/InfoModal';
 import { AppUpdateModal } from '../components/AppUpdateModal';
 import { useAppUpdateCheck } from '../hooks/useAppUpdateCheck';
 import { probeLatestReleaseForDev } from '../services/appUpdate';
 
 export type AppUpdateContextValue = {
   checkManualAsync: () => Promise<'opened' | 'none' | 'dismissed'>;
-  showPreviewMock: () => void;
   probeGithubRelease: () => Promise<void>;
 };
 
@@ -20,6 +19,12 @@ export function useAppUpdateControls(): AppUpdateContextValue {
   return ctx;
 }
 
+type GithubProbeModalPayload = {
+  title: string;
+  message: string;
+  iconName?: InfoModalIconName;
+};
+
 export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
   const {
     visible,
@@ -27,28 +32,38 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
     installedVersion,
     onDismissLater,
     checkManualAsync,
-    showPreviewMock,
   } = useAppUpdateCheck();
+
+  const [githubProbeModal, setGithubProbeModal] = useState<GithubProbeModalPayload | null>(null);
 
   const probeGithubRelease = useCallback(async () => {
     const r = await probeLatestReleaseForDev();
     if (!r.ok) {
-      Alert.alert('GitHub', r.detail ?? 'שגיאה');
+      setGithubProbeModal({
+        title: 'GitHub',
+        message: r.detail ?? 'שגיאה',
+        iconName: 'cloud-offline-outline',
+      });
       return;
     }
-    Alert.alert(
-      'תגובת GitHub האחרונה',
-      [`טאג: ${r.tag_name ?? '(חסר)'}`, r.apkAsset ? `APK: ${r.apkAsset}` : null, r.detail].filter(Boolean).join('\n'),
-    );
+    const lines = [
+      `טאג: ${r.tag_name ?? '(חסר)'}`,
+      r.apkAsset ? `APK: ${r.apkAsset}` : null,
+      r.detail,
+    ].filter(Boolean) as string[];
+    setGithubProbeModal({
+      title: 'תגובת GitHub האחרונה',
+      message: lines.join('\n'),
+      iconName: 'logo-github',
+    });
   }, []);
 
   const value = useMemo(
     () => ({
       checkManualAsync,
-      showPreviewMock,
       probeGithubRelease,
     }),
-    [checkManualAsync, showPreviewMock, probeGithubRelease],
+    [checkManualAsync, probeGithubRelease],
   );
 
   return (
@@ -59,6 +74,14 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
         offer={offer}
         installedVersion={installedVersion}
         onDismissLater={onDismissLater}
+      />
+      <InfoModal
+        compact
+        visible={githubProbeModal !== null}
+        onClose={() => setGithubProbeModal(null)}
+        title={githubProbeModal?.title ?? ''}
+        message={githubProbeModal?.message ?? ''}
+        iconName={githubProbeModal?.iconName}
       />
     </AppUpdateContext.Provider>
   );
