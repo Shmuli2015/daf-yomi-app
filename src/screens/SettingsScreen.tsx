@@ -27,13 +27,14 @@ export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
   const updateCtl = useAppUpdateControls();
-  const { settings, updateNotificationSettings, updateThemeMode, loadInitialData } =
+  const { settings, updateNotificationSettings, updateThemeMode, loadInitialData, setUpdateAutoPromptEnabled } =
     useAppStore(
       useShallow(s => ({
         settings: s.settings,
         updateNotificationSettings: s.updateNotificationSettings,
         updateThemeMode: s.updateThemeMode,
         loadInitialData: s.loadInitialData,
+        setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,
       })),
     );
   const [hour, setHour] = useState(7);
@@ -287,6 +288,13 @@ export default function SettingsScreen() {
     });
   }, []);
 
+  const handleUpdateAutoPromptToggle = useCallback(
+    (val: boolean) => {
+      setUpdateAutoPromptEnabled(val);
+    },
+    [setUpdateAutoPromptEnabled],
+  );
+
   const handleCheckAppUpdates = useCallback(async () => {
     if (!isUpdateCheckConfigured()) {
       setUpdateFeedback({
@@ -361,6 +369,8 @@ export default function SettingsScreen() {
             onTestNotification={handleTestNotification}
             onCheckScheduled={handleCheckScheduled}
             onResetModalOpen={() => setShowResetModal(true)}
+            updateAutoPromptEnabled={updatesConfigured ? settings.update_auto_prompt_enabled === 1 : undefined}
+            onUpdateAutoPromptToggle={updatesConfigured ? handleUpdateAutoPromptToggle : undefined}
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
             onProbeGithubRelease={__DEV__ ? updateCtl.probeGithubRelease : undefined}
           />

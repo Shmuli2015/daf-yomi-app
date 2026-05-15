@@ -25,6 +25,8 @@ export interface SettingsRecord {
   theme_mode: string;
   last_update_check_at: string | null;
   dismissed_update_version: string | null;
+  /** 1 = show update modal when a newer version is detected (startup / foreground) */
+  update_auto_prompt_enabled: number;
 }
 
 export function initDB() {
@@ -72,6 +74,9 @@ export function initDB() {
   }
   if (!columns.includes('dismissed_update_version')) {
     db.execSync('ALTER TABLE settings ADD COLUMN dismissed_update_version TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('update_auto_prompt_enabled')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN update_auto_prompt_enabled INTEGER DEFAULT 0;');
   }
 
   db.execSync(`
@@ -156,6 +161,12 @@ export function touchLastUpdateCheckAt() {
 
 export function setDismissedUpdateVersion(version: string | null) {
   db.runSync('UPDATE settings SET dismissed_update_version = ? WHERE id = 1', [version]);
+}
+
+export function setUpdateAutoPromptEnabled(enabled: boolean) {
+  db.runSync('UPDATE settings SET update_auto_prompt_enabled = ? WHERE id = 1', [
+    enabled ? 1 : 0,
+  ]);
 }
 
 export function resetDB() {

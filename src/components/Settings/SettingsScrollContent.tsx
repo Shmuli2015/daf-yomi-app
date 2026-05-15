@@ -39,6 +39,9 @@ export type SettingsScrollContentProps = {
   onTestNotification: () => void;
   onCheckScheduled: () => void;
   onResetModalOpen: () => void;
+  /** כבוי כברירת מחדל — הפעלה מציגה חלון עדכון אוטומטית */
+  updateAutoPromptEnabled?: boolean;
+  onUpdateAutoPromptToggle?: (enabled: boolean) => void;
   onCheckAppUpdate?: () => void;
   onProbeGithubRelease?: () => void;
 };
@@ -67,6 +70,8 @@ export default function SettingsScrollContent({
   onTestNotification,
   onCheckScheduled,
   onResetModalOpen,
+  updateAutoPromptEnabled,
+  onUpdateAutoPromptToggle,
   onCheckAppUpdate,
   onProbeGithubRelease,
 }: SettingsScrollContentProps) {
@@ -177,6 +182,16 @@ export default function SettingsScrollContent({
           <>
             <SectionHeader title="עדכוני אפליקציה" />
             <View style={styles.card}>
+              {onUpdateAutoPromptToggle != null && updateAutoPromptEnabled != null ? (
+                <SettingItem
+                  icon="alert-circle-outline"
+                  title="התראות עדכון אוטומטיות"
+                  description="בדיקת עדכונים אוטומטית בפתיחת האפליקציה או בחזרה מהרקע, והתראה עם קישור כשמתפרסם עדכון"
+                  type="switch"
+                  value={updateAutoPromptEnabled}
+                  onPress={onUpdateAutoPromptToggle}
+                />
+              ) : null}
               <SettingItem
                 icon="download-outline"
                 title="בדוק עדכונים"

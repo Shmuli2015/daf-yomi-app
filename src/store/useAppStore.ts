@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, DailyRecord, SettingsRecord } from '../db/database';
+import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, DailyRecord, SettingsRecord } from '../db/database';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, ProgressCache } from '../utils/progressCache';
 
@@ -35,6 +35,7 @@ interface AppState {
   ) => void;
 
   updateThemeMode: (themeMode: string) => void;
+  setUpdateAutoPromptEnabled: (enabled: boolean) => void;
   setCurrentDate: (date: Date) => void;
 }
 
@@ -154,6 +155,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   updateThemeMode: (themeMode: string) => {
     updateThemeMode(themeMode);
+    get().refreshSettings();
+  },
+
+  setUpdateAutoPromptEnabled: (enabled: boolean) => {
+    persistUpdateAutoPromptSetting(enabled);
     get().refreshSettings();
   },
 

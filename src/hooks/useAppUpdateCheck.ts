@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 import Constants from 'expo-constants';
 import { useAppStore } from '../store/useAppStore';
 import { getSettings, touchLastUpdateCheckAt, setDismissedUpdateVersion } from '../db/database';
@@ -9,14 +10,8 @@ import {
   type LatestReleaseOffer,
 } from '../services/appUpdate';
 
-const TWENTY_FOUR_H_MS = 24 * 60 * 60 * 1000;
-
-function shouldThrottleAutoCheck(lastIso: string | null | undefined): boolean {
-  if (!lastIso) return false;
-  const t = Date.parse(lastIso);
-  if (Number.isNaN(t)) return false;
-  return Date.now() - t < TWENTY_FOUR_H_MS;
-}
+/** Minimal gap between automatic checks — avoids duplicate calls on launch/state flicker */
+const AUTO_CHECK_MIN_GAP_MS = 5000;
 
 function shouldSkipDueToDismissed(remote: string, dismissed: string | null | undefined): boolean {
   if (!dismissed) return false;
@@ -31,7 +26,7 @@ export function useAppUpdateCheck() {
 
   const [visible, setVisible] = useState(false);
   const [offer, setOffer] = useState<LatestReleaseOffer | null>(null);
-  const autoRanRef = useRef(false);
+  const lastAutoRunAtRef = useRef(0);
 
   const installedVersion = Constants.expoConfig?.version ?? '0.0.0';
 
@@ -55,7 +50,7 @@ export function useAppUpdateCheck() {
 
       const row = getSettings();
 
-      if (!force && shouldThrottleAutoCheck(row.last_update_check_at)) {
+      if (!force && (row.update_auto_prompt_enabled ?? 0) !== 1) {
         return 'none';
       }
 
@@ -65,7 +60,7 @@ export function useAppUpdateCheck() {
       const next = await resolveUpdateOfferIfAny(installedVersion);
       if (!next) return 'none';
 
-      if (shouldSkipDueToDismissed(next.latestVersion, row.dismissed_update_version)) {
+      if (!force && shouldSkipDueToDismissed(next.latestVersion, row.dismissed_update_version)) {
         return 'dismissed';
       }
 
@@ -76,11 +71,23 @@ export function useAppUpdateCheck() {
     [installedVersion, refreshSettings],
   );
 
-  useEffect(() => {
-    if (!isAppReady || autoRanRef.current) return;
-    autoRanRef.current = true;
+  const kickAutoRemoteCheck = useCallback(() => {
+    if (!isAppReady || !isUpdateCheckConfigured()) return;
+    if ((getSettings().update_auto_prompt_enabled ?? 0) !== 1) return;
+    const now = Date.now();
+    if (now - lastAutoRunAtRef.current < AUTO_CHECK_MIN_GAP_MS) return;
+    lastAutoRunAtRef.current = now;
     void runRemoteCheck(false);
   }, [isAppReady, runRemoteCheck]);
+
+  useEffect(() => {
+    if (!isAppReady) return;
+    kickAutoRemoteCheck();
+    const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
+      if (next === 'active') kickAutoRemoteCheck();
+    });
+    return () => sub.remove();
+  }, [isAppReady, kickAutoRemoteCheck]);
 
   const checkManualAsync = useCallback(() => runRemoteCheck(true), [runRemoteCheck]);
 
