@@ -9,6 +9,7 @@ import { useShallow } from "zustand/react/shallow";
 import React, { useMemo, useState, useCallback } from "react";
 import { HDate } from "@hebcal/core";
 import { format, subDays, addDays } from "date-fns";
+import { he } from "date-fns/locale/he";
 import ConfettiCannon from "react-native-confetti-cannon";
 import HomeHeader from "../components/HomeHeader";
 import HomeContent from "../components/HomeContent";
@@ -69,7 +70,11 @@ export default function HomeScreen({ navigation }: any) {
 
   const hDate = useMemo(() => new HDate(currentDate), [currentDate]);
   const hebrewDateStr = useMemo(() => hDate.renderGematriya(), [hDate]);
-  const gregorianDateStr = useMemo(() => format(currentDate, "dd/MM/yyyy"), [currentDate]);
+  const gregorianDateStr = useMemo(
+    () =>
+      `${format(currentDate, "EEEE", { locale: he })} · ${format(currentDate, "dd/MM/yyyy")}`,
+    [currentDate],
+  );
 
   const handlePrevDay = useCallback(() => {
     setCurrentDate(subDays(currentDate, 1));
