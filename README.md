@@ -1,6 +1,8 @@
-# מסע דף (Masa Daf) - Daf Yomi Tracker
+<div dir="ltr" lang="en">
 
-**מסע דף** is a premium, modern mobile application designed for the global Daf Yomi community. Built with a focus on high-end aesthetics, Hebrew localization, and a seamless user experience, it helps you stay consistent on your journey through Shas.
+# <span dir="rtl" lang="he">מסע דף</span> (Masa Daf) - Daf Yomi Tracker
+
+**<span dir="rtl" lang="he">מסע דף</span>** is a premium, modern mobile application designed for the global Daf Yomi community. Built with a focus on high-end aesthetics, Hebrew localization, and a seamless user experience, it helps you stay consistent on your journey through Shas.
 
 **Version:** See the `version` field in [`package.json`](./package.json). Expo picks it up in [`app.config.js`](./app.config.js), and the app shows it in Settings (via `expo-constants`), so one source of truth stays in sync.
 
@@ -9,9 +11,9 @@
 ## App Functions
 
 ### 🏠 Home Dashboard
-- **Day Navigation**: Prev/next arrows on the dashboard move between calendar days for that day's Daf; tap the dates to jump back to today, or use **Return to today** (`חזור להיום`) when you have moved away from the real calendar date
+- **Day Navigation**: Prev/next arrows on the dashboard move between calendar days for that day's Daf; tap the dates to jump back to today, or use **Return to today** (<span dir="rtl" lang="he">חזור להיום</span>) when you have moved away from the real calendar date
 - **Today's Daf Display**: Shows the Daf Yomi for the selected day (tractate and page) with both Hebrew and Gregorian dates (Gregorian respects the visibility toggle)
-- **Learning Tracker**: Use **Mark as learned** (`סמן כנלמד`) to record that day's page; the control switches to **Finished** (`סיימתי את הדף`) and asks for confirmation before unsetting
+- **Learning Tracker**: Use **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) to record that day's page; the control switches to **Finished** (<span dir="rtl" lang="he">סיימתי את הדף</span>) and asks for confirmation before unsetting
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Direct link to view the Daf on Sefaria for online learning
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum
@@ -21,7 +23,7 @@
 
 
 ### 📊 History & Progress Tracking
-- **Complete Shas Overview**: Grid view of all 37 tractates (מסכתות) in the Talmud
+- **Complete Shas Overview**: Grid view of all 37 tractates (<span dir="rtl" lang="he">מסכתות</span>) in the Talmud
 - **Masechet-by-Masechet Progress**: Individual progress bars for each tractate showing pages learned
 - **Completion Statistics**: Track total pages learned and completed tractates
 - **Interactive Masechet Details**: Tap any tractate to see detailed breakdown of dafim learned vs. remaining
@@ -30,20 +32,20 @@
 
 ### 📅 Hebrew Calendar View
 - **Monthly Hebrew Calendar**: Hebrew dates (gematria) with gregorian day numbers per cell
-- **Navigation**: Month arrows and a **Today** (`היום`) shortcut when you are viewing another month
+- **Navigation**: Month arrows and a **Today** (<span dir="rtl" lang="he">היום</span>) shortcut when you are viewing another month
 - **Learned days**: Highlighted with the accent color; **today** uses a lighter accent ring
 - **Day detail**: Tap a date to open a card with that day's Daf, Sefaria link, and learn/unlearn (with confirmation when clearing)
-- **Future dates**: Option to mark **learned ahead** (`למדתי מראש`) when you have already studied that calendar day's page
+- **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
-- **Notifications Master Switch**: Toggle **Daily reminder** (`תזכורת יומית`) on or off; when off, no reminders are scheduled
+- **Notifications Master Switch**: Toggle **Daily reminder** (<span dir="rtl" lang="he">תזכורת יומית</span>) on or off; when off, no reminders are scheduled
 - **Daily Notifications**: When reminders are enabled, choose one time for every day or set up per-day behavior
-- **Notification Mode**: **Every day** (`כל יום`) uses a single time for the whole week; **By weekday** (`לפי ימים`) lets you enable or disable each day and set a different time per enabled day
-- **In-App User Guide**: Open **User guide** (`מדריך שימוש`) for a Hebrew walkthrough of every major screen and feature; the guide includes the support email for feedback and questions
-- **Contact & support**: **Contact** (`יצירת קשר`) in Settings opens your mail app, or write to **[support.masa.daf@gmail.com](mailto:support.masa.daf@gmail.com)** for feedback, technical support, and suggestions
+- **Notification Mode**: **Every day** (<span dir="rtl" lang="he">כל יום</span>) uses a single time for the whole week; **By weekday** (<span dir="rtl" lang="he">לפי ימים</span>) lets you enable or disable each day and set a different time per enabled day
+- **In-App User Guide**: Open **User guide** (<span dir="rtl" lang="he">מדריך שימוש</span>) for a Hebrew walkthrough of every major screen and feature; the guide includes the support email for feedback and questions
+- **Contact & support**: **Contact** (<span dir="rtl" lang="he">יצירת קשר</span>) in Settings opens your mail app, or write to **[support.masa.daf@gmail.com](mailto:support.masa.daf@gmail.com)** for feedback, technical support, and suggestions
 - **Interactive Notification Actions** (Hebrew in the app):  
-  - `✅ סיימתי את הדף!` - mark the current cycle page as learned from the notification  
-  - `⏰ הזכר לי עוד שעה` - snooze for one hour
+  - <span dir="rtl" lang="he">✅ סיימתי את הדף!</span> — mark the current cycle page as learned from the notification  
+  - <span dir="rtl" lang="he">⏰ הזכר לי עוד שעה</span> — snooze for one hour
 - **Theme Selection**: Choose between Light, Dark, or System-based theme modes
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
 - **Confetti Effects Toggle**: Enable/disable celebration animations
@@ -51,13 +53,13 @@
 - **Privacy-First**: All data stored locally on device with SQLite database
 
 ### 🔔 Smart Notifications
-- **Daily Learning Reminders**: Scheduled at your preferred time(s) while **Daily reminder** (`תזכורת יומית`) stays enabled
+- **Daily Learning Reminders**: Scheduled at your preferred time(s) while **Daily reminder** (<span dir="rtl" lang="he">תזכורת יומית</span>) stays enabled
 - **Dynamic Daf Information**: Notifications show today's tractate and page number
 - **Interactive Actions**: Quick actions directly from notification tray
-- **Snooze Functionality**: One-hour follow-up via `⏰ הזכר לי עוד שעה`
+- **Snooze Functionality**: One-hour follow-up via <span dir="rtl" lang="he">⏰ הזכר לי עוד שעה</span>
 - **Expo Go**: Local notification scheduling still runs, but behavior can differ from dev/production builds; use a **development build** for full parity
 - **Auto-scheduling**: Notifications automatically reschedule on device reboot
-- **Per-Day Customization**: In **By weekday** (`לפי ימים`) mode, turn individual weekdays on or off and assign each enabled day its own time
+- **Per-Day Customization**: In **By weekday** (<span dir="rtl" lang="he">לפי ימים</span>) mode, turn individual weekdays on or off and assign each enabled day its own time
 - **Hebrew Text**: All notifications in Hebrew for native speaker experience
 
 ### 📱 User Experience
@@ -155,7 +157,7 @@ The project uses **GitHub Actions** to automate the build process for Android:
 
 Questions, technical support, or ideas to improve the app: **[support.masa.daf@gmail.com](mailto:support.masa.daf@gmail.com)**  
 
-You can also use **Contact** (`יצירת קשר`) in the in-app Settings screen to start an email with a preset subject line.
+You can also use **Contact** (<span dir="rtl" lang="he">יצירת קשר</span>) in the in-app Settings screen to start an email with a preset subject line.
 
 ---
 
@@ -175,3 +177,4 @@ This project is licensed under the MIT License.
 
 Shmuel Rosenberg - see `package.json` (`author`) and the in-app Settings footer.
 
+</div>
