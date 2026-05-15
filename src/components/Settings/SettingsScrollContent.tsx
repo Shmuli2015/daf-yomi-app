@@ -39,6 +39,9 @@ export type SettingsScrollContentProps = {
   onTestNotification: () => void;
   onCheckScheduled: () => void;
   onResetModalOpen: () => void;
+  onCheckAppUpdate?: () => void;
+  onPreviewUpdateModal?: () => void;
+  onProbeGithubRelease?: () => void;
 };
 
 export default function SettingsScrollContent({
@@ -65,6 +68,9 @@ export default function SettingsScrollContent({
   onTestNotification,
   onCheckScheduled,
   onResetModalOpen,
+  onCheckAppUpdate,
+  onPreviewUpdateModal,
+  onProbeGithubRelease,
 }: SettingsScrollContentProps) {
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
   const [mailHintVisible, setMailHintVisible] = useState(false);
@@ -169,6 +175,20 @@ export default function SettingsScrollContent({
           />
         </View>
 
+        {onCheckAppUpdate ? (
+          <>
+            <SectionHeader title="עדכוני אפליקציה" />
+            <View style={styles.card}>
+              <SettingItem
+                icon="download-outline"
+                title="בדוק עדכונים"
+                description="מחפש גרסה חדשה ב-GitHub (מומלץ מדי פעם)"
+                onPress={onCheckAppUpdate}
+              />
+            </View>
+          </>
+        ) : null}
+
         {showDevSection && (
           <>
             <SectionHeader title="דיבאג והתראות" />
@@ -185,6 +205,22 @@ export default function SettingsScrollContent({
                 description={`${scheduledCount} התראות מתוזמנות`}
                 onPress={onCheckScheduled}
               />
+              {onPreviewUpdateModal ? (
+                <SettingItem
+                  icon="phone-portrait-outline"
+                  title="פריוויו מודל עדכון"
+                  description="מציג את חלון העדכון ללא רשת (בדיקת UI)"
+                  onPress={onPreviewUpdateModal}
+                />
+              ) : null}
+              {onProbeGithubRelease ? (
+                <SettingItem
+                  icon="cloud-outline"
+                  title="בדוק תגובת GitHub"
+                  description="מציג טאג ושם APK מה-release האחרון"
+                  onPress={onProbeGithubRelease}
+                />
+              ) : null}
             </View>
           </>
         )}
@@ -204,7 +240,7 @@ export default function SettingsScrollContent({
           הנתונים שלך נשמרים באופן מקומי בלבד על המכשיר שלך.
         </Text>
 
-        <SettingsFooter />
+        <SettingsFooter onVersionLongPress={__DEV__ ? onPreviewUpdateModal : undefined} />
       </View>
     </ScrollView>
 

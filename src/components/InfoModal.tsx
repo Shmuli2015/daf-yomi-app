@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 
+export type InfoModalIconName = keyof typeof Ionicons.glyphMap;
+
 interface InfoModalProps {
   visible: boolean;
   onClose: () => void;
@@ -11,6 +13,8 @@ interface InfoModalProps {
   /** Optional line shown below the message (e.g. email) — accent styling, selectable */
   emphasis?: string;
   actionLabel?: string;
+  /** Ionicons glyph — default info circle */
+  iconName?: InfoModalIconName;
 }
 
 export default function InfoModal({
@@ -20,6 +24,7 @@ export default function InfoModal({
   message,
   emphasis,
   actionLabel = 'הבנתי',
+  iconName = 'information-circle',
 }: InfoModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -42,7 +47,7 @@ export default function InfoModal({
       <View style={styles.overlay}>
         <Animated.View style={[styles.container, { opacity, transform: [{ scale }] }]}>
           <View style={styles.iconContainer}>
-            <Ionicons name="information-circle" size={36} color={theme.colors.accent} />
+            <Ionicons name={iconName} size={36} color={theme.colors.accent} />
           </View>
 
           <Text style={styles.title}>{title}</Text>

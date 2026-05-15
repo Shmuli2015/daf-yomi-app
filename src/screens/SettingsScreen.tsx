@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { View, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import { useAppStore } from '../store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import { resetDB } from '../db/database';
@@ -8,6 +9,7 @@ import ScreenTopGradient from '../components/ScreenTopGradient';
 import SettingsLoadingView from '../components/Settings/SettingsLoadingView';
 import SettingsScrollContent from '../components/Settings/SettingsScrollContent';
 import SettingsModals from '../components/Settings/SettingsModals';
+import InfoModal, { type InfoModalIconName } from '../components/InfoModal';
 import { createSettingsScreenStyles } from '../components/Settings/settingsScreenStyles';
 import { ThemeMode, useTheme } from '../theme';
 import {
@@ -18,10 +20,13 @@ import {
 } from '../utils/notifications';
 import { parseDaySchedulesJson } from '../utils/settingsScreen';
 import type { DaySchedule } from '../components/Settings/DayScheduleList';
+import { useAppUpdateControls } from '../context/AppUpdateProvider';
+import { isUpdateCheckConfigured } from '../services/appUpdate';
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
+  const updateCtl = useAppUpdateControls();
   const { settings, updateNotificationSettings, updateThemeMode, loadInitialData } =
     useAppStore(
       useShallow(s => ({
@@ -47,6 +52,13 @@ export default function SettingsScreen() {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [scheduledCount, setScheduledCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [updateFeedback, setUpdateFeedback] = useState<{
+    title: string;
+    message: string;
+    emphasis?: string;
+    iconName?: InfoModalIconName;
+    actionLabel?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (settings) {
@@ -254,6 +266,42 @@ export default function SettingsScreen() {
     Alert.alert('התראות מתוזמנות', `יש ${notifications.length} התראות מתוזמנות במערכת`);
   }, []);
 
+  const handleCheckAppUpdates = useCallback(async () => {
+    if (!isUpdateCheckConfigured()) {
+      setUpdateFeedback({
+        title: 'בדיקת עדכונים',
+        message:
+          'החיבור לשרת העדכונים לא הוגדר בהגדרות האפליקציה. אם אתה מפתח הפרויקט, ודא שבקובץ app.config מוגדרים githubOwner, githubRepo.',
+        iconName: 'settings-outline',
+        actionLabel: 'הבנתי',
+      });
+      return;
+    }
+    const r = await updateCtl.checkManualAsync();
+    if (r === 'opened') return;
+    if (r === 'dismissed') {
+      setUpdateFeedback({
+        title: 'נזכיר כשיהיה חדש',
+        message:
+          'סימנת «אחר כך» על העדכון האחרון. לא נציג שוב את אותה גרסה; כשנפרסם עדכון חדש יותר, הוא יוצג שוב.',
+        iconName: 'time-outline',
+        actionLabel: 'סגור',
+      });
+      return;
+    }
+    const ver = Constants.expoConfig?.version;
+    setUpdateFeedback({
+      title: 'הכל עדכני',
+      message:
+        'גרסת מסע דף שלך תואמת לגרסה האחרונה שפורסמה. כשנוסיף שיפורים ונפרסם גרסה חדשה, תוכל לעדכן מכאן.',
+      emphasis: ver ? `גרסה מותקנת: ${ver}` : undefined,
+      iconName: 'checkmark-circle',
+      actionLabel: 'מצוין',
+    });
+  }, [updateCtl]);
+
+  const updatesConfigured = isUpdateCheckConfigured();
+
   useEffect(() => {
     async function checkScheduled() {
       const notifications = await getScheduledNotifications();
@@ -295,6 +343,9 @@ export default function SettingsScreen() {
             onTestNotification={handleTestNotification}
             onCheckScheduled={handleCheckScheduled}
             onResetModalOpen={() => setShowResetModal(true)}
+            onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
+            onPreviewUpdateModal={__DEV__ ? updateCtl.showPreviewMock : undefined}
+            onProbeGithubRelease={__DEV__ ? updateCtl.probeGithubRelease : undefined}
           />
         </View>
 
@@ -316,6 +367,16 @@ export default function SettingsScreen() {
           showSuccessModal={showSuccessModal}
           onSuccessModalClose={() => setShowSuccessModal(false)}
           isSaving={isSaving}
+        />
+
+        <InfoModal
+          visible={updateFeedback != null}
+          onClose={() => setUpdateFeedback(null)}
+          title={updateFeedback?.title ?? ''}
+          message={updateFeedback?.message ?? ''}
+          emphasis={updateFeedback?.emphasis}
+          iconName={updateFeedback?.iconName}
+          actionLabel={updateFeedback?.actionLabel ?? 'הבנתי'}
         />
       </SafeAreaView>
     </View>

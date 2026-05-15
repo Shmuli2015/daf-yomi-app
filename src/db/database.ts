@@ -23,6 +23,8 @@ export interface SettingsRecord {
   notif_mode: string;
   day_schedules: string | null;
   theme_mode: string;
+  last_update_check_at: string | null;
+  dismissed_update_version: string | null;
 }
 
 export function initDB() {
@@ -64,6 +66,12 @@ export function initDB() {
   }
   if (!columns.includes('theme_mode')) {
     db.execSync("ALTER TABLE settings ADD COLUMN theme_mode TEXT DEFAULT 'system';");
+  }
+  if (!columns.includes('last_update_check_at')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN last_update_check_at TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('dismissed_update_version')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN dismissed_update_version TEXT DEFAULT NULL;');
   }
 
   db.execSync(`
@@ -138,6 +146,16 @@ export function updateSettings(
 
 export function updateThemeMode(themeMode: string) {
   db.runSync('UPDATE settings SET theme_mode = ? WHERE id = 1', [themeMode]);
+}
+
+export function touchLastUpdateCheckAt() {
+  db.runSync('UPDATE settings SET last_update_check_at = ? WHERE id = 1', [
+    new Date().toISOString(),
+  ]);
+}
+
+export function setDismissedUpdateVersion(version: string | null) {
+  db.runSync('UPDATE settings SET dismissed_update_version = ? WHERE id = 1', [version]);
 }
 
 export function resetDB() {

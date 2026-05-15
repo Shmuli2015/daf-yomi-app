@@ -12,6 +12,7 @@ import SplashScreen from './src/components/SplashScreen';
 import { ThemeProvider, ThemeMode, resolveThemeScheme, getNavigationThemeColors } from './src/theme';
 import { useColorScheme } from 'react-native';
 import SystemChromeThemeSync from './src/components/SystemChromeThemeSync';
+import { AppUpdateProvider } from './src/context/AppUpdateProvider';
 
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
@@ -52,22 +53,21 @@ export default function App() {
     <SafeAreaProvider>
       <ThemeProvider mode={themeMode}>
         <SystemChromeThemeSync themeMode={themeMode} />
-        <NavigationContainer
-          theme={{
-            dark: resolveThemeScheme(themeMode, systemScheme) === 'dark',
-            colors: getNavigationThemeColors(themeMode, systemScheme),
-            fonts: undefined as any,
-          }}
-        >
-          <AppNavigator />
-        </NavigationContainer>
+        <AppUpdateProvider>
+          <NavigationContainer
+            theme={{
+              dark: resolveThemeScheme(themeMode, systemScheme) === 'dark',
+              colors: getNavigationThemeColors(themeMode, systemScheme),
+              fonts: undefined as any,
+            }}
+          >
+            <AppNavigator />
+          </NavigationContainer>
+          {showSplash && (
+            <SplashScreen isReady={isReady} onFinish={onSplashFinish} />
+          )}
+        </AppUpdateProvider>
       </ThemeProvider>
-      {showSplash && (
-        <SplashScreen 
-          isReady={isReady} 
-          onFinish={onSplashFinish} 
-        />
-      )}
     </SafeAreaProvider>
   );
 }

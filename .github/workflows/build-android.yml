@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -40,7 +43,35 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: 📂 Upload APK
+      - name: 📛 Rename APK for GitHub Release
+        id: release_apk
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=$(node -p "require('./app.config.js').expo.extra.releaseApkBasename")
+          VER=$(node -p "require('./package.json').version")
+          shopt -s nullglob
+          files=(./*.apk)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo 'No APK found in repo root'
+            exit 1
+          fi
+          SRC="${files[0]}"
+          DEST="${BASE}-${VER}.apk"
+          mv "$SRC" "$DEST"
+          echo "filename=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: 🚀 Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.release_apk.outputs.filename }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📂 Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk

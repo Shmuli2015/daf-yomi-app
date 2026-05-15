@@ -45,6 +45,13 @@ module.exports = {
       eas: {
         projectId: 'ee12a724-804d-4143-8983-39e2e74f4339',
       },
+      /** GitHub Releases API — public repo, no token required */
+      githubOwner: 'Shmuli2015',
+      githubRepo: 'daf-yomi-app',
+      /** APK asset prefix on releases (מסע דף → masa-daf-1.2.3.apk) */
+      releaseApkBasename: 'masa-daf',
+      /** Set false to disable automatic update checks */
+      updateCheckEnabled: true,
     },
   },
 };
