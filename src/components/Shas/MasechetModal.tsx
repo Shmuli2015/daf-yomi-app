@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
@@ -15,6 +15,7 @@ import { getMasechetProgressFromCache } from '../../utils/progressCache';
 import { useTheme } from '../../theme';
 import BulkActionConfirmOverlay from './BulkActionConfirmOverlay';
 import FullscreenLoadingOverlay from './FullscreenLoadingOverlay';
+import DafCell from './DafCell';
 
 interface MasechetModalProps {
   masechet: typeof SHAS_MASECHTOT[0];
@@ -69,6 +70,13 @@ export default function MasechetModal({
       setTimeout(() => setShowConfetti(true), 200);
     }
   }, [masechet.he, learnedDateSet, progressCache, dafimArray.length, toggleAnyDafLearned]);
+
+  const handleToggleDafRef = useRef(handleToggleDaf);
+  handleToggleDafRef.current = handleToggleDaf;
+
+  const handleToggleDafStable = useCallback((dafNum: number) => {
+    handleToggleDafRef.current(dafNum);
+  }, []);
 
   const handleMarkAll = useCallback(() => {
     const updates = dafimArray
@@ -169,16 +177,13 @@ export default function MasechetModal({
               const dateStr = getDafDateStr(masechet.he, dafNum);
               const isLearned = dateStr ? learnedDateSet.has(dateStr) : false;
               return (
-                <TouchableOpacity
+                <DafCell
                   key={dafNum}
-                  activeOpacity={0.7}
-                  onPress={() => handleToggleDaf(dafNum)}
-                  style={[styles.dafCell, isLearned ? styles.dafCellLearned : styles.dafCellDefault]}
-                >
-                  <Text style={[styles.dafText, isLearned ? styles.dafTextLearned : styles.dafTextDefault]}>
-                    {numberToGematria(dafNum)}
-                  </Text>
-                </TouchableOpacity>
+                  dafNum={dafNum}
+                  isLearned={isLearned}
+                  onPress={handleToggleDafStable}
+                  styles={styles}
+                />
               );
             })}
           </View>

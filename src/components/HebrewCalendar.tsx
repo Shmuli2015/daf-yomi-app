@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing, useWindowDimensions, PanResponder } from 'react-native';
 import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { HDate, Locale } from '@hebcal/core';
@@ -42,7 +42,7 @@ export default function HebrewCalendar() {
   const gridOpacity = useRef(new Animated.Value(1)).current;
 
   const SLIDE_PX = 40;
-  const animateGridChange = (direction: 'next' | 'prev', changeFn: () => void) => {
+  const animateGridChange = useCallback((direction: 'next' | 'prev', changeFn: () => void) => {
     const outDir = direction === 'next' ? -SLIDE_PX : SLIDE_PX;
     const enterFrom = direction === 'next' ? SLIDE_PX : -SLIDE_PX;
 
@@ -57,7 +57,27 @@ export default function HebrewCalendar() {
         Animated.timing(gridTranslateX, { toValue: 0, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true }),
       ]).start();
     });
-  };
+  }, [gridOpacity, gridTranslateX]);
+
+  const handleDayPress = useCallback((hd: HDate) => {
+    setSelectedDate(hd);
+    setModalVisible(true);
+
+    const hdMonth = hd.getMonth();
+    const hdYear = hd.getFullYear();
+    const currentMonth = currentHDate.getMonth();
+    const currentYear = currentHDate.getFullYear();
+
+    if (hdMonth !== currentMonth || hdYear !== currentYear) {
+      const direction = (hdYear > currentYear || (hdYear === currentYear && hdMonth > currentMonth))
+        ? 'next'
+        : 'prev';
+      
+      animateGridChange(direction, () => {
+        setCurrentHDate(new HDate(1, hdMonth, hdYear));
+      });
+    }
+  }, [currentHDate, animateGridChange]);
 
   const calendarData = useMemo(() => {
     const year = currentHDate.getFullYear();
@@ -218,18 +238,7 @@ export default function HebrewCalendar() {
               learned={day.learned}
               isToday={day.isToday}
               isSelected={isSameDay(day.hdate, selectedDate)}
-              onPress={(hd) => { 
-                setSelectedDate(hd); 
-                setModalVisible(true); 
-                if (!day.isCurrentMonth) {
-                  const direction = (hd.getFullYear() > currentHDate.getFullYear() || 
-                                    (hd.getFullYear() === currentHDate.getFullYear() && hd.getMonth() > currentHDate.getMonth())) 
-                                    ? 'next' : 'prev';
-                  animateGridChange(direction, () => {
-                    setCurrentHDate(new HDate(1, hd.getMonth(), hd.getFullYear()));
-                  });
-                }
-              }}
+              onPress={handleDayPress}
             />
           ))}
         </View>

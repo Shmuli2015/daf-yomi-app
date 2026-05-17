@@ -1,7 +1,8 @@
 import { DailyRecord } from '../db/database';
 import { SHAS_MASECHTOT, Seder, SEDARIM } from '../data/shas';
-import { getMasechetDafim, getDafDateStr, stripNiqqud } from './shas';
+import { stripNiqqud } from './shas';
 import { getDateStr } from './dafYomi';
+import dafDates from '../data/dafDates.json';
 
 export interface SederProgressData {
   totalDafim: number;
@@ -24,6 +25,18 @@ export interface ProgressCache {
 }
 
 let cachedResult: ProgressCache | null = null;
+
+const dateToMasechet = new Map<string, string>();
+for (const [key, dateStr] of Object.entries(dafDates as Record<string, string | undefined>)) {
+  if (dateStr) {
+    const masechetNameWithNiqqud = key.split('_')[0];
+    const masechetName = stripNiqqud(masechetNameWithNiqqud);
+    const match = SHAS_MASECHTOT.find(m => stripNiqqud(m.he) === masechetName);
+    if (match) {
+      dateToMasechet.set(dateStr, match.he);
+    }
+  }
+}
 
 function generateHistoryHash(history: DailyRecord[]): string {
   const learnedCount = history.filter(r => r.status === 'learned').length;
@@ -83,23 +96,20 @@ export function buildProgressCache(history: DailyRecord[]): ProgressCache {
   );
 
   const masechetProgress = new Map<string, { learned: number; total: number }>();
-  
   for (const masechet of SHAS_MASECHTOT) {
-    const dafim = getMasechetDafim(masechet.he);
-    const total = dafim.length;
-    
-    const masechetDates = new Set<string>();
-    for (const dafNum of dafim) {
-      const dateStr = getDafDateStr(masechet.he, dafNum);
-      if (dateStr) masechetDates.add(dateStr);
+    masechetProgress.set(masechet.he, { learned: 0, total: masechet.pages });
+  }
+
+  let learnedCount = 0;
+  for (const dateStr of learnedDates) {
+    const masechetName = dateToMasechet.get(dateStr);
+    if (masechetName) {
+      const progress = masechetProgress.get(masechetName);
+      if (progress) {
+        progress.learned++;
+        learnedCount++;
+      }
     }
-    
-    let learned = 0;
-    for (const dateStr of masechetDates) {
-      if (learnedDates.has(dateStr)) learned++;
-    }
-    
-    masechetProgress.set(masechet.he, { learned, total });
   }
 
   const sederProgress = new Map<Seder, SederProgressData>();
@@ -137,7 +147,6 @@ export function buildProgressCache(history: DailyRecord[]): ProgressCache {
   }
 
   const totalPages = 2711;
-  const learnedCount = learnedDates.size;
   const percentage = Math.round((learnedCount / totalPages) * 100);
   
   const totalShasProgress = {
@@ -182,3 +191,4 @@ export function getSederProgressFromCache(
     percentage: 0
   };
 }
+
