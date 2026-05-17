@@ -80,8 +80,8 @@ jobs:
           # You can change [1:] to [3:] if you want to keep the 3 most recent releases.
           gh release list --limit 100 --json tagName --jq '.[1:] | .[].tagName' | while read -r tag; do
             if [ -n "$tag" ]; then
-              echo "Deleting older release and tag: $tag"
-              gh release delete "$tag" -y --cleanup-tag
+              echo "Deleting older release: $tag"
+              gh release delete "$tag" -y
             fi
           done
         env:

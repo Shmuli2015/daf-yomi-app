@@ -10,6 +10,7 @@ export type AppExtraConfig = {
 export type LatestReleaseOffer = {
   latestVersion: string;
   downloadUrl: string;
+  releasePageUrl: string;
   rawTag: string;
   /** שם קובץ ה-APK ב-release (לאימות מול ההורדה) */
   apkFileName: string;
@@ -151,6 +152,8 @@ export async function resolveUpdateOfferIfAny(installedVersion: string): Promise
     return null;
   }
 
+  const releasePageUrl = `https://github.com/${owner}/${repo}/releases/tag/${tag}`;
+
   if (__DEV__) {
     console.log('[appUpdate] newer release', {
       installedVersion,
@@ -158,10 +161,11 @@ export async function resolveUpdateOfferIfAny(installedVersion: string): Promise
       tag,
       apkFileName,
       downloadUrl,
+      releasePageUrl,
     });
   }
 
-  return { latestVersion, downloadUrl, rawTag: tag, apkFileName };
+  return { latestVersion, downloadUrl, releasePageUrl, rawTag: tag, apkFileName };
 }
 
 export async function probeLatestReleaseForDev(): Promise<{

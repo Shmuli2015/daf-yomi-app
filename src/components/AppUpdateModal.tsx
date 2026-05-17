@@ -52,9 +52,10 @@ export function AppUpdateModal({
   }, [visible, opacity, scale]);
 
   const openDownload = async () => {
-    if (!offer?.downloadUrl) return;
+    const targetUrl = offer?.releasePageUrl || offer?.downloadUrl;
+    if (!targetUrl) return;
     try {
-      await Linking.openURL(offer.downloadUrl);
+      await Linking.openURL(targetUrl);
     } catch {
       /* handled silently — browser/download manager may still open */
     }
@@ -71,17 +72,14 @@ export function AppUpdateModal({
           </View>
           <Text style={styles.title}>עדכון זמין למסע דף</Text>
           <Text style={styles.body}>
-            יש גרסה חדשה באתר ההפצה. מומלץ להוריד ולהתקין את הקובץ (
-            <Text style={styles.em}>APK</Text>) מהדפדפן או מנהל ההורדות.
+            יש גרסה חדשה זמינה! לחץ על הכפתור כדי לפתוח את דף הגרסה בדפדפן ולהוריד את קובץ ה-APK בצורה בטוחה ומהירה.
           </Text>
           <Text style={styles.versions}>
             מותקן: {installedVersion}{'\n'}
             חדש: {offer.latestVersion}
-            {'\n'}
-            קובץ: {offer.apkFileName}
           </Text>
           <TouchableOpacity style={styles.primaryBtn} onPress={openDownload} activeOpacity={0.85}>
-            <Text style={styles.primaryLabel}>הורד עדכון</Text>
+            <Text style={styles.primaryLabel}>פתח דף הורדה</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.secondaryBtn} onPress={onDismissLater} activeOpacity={0.75}>
             <Text style={styles.secondaryLabel}>אחר כך</Text>
