@@ -71,6 +71,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: 🧹 Keep only the latest release
+        if: startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          echo "Fetching releases..."
+          # Keep only the 1 most recent release (index [1:]). 
+          # You can change [1:] to [3:] if you want to keep the 3 most recent releases.
+          gh release list --limit 100 --json tagName --jq '.[1:] | .[].tagName' | while read -r tag; do
+            if [ -n "$tag" ]; then
+              echo "Deleting older release and tag: $tag"
+              gh release delete "$tag" -y --cleanup-tag
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: 📂 Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
