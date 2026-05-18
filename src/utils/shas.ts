@@ -6,6 +6,15 @@ export function stripNiqqud(str: string) {
   return str.replace(/[\u0591-\u05C7]/g, '');
 }
 
+const normalizedDafDates = new Map<string, string>();
+for (const [key, value] of Object.entries(dafDates as Record<string, string>)) {
+  const lastUnderscore = key.lastIndexOf('_');
+  if (lastUnderscore === -1) continue;
+  const masechetPart = stripNiqqud(key.slice(0, lastUnderscore));
+  const dafPart = key.slice(lastUnderscore + 1);
+  normalizedDafDates.set(`${masechetPart}_${dafPart}`, value);
+}
+
 const masechetDafimByName = new Map<string, number[]>();
 
 export function getMasechetDafim(masechetHe: string): number[] {
@@ -13,8 +22,15 @@ export function getMasechetDafim(masechetHe: string): number[] {
   const hit = masechetDafimByName.get(masechetNameSafe);
   if (hit !== undefined) return hit;
 
-  const keys = Object.keys(dafDates).filter(k => k.startsWith(masechetNameSafe + '_'));
-  const dafim = keys.map(k => parseInt(k.split('_')[1], 10)).sort((a, b) => a - b);
+  const prefix = masechetNameSafe + '_';
+  const dafim: number[] = [];
+  for (const k of normalizedDafDates.keys()) {
+    if (k.startsWith(prefix)) {
+      const dafNum = parseInt(k.slice(prefix.length), 10);
+      if (!isNaN(dafNum)) dafim.push(dafNum);
+    }
+  }
+  dafim.sort((a, b) => a - b);
   masechetDafimByName.set(masechetNameSafe, dafim);
   return dafim;
 }
@@ -22,7 +38,7 @@ export function getMasechetDafim(masechetHe: string): number[] {
 export function getDafDateStr(masechetHe: string, dafNum: number): string | null {
   const masechetNameSafe = stripNiqqud(masechetHe);
   const key = `${masechetNameSafe}_${dafNum}`;
-  return (dafDates as Record<string, string | undefined>)[key] ?? null;
+  return normalizedDafDates.get(key) ?? null;
 }
 
 export function getMasechetProgress(masechetHe: string, history: DailyRecord[]) {
