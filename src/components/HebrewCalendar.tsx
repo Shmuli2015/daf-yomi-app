@@ -28,8 +28,8 @@ export default function HebrewCalendar() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { history, toggleAnyDafLearned } = useAppStore(
-    useShallow((s) => ({ history: s.history, toggleAnyDafLearned: s.toggleAnyDafLearned })),
+  const { history, toggleAnyDafLearned, settings } = useAppStore(
+    useShallow((s) => ({ history: s.history, toggleAnyDafLearned: s.toggleAnyDafLearned, settings: s.settings })),
   );
   const learnedDateSet = useMemo(() => buildLearnedDateSet(history), [history]);
   const [currentHDate, setCurrentHDate] = useState(new HDate(new Date()));
@@ -258,7 +258,7 @@ export default function HebrewCalendar() {
             if (currentlyLearned) {
               setShowConfirm(true);
             } else {
-              setShowConfetti(true);
+              if (settings?.show_confetti) setShowConfetti(true);
               toggleAnyDafLearned(getDateStr(selectedDate.greg()), selectedDafInfo.masechet, selectedDafInfo.daf);
               setModalVisible(false);
             }
