@@ -30,7 +30,7 @@ export default function MasechetModal({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { history, progressCache, toggleAnyDafLearned, batchMarkDafim, batchUnmarkDafim } =
+  const { history, progressCache, toggleAnyDafLearned, batchMarkDafim, batchUnmarkDafim, settings } =
     useAppStore(
       useShallow((s) => ({
         history: s.history,
@@ -38,6 +38,7 @@ export default function MasechetModal({
         toggleAnyDafLearned: s.toggleAnyDafLearned,
         batchMarkDafim: s.batchMarkDafim,
         batchUnmarkDafim: s.batchUnmarkDafim,
+        settings: s.settings,
       })),
     );
   const learnedDateSet = useMemo(() => buildLearnedDateSet(history), [history]);
@@ -66,10 +67,10 @@ export default function MasechetModal({
     const dafHeStr = `דף ${numberToGematria(dafNum)}`;
     toggleAnyDafLearned(dateStr, masechet.he, dafHeStr);
 
-    if (!isCurrentlyLearned && learnedBefore + 1 === dafimArray.length) {
+    if (!isCurrentlyLearned && learnedBefore + 1 === dafimArray.length && settings?.show_confetti) {
       setTimeout(() => setShowConfetti(true), 200);
     }
-  }, [masechet.he, learnedDateSet, progressCache, dafimArray.length, toggleAnyDafLearned]);
+  }, [masechet.he, learnedDateSet, progressCache, dafimArray.length, toggleAnyDafLearned, settings]);
 
   const handleToggleDafRef = useRef(handleToggleDaf);
   handleToggleDafRef.current = handleToggleDaf;
@@ -96,9 +97,9 @@ export default function MasechetModal({
 
     if (updates.length > 0) {
       batchMarkDafim(updates);
-      setTimeout(() => setShowConfetti(true), 200);
+      if (settings?.show_confetti) setTimeout(() => setShowConfetti(true), 200);
     }
-  }, [masechet.he, dafimArray, learnedDateSet, batchMarkDafim]);
+  }, [masechet.he, dafimArray, learnedDateSet, batchMarkDafim, settings]);
 
   const handleUnmarkAll = useCallback(() => {
     const updates = dafimArray
