@@ -3,6 +3,7 @@ import { TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, Easing } from 'react-native-reanimated';
 import { HDate } from '@hebcal/core';
 import { useTheme } from '../../theme';
+import { useAppStore } from '../../store/useAppStore';
 
 interface CalendarDayProps {
   hdate: HDate;
@@ -17,6 +18,7 @@ const CalendarDay = React.memo(
   ({ hdate, isCurrentMonth, learned, isToday, isSelected, onPress }: CalendarDayProps) => {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
+    const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
 
     const gematriya = hdate.renderGematriya().split(' ')[0];
     const gregDay = hdate.greg().getDate();
@@ -71,7 +73,9 @@ const CalendarDay = React.memo(
             style={[styles.circle, { backgroundColor: bg, borderColor, borderWidth: isSelected ? 1.5 : 0 }]}
           >
             <Animated.Text style={[styles.dayText, { color: textColor }]}>{gematriya}</Animated.Text>
-            <Animated.Text style={[styles.gregText, { color: subColor }]}>{gregDay}</Animated.Text>
+            {showSecularDate && (
+              <Animated.Text style={[styles.gregText, { color: subColor }]}>{gregDay}</Animated.Text>
+            )}
           </Animated.View>
         </Animated.View>
       </TouchableOpacity>
