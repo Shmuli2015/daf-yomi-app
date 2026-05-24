@@ -34,6 +34,8 @@ export type SettingsScrollContentProps = {
   onGuideModalOpen: () => void;
   showSecularDate: boolean;
   onSecularDateToggle: (v: boolean) => void;
+  showCalendarDaf: boolean;
+  onCalendarDafToggle: (v: boolean) => void;
   showConfettiPref: boolean;
   onConfettiToggle: (v: boolean) => void;
   studyLinkMode: StudyLinkMode;
@@ -68,6 +70,8 @@ export default function SettingsScrollContent({
   onGuideModalOpen,
   showSecularDate,
   onSecularDateToggle,
+  showCalendarDaf,
+  onCalendarDafToggle,
   showConfettiPref,
   onConfettiToggle,
   studyLinkMode,
@@ -165,6 +169,14 @@ export default function SettingsScrollContent({
             type="switch"
             value={showSecularDate}
             onPress={onSecularDateToggle}
+          />
+          <SettingItem
+            icon="book-outline"
+            title="הצג דף בלוח שנה"
+            description="הצגת מספר הדף היומי בכל תא בלוח השנה"
+            type="switch"
+            value={showCalendarDaf}
+            onPress={onCalendarDafToggle}
           />
           <SettingItem
             icon="sparkles-outline"
