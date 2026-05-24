@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View } from 'react-native';
+import { View, Share } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { useAppStore } from '../store/useAppStore';
@@ -23,6 +23,7 @@ import { parseStudyLinkMode, type StudyLinkMode } from '../utils/studyLinkMode';
 import type { DaySchedule } from '../components/Settings/DayScheduleList';
 import { useAppUpdateControls } from '../context/AppUpdateProvider';
 import { isUpdateCheckConfigured } from '../services/appUpdate';
+import { getDownloadPageUrl } from '../services/apkInstall';
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -338,6 +339,19 @@ export default function SettingsScreen() {
     });
   }, [updateCtl]);
 
+  const handleShareDownloadLink = useCallback(async () => {
+    const url = getDownloadPageUrl();
+    try {
+      await Share.share({
+        title: 'מסע דף',
+        message: `מסע דף: מעקב דף יומי בעברית\n${url}`,
+        url,
+      });
+    } catch {
+      /* user cancelled or share unavailable */
+    }
+  }, []);
+
   const updatesConfigured = isUpdateCheckConfigured();
 
   useEffect(() => {
@@ -387,6 +401,7 @@ export default function SettingsScreen() {
             onUpdateAutoPromptToggle={updatesConfigured ? handleUpdateAutoPromptToggle : undefined}
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
             onProbeGithubRelease={__DEV__ ? updateCtl.probeGithubRelease : undefined}
+            onShareDownloadLink={handleShareDownloadLink}
           />
         </View>
 

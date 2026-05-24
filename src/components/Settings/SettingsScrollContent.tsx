@@ -48,6 +48,7 @@ export type SettingsScrollContentProps = {
   onUpdateAutoPromptToggle?: (enabled: boolean) => void;
   onCheckAppUpdate?: () => void;
   onProbeGithubRelease?: () => void;
+  onShareDownloadLink?: () => void;
 };
 
 export default function SettingsScrollContent({
@@ -80,6 +81,7 @@ export default function SettingsScrollContent({
   onUpdateAutoPromptToggle,
   onCheckAppUpdate,
   onProbeGithubRelease,
+  onShareDownloadLink,
 }: SettingsScrollContentProps) {
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
   const [mailHintVisible, setMailHintVisible] = useState(false);
@@ -204,6 +206,26 @@ export default function SettingsScrollContent({
                 title="בדוק עדכונים"
                 description="מוודא אם יש גרסה חדשה לאפליקציה (כדאי מדי פעם)"
                 onPress={onCheckAppUpdate}
+              />
+              {onShareDownloadLink ? (
+                <SettingItem
+                  icon="share-social-outline"
+                  title="שתף קישור להורדה"
+                  description="שלח לחברים קישור להתקנת מסע דף"
+                  onPress={onShareDownloadLink}
+                />
+              ) : null}
+            </View>
+          </>
+        ) : onShareDownloadLink ? (
+          <>
+            <SectionHeader title="שיתוף האפליקציה" />
+            <View style={styles.card}>
+              <SettingItem
+                icon="share-social-outline"
+                title="שתף קישור להורדה"
+                description="שלח לחברים קישור להתקנת מסע דף"
+                onPress={onShareDownloadLink}
               />
             </View>
           </>
