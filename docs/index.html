@@ -8,6 +8,12 @@
       name="description"
       content="הורידו את אפליקציית מסע דף, מעקב דף יומי בעברית"
     />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <link rel="icon" href="icon.png" type="image/png" />
     <link rel="stylesheet" href="style.css" />
   </head>
@@ -28,7 +34,10 @@
 
       <p id="version-line" class="version-line" aria-live="polite">טוען גרסה…</p>
 
-      <a id="download-btn" class="download-btn" href="#" hidden>הורד לאנדרואיד</a>
+      <a id="download-btn" class="download-btn" href="#" hidden>
+        <span class="download-btn-label">הורד לאנדרואיד</span>
+        <span id="download-btn-version" class="download-btn-version"></span>
+      </a>
       <p id="status" class="status" aria-live="polite"></p>
 
       <section class="steps" aria-label="הוראות התקנה">

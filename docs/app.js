@@ -4,6 +4,7 @@ const APK_BASENAME = 'masa-daf';
 
 const versionLine = document.getElementById('version-line');
 const downloadBtn = document.getElementById('download-btn');
+const downloadBtnVersion = document.getElementById('download-btn-version');
 const statusEl = document.getElementById('status');
 
 function normalizeVersion(raw) {
@@ -25,9 +26,11 @@ function buildDownloadUrl(tag, fileName) {
 }
 
 function applyRelease({ version, downloadUrl }) {
-  versionLine.textContent = `גרסה ${version}`;
+  versionLine.hidden = true;
   downloadBtn.href = downloadUrl;
-  downloadBtn.textContent = `הורד לאנדרואיד (${version})`;
+  if (downloadBtnVersion) {
+    downloadBtnVersion.textContent = `גרסה ${version}`;
+  }
   downloadBtn.hidden = false;
   downloadBtn.removeAttribute('aria-disabled');
   statusEl.textContent = '';
