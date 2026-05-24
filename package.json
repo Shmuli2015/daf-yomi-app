@@ -9,7 +9,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "release": "npm version patch && git push && git push --tags",
+    "release": "npm version patch --no-git-tag-version && git checkout -b release/$(node -p \"require('./package.json').version\") && git add package.json package-lock.json && git commit -m \"Release $(node -p \"require('./package.json').version\")\" && git push -u origin HEAD",
     "build:apk": "eas build --platform android --profile preview --local"
   },
   "dependencies": {
