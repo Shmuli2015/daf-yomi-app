@@ -3,24 +3,28 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>מסע דף — הורדה לאנדרואיד</title>
+    <title>מסע דף: הורדה לאנדרואיד</title>
     <meta
       name="description"
-      content="הורידו את אפליקציית מסע דף — מעקב דף יומי בעברית"
+      content="הורידו את אפליקציית מסע דף, מעקב דף יומי בעברית"
     />
+    <link rel="icon" href="icon.png" type="image/png" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <main class="page">
-      <img
-        class="logo"
-        src="https://raw.githubusercontent.com/Shmuli2015/daf-yomi-app/main/assets/icon.png"
-        width="96"
-        height="96"
-        alt="לוגו מסע דף"
-      />
+      <div class="logo-wrap">
+        <img
+          class="logo"
+          src="icon.png"
+          width="112"
+          height="112"
+          alt="לוגו מסע דף"
+          decoding="async"
+        />
+      </div>
       <h1>מסע דף</h1>
-      <p class="tagline">מעקב דף יומי — פשוט, בעברית, בלי פרסומות</p>
+      <p class="tagline">מעקב דף יומי. פשוט, בעברית, בלי פרסומות</p>
 
       <p id="version-line" class="version-line" aria-live="polite">טוען גרסה…</p>
 
@@ -32,13 +36,13 @@
         <ol>
           <li>לחצו «הורד לאנדרואיד»</li>
           <li>פתחו את הקובץ שהורד (מההתראות או מ«הורדות»)</li>
-          <li>לחצו «התקן» — ייתכן שיופיע «מקורות לא ידועים»: יש לאשר</li>
+          <li>לחצו «התקן». ייתכן שיופיע «מקורות לא ידועים»: יש לאשר</li>
           <li>פתחו את האפליקציה ותתחילו ללמוד</li>
         </ol>
       </section>
 
       <p class="footer-note">
-        יש לכם כבר את האפליקציה? עדכונים עתידיים יופיעו מתוך «הגדרות → בדוק עדכונים».
+        יש לכם כבר את האפליקציה? עדכונים עתידיים יופיעו מתוך «הגדרות», «בדוק עדכונים».
       </p>
     </main>
     <script src="app.js"></script>

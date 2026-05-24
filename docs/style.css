@@ -28,10 +28,29 @@ body {
   text-align: center;
 }
 
+.logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 128px;
+  height: 128px;
+  margin: 0 auto 1.25rem;
+  padding: 8px;
+  border-radius: 28%;
+  background: linear-gradient(145deg, #2a3440 0%, #151b22 100%);
+  border: 1px solid rgba(201, 150, 60, 0.35);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 0 28px rgba(201, 150, 60, 0.12);
+}
+
 .logo {
+  display: block;
+  width: 112px;
+  height: 112px;
   border-radius: 22%;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-  margin-bottom: 1rem;
+  object-fit: cover;
 }
 
 h1 {
