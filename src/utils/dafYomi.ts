@@ -1,5 +1,6 @@
 import { HDate } from '@hebcal/core';
 import { DafYomiEvent } from '@hebcal/learning';
+import { buildSefariaTextUrl, normalizeMasechetEn, parseDafEn } from './dafNavigation';
 
 export function getDateStr(date: Date): string {
   const year = date.getFullYear();
@@ -29,14 +30,18 @@ export function getDafByDate(date: Date) {
   const lastSpaceIdx = withoutPrefixEng.lastIndexOf(' ');
   const masechetEng = withoutPrefixEng.substring(0, lastSpaceIdx);
   const dafNumEng = withoutPrefixEng.substring(lastSpaceIdx + 1);
+  const { dafNum, amud } = parseDafEn(dafNumEng);
+  const masechetEn = normalizeMasechetEn(masechetEng);
 
-  const sefariaUrl = `https://www.sefaria.org/${masechetEng.replace(/ /g, '_')}.${dafNumEng}a?lang=he`;
+  const sefariaUrl = buildSefariaTextUrl(masechetEn, dafNum, amud);
 
   return {
     masechet: masechetClean,
     daf: partsHeb[1] ? `דף ${partsHeb[1]}` : '',
-    masechetEn: masechetEng,
+    masechetEn,
     dafEn: dafNumEng,
+    dafNum,
+    amud,
     sefariaUrl,
     fullText: withoutPrefixHeb,
     dateString: getUTCDateStr(date),

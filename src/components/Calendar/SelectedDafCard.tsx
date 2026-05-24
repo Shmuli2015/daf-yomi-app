@@ -4,6 +4,7 @@ import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
+import { parseStudyLinkMode, shouldShowSefariaLink, shouldShowTzuratLink } from '../../utils/studyLinkMode';
 
 interface SelectedDafCardProps {
   selectedDate: HDate;
@@ -12,15 +13,22 @@ interface SelectedDafCardProps {
     daf: string;
     dateString: string;
     sefariaUrl: string;
+    masechetEn: string;
+    dafNum: number;
+    amud: 'a' | 'b';
   };
   isLearned: boolean;
   onToggle?: () => void;
+  onOpenTzuratHadaf?: () => void;
 }
 
-const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: SelectedDafCardProps) => {
+const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle, onOpenTzuratHadaf }: SelectedDafCardProps) => {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
+  const studyLinkMode = parseStudyLinkMode(useAppStore((s) => s.settings?.study_link_mode));
+  const showSefaria = shouldShowSefariaLink(studyLinkMode);
+  const showTzurat = shouldShowTzuratLink(studyLinkMode);
   const isFuture = dafInfo.dateString > new Date().toISOString().split('T')[0];
 
   const scale = useRef(new Animated.Value(0.9)).current;
@@ -81,6 +89,7 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
           <Text style={[styles.toggleText, { color: toggleTextColor }]}>{toggleLabel}</Text>
         </TouchableOpacity>
 
+        {showSefaria && (
         <TouchableOpacity
           onPress={() => Linking.openURL(dafInfo.sefariaUrl)}
           activeOpacity={0.7}
@@ -91,6 +100,20 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle }: Selecte
           </View>
           <Text style={styles.sefariaText}>פתח בספריא (Sefaria)</Text>
         </TouchableOpacity>
+        )}
+
+        {showTzurat && (
+        <TouchableOpacity
+          onPress={onOpenTzuratHadaf}
+          activeOpacity={0.7}
+          style={styles.tzuratBtn}
+        >
+          <View style={styles.sefariaIconWrapper}>
+            <Ionicons name="document-text-outline" size={16} color={theme.colors.accent} />
+          </View>
+          <Text style={styles.tzuratText}>צורת הדף</Text>
+        </TouchableOpacity>
+        )}
       </View>
     </Animated.View>
   );
@@ -180,6 +203,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: 'center',
     },
     sefariaText: { color: theme.colors.textSecondary, fontWeight: '700', fontSize: 13 },
+    tzuratBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 10,
+      backgroundColor: theme.colors.accentLight,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: theme.colors.accent + '30',
+      gap: 6,
+    },
+    tzuratText: { color: theme.colors.accent, fontWeight: '800', fontSize: 13 },
   });
 
 export default SelectedDafCard;

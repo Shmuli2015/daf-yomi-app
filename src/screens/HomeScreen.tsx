@@ -11,6 +11,8 @@ import { HDate } from "@hebcal/core";
 import { format, subDays, addDays } from "date-fns";
 import { he } from "date-fns/locale/he";
 import ConfettiCannon from "react-native-confetti-cannon";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import HomeHeader from "../components/HomeHeader";
 import HomeContent from "../components/HomeContent";
 import ShasBanner from "../components/ShasBanner";
@@ -18,8 +20,11 @@ import { getDateStr } from "../utils/dafYomi";
 import { getMasechetDafim } from "../utils/shas";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
 import { useTheme } from "../theme";
+import type { RootStackParamList } from "../navigation/types";
+import { parseStudyLinkMode, shouldShowSefariaLink, shouldShowTzuratLink } from "../utils/studyLinkMode";
 
 export default function HomeScreen({ navigation }: any) {
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -31,6 +36,9 @@ export default function HomeScreen({ navigation }: any) {
     todayMasechet,
     todayDafNum,
     todaySefariaUrl,
+    todayMasechetEn,
+    todayDafNumValue,
+    todayAmud,
     loadInitialData,
     streak,
     toggleAnyDafLearned,
@@ -46,6 +54,9 @@ export default function HomeScreen({ navigation }: any) {
       todayMasechet: s.todayMasechet,
       todayDafNum: s.todayDafNum,
       todaySefariaUrl: s.todaySefariaUrl,
+      todayMasechetEn: s.todayMasechetEn,
+      todayDafNumValue: s.todayDafNumValue,
+      todayAmud: s.todayAmud,
       loadInitialData: s.loadInitialData,
       streak: s.streak,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
@@ -116,6 +127,19 @@ export default function HomeScreen({ navigation }: any) {
     });
   }, [history, currentDate]);
 
+  const studyLinkMode = parseStudyLinkMode(settings?.study_link_mode);
+  const showSefariaLink = shouldShowSefariaLink(studyLinkMode);
+  const showTzuratLink = shouldShowTzuratLink(studyLinkMode);
+
+  const handleOpenTzuratHadaf = useCallback(() => {
+    rootNavigation.navigate('TzuratHadaf', {
+      masechetEn: todayMasechetEn,
+      masechetHe: todayMasechet,
+      dafNum: todayDafNumValue,
+      amud: todayAmud,
+    });
+  }, [rootNavigation, todayMasechetEn, todayMasechet, todayDafNumValue, todayAmud]);
+
   if (!isAppReady) {
     return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
   }
@@ -133,6 +157,9 @@ export default function HomeScreen({ navigation }: any) {
           todayMasechet={todayMasechet}
           todayDafNum={todayDafNum}
           sefariaUrl={todaySefariaUrl}
+          showSefariaLink={showSefariaLink}
+          showTzuratLink={showTzuratLink}
+          onOpenTzuratHadaf={handleOpenTzuratHadaf}
           isLearned={isLearned}
           handleToggle={handleToggle}
           masechetProgressPct={masechetStats.pct}
@@ -143,6 +170,7 @@ export default function HomeScreen({ navigation }: any) {
           onNextDay={handleNextDay}
           onTodayPress={() => loadInitialData()}
           isToday={isToday}
+          currentDate={currentDate}
         />
 
 

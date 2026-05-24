@@ -17,7 +17,9 @@
 - **Today's Daf Display**: Shows the Daf Yomi for the selected day (tractate and page) with both Hebrew and Gregorian dates (Gregorian respects the visibility toggle)
 - **Learning Tracker**: Use **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) to record that day's page; the control switches to **Finished** (<span dir="rtl" lang="he">סיימתי את הדף</span>) and asks for confirmation before unsetting
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
-- **Sefaria Integration**: Direct link to view the Daf on Sefaria for online learning
+- **Sefaria Integration**: Opens the Daf in Sefaria in your **external browser** (unchanged behavior)
+- **Tzurat Hadaf Viewer** (<span dir="rtl" lang="he">צורת הדף</span>): In-app **Vilna page images** (via Sefaria Manuscripts API) with pinch-to-zoom, amud/daf navigation, and **local image cache** for fast re-open
+- **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **Tzurat Hadaf only**, or **both** on Home and Calendar
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum
 - **7-Day Progress Overview**: In-app mini chart of the last seven days so you can see your week at a glance
 - **Shas Progress Banner**: Overall progress across Shas; **tap the banner** to open the History screen for full tractate details
@@ -36,7 +38,7 @@
 - **Monthly Hebrew Calendar**: Hebrew dates (gematria) with gregorian day numbers per cell
 - **Navigation**: Month arrows and a **Today** (<span dir="rtl" lang="he">היום</span>) shortcut when you are viewing another month
 - **Learned days**: Highlighted with the accent color; **today** uses a lighter accent ring
-- **Day detail**: Tap a date to open a card with that day's Daf, Sefaria link, and learn/unlearn (with confirmation when clearing)
+- **Day detail**: Tap a date to open a card with that day's Daf, study buttons (Sefaria and/or Tzurat Hadaf per Settings), and learn/unlearn (with confirmation when clearing)
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
@@ -50,6 +52,7 @@
   - <span dir="rtl" lang="he">✅ סיימתי את הדף!</span> — mark the current cycle page as learned from the notification  
   - <span dir="rtl" lang="he">⏰ הזכר לי עוד שעה</span> — snooze for one hour
 - **Theme Selection**: Choose between Light, Dark, or System-based theme modes
+- **Study Link Mode** (<span dir="rtl" lang="he">כפתורי לימוד</span>): Show **Sefaria**, **Tzurat Hadaf**, or **both** on the Home dashboard and Calendar day card
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
 - **Confetti Effects Toggle**: Enable/disable celebration animations
 - **Data Management**: Complete reset option to clear all learning history
@@ -69,8 +72,8 @@
 - **Full RTL Support**: Complete Right-to-Left layout optimized for Hebrew
 - **Smooth Animations**: Powered by React Native Reanimated for fluid transitions
 - **Splash Screen**: Elegant branded loading screen on app launch
-- **Tab Navigation**: Intuitive bottom tab bar with Home, Calendar, History, and Settings
-- **Offline-First**: Full functionality without internet connection
+- **Tab Navigation**: Intuitive bottom tab bar with Home, Calendar, History, and Settings; Tzurat Hadaf opens as a full-screen modal over the tabs
+- **Offline-First (progress tracking)**: Mark learned, calendar, history, and settings work without internet; **Tzurat Hadaf** needs network on first load per page, then serves from on-device cache
 - **Platform Support**: Runs on iOS, Android, and Web
 - **Dark Mode**: Sophisticated dark theme with gold accents for premium "Seforim" aesthetic
 - **Light Mode**: Clean, bright interface for daytime use
@@ -92,6 +95,7 @@
 - **Styling**: [NativeWind](https://www.nativewind.dev/) (Tailwind CSS) & Vanilla CSS for custom animations.
 - **State Management**: [Zustand](https://github.com/pmndrs/zustand) for reactive UI states.
 - **Database**: [Expo SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/) for lightning-fast local persistence.
+- **Study / Manuscripts**: [Sefaria Manuscripts API](https://developers.sefaria.org/reference/get-manuscripts), [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) (page image cache), [react-native-webview](https://docs.expo.dev/versions/latest/sdk/webview/) (pinch-to-zoom viewer).
 - **Calendar Logic**: [@hebcal/core](https://www.npmjs.com/package/@hebcal/core) & `@hebcal/learning`.
 - **Animations**: [React Native Reanimated](https://docs.expo.dev/versions/latest/sdk/reanimated/) & [react-native-confetti-cannon](https://www.npmjs.com/package/react-native-confetti-cannon).
 

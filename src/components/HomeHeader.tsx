@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Linking, StyleSheet, Dimensions } from 'react-native';
-import Animated, { FadeInDown, FadeInUp, useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, Easing, withSpring } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, Easing, withSpring } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,6 +15,9 @@ interface HomeHeaderProps {
   todayMasechet: string;
   todayDafNum: string;
   sefariaUrl: string;
+  showSefariaLink?: boolean;
+  showTzuratLink?: boolean;
+  onOpenTzuratHadaf?: () => void;
   isLearned?: boolean;
   handleToggle?: () => void;
   masechetProgressPct?: number;
@@ -25,6 +28,7 @@ interface HomeHeaderProps {
   onNextDay?: () => void;
   onTodayPress?: () => void;
   isToday?: boolean;
+  currentDate?: Date;
 }
 
 const HomeHeader = React.memo(function HomeHeader({
@@ -33,6 +37,9 @@ const HomeHeader = React.memo(function HomeHeader({
   todayMasechet,
   todayDafNum,
   sefariaUrl,
+  showSefariaLink = true,
+  showTzuratLink = true,
+  onOpenTzuratHadaf,
   isLearned,
   handleToggle,
   masechetProgressPct = 0,
@@ -43,6 +50,7 @@ const HomeHeader = React.memo(function HomeHeader({
   onNextDay,
   onTodayPress,
   isToday,
+  currentDate,
 }: HomeHeaderProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -52,6 +60,9 @@ const HomeHeader = React.memo(function HomeHeader({
 
   const progressWidth = useSharedValue(0);
   const pulseScale = useSharedValue(1);
+  const todayJumpX = useSharedValue(0);
+  const todayJumpOpacity = useSharedValue(1);
+  const todayBtnScale = useSharedValue(1);
 
   useEffect(() => {
     progressWidth.value = withTiming(masechetProgressPct, { duration: 1000, easing: Easing.out(Easing.exp) });
@@ -78,6 +89,42 @@ const HomeHeader = React.memo(function HomeHeader({
     transform: [{ scale: pulseScale.value }],
   }));
 
+  const animatedTodayJumpStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: todayJumpX.value }],
+    opacity: todayJumpOpacity.value,
+  }));
+
+  const animatedTodayBtnStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: todayBtnScale.value }],
+  }));
+
+  const handleTodayPress = () => {
+    if (!onTodayPress) return;
+
+    if (isToday) {
+      onTodayPress();
+      return;
+    }
+
+    todayBtnScale.value = withSequence(
+      withTiming(0.9, { duration: 80, easing: Easing.out(Easing.ease) }),
+      withSpring(1, { damping: 12, stiffness: 200 }),
+    );
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const viewing = new Date(currentDate ?? today);
+    viewing.setHours(0, 0, 0, 0);
+    const slideFrom = viewing < today ? -18 : 18;
+
+    todayJumpX.value = slideFrom;
+    todayJumpOpacity.value = 0.55;
+    todayJumpX.value = withSpring(0, { damping: 16, stiffness: 180 });
+    todayJumpOpacity.value = withTiming(1, { duration: 260, easing: Easing.out(Easing.cubic) });
+
+    onTodayPress();
+  };
+
   return (
     <View style={styles.outerContainer}>
       <LinearGradient
@@ -86,6 +133,7 @@ const HomeHeader = React.memo(function HomeHeader({
       />
       
       <Animated.View entering={FadeInDown.duration(400).springify()} style={{ paddingTop: insets.top + 16 }}>
+        <Animated.View style={animatedTodayJumpStyle}>
         <View style={styles.topBar}>
           <TouchableOpacity 
             style={styles.navBtn} 
@@ -95,7 +143,7 @@ const HomeHeader = React.memo(function HomeHeader({
             <Ionicons name="chevron-forward" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.datesContainer} onPress={onTodayPress} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.datesContainer} onPress={handleTodayPress} activeOpacity={0.7}>
             <Text style={styles.hebrewDate}>{cleanHebrewDate}</Text>
             {showSecularDate && <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>}
           </TouchableOpacity>
@@ -109,19 +157,17 @@ const HomeHeader = React.memo(function HomeHeader({
           </TouchableOpacity>
         </View>
 
-
-
-
         {!isToday && (
-          <TouchableOpacity style={styles.todayButton} onPress={onTodayPress}>
-            <Text style={styles.todayButtonText}>חזור להיום</Text>
-          </TouchableOpacity>
+          <Animated.View
+            entering={FadeIn.duration(220)}
+            exiting={FadeOut.duration(180)}
+            style={animatedTodayBtnStyle}
+          >
+            <TouchableOpacity style={styles.todayButton} onPress={handleTodayPress} activeOpacity={0.7}>
+              <Text style={styles.todayButtonText}>חזור להיום</Text>
+            </TouchableOpacity>
+          </Animated.View>
         )}
-
-
-
-
-
 
         <Animated.View 
           entering={FadeInUp.duration(500).delay(100).springify()} 
@@ -182,6 +228,7 @@ const HomeHeader = React.memo(function HomeHeader({
               </TouchableOpacity>
             </Animated.View>
 
+            {showSefariaLink && (
             <TouchableOpacity
               onPress={() => Linking.openURL(sefariaUrl)}
               style={styles.secondaryButton}
@@ -190,7 +237,20 @@ const HomeHeader = React.memo(function HomeHeader({
               <Ionicons name="book-outline" size={20} color={theme.colors.textPrimary} />
               <Text style={styles.secondaryButtonText}>ספריא</Text>
             </TouchableOpacity>
+            )}
+
+            {showTzuratLink && (
+            <TouchableOpacity
+              onPress={onOpenTzuratHadaf}
+              style={styles.tzuratButton}
+              activeOpacity={0.75}
+            >
+              <Ionicons name="document-text-outline" size={20} color={theme.colors.accent} />
+              <Text style={styles.tzuratButtonText}>צורת הדף</Text>
+            </TouchableOpacity>
+            )}
           </View>
+        </Animated.View>
         </Animated.View>
       </Animated.View>
 
@@ -382,6 +442,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.textPrimary,
       fontSize: 15,
       fontWeight: '700',
+    },
+    tzuratButton: {
+      alignSelf: 'stretch',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: theme.colors.accent + '40',
+      backgroundColor: theme.colors.accentLight,
+    },
+    tzuratButtonText: {
+      color: theme.colors.accent,
+      fontSize: 15,
+      fontWeight: '800',
     },
     todayButton: {
       alignSelf: 'center',

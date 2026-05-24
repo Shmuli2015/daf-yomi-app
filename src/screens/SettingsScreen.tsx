@@ -19,6 +19,7 @@ import {
   getScheduledNotifications,
 } from '../utils/notifications';
 import { parseDaySchedulesJson } from '../utils/settingsScreen';
+import { parseStudyLinkMode, type StudyLinkMode } from '../utils/studyLinkMode';
 import type { DaySchedule } from '../components/Settings/DayScheduleList';
 import { useAppUpdateControls } from '../context/AppUpdateProvider';
 import { isUpdateCheckConfigured } from '../services/appUpdate';
@@ -27,12 +28,13 @@ export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
   const updateCtl = useAppUpdateControls();
-  const { settings, updateNotificationSettings, updateThemeMode, loadInitialData, setUpdateAutoPromptEnabled } =
+  const { settings, updateNotificationSettings, updateThemeMode, updateStudyLinkMode, loadInitialData, setUpdateAutoPromptEnabled } =
     useAppStore(
       useShallow(s => ({
         settings: s.settings,
         updateNotificationSettings: s.updateNotificationSettings,
         updateThemeMode: s.updateThemeMode,
+        updateStudyLinkMode: s.updateStudyLinkMode,
         loadInitialData: s.loadInitialData,
         setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,
       })),
@@ -49,6 +51,7 @@ export default function SettingsScreen() {
   const [editingDay, setEditingDay] = useState<number | null>(null);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
+  const [studyLinkMode, setStudyLinkMode] = useState<StudyLinkMode>('both');
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [scheduledCount, setScheduledCount] = useState(0);
@@ -80,6 +83,7 @@ export default function SettingsScreen() {
       setNotificationsEnabled(settings.notifications_enabled === 1);
       setNotifMode((settings.notif_mode as 'daily' | 'custom') || 'daily');
       setThemeMode((settings.theme_mode as ThemeMode) || 'system');
+      setStudyLinkMode(parseStudyLinkMode(settings.study_link_mode));
       setDaySchedules(parseDaySchedulesJson(settings.day_schedules));
     }
   }, [settings]);
@@ -256,6 +260,14 @@ export default function SettingsScreen() {
     [updateThemeMode],
   );
 
+  const handleStudyLinkModeChange = useCallback(
+    (mode: StudyLinkMode) => {
+      setStudyLinkMode(mode);
+      updateStudyLinkMode(mode);
+    },
+    [updateStudyLinkMode],
+  );
+
   const handleTimePickerOpen = useCallback(() => {
     setEditingDay(null);
     setShowTimePicker(true);
@@ -364,6 +376,8 @@ export default function SettingsScreen() {
             onSecularDateToggle={handleSecularDateToggle}
             showConfettiPref={showConfettiPref}
             onConfettiToggle={handleConfettiToggle}
+            studyLinkMode={studyLinkMode}
+            onStudyLinkModeChange={handleStudyLinkModeChange}
             showDevSection={__DEV__}
             scheduledCount={scheduledCount}
             onTestNotification={handleTestNotification}

@@ -7,7 +7,9 @@ import { NotifModeToggle } from './NotifModeToggle';
 import { DayScheduleList } from './DayScheduleList';
 import type { DaySchedule } from './DayScheduleList';
 import { SettingsFooter } from './SettingsFooter';
+import StudyLinkModeToggle from './StudyLinkModeToggle';
 import type { SettingsScreenStyles } from './settingsScreenStyles';
+import type { StudyLinkMode } from '../../utils/studyLinkMode';
 import InfoModal from '../InfoModal';
 import {
   formatNotificationTime,
@@ -34,6 +36,8 @@ export type SettingsScrollContentProps = {
   onSecularDateToggle: (v: boolean) => void;
   showConfettiPref: boolean;
   onConfettiToggle: (v: boolean) => void;
+  studyLinkMode: StudyLinkMode;
+  onStudyLinkModeChange: (mode: StudyLinkMode) => void;
   showDevSection: boolean;
   scheduledCount: number;
   onTestNotification: () => void;
@@ -65,6 +69,8 @@ export default function SettingsScrollContent({
   onSecularDateToggle,
   showConfettiPref,
   onConfettiToggle,
+  studyLinkMode,
+  onStudyLinkModeChange,
   showDevSection,
   scheduledCount,
   onTestNotification,
@@ -166,6 +172,7 @@ export default function SettingsScrollContent({
             value={showConfettiPref}
             onPress={onConfettiToggle}
           />
+          <StudyLinkModeToggle mode={studyLinkMode} onChange={onStudyLinkModeChange} />
         </View>
 
         <SectionHeader title="יצירת קשר" />

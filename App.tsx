@@ -1,7 +1,7 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { I18nManager } from 'react-native';
-import AppNavigator from './src/navigation/AppNavigator';
+import RootNavigator from './src/navigation/RootNavigator';
 
 import { useAppStore } from './src/store/useAppStore';
 import * as Notifications from 'expo-notifications';
@@ -49,6 +49,9 @@ export default function App() {
   const systemScheme = (useColorScheme() || 'dark') as 'dark' | 'light';
   useNotificationsSetup();
 
+  const isDark = resolveThemeScheme(themeMode, systemScheme) === 'dark';
+  const navigationTheme = isDark ? DarkTheme : DefaultTheme;
+
   return (
     <SafeAreaProvider>
       <ThemeProvider mode={themeMode}>
@@ -56,12 +59,15 @@ export default function App() {
         <AppUpdateProvider>
           <NavigationContainer
             theme={{
-              dark: resolveThemeScheme(themeMode, systemScheme) === 'dark',
-              colors: getNavigationThemeColors(themeMode, systemScheme),
-              fonts: undefined as any,
+              ...navigationTheme,
+              dark: isDark,
+              colors: {
+                ...navigationTheme.colors,
+                ...getNavigationThemeColors(themeMode, systemScheme),
+              },
             }}
           >
-            <AppNavigator />
+            <RootNavigator />
           </NavigationContainer>
           {showSplash && (
             <SplashScreen isReady={isReady} onFinish={onSplashFinish} />

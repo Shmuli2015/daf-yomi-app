@@ -4,6 +4,8 @@ import Reanimated, { FadeInDown } from 'react-native-reanimated';
 import { HDate, Locale } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../store/useAppStore';
 import { buildLearnedDateSet } from '../utils/shas';
@@ -12,6 +14,7 @@ import CalendarDay from './Calendar/CalendarDay';
 import DafDetailModal from './Calendar/DafDetailModal';
 import ConfirmModal from './ConfirmModal';
 import { useTheme } from '../theme';
+import type { RootStackParamList } from '../navigation/types';
 
 const DAYS_OF_WEEK = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
@@ -24,6 +27,7 @@ interface DayData {
 }
 
 export default function HebrewCalendar() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -195,6 +199,17 @@ export default function HebrewCalendar() {
     return getDafByDate(selectedDate.greg());
   }, [selectedDate]);
 
+  const handleOpenTzuratHadaf = useCallback(() => {
+    if (!selectedDafInfo) return;
+    setModalVisible(false);
+    navigation.navigate('TzuratHadaf', {
+      masechetEn: selectedDafInfo.masechetEn,
+      masechetHe: selectedDafInfo.masechet,
+      dafNum: selectedDafInfo.dafNum,
+      amud: selectedDafInfo.amud,
+    });
+  }, [navigation, selectedDafInfo]);
+
   return (
     <Reanimated.View entering={FadeInDown.duration(400).springify()} style={styles.card} {...panResponder.panHandlers}>
       <View style={styles.navRow}>
@@ -264,6 +279,7 @@ export default function HebrewCalendar() {
             }
           }
         }}
+        onOpenTzuratHadaf={handleOpenTzuratHadaf}
       />
 
       <ConfirmModal

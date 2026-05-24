@@ -27,6 +27,8 @@ export interface SettingsRecord {
   dismissed_update_version: string | null;
   /** 1 = show update modal when a newer version is detected (startup / foreground) */
   update_auto_prompt_enabled: number;
+  /** sefaria | tzurat | both — which study buttons to show on home/calendar */
+  study_link_mode: string;
 }
 
 export function initDB() {
@@ -77,6 +79,9 @@ export function initDB() {
   }
   if (!columns.includes('update_auto_prompt_enabled')) {
     db.execSync('ALTER TABLE settings ADD COLUMN update_auto_prompt_enabled INTEGER DEFAULT 0;');
+  }
+  if (!columns.includes('study_link_mode')) {
+    db.execSync("ALTER TABLE settings ADD COLUMN study_link_mode TEXT DEFAULT 'both';");
   }
 
   db.execSync(`
@@ -151,6 +156,10 @@ export function updateSettings(
 
 export function updateThemeMode(themeMode: string) {
   db.runSync('UPDATE settings SET theme_mode = ? WHERE id = 1', [themeMode]);
+}
+
+export function updateStudyLinkMode(mode: string) {
+  db.runSync('UPDATE settings SET study_link_mode = ? WHERE id = 1', [mode]);
 }
 
 export function touchLastUpdateCheckAt() {

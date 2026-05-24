@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, DailyRecord, SettingsRecord } from '../db/database';
+import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, DailyRecord, SettingsRecord } from '../db/database';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, ProgressCache } from '../utils/progressCache';
 
@@ -12,6 +12,9 @@ interface AppState {
   todayMasechet: string;
   todayDafNum: string;
   todaySefariaUrl: string;
+  todayMasechetEn: string;
+  todayDafNumValue: number;
+  todayAmud: 'a' | 'b';
   streak: number;
   progressCache: ProgressCache | null;
   isAppReady: boolean;
@@ -35,6 +38,7 @@ interface AppState {
   ) => void;
 
   updateThemeMode: (themeMode: string) => void;
+  updateStudyLinkMode: (mode: string) => void;
   setUpdateAutoPromptEnabled: (enabled: boolean) => void;
   setCurrentDate: (date: Date) => void;
 }
@@ -48,6 +52,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   todayMasechet: '',
   todayDafNum: '',
   todaySefariaUrl: '',
+  todayMasechetEn: '',
+  todayDafNumValue: 2,
+  todayAmud: 'a',
   streak: 0,
   progressCache: null,
   isAppReady: false,
@@ -81,6 +88,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       todayMasechet: dafInfo.masechet,
       todayDafNum: dafInfo.daf,
       todaySefariaUrl: dafInfo.sefariaUrl,
+      todayMasechetEn: dafInfo.masechetEn,
+      todayDafNumValue: dafInfo.dafNum,
+      todayAmud: dafInfo.amud,
       streak: cache.streak,
       progressCache: cache
     });
@@ -155,6 +165,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   updateThemeMode: (themeMode: string) => {
     updateThemeMode(themeMode);
+    get().refreshSettings();
+  },
+
+  updateStudyLinkMode: (mode: string) => {
+    updateStudyLinkMode(mode);
     get().refreshSettings();
   },
 

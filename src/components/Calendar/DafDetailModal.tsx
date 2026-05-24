@@ -14,9 +14,13 @@ interface DafDetailModalProps {
     daf: string;
     dateString: string;
     sefariaUrl: string;
+    masechetEn: string;
+    dafNum: number;
+    amud: 'a' | 'b';
   } | null;
   isLearned: boolean;
   onToggle: () => void;
+  onOpenTzuratHadaf?: () => void;
 }
 
 const DafDetailModal = ({
@@ -26,6 +30,7 @@ const DafDetailModal = ({
   dafInfo,
   isLearned,
   onToggle,
+  onOpenTzuratHadaf,
 }: DafDetailModalProps) => {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -56,6 +61,7 @@ const DafDetailModal = ({
                 dafInfo={dafInfo}
                 isLearned={isLearned}
                 onToggle={onToggle}
+                onOpenTzuratHadaf={onOpenTzuratHadaf}
               />
             )}
           </Pressable>
