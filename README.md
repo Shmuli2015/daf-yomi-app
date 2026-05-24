@@ -6,7 +6,7 @@
 
 **Version:** See the `version` field in [`package.json`](./package.json). Expo picks it up in [`app.config.js`](./app.config.js), and the app shows it in Settings (via `expo-constants`), so one source of truth stays in sync.
 
-**App updates (APK sideload):** The app compares the installed build against the latest published APK using the public GitHub Releases API (see [`src/services/appUpdate.ts`](./src/services/appUpdate.ts)). Configure the repository and asset names in `expo.extra` inside [`app.config.js`](./app.config.js) (`githubOwner`, `githubRepo`, `releaseApkBasename`, `updateCheckEnabled`). Users can run **Check for updates** in Settings at any time for a manual check. **Automatic update notifications** (<span dir="rtl" lang="he">התראות עדכון אוטומטיות</span>) are optional and **off** by default—when enabled they add checks on launch and when returning from the background and can surface the download modal after a new release.
+**App updates (APK sideload):** The app compares the installed build against the latest published APK using the public GitHub Releases API (see [`src/services/appUpdate.ts`](./src/services/appUpdate.ts)). When a newer version is available, **Download & install** (<span dir="rtl" lang="he">הורד והתקן</span>) downloads the APK in-app and opens Android’s install screen (see [`src/services/apkInstall.ts`](./src/services/apkInstall.ts)). **First install / share link:** [Download page](https://shmuli2015.github.io/daf-yomi-app/) (`docs/` on GitHub Pages) — one Hebrew button, no GitHub UI. Configure the repository in `expo.extra` inside [`app.config.js`](./app.config.js) (`githubOwner`, `githubRepo`, `releaseApkBasename`, `downloadPageUrl`, `updateCheckEnabled`). **Automatic update notifications** (<span dir="rtl" lang="he">התראות עדכון אוטומטיות</span>) are optional and **off** by default.
 
 ---
 
@@ -42,7 +42,7 @@
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
-- **App updates** (<span dir="rtl" lang="he">עדכוני אפליקציה</span>): **Check for updates** (<span dir="rtl" lang="he">בדוק עדכונים</span>) runs a manual GitHub check and, when a newer APK is available, shows a modal with a download link. **Automatic update notifications** (<span dir="rtl" lang="he">התראות עדכון אוטומטיות</span>): the toggle defaults to **off** (no automatic polling). When **on**, the app also checks on startup and when returning from the background and shows that modal after a new release. Tapping **later** suppresses repeated *automatic* prompts for that version until a newer release ships; **Check for updates** keeps offering it whenever the remote version is still newer than installed. Install stays manual via browser or download manager outside the Play Store pipeline.
+- **App updates** (<span dir="rtl" lang="he">עדכוני אפליקציה</span>): **Check for updates** (<span dir="rtl" lang="he">בדוק עדכונים</span>) checks GitHub; when a newer APK exists, a modal offers **Download & install** in-app (Android). **Automatic update notifications** default to **off**. Fallback: **Download in browser** opens the simple [download page](https://shmuli2015.github.io/daf-yomi-app/). Tapping **later** suppresses automatic prompts for that version until a newer release ships.
 - **Notifications Master Switch**: Toggle **Daily reminder** (<span dir="rtl" lang="he">תזכורת יומית</span>) on or off; when off, no reminders are scheduled
 - **Daily Notifications**: When reminders are enabled, choose one time for every day or set up per-day behavior
 - **Notification Mode**: **Every day** (<span dir="rtl" lang="he">כל יום</span>) uses a single time for the whole week; **By weekday** (<span dir="rtl" lang="he">לפי ימים</span>) lets you enable or disable each day and set a different time per enabled day
@@ -158,7 +158,8 @@ Workflow: [`.github/workflows/build-android.yml`](./.github/workflows/build-andr
 - **Triggers**: Push of a version tag matching `v*` (for example `v1.0.12`), or **Run workflow** manually (`workflow_dispatch`).
 - **Build**: Local EAS Android preview APK (`eas build … --profile preview --local`); requires `EXPO_TOKEN` in repository secrets.
 - **GitHub Release (tags only)**: After the build, the APK is renamed to `{releaseApkBasename}-{version}.apk` (see `expo.extra.releaseApkBasename` in [`app.config.js`](./app.config.js), default branding prefix `masa-daf`) and attached to a **published** GitHub Release for that tag ([`softprops/action-gh-release`](https://github.com/softprops/action-gh-release)).
-- **Artifacts**: Every run uploads `*.apk` as a workflow artifact (short-lived); **users should download from Releases**, which matches what the in-app updater checks.
+- **Download page**: CI updates [`docs/latest.json`](./docs/latest.json) so [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) always points at the latest APK.
+- **Artifacts**: Every run uploads `*.apk` as a workflow artifact (short-lived); **users should download from the download page or Releases**, which matches what the in-app updater checks.
 
 **Maintainer checklist for a release**
 

@@ -24,7 +24,7 @@ module.exports = {
         backgroundColor: '#ffffff',
       },
       predictiveBackGestureEnabled: false,
-      permissions: ['USE_EXACT_ALARM', 'SCHEDULE_EXACT_ALARM'],
+      permissions: ['USE_EXACT_ALARM', 'SCHEDULE_EXACT_ALARM', 'REQUEST_INSTALL_PACKAGES'],
     },
     web: {
       favicon: './assets/favicon.png',
@@ -52,6 +52,8 @@ module.exports = {
       releaseApkBasename: 'masa-daf',
       /** Set false to disable automatic update checks */
       updateCheckEnabled: true,
+      /** Public download page (GitHub Pages) — share link for first install */
+      downloadPageUrl: 'https://shmuli2015.github.io/daf-yomi-app/',
     },
   },
 };
