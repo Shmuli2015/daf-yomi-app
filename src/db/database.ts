@@ -29,6 +29,8 @@ export interface SettingsRecord {
   update_auto_prompt_enabled: number;
   /** sefaria | tzurat | both — which study buttons to show on home/calendar */
   study_link_mode: string;
+  /** 1 = show daf number in calendar day cells */
+  show_calendar_daf: number;
 }
 
 export function initDB() {
@@ -82,6 +84,9 @@ export function initDB() {
   }
   if (!columns.includes('study_link_mode')) {
     db.execSync("ALTER TABLE settings ADD COLUMN study_link_mode TEXT DEFAULT 'both';");
+  }
+  if (!columns.includes('show_calendar_daf')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN show_calendar_daf INTEGER DEFAULT 0;');
   }
 
   db.execSync(`
@@ -176,6 +181,10 @@ export function setUpdateAutoPromptEnabled(enabled: boolean) {
   db.runSync('UPDATE settings SET update_auto_prompt_enabled = ? WHERE id = 1', [
     enabled ? 1 : 0,
   ]);
+}
+
+export function setShowCalendarDaf(enabled: boolean) {
+  db.runSync('UPDATE settings SET show_calendar_daf = ? WHERE id = 1', [enabled ? 1 : 0]);
 }
 
 export function resetDB() {

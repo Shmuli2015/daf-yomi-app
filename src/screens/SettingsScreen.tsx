@@ -29,7 +29,7 @@ export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
   const updateCtl = useAppUpdateControls();
-  const { settings, updateNotificationSettings, updateThemeMode, updateStudyLinkMode, loadInitialData, setUpdateAutoPromptEnabled } =
+  const { settings, updateNotificationSettings, updateThemeMode, updateStudyLinkMode, loadInitialData, setUpdateAutoPromptEnabled, setShowCalendarDafEnabled } =
     useAppStore(
       useShallow(s => ({
         settings: s.settings,
@@ -38,11 +38,13 @@ export default function SettingsScreen() {
         updateStudyLinkMode: s.updateStudyLinkMode,
         loadInitialData: s.loadInitialData,
         setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,
+        setShowCalendarDafEnabled: s.setShowCalendarDafEnabled,
       })),
     );
   const [hour, setHour] = useState(7);
   const [minute, setMinute] = useState(30);
   const [showSecularDate, setShowSecularDate] = useState(true);
+  const [showCalendarDaf, setShowCalendarDaf] = useState(false);
   const [showConfettiPref, setShowConfettiPref] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -80,6 +82,7 @@ export default function SettingsScreen() {
       setHour(settings.notification_hour);
       setMinute(settings.notification_minute);
       setShowSecularDate(settings.show_secular_date === 1);
+      setShowCalendarDaf(settings.show_calendar_daf === 1);
       setShowConfettiPref(settings.show_confetti === 1);
       setNotificationsEnabled(settings.notifications_enabled === 1);
       setNotifMode((settings.notif_mode as 'daily' | 'custom') || 'daily');
@@ -269,6 +272,14 @@ export default function SettingsScreen() {
     [updateStudyLinkMode],
   );
 
+  const handleCalendarDafToggle = useCallback(
+    (val: boolean) => {
+      setShowCalendarDaf(val);
+      setShowCalendarDafEnabled(val);
+    },
+    [setShowCalendarDafEnabled],
+  );
+
   const handleTimePickerOpen = useCallback(() => {
     setEditingDay(null);
     setShowTimePicker(true);
@@ -388,6 +399,8 @@ export default function SettingsScreen() {
             onGuideModalOpen={() => setShowGuideModal(true)}
             showSecularDate={showSecularDate}
             onSecularDateToggle={handleSecularDateToggle}
+            showCalendarDaf={showCalendarDaf}
+            onCalendarDafToggle={handleCalendarDafToggle}
             showConfettiPref={showConfettiPref}
             onConfettiToggle={handleConfettiToggle}
             studyLinkMode={studyLinkMode}

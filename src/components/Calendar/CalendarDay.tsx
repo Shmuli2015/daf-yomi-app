@@ -11,11 +11,12 @@ interface CalendarDayProps {
   learned: boolean;
   isToday: boolean;
   isSelected: boolean;
+  dafLabel?: string;
   onPress: (hdate: HDate) => void;
 }
 
 const CalendarDay = React.memo(
-  ({ hdate, isCurrentMonth, learned, isToday, isSelected, onPress }: CalendarDayProps) => {
+  ({ hdate, isCurrentMonth, learned, isToday, isSelected, dafLabel, onPress }: CalendarDayProps) => {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
@@ -76,6 +77,9 @@ const CalendarDay = React.memo(
             {showSecularDate && (
               <Animated.Text style={[styles.gregText, { color: subColor }]}>{gregDay}</Animated.Text>
             )}
+            {dafLabel ? (
+              <Animated.Text style={[styles.dafText, { color: subColor }]}>{dafLabel}</Animated.Text>
+            ) : null}
           </Animated.View>
         </Animated.View>
       </TouchableOpacity>
@@ -87,6 +91,7 @@ const CalendarDay = React.memo(
       prevProps.learned === nextProps.learned &&
       prevProps.isToday === nextProps.isToday &&
       prevProps.isSelected === nextProps.isSelected &&
+      prevProps.dafLabel === nextProps.dafLabel &&
       prevProps.onPress === nextProps.onPress &&
       prevProps.hdate.getFullYear() === nextProps.hdate.getFullYear() &&
       prevProps.hdate.getMonth() === nextProps.hdate.getMonth() &&
@@ -125,6 +130,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     dayText: { fontSize: 14, fontWeight: '800' },
     gregText: { fontSize: 9, fontWeight: '500', marginTop: -1 },
+    dafText: { fontSize: 8, fontWeight: '600', marginTop: -1 },
   });
 
 export default CalendarDay;

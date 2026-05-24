@@ -24,6 +24,7 @@ interface DayData {
   learned: boolean;
   isToday: boolean;
   dateKey: string;
+  dafLabel?: string;
 }
 
 export default function HebrewCalendar() {
@@ -36,6 +37,7 @@ export default function HebrewCalendar() {
     useShallow((s) => ({ history: s.history, toggleAnyDafLearned: s.toggleAnyDafLearned, settings: s.settings })),
   );
   const learnedDateSet = useMemo(() => buildLearnedDateSet(history), [history]);
+  const showCalendarDaf = settings?.show_calendar_daf === 1;
   const [currentHDate, setCurrentHDate] = useState(new HDate(new Date()));
   const [selectedDate, setSelectedDate] = useState<HDate | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -101,6 +103,7 @@ export default function HebrewCalendar() {
         learned: learnedDateSet.has(dateKey),
         isToday: isSameDay(d, todayHd),
         dateKey,
+        dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
       });
     }
 
@@ -113,6 +116,7 @@ export default function HebrewCalendar() {
         learned: learnedDateSet.has(dateKey),
         isToday: isSameDay(d, todayHd),
         dateKey,
+        dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
       });
       d = d.next();
     }
@@ -126,11 +130,12 @@ export default function HebrewCalendar() {
         learned: learnedDateSet.has(dateKey),
         isToday: isSameDay(d, new HDate()),
         dateKey,
+        dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
       });
       d = d.next();
     }
     return days;
-  }, [currentHDate, learnedDateSet]);
+  }, [currentHDate, learnedDateSet, showCalendarDaf]);
 
 
   function isSameDay(d1: HDate, d2: HDate | null) {
@@ -253,6 +258,7 @@ export default function HebrewCalendar() {
               learned={day.learned}
               isToday={day.isToday}
               isSelected={isSameDay(day.hdate, selectedDate)}
+              dafLabel={day.dafLabel}
               onPress={handleDayPress}
             />
           ))}

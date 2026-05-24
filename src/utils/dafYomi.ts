@@ -35,9 +35,12 @@ export function getDafByDate(date: Date) {
 
   const sefariaUrl = buildSefariaTextUrl(masechetEn, dafNum, amud);
 
+  const dafNumOnly = (partsHeb[1] || '').replace(/[\u0591-\u05C7]/g, '').trim();
+
   return {
     masechet: masechetClean,
     daf: partsHeb[1] ? `דף ${partsHeb[1]}` : '',
+    dafNumOnly,
     masechetEn,
     dafEn: dafNumEng,
     dafNum,

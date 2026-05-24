@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, DailyRecord, SettingsRecord } from '../db/database';
+import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, DailyRecord, SettingsRecord } from '../db/database';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, ProgressCache } from '../utils/progressCache';
 
@@ -40,6 +40,7 @@ interface AppState {
   updateThemeMode: (themeMode: string) => void;
   updateStudyLinkMode: (mode: string) => void;
   setUpdateAutoPromptEnabled: (enabled: boolean) => void;
+  setShowCalendarDafEnabled: (enabled: boolean) => void;
   setCurrentDate: (date: Date) => void;
 }
 
@@ -175,6 +176,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setUpdateAutoPromptEnabled: (enabled: boolean) => {
     persistUpdateAutoPromptSetting(enabled);
+    get().refreshSettings();
+  },
+
+  setShowCalendarDafEnabled: (enabled: boolean) => {
+    persistShowCalendarDaf(enabled);
     get().refreshSettings();
   },
 
