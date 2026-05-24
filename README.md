@@ -155,7 +155,7 @@
 
 Workflow: [`.github/workflows/build-android.yml`](./.github/workflows/build-android.yml).
 
-- **Triggers**: Push of a version tag matching `v*` (for example `v1.0.12`), or **Run workflow** manually (`workflow_dispatch`).
+- **Triggers**: Merge of a pull request from a `release/*` branch (creates and pushes the `v*` tag, which starts the Android build), push of a version tag matching `v*`, or **Run workflow** manually (`workflow_dispatch`).
 - **Build**: Local EAS Android preview APK (`eas build … --profile preview --local`); requires `EXPO_TOKEN` in repository secrets.
 - **GitHub Release (tags only)**: After the build, the APK is renamed to `{releaseApkBasename}-{version}.apk` (see `expo.extra.releaseApkBasename` in [`app.config.js`](./app.config.js), default branding prefix `masa-daf`) and attached to a **published** GitHub Release for that tag ([`softprops/action-gh-release`](https://github.com/softprops/action-gh-release)).
 - **Download page**: CI updates [`docs/latest.json`](./docs/latest.json) so [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) always points at the latest APK.
@@ -163,9 +163,9 @@ Workflow: [`.github/workflows/build-android.yml`](./.github/workflows/build-andr
 
 **Maintainer checklist for a release**
 
-1. Bump `version` in [`package.json`](./package.json) (and commit).
-2. Create and push the tag: `git tag vX.Y.Z && git push origin vX.Y.Z`.
-3. Confirm the workflow run published the Release and that the APK asset name matches `releaseApkBasename`.
+1. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it.
+2. Open a pull request from `release/X.Y.Z` into `master` and merge it after review.
+3. CI creates the `vX.Y.Z` tag and runs the Android build; confirm the Release published and that the APK asset name matches `releaseApkBasename`.
 
 ---
 
