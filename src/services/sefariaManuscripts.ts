@@ -1,5 +1,10 @@
-import * as FileSystem from 'expo-file-system/legacy';
 import { buildSefariaTref, Amud } from '../utils/dafNavigation';
+import {
+  deleteTzuratHadafFile,
+  downloadTzuratHadafFile,
+  findTzuratHadafFile,
+  MIN_IMAGE_BYTES,
+} from './tzuratHadafStorage';
 
 export interface ManuscriptPage {
   imageUrl: string;
@@ -21,21 +26,9 @@ interface ManuscriptApiItem {
 }
 
 const VILNA_SLUG_HINTS = ['vilna', 'romm', 'widow'];
-const CACHE_DIR = `${FileSystem.cacheDirectory ?? ''}tzurat-hadaf/`;
 
 const imageUriCache = new Map<string, string>();
 const apiCache = new Map<string, ManuscriptPage>();
-
-function cacheFilePath(tref: string): string {
-  return `${CACHE_DIR}${tref.replace(/\./g, '_')}.jpg`;
-}
-
-async function ensureCacheDir(): Promise<void> {
-  const info = await FileSystem.getInfoAsync(CACHE_DIR);
-  if (!info.exists) {
-    await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
-  }
-}
 
 function isVilnaManuscript(item: ManuscriptApiItem): boolean {
   const slug = (item.manuscript_slug || '').toLowerCase();
@@ -98,25 +91,16 @@ async function fetchFromApi(tref: string): Promise<ManuscriptPage | null> {
 }
 
 async function readDiskCache(tref: string): Promise<string | null> {
-  const path = cacheFilePath(tref);
-  const info = await FileSystem.getInfoAsync(path);
-  if (!info.exists) return null;
+  const path = await findTzuratHadafFile(tref, 'jpg', MIN_IMAGE_BYTES);
+  if (!path) return null;
   imageUriCache.set(tref, path);
   return path;
 }
 
 async function downloadToCache(tref: string, remoteUrl: string): Promise<string> {
-  await ensureCacheDir();
-  const path = cacheFilePath(tref);
-  const existing = await FileSystem.getInfoAsync(path);
-  if (existing.exists) {
-    imageUriCache.set(tref, path);
-    return path;
-  }
-
-  const result = await FileSystem.downloadAsync(remoteUrl, path);
-  imageUriCache.set(tref, result.uri);
-  return result.uri;
+  const localUri = await downloadTzuratHadafFile(tref, 'jpg', remoteUrl);
+  imageUriCache.set(tref, localUri);
+  return localUri;
 }
 
 export function peekCachedImageUri(tref: string): string | null {
@@ -127,6 +111,12 @@ export async function resolveCachedImageUri(tref: string): Promise<string | null
   const memory = peekCachedImageUri(tref);
   if (memory) return memory;
   return readDiskCache(tref);
+}
+
+export async function clearCachedManuscriptImage(tref: string): Promise<void> {
+  imageUriCache.delete(tref);
+  apiCache.delete(tref);
+  await deleteTzuratHadafFile(tref, 'jpg');
 }
 
 export async function fetchVilnaManuscriptPage(

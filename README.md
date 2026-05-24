@@ -18,7 +18,7 @@
 - **Learning Tracker**: Use **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) to record that day's page; the control switches to **Finished** (<span dir="rtl" lang="he">סיימתי את הדף</span>) and asks for confirmation before unsetting
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Opens the Daf in Sefaria in your **external browser** (unchanged behavior)
-- **Tzurat Hadaf Viewer** (<span dir="rtl" lang="he">צורת הדף</span>): In-app **Vilna page images** (via Sefaria Manuscripts API) with pinch-to-zoom, amud/daf navigation, and **local image cache** for fast re-open
+- **Tzurat Hadaf Viewer** (<span dir="rtl" lang="he">צורת הדף</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) (Sefaria Manuscripts fallback) with pinch-to-zoom, amud/daf navigation, and **local PDF cache** for fast re-open
 - **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **Tzurat Hadaf only**, or **both** on Home and Calendar
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum
 - **7-Day Progress Overview**: In-app mini chart of the last seven days so you can see your week at a glance
@@ -95,7 +95,7 @@
 - **Styling**: [NativeWind](https://www.nativewind.dev/) (Tailwind CSS) & Vanilla CSS for custom animations.
 - **State Management**: [Zustand](https://github.com/pmndrs/zustand) for reactive UI states.
 - **Database**: [Expo SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/) for lightning-fast local persistence.
-- **Study / Manuscripts**: [Sefaria Manuscripts API](https://developers.sefaria.org/reference/get-manuscripts), [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) (page image cache), [react-native-webview](https://docs.expo.dev/versions/latest/sdk/webview/) (pinch-to-zoom viewer).
+- **Study / Tzurat Hadaf**: [daf-yomi.com](https://daf-yomi.com) Vilna page PDFs, [Sefaria Manuscripts API](https://developers.sefaria.org/reference/get-manuscripts) (fallback), [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) (page cache), [react-native-webview](https://docs.expo.dev/versions/latest/sdk/webview/) (PDF/image viewer).
 - **Calendar Logic**: [@hebcal/core](https://www.npmjs.com/package/@hebcal/core) & `@hebcal/learning`.
 - **Animations**: [React Native Reanimated](https://docs.expo.dev/versions/latest/sdk/reanimated/) & [react-native-confetti-cannon](https://www.npmjs.com/package/react-native-confetti-cannon).
 
