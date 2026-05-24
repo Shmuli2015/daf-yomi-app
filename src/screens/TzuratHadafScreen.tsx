@@ -56,12 +56,6 @@ export default function TzuratHadafScreen() {
     const cachedPdf = peekCachedPdfUri(tref) ?? (await resolveCachedPdfUri(tref));
     if (cachedPdf) {
       await clearCachedManuscriptImage(tref);
-      console.log('[tzuratHadaf] displaying cached pdf', {
-        tref,
-        pageId,
-        remoteUrl,
-        uri: cachedPdf,
-      });
       setPage({
         kind: 'pdf',
         uri: cachedPdf,
@@ -85,12 +79,10 @@ export default function TzuratHadafScreen() {
 
       const cachedImage = peekCachedImageUri(tref) ?? (await resolveCachedImageUri(tref));
       if (cachedImage) {
-        console.log('[tzuratHadaf] using cached sefaria fallback image', { tref, uri: cachedImage });
         setPage({ kind: 'image', uri: cachedImage });
         return;
       }
 
-      console.log('[tzuratHadaf] falling back to Sefaria manuscripts', { tref });
       const sefariaPage = await fetchVilnaManuscriptPage(loc.masechetEn, loc.dafNum, loc.amud);
       if (!sefariaPage) {
         setError('לא נמצאה תמונת צורת הדף לדף זה. ניתן לפתוח את הטקסט בספריא.');
