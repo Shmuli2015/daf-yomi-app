@@ -129,6 +129,17 @@ export async function resolveCachedImageUri(tref: string): Promise<string | null
   return readDiskCache(tref);
 }
 
+export async function clearCachedManuscriptImage(tref: string): Promise<void> {
+  imageUriCache.delete(tref);
+  apiCache.delete(tref);
+
+  const path = cacheFilePath(tref);
+  const info = await FileSystem.getInfoAsync(path);
+  if (info.exists) {
+    await FileSystem.deleteAsync(path, { idempotent: true });
+  }
+}
+
 export async function fetchVilnaManuscriptPage(
   masechetEn: string,
   dafNum: number,

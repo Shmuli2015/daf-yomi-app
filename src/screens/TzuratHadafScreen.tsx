@@ -3,7 +3,7 @@ import { View, StyleSheet, Linking } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import TzuratHeader from '../components/TzuratHadaf/TzuratHeader';
-import TzuratHadafViewer from '../components/TzuratHadaf/TzuratHadafViewer';
+import TzuratHadafViewer, { type TzuratPageContent } from '../components/TzuratHadaf/TzuratHadafViewer';
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
 import { useTheme } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
@@ -16,10 +16,17 @@ import {
   getPrevDaf,
   type DafLocation,
 } from '../utils/dafNavigation';
+import { buildDafYomiPdfUrl, resolveDafYomiPageId } from '../utils/dafYomiPageId';
+import {
+  fetchDafYomiPage,
+  peekCachedPdfUri,
+  resolveCachedPdfUri,
+} from '../services/dafYomiPages';
 import {
   fetchVilnaManuscriptPage,
   peekCachedImageUri,
   resolveCachedImageUri,
+  clearCachedManuscriptImage,
 } from '../services/sefariaManuscripts';
 
 type Route = RouteProp<RootStackParamList, 'TzuratHadaf'>;
@@ -37,24 +44,29 @@ export default function TzuratHadafScreen() {
     amud: route.params.amud,
   });
 
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [page, setPage] = useState<TzuratPageContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadPage = useCallback(async (loc: DafLocation) => {
     const tref = buildSefariaTref(loc.masechetEn, loc.dafNum, loc.amud);
+    const pageId = resolveDafYomiPageId(loc.masechetEn, loc.dafNum, loc.amud);
+    const remoteUrl = pageId != null ? buildDafYomiPdfUrl(pageId) : undefined;
 
-    const memoryUri = peekCachedImageUri(tref);
-    if (memoryUri) {
-      setImageUrl(memoryUri);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    const diskUri = await resolveCachedImageUri(tref);
-    if (diskUri) {
-      setImageUrl(diskUri);
+    const cachedPdf = peekCachedPdfUri(tref) ?? (await resolveCachedPdfUri(tref));
+    if (cachedPdf) {
+      await clearCachedManuscriptImage(tref);
+      console.log('[tzuratHadaf] displaying cached pdf', {
+        tref,
+        pageId,
+        remoteUrl,
+        uri: cachedPdf,
+      });
+      setPage({
+        kind: 'pdf',
+        uri: cachedPdf,
+        remoteUrl,
+      });
       setLoading(false);
       setError(null);
       return;
@@ -62,15 +74,29 @@ export default function TzuratHadafScreen() {
 
     setLoading(true);
     setError(null);
-    setImageUrl(null);
+    setPage(null);
 
     try {
-      const page = await fetchVilnaManuscriptPage(loc.masechetEn, loc.dafNum, loc.amud);
-      if (!page) {
+      const pdfPage = await fetchDafYomiPage(loc.masechetEn, loc.dafNum, loc.amud);
+      if (pdfPage) {
+        setPage(pdfPage);
+        return;
+      }
+
+      const cachedImage = peekCachedImageUri(tref) ?? (await resolveCachedImageUri(tref));
+      if (cachedImage) {
+        console.log('[tzuratHadaf] using cached sefaria fallback image', { tref, uri: cachedImage });
+        setPage({ kind: 'image', uri: cachedImage });
+        return;
+      }
+
+      console.log('[tzuratHadaf] falling back to Sefaria manuscripts', { tref });
+      const sefariaPage = await fetchVilnaManuscriptPage(loc.masechetEn, loc.dafNum, loc.amud);
+      if (!sefariaPage) {
         setError('לא נמצאה תמונת צורת הדף לדף זה. ניתן לפתוח את הטקסט בספריא.');
         return;
       }
-      setImageUrl(page.imageUrl);
+      setPage({ kind: 'image', uri: sefariaPage.imageUrl });
     } catch {
       setError('נדרש חיבור לאינטרנט כדי לצפות בצורת הדף.');
     } finally {
@@ -102,7 +128,7 @@ export default function TzuratHadafScreen() {
       />
 
       <TzuratHadafViewer
-        imageUrl={imageUrl}
+        page={page}
         loading={loading}
         error={error}
         onOpenSefaria={openSefaria}
