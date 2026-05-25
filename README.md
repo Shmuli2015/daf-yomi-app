@@ -15,10 +15,10 @@
 ### 🏠 Home Dashboard
 - **Day Navigation**: Prev/next arrows on the dashboard move between calendar days for that day's Daf; tap the dates to jump back to today, or use **Return to today** (<span dir="rtl" lang="he">חזור להיום</span>) when you have moved away from the real calendar date
 - **Today's Daf Display**: Shows the Daf Yomi for the selected day (tractate and page) with both Hebrew and Gregorian dates (Gregorian respects the visibility toggle)
-- **Learning Tracker**: Use **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) to record that day's page; the control switches to **Finished** (<span dir="rtl" lang="he">סיימתי את הדף</span>) and asks for confirmation before unsetting
+- **Learning Tracker**: Use **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) to record that day's page; the control switches to **Learned** (<span dir="rtl" lang="he">אשריך! הדף נלמד</span>) and asks for confirmation before unsetting
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Opens the Daf in Sefaria in your **external browser** (unchanged behavior)
-- **Tzurat Hadaf Viewer** (<span dir="rtl" lang="he">צורת הדף</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) (Sefaria Manuscripts fallback) with pinch-to-zoom, amud/daf navigation, and **local PDF cache** for fast re-open
+- **Tzurat Hadaf Viewer** (<span dir="rtl" lang="he">צורת הדף</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) (Sefaria Manuscripts fallback) with pinch-to-zoom, amud/daf navigation, **mark as learned** from the viewer header, **landscape rotation** for wider reading, and **local PDF cache** for fast re-open
 - **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **Tzurat Hadaf only**, or **both** on Home and Calendar
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum
 - **7-Day Progress Overview**: In-app mini chart of the last seven days so you can see your week at a glance
@@ -28,23 +28,23 @@
 
 
 ### 📊 History & Progress Tracking
-- **Complete Shas Overview**: Grid view of all 37 tractates (<span dir="rtl" lang="he">מסכתות</span>) in the Talmud
+- **Complete Shas Overview**: All 37 tractates (<span dir="rtl" lang="he">מסכתות</span>) grouped by **Seder** (<span dir="rtl" lang="he">סדר</span>) in collapsible sections, each with its own progress summary
 - **Masechet-by-Masechet Progress**: Individual progress bars for each tractate showing pages learned
 - **Completion Statistics**: Track total pages learned and completed tractates
-- **Interactive Masechet Details**: Tap any tractate to see detailed breakdown of dafim learned vs. remaining
+- **Interactive Masechet Details**: Tap any tractate to see a daf grid; use **Mark all** (<span dir="rtl" lang="he">סמן הכל</span>) or **Clear all** (<span dir="rtl" lang="he">בטל הכל</span>) for bulk updates (with confirmation), or tap individual daf numbers to toggle
 - **Visual Progress Hero**: Large progress ring displaying overall Shas completion percentage
 - **Share Shas progress as an image**: On the History screen, use the **share** control on the hero card (same flow: preview → **Share image**) to export a branded square graphic with ring %, pages learned, and completed tractates count
 - **Learned Pages Counter**: Real-time count of total pages learned across all of Shas
 
 ### 📅 Hebrew Calendar View
-- **Monthly Hebrew Calendar**: Hebrew dates (gematria) with gregorian day numbers per cell
-- **Navigation**: Month arrows and a **Today** (<span dir="rtl" lang="he">היום</span>) shortcut when you are viewing another month
+- **Monthly Hebrew Calendar**: Hebrew dates (gematria) with gregorian day numbers per cell; optionally show each day's **Daf number** in the cell (<span dir="rtl" lang="he">הצג דף בלוח שנה</span> in Settings)
+- **Navigation**: Month arrows, **swipe left/right** to change months, and a **Return to today** (<span dir="rtl" lang="he">חזרה להיום</span>) shortcut when you are viewing another month
 - **Learned days**: Highlighted with the accent color; **today** uses a lighter accent ring
 - **Day detail**: Tap a date to open a card with that day's Daf, study buttons (Sefaria and/or Tzurat Hadaf per Settings), and learn/unlearn (with confirmation when clearing)
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
-- **App updates** (<span dir="rtl" lang="he">עדכוני אפליקציה</span>): **Check for updates** (<span dir="rtl" lang="he">בדוק עדכונים</span>) checks GitHub; when a newer APK exists, a modal offers **Download & install** in-app (Android). **Automatic update notifications** default to **off**. Fallback: **Download in browser** opens the simple [download page](https://shmuli2015.github.io/daf-yomi-app/). Tapping **later** suppresses automatic prompts for that version until a newer release ships.
+- **App updates** (<span dir="rtl" lang="he">עדכוני אפליקציה</span>): **Check for updates** (<span dir="rtl" lang="he">בדוק עדכונים</span>) checks GitHub; when a newer APK exists, a modal offers **Download & install** in-app (Android). **Automatic update notifications** default to **off**. Fallback: **Download in browser** opens the simple [download page](https://shmuli2015.github.io/daf-yomi-app/). Tapping **later** suppresses automatic prompts for that version until a newer release ships. **Share download link** (<span dir="rtl" lang="he">שתף קישור להורדה</span>) sends the install page to friends via the system share sheet.
 - **Notifications Master Switch**: Toggle **Daily reminder** (<span dir="rtl" lang="he">תזכורת יומית</span>) on or off; when off, no reminders are scheduled
 - **Daily Notifications**: When reminders are enabled, choose one time for every day or set up per-day behavior
 - **Notification Mode**: **Every day** (<span dir="rtl" lang="he">כל יום</span>) uses a single time for the whole week; **By weekday** (<span dir="rtl" lang="he">לפי ימים</span>) lets you enable or disable each day and set a different time per enabled day
@@ -56,6 +56,7 @@
 - **Theme Selection**: Choose between Light, Dark, or System-based theme modes
 - **Study Link Mode** (<span dir="rtl" lang="he">כפתורי לימוד</span>): Show **Sefaria**, **Tzurat Hadaf**, or **both** on the Home dashboard and Calendar day card
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
+- **Calendar Daf Labels**: Toggle whether each calendar cell shows that day's Daf number (<span dir="rtl" lang="he">הצג דף בלוח שנה</span>)
 - **Confetti Effects Toggle**: Enable/disable celebration animations
 - **Data Management**: Complete reset option to clear all learning history
 - **Privacy-First**: All data stored locally on device with SQLite database
@@ -73,7 +74,7 @@
 ### 📱 User Experience
 - **Full RTL Support**: Complete Right-to-Left layout optimized for Hebrew
 - **Smooth Animations**: Powered by React Native Reanimated for fluid transitions
-- **Splash Screen**: Elegant branded loading screen on app launch
+- **Splash Screen**: Elegant branded loading screen on app launch with a random inspirational quote about Torah learning
 - **Tab Navigation**: Intuitive bottom tab bar with Home, Calendar, History, and Settings; Tzurat Hadaf opens as a full-screen modal over the tabs
 - **Offline-First (progress tracking)**: Mark learned, calendar, history, and settings work without internet; **Tzurat Hadaf** needs network on first load per page, then serves from on-device cache
 - **Platform Support**: Runs on iOS, Android, and Web
