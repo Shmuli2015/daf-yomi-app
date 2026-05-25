@@ -125,11 +125,6 @@ const HomeHeader = React.memo(function HomeHeader({
 
   return (
     <View style={styles.outerContainer}>
-      <LinearGradient
-        colors={[theme.colors.accent + '20', 'transparent']}
-        style={[styles.gradientBg, { height: 300 }]}
-      />
-      
       <Animated.View entering={FadeInDown.duration(400).springify()}>
         <Animated.View style={animatedTodayJumpStyle}>
         <View style={styles.topBar}>
@@ -272,12 +267,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     outerContainer: {
       position: 'relative',
-    },
-    gradientBg: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
     },
     topBar: {
       flexDirection: 'row',
