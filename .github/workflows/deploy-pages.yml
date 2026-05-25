@@ -1,9 +1,9 @@
 name: Deploy GitHub Pages
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [master]
+  push:
+    branches:
+      - master
 
 permissions:
   contents: read
@@ -16,16 +16,13 @@ concurrency:
 
 jobs:
   deploy:
-    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout master
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: master
 
       - name: Setup Node
         uses: actions/setup-node@v4
