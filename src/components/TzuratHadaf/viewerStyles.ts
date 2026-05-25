@@ -1,7 +1,10 @@
 import { StyleSheet } from 'react-native';
 import { useTheme } from '../../theme';
 
-export function createViewerStyles(theme: ReturnType<typeof useTheme>) {
+export function createViewerStyles(
+  theme: ReturnType<typeof useTheme>,
+  isLandscape = false,
+) {
   return StyleSheet.create({
     viewer: {
       flex: 1,
@@ -15,16 +18,32 @@ export function createViewerStyles(theme: ReturnType<typeof useTheme>) {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      paddingVertical: 8,
+      gap: isLandscape ? 6 : 10,
+      paddingHorizontal: isLandscape ? 10 : 12,
+      paddingVertical: isLandscape ? 4 : 8,
       backgroundColor: theme.colors.surface,
       borderTopWidth: 1,
       borderTopColor: theme.colors.border,
+    },
+    zoomHintGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+    },
+    zoomHintDivider: {
+      width: 1,
+      height: 14,
+      backgroundColor: theme.colors.border,
     },
     zoomHintText: {
       color: theme.colors.textMuted,
       fontSize: 11,
       fontWeight: '600',
+    },
+    rotateGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
     },
     center: {
       flex: 1,

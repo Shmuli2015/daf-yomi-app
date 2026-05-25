@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 
 interface TzuratNavigationBarProps {
+  isLandscape?: boolean;
   canPrevAmud: boolean;
   canNextAmud: boolean;
   canPrevDaf: boolean;
@@ -16,6 +17,7 @@ interface TzuratNavigationBarProps {
 }
 
 export default function TzuratNavigationBar({
+  isLandscape = false,
   canPrevAmud,
   canNextAmud,
   canPrevDaf,
@@ -27,10 +29,10 @@ export default function TzuratNavigationBar({
 }: TzuratNavigationBarProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createStyles(theme, isLandscape), [theme, isLandscape]);
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom + 12 }]}>
+    <View style={[styles.container, { paddingBottom: insets.bottom + (isLandscape ? 6 : 12) }]}>
       <NavButton
         label="דף קודם"
         icon="chevron-forward"
@@ -105,13 +107,13 @@ function NavButton({
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
+const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) =>
   StyleSheet.create({
     container: {
       flexDirection: 'row',
-      gap: 8,
-      paddingHorizontal: 12,
-      paddingTop: 12,
+      gap: isLandscape ? 4 : 8,
+      paddingHorizontal: isLandscape ? 8 : 12,
+      paddingTop: isLandscape ? 6 : 12,
       borderTopWidth: 1,
       borderTopColor: theme.colors.border,
       backgroundColor: theme.colors.surface,
@@ -120,13 +122,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 10,
+      paddingVertical: isLandscape ? 6 : 10,
       paddingHorizontal: 4,
-      borderRadius: 14,
+      borderRadius: isLandscape ? 10 : 14,
       backgroundColor: theme.colors.background,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      gap: 4,
+      gap: isLandscape ? 2 : 4,
     },
     btnCompact: {
       flex: 0.85,
@@ -136,12 +138,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     btnText: {
       color: theme.colors.textPrimary,
-      fontSize: 11,
+      fontSize: isLandscape ? 9 : 11,
       fontWeight: '800',
       textAlign: 'center',
     },
     btnTextCompact: {
-      fontSize: 10,
+      fontSize: isLandscape ? 8 : 10,
     },
     btnTextDisabled: {
       color: theme.colors.textSecondary,
