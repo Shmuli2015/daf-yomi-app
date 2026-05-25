@@ -8,6 +8,7 @@ const downloadBtnVersion = document.getElementById('download-btn-version');
 const statusEl = document.getElementById('status');
 const inAppBanner = document.getElementById('in-app-banner');
 const openExternalBtn = document.getElementById('open-external-btn');
+const copyLinkBtn = document.getElementById('copy-link-btn');
 
 let releaseDownloadUrl = '';
 let releaseApkFileName = '';
@@ -67,49 +68,70 @@ function openInExternalBrowser(url) {
   const target = url || window.location.href;
   const path = target.replace(/^https?:\/\//, '');
   const fallback = encodeURIComponent(target);
-  window.location.href = `intent://${path}#Intent;scheme=https;action=android.intent.action.VIEW;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
+
+  // Opens the system "Open with" chooser — breaks out of in-app browsers.
+  window.location.href = `intent://${path}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${fallback};end`;
+}
+
+async function copyPageLink() {
+  const url = window.location.href;
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+    } else {
+      const input = document.createElement('textarea');
+      input.value = url;
+      input.setAttribute('readonly', '');
+      input.style.position = 'fixed';
+      input.style.opacity = '0';
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand('copy');
+      input.remove();
+    }
+    statusEl.textContent = 'הקישור הועתק. הדביקו ב-Chrome ופתחו מהדפדפן.';
+  } catch {
+    statusEl.textContent = 'לא הצלחנו להעתיק. ⋮ → «פתיחה בדפדפן».';
+  }
 }
 
 function showInAppUi() {
   if (inAppBanner) inAppBanner.hidden = false;
-  statusEl.textContent = 'לחצו על «פתחו ב-Chrome» ואז «הורד לאנדרואיד».';
+  if (downloadBtn) downloadBtn.hidden = true;
+  statusEl.textContent = '';
 }
 
-function setDownloadStatus() {
-  statusEl.textContent =
-    'ההורדה התחילה. אם היא נתקעת: ⋮ → «הורדות», ואז «הורדה בכל זאת» אם מופיע.';
+function hideInAppUi() {
+  if (inAppBanner) inAppBanner.hidden = true;
+  if (downloadBtn) downloadBtn.hidden = false;
 }
 
-function triggerApkDownload(url, fileName) {
-  setDownloadStatus();
-
-  const popup = window.open(url, '_blank', 'noopener,noreferrer');
-  if (popup) return;
-
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = fileName || 'masa-daf.apk';
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+function downloadApkDirect(url) {
+  statusEl.textContent = 'מתחיל הורדה…';
+  window.location.assign(url);
 }
 
 function applyRelease({ version, downloadUrl, apkFileName }) {
   releaseDownloadUrl = downloadUrl;
   releaseApkFileName = apkFileName || '';
   versionLine.hidden = true;
-  downloadBtn.href = isAndroid() ? '#' : downloadUrl;
+
   if (downloadBtnVersion) {
     downloadBtnVersion.textContent = `גרסה ${version}`;
   }
-  downloadBtn.hidden = false;
   downloadBtn.removeAttribute('aria-disabled');
+
+  if (isAndroid()) {
+    downloadBtn.href = '#';
+  } else {
+    downloadBtn.href = downloadUrl;
+    downloadBtn.hidden = false;
+  }
 
   if (needsExternalBrowser()) {
     showInAppUi();
   } else {
+    hideInAppUi();
     statusEl.textContent = '';
   }
 }
@@ -146,24 +168,23 @@ async function loadFromGithubApi() {
 
 function handleDownloadClick(event) {
   if (!releaseDownloadUrl) return;
-
   if (!isAndroid()) return;
 
   event.preventDefault();
 
   if (needsExternalBrowser()) {
     openInExternalBrowser(window.location.href);
-    statusEl.textContent = 'אחרי שנפתח Chrome, לחצו שוב על «הורד לאנדרואיד».';
     return;
   }
 
-  triggerApkDownload(releaseDownloadUrl, releaseApkFileName);
+  downloadApkDirect(releaseDownloadUrl);
 }
 
 openExternalBtn?.addEventListener('click', () => {
   openInExternalBrowser(window.location.href);
-  statusEl.textContent = 'אחרי שנפתח Chrome, לחצו שוב על «הורד לאנדרואיד».';
 });
+
+copyLinkBtn?.addEventListener('click', copyPageLink);
 
 downloadBtn?.addEventListener('click', handleDownloadClick);
 
