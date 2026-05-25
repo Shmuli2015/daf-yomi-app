@@ -5,7 +5,12 @@ const APK_BASENAME = 'masa-daf';
 const versionLine = document.getElementById('version-line');
 const downloadBtn = document.getElementById('download-btn');
 const downloadBtnVersion = document.getElementById('download-btn-version');
+const downloadBtnLabel = downloadBtn?.querySelector('.download-btn-label');
 const statusEl = document.getElementById('status');
+const inAppBanner = document.getElementById('in-app-banner');
+const openExternalBtn = document.getElementById('open-external-btn');
+
+let releaseDownloadUrl = '';
 
 function normalizeVersion(raw) {
   return String(raw || '')
@@ -25,7 +30,37 @@ function buildDownloadUrl(tag, fileName) {
   return `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(fileName)}`;
 }
 
+function isInAppBrowser() {
+  const ua = navigator.userAgent || '';
+  return (
+    /Instagram|WhatsApp|FBAN|FBAV|FB_IAB|Line\/|Twitter|LinkedInApp|Snapchat|TikTok|Telegram|Messenger|MicroMessenger/i.test(
+      ua
+    ) ||
+    (/Android/i.test(ua) && (/\bwv\b/.test(ua) || /WebView/i.test(ua)))
+  );
+}
+
+function openInExternalBrowser(url) {
+  const target = url || window.location.href;
+  const path = target.replace(/^https?:\/\//, '');
+
+  if (/Android/i.test(navigator.userAgent)) {
+    const fallback = encodeURIComponent(target);
+    window.location.href = `intent://${path}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${fallback};end`;
+    return;
+  }
+
+  window.open(target, '_blank', 'noopener,noreferrer');
+}
+
+function showInAppUi() {
+  if (inAppBanner) inAppBanner.hidden = false;
+  if (downloadBtnLabel) downloadBtnLabel.textContent = 'פתחו ב-Chrome להורדה';
+  statusEl.textContent = 'אחרי הפתיחה ב-Chrome, לחצו שוב על הכפתור להורדה.';
+}
+
 function applyRelease({ version, downloadUrl }) {
+  releaseDownloadUrl = downloadUrl;
   versionLine.hidden = true;
   downloadBtn.href = downloadUrl;
   if (downloadBtnVersion) {
@@ -33,7 +68,12 @@ function applyRelease({ version, downloadUrl }) {
   }
   downloadBtn.hidden = false;
   downloadBtn.removeAttribute('aria-disabled');
-  statusEl.textContent = '';
+
+  if (isInAppBrowser()) {
+    showInAppUi();
+  } else {
+    statusEl.textContent = '';
+  }
 }
 
 async function loadLatestJson() {
@@ -60,6 +100,20 @@ async function loadFromGithubApi() {
     downloadUrl: buildDownloadUrl(tag, fileName),
   };
 }
+
+function handleDownloadClick(event) {
+  if (!isInAppBrowser()) return;
+
+  event.preventDefault();
+  openInExternalBrowser(window.location.href);
+  statusEl.textContent = 'אחרי הפתיחה ב-Chrome, לחצו שוב על הכפתור להורדה.';
+}
+
+openExternalBtn?.addEventListener('click', () => {
+  openInExternalBrowser(window.location.href);
+});
+
+downloadBtn?.addEventListener('click', handleDownloadClick);
 
 async function init() {
   downloadBtn.setAttribute('aria-disabled', 'true');
