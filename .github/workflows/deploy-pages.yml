@@ -1,0 +1,91 @@
+name: Deploy GitHub Pages
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout master
+        uses: actions/checkout@v4
+        with:
+          ref: master
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Write latest.json from GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const { githubOwner: owner, githubRepo: repo, releaseApkBasename: base } =
+            require('./app.config.js').expo.extra;
+
+          async function run() {
+            const headers = {
+              Accept: 'application/vnd.github+json',
+              'User-Agent': 'daf-yomi-pages',
+              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+            };
+            const url = `https://api.github.com/repos/${owner}/${repo}/releases/latest`;
+            const res = await fetch(url, { headers });
+            if (res.status === 404) {
+              console.log('No GitHub release yet; keeping docs/latest.json from master');
+              return;
+            }
+            if (!res.ok) throw new Error(`GitHub API ${res.status} for ${url}`);
+            const release = await res.json();
+            const assets = release.assets || [];
+            const apk =
+              assets.find((a) => a.name?.endsWith('.apk') && a.name.startsWith(`${base}-`)) ||
+              assets.find((a) => a.name?.endsWith('.apk'));
+            if (!apk) throw new Error(`No APK asset on release ${release.tag_name}`);
+            const data = {
+              version: String(release.tag_name || '').replace(/^v/i, ''),
+              tag: release.tag_name,
+              apkFileName: apk.name,
+              downloadUrl: apk.browser_download_url,
+            };
+            fs.mkdirSync('docs', { recursive: true });
+            fs.writeFileSync('docs/latest.json', `${JSON.stringify(data, null, 2)}\n`);
+            console.log(`Wrote docs/latest.json for ${release.tag_name}`);
+          }
+
+          run().catch((err) => {
+            console.error(err);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
