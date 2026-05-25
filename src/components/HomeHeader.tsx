@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, TouchableOpacity, Linking, StyleSheet, Dimensions } from 'react-native';
 import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, Easing, withSpring } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import ConfirmModal from './ConfirmModal';
 import { useTheme } from '../theme';
@@ -54,7 +53,6 @@ const HomeHeader = React.memo(function HomeHeader({
 }: HomeHeaderProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const insets = useSafeAreaInsets();
   const [showConfirm, setShowConfirm] = useState(false);
   const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
 
@@ -132,7 +130,7 @@ const HomeHeader = React.memo(function HomeHeader({
         style={[styles.gradientBg, { height: 300 }]}
       />
       
-      <Animated.View entering={FadeInDown.duration(400).springify()} style={{ paddingTop: insets.top + 16 }}>
+      <Animated.View entering={FadeInDown.duration(400).springify()}>
         <Animated.View style={animatedTodayJumpStyle}>
         <View style={styles.topBar}>
           <TouchableOpacity 

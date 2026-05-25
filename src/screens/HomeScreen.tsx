@@ -4,6 +4,7 @@ import {
   StyleSheet,
   useWindowDimensions,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore } from "../store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import React, { useMemo, useState, useCallback } from "react";
@@ -16,6 +17,7 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import HomeHeader from "../components/HomeHeader";
 import HomeContent from "../components/HomeContent";
 import ShasBanner from "../components/ShasBanner";
+import ScreenTopGradient from "../components/ScreenTopGradient";
 import { getDateStr } from "../utils/dafYomi";
 import { getMasechetDafim } from "../utils/shas";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
@@ -145,10 +147,12 @@ export default function HomeScreen({ navigation }: any) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+    <View style={styles.screenOuter}>
+      <ScreenTopGradient />
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <ScrollView
-        style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBottom: 12 }}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <HomeHeader
@@ -187,7 +191,7 @@ export default function HomeScreen({ navigation }: any) {
 
         <HomeContent streak={streak} last7Days={last7Days} />
       </ScrollView>
-
+      </SafeAreaView>
 
       {showConfetti && (
         <View style={styles.confettiContainer} pointerEvents="none">
@@ -213,6 +217,14 @@ export default function HomeScreen({ navigation }: any) {
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
+    screenOuter: {
+      flex: 1,
+      position: "relative",
+      backgroundColor: theme.colors.background,
+    },
+    safeArea: { flex: 1, backgroundColor: "transparent" },
+    scroll: { flex: 1, backgroundColor: "transparent" },
+    scrollContent: { paddingTop: 24, paddingBottom: 12 },
     confettiContainer: {
       position: "absolute",
       top: 0,
