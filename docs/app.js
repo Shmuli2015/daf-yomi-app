@@ -10,6 +10,7 @@ const inAppBanner = document.getElementById('in-app-banner');
 const openExternalBtn = document.getElementById('open-external-btn');
 
 let releaseDownloadUrl = '';
+let releaseApkFileName = '';
 
 function normalizeVersion(raw) {
   return String(raw || '')
@@ -71,11 +72,33 @@ function openInExternalBrowser(url) {
 
 function showInAppUi() {
   if (inAppBanner) inAppBanner.hidden = false;
-  statusEl.textContent = 'לחצו על «פתחו ב-Chrome» או על «הורד לאנדרואיד» כדי לעבור לדפדפן מלא.';
+  statusEl.textContent = 'לחצו על «פתחו ב-Chrome» ואז «הורד לאנדרואיד».';
 }
 
-function applyRelease({ version, downloadUrl }) {
+function setDownloadStatus() {
+  statusEl.textContent =
+    'ההורדה התחילה. אם היא נתקעת: ⋮ → «הורדות», ואז «הורדה בכל זאת» אם מופיע.';
+}
+
+function triggerApkDownload(url, fileName) {
+  setDownloadStatus();
+
+  const popup = window.open(url, '_blank', 'noopener,noreferrer');
+  if (popup) return;
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = fileName || 'masa-daf.apk';
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function applyRelease({ version, downloadUrl, apkFileName }) {
   releaseDownloadUrl = downloadUrl;
+  releaseApkFileName = apkFileName || '';
   versionLine.hidden = true;
   downloadBtn.href = isAndroid() ? '#' : downloadUrl;
   if (downloadBtnVersion) {
@@ -96,7 +119,11 @@ async function loadLatestJson() {
   if (!res.ok) throw new Error('latest.json unavailable');
   const data = await res.json();
   if (!data?.downloadUrl || !data?.version) throw new Error('invalid latest.json');
-  return { version: data.version, downloadUrl: data.downloadUrl };
+  return {
+    version: data.version,
+    downloadUrl: data.downloadUrl,
+    apkFileName: data.apkFileName || '',
+  };
 }
 
 async function loadFromGithubApi() {
@@ -112,7 +139,8 @@ async function loadFromGithubApi() {
   if (!tag || !fileName) throw new Error('no APK on release');
   return {
     version: normalizeVersion(tag),
-    downloadUrl: buildDownloadUrl(tag, fileName),
+    downloadUrl: asset?.browser_download_url || buildDownloadUrl(tag, fileName),
+    apkFileName: fileName,
   };
 }
 
@@ -129,7 +157,7 @@ function handleDownloadClick(event) {
     return;
   }
 
-  window.location.href = releaseDownloadUrl;
+  triggerApkDownload(releaseDownloadUrl, releaseApkFileName);
 }
 
 openExternalBtn?.addEventListener('click', () => {
