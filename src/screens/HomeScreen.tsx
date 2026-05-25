@@ -189,7 +189,7 @@ export default function HomeScreen({ navigation }: any) {
 
         <View style={{ height: 20 }} />
 
-        <HomeContent streak={streak} last7Days={last7Days} />
+        <HomeContent streak={streak} last7Days={last7Days} hebrewDateStr={hebrewDateStr} />
       </ScrollView>
       </SafeAreaView>
 

@@ -1,9 +1,20 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Animated, { FadeInDown, useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+  Easing,
+  type SharedValue,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme';
+import ShareIconButton from './Share/ShareIconButton';
+import SharePreviewModal from './Share/SharePreviewModal';
+import type { StreakShareData } from '../utils/shareProgressImage';
 
 interface DayRecord {
   date: Date;
@@ -16,16 +27,72 @@ interface DayRecord {
 interface HomeContentProps {
   streak: number;
   last7Days: DayRecord[];
+  hebrewDateStr: string;
+}
+
+type HomeStyles = ReturnType<typeof createStyles>;
+
+function StreakDayBar({
+  showBars,
+  barHeight,
+  barColor,
+  barOpacity,
+  dayNameHe,
+  isToday,
+  styles,
+}: {
+  showBars: SharedValue<number>;
+  barHeight: number;
+  barColor: string;
+  barOpacity: number;
+  dayNameHe: string;
+  isToday: boolean;
+  styles: HomeStyles;
+}) {
+  const animatedStyle = useAnimatedStyle(() => ({
+    height: showBars.value * barHeight,
+  }));
+
+  return (
+    <View style={styles.barColumn}>
+      <View style={styles.barBg}>
+        <Animated.View
+          style={[
+            styles.barFill,
+            animatedStyle,
+            {
+              backgroundColor: barColor,
+              opacity: barOpacity,
+            },
+          ]}
+        />
+      </View>
+      <Text style={[styles.dayLabel, isToday && styles.todayLabel]}>{dayNameHe}</Text>
+    </View>
+  );
 }
 
 const HomeContent = React.memo(function HomeContent({
   streak,
   last7Days,
+  hebrewDateStr,
 }: HomeContentProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const [shareVisible, setShareVisible] = useState(false);
+  const [shareData, setShareData] = useState<StreakShareData | null>(null);
 
   const showBars = useSharedValue(0);
+
+  const handleSharePress = useCallback(() => {
+    const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
+    setShareData({ variant: 'streak', streak, hebrewDate: cleanHebrewDate });
+    setShareVisible(true);
+  }, [hebrewDateStr, streak]);
+
+  const handleShareClose = useCallback(() => {
+    setShareVisible(false);
+  }, []);
 
   useEffect(() => {
     showBars.value = withDelay(600, withTiming(1, { duration: 800, easing: Easing.out(Easing.exp) }));
@@ -38,6 +105,10 @@ const HomeContent = React.memo(function HomeContent({
           colors={[theme.colors.accent + '10', 'transparent']}
           style={StyleSheet.absoluteFill}
         />
+
+        <View style={styles.shareButtonRow} pointerEvents="box-none">
+          <ShareIconButton onPress={handleSharePress} />
+        </View>
         
         <View style={styles.streakInfo}>
           <View style={styles.streakIconContainer}>
@@ -62,45 +133,36 @@ const HomeContent = React.memo(function HomeContent({
               const isLearned = day.status === 'learned';
               let barHeight = 12;
               let barColor: string = theme.colors.progressTrack;
-              let opacity = 0.5;
-              
+              let barOpacity = 0.5;
+
               if (isLearned) {
                 barHeight = 60;
                 barColor = theme.colors.accent;
-                opacity = 1;
+                barOpacity = 1;
               } else if (isToday) {
                 barHeight = 24;
                 barColor = theme.colors.accent;
-                opacity = 0.3;
+                barOpacity = 0.3;
               }
 
-              const animatedStyle = useAnimatedStyle(() => ({
-                height: showBars.value * barHeight,
-              }));
-
               return (
-                <View key={index} style={styles.barColumn}>
-                  <View style={styles.barBg}>
-                    <Animated.View 
-                      style={[
-                        styles.barFill, 
-                        animatedStyle,
-                        { 
-                          backgroundColor: barColor,
-                          opacity: opacity,
-                        }
-                      ]} 
-                    />
-                  </View>
-                  <Text style={[styles.dayLabel, isToday && styles.todayLabel]}>
-                    {day.dayNameHe}
-                  </Text>
-                </View>
+                <StreakDayBar
+                  key={day.dateStr}
+                  showBars={showBars}
+                  barHeight={barHeight}
+                  barColor={barColor}
+                  barOpacity={barOpacity}
+                  dayNameHe={day.dayNameHe}
+                  isToday={isToday}
+                  styles={styles}
+                />
               );
             })}
           </View>
         </View>
       </View>
+
+      <SharePreviewModal visible={shareVisible} onClose={handleShareClose} data={shareData} />
     </Animated.View>
   );
 });
@@ -120,7 +182,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderWidth: 1,
       borderColor: theme.colors.border,
       overflow: 'hidden',
+      position: 'relative',
       ...theme.shadow.cardMedium,
+    },
+    shareButtonRow: {
+      position: 'absolute',
+      top: 16,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      paddingEnd: 24,
+      zIndex: 1,
     },
     streakInfo: {
       flexDirection: 'row',
