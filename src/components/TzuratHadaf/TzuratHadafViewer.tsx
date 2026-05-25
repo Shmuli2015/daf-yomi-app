@@ -16,11 +16,14 @@ export default function TzuratHadafViewer({
   page,
   loading,
   error,
+  layoutKey,
+  isLandscape = false,
+  onToggleOrientation,
   onOpenSefaria,
   onRetry,
 }: TzuratHadafViewerProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createViewerStyles(theme), [theme]);
+  const styles = useMemo(() => createViewerStyles(theme, isLandscape), [theme, isLandscape]);
   const [contentLoading, setContentLoading] = useState(true);
 
   const handlePdfPrepareStart = useCallback(() => {
@@ -82,6 +85,7 @@ export default function TzuratHadafViewer({
   return (
     <View style={styles.viewer}>
       <TzuratPageWebView
+        key={layoutKey}
         page={page}
         html={webHtml}
         styles={styles}
@@ -97,7 +101,12 @@ export default function TzuratHadafViewer({
           setContentLoading(true);
         }}
       />
-      <TzuratZoomHint styles={styles} textMuted={theme.colors.textMuted} />
+      <TzuratZoomHint
+        styles={styles}
+        textMuted={theme.colors.textMuted}
+        isLandscape={isLandscape}
+        onToggleOrientation={onToggleOrientation}
+      />
     </View>
   );
 }

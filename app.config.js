@@ -31,6 +31,7 @@ module.exports = {
     },
     plugins: [
       'expo-sqlite',
+      'expo-screen-orientation',
       '@react-native-community/datetimepicker',
       'expo-font',
       [
