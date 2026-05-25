@@ -22,6 +22,7 @@
 - **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **Tzurat Hadaf only**, or **both** on Home and Calendar
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum
 - **7-Day Progress Overview**: In-app mini chart of the last seven days so you can see your week at a glance
+- **Share progress as an image** (<span dir="rtl" lang="he">שיתוף תמונה</span>): On the streak card, tap the **share** (<span dir="rtl" lang="he">שתף</span>) control to open a preview, then **Share image** (<span dir="rtl" lang="he">שתף תמונה</span>) — exports a square graphic (streak, Hebrew date, app branding) for WhatsApp Status, Instagram Stories, etc. (requires a **development or production build**, not Expo Go; see Tech Stack)
 - **Shas Progress Banner**: Overall progress across Shas; **tap the banner** to open the History screen for full tractate details
 - **Confetti Celebration**: Optional festive animation when marking a Daf as learned
 
@@ -32,6 +33,7 @@
 - **Completion Statistics**: Track total pages learned and completed tractates
 - **Interactive Masechet Details**: Tap any tractate to see detailed breakdown of dafim learned vs. remaining
 - **Visual Progress Hero**: Large progress ring displaying overall Shas completion percentage
+- **Share Shas progress as an image**: On the History screen, use the **share** control on the hero card (same flow: preview → **Share image**) to export a branded square graphic with ring %, pages learned, and completed tractates count
 - **Learned Pages Counter**: Real-time count of total pages learned across all of Shas
 
 ### 📅 Hebrew Calendar View
@@ -98,6 +100,7 @@
 - **Study / Tzurat Hadaf**: [daf-yomi.com](https://daf-yomi.com) Vilna page PDFs, [Sefaria Manuscripts API](https://developers.sefaria.org/reference/get-manuscripts) (fallback), [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) (page cache), [react-native-webview](https://docs.expo.dev/versions/latest/sdk/webview/) (PDF/image viewer).
 - **Calendar Logic**: [@hebcal/core](https://www.npmjs.com/package/@hebcal/core) & `@hebcal/learning`.
 - **Animations**: [React Native Reanimated](https://docs.expo.dev/versions/latest/sdk/reanimated/) & [react-native-confetti-cannon](https://www.npmjs.com/package/react-native-confetti-cannon).
+- **Share card capture**: [react-native-view-shot](https://github.com/gre/react-native-view-shot) (`captureRef`) and [expo-sharing](https://docs.expo.dev/versions/latest/sdk/sharing/) plus [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) — native modules; use a **development build** or release APK, not Expo Go.
 
 
 ---

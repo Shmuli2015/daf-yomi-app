@@ -1,12 +1,15 @@
-import React, { useMemo as useReactMemo } from "react";
+import React, { useMemo as useReactMemo, useState, useCallback } from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MasechetGrid from "../components/Shas/MasechetGrid";
 import ShasProgressHero from "../components/Shas/ShasProgressHero";
 import ScreenTopGradient from "../components/ScreenTopGradient";
+import ShareIconButton from "../components/Share/ShareIconButton";
+import SharePreviewModal from "../components/Share/SharePreviewModal";
 import { useAppStore } from "../store/useAppStore";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { useTheme } from "../theme";
+import type { ShasShareData } from "../utils/shareProgressImage";
 
 export default function HistoryScreen() {
   const theme = useTheme();
@@ -37,6 +40,24 @@ export default function HistoryScreen() {
   const progress = totalDafim > 0 ? learnedDafim / totalDafim : 0;
   const percentage = (progress * 100).toFixed(1);
 
+  const [shareVisible, setShareVisible] = useState(false);
+  const [shareData, setShareData] = useState<ShasShareData | null>(null);
+
+  const handleSharePress = useCallback(() => {
+    setShareData({
+      variant: 'shas',
+      progress,
+      percentage,
+      learnedDafim,
+      completedMasechtot,
+    });
+    setShareVisible(true);
+  }, [progress, percentage, learnedDafim, completedMasechtot]);
+
+  const handleShareClose = useCallback(() => {
+    setShareVisible(false);
+  }, []);
+
   return (
     <View style={styles.outer}>
       <ScreenTopGradient />
@@ -54,17 +75,24 @@ export default function HistoryScreen() {
             <Text style={styles.pageSubtitle}>מעקב לימוד של כל מסכתות הש״ס</Text>
           </View>
 
-          <ShasProgressHero
-            progress={progress}
-            percentage={percentage}
-            learnedDafim={learnedDafim}
-            completedMasechtot={completedMasechtot}
-            totalDafim={totalDafim}
-          />
+          <View style={styles.heroWrapper}>
+            <View style={styles.shareButtonRow} pointerEvents="box-none">
+              <ShareIconButton onPress={handleSharePress} />
+            </View>
+            <ShasProgressHero
+              progress={progress}
+              percentage={percentage}
+              learnedDafim={learnedDafim}
+              completedMasechtot={completedMasechtot}
+              totalDafim={totalDafim}
+            />
+          </View>
 
           <MasechetGrid />
         </ScrollView>
       </SafeAreaView>
+
+      <SharePreviewModal visible={shareVisible} onClose={handleShareClose} data={shareData} />
     </View>
   );
 }
@@ -106,5 +134,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       fontSize: 13,
       color: theme.colors.textSecondary,
       fontWeight: "600",
+    },
+    heroWrapper: {
+      position: "relative",
+    },
+    shareButtonRow: {
+      position: "absolute",
+      top: 24,
+      left: 0,
+      right: 0,
+      flexDirection: "row",
+      justifyContent: "flex-end",
+      paddingEnd: 52,
+      zIndex: 1,
     },
   });
