@@ -1,6 +1,8 @@
 import React, { useMemo as useReactMemo, useState, useCallback } from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import MasechetGrid from "../components/Shas/MasechetGrid";
 import ShasProgressHero from "../components/Shas/ShasProgressHero";
 import ScreenTopGradient from "../components/ScreenTopGradient";
@@ -9,9 +11,14 @@ import SharePreviewModal from "../components/Share/SharePreviewModal";
 import { useAppStore } from "../store/useAppStore";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { useTheme } from "../theme";
+import type { MainTabParamList } from "../navigation/types";
 import type { ShasShareData } from "../utils/shareProgressImage";
 
 export default function HistoryScreen() {
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList, "History">>();
+  const route = useRoute<RouteProp<MainTabParamList, "History">>();
+  const openMasechetEn = route.params?.openMasechetEn;
+  const returnToHomeOnClose = route.params?.returnToHomeOnClose;
   const theme = useTheme();
   const styles = useReactMemo(() => createStyles(theme), [theme]);
   const progressCache = useAppStore(state => state.progressCache);
@@ -58,6 +65,16 @@ export default function HistoryScreen() {
     setShareVisible(false);
   }, []);
 
+  const handleOpenMasechetConsumed = useCallback(() => {
+    if (route.params?.openMasechetEn || route.params?.returnToHomeOnClose) {
+      navigation.setParams({ openMasechetEn: undefined, returnToHomeOnClose: undefined });
+    }
+  }, [navigation, route.params?.openMasechetEn, route.params?.returnToHomeOnClose]);
+
+  const handleReturnToHome = useCallback(() => {
+    navigation.navigate("Home");
+  }, [navigation]);
+
   return (
     <View style={styles.outer}>
       <ScreenTopGradient />
@@ -88,7 +105,12 @@ export default function HistoryScreen() {
             />
           </View>
 
-          <MasechetGrid />
+          <MasechetGrid
+            openMasechetEn={openMasechetEn}
+            returnToHomeOnClose={returnToHomeOnClose}
+            onOpenMasechetConsumed={handleOpenMasechetConsumed}
+            onReturnToHome={handleReturnToHome}
+          />
         </ScrollView>
       </SafeAreaView>
 

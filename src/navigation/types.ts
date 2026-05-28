@@ -1,5 +1,12 @@
 import type { Amud } from '../utils/dafNavigation';
 
+export type MainTabParamList = {
+  Home: undefined;
+  Calendar: undefined;
+  History: { openMasechetEn?: string; returnToHomeOnClose?: boolean } | undefined;
+  Settings: undefined;
+};
+
 export type RootStackParamList = {
   MainTabs: undefined;
   TzuratHadaf: {
