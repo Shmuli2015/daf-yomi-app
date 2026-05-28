@@ -157,19 +157,25 @@
 
 ## CI/CD
 
-Workflow: [`.github/workflows/build-android.yml`](./.github/workflows/build-android.yml).
+Three GitHub Actions workflows:
 
-- **Triggers**: Merge of a pull request from a `release/*` branch (creates and pushes the `v*` tag, which starts the Android build), push of a version tag matching `v*`, or **Run workflow** manually (`workflow_dispatch`).
-- **Build**: Local EAS Android preview APK (`eas build … --profile preview --local`); requires `EXPO_TOKEN` in repository secrets.
-- **GitHub Release (tags only)**: After the build, the APK is renamed to `{releaseApkBasename}-{version}.apk` (see `expo.extra.releaseApkBasename` in [`app.config.js`](./app.config.js), default branding prefix `masa-daf`) and attached to a **published** GitHub Release for that tag ([`softprops/action-gh-release`](https://github.com/softprops/action-gh-release)).
-- **Download page**: CI updates [`docs/latest.json`](./docs/latest.json) so [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) always points at the latest APK.
-- **Artifacts**: Every run uploads `*.apk` as a workflow artifact (short-lived); **users should download from the download page or Releases**, which matches what the in-app updater checks.
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) | Pull requests and pushes to `master` | TypeScript check + Expo validation (`npm run ci`) |
+| [`.github/workflows/build-android.yml`](./.github/workflows/build-android.yml) | Push to `release/**` or manual dispatch | EAS local APK build + GitHub Release |
+| [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) | After successful APK build (`workflow_run`) or manual dispatch | Update [`docs/latest.json`](./docs/latest.json) and deploy [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) |
+
+**Quality checks** (`ci.yml`): runs `tsc --noEmit` and `expo-doctor` on every PR and `master` push (~2 min). Locally: `npm run ci`.
+
+**APK build** (`build-android.yml`): runs the same quality checks, then a local EAS Android preview APK (`eas build … --profile preview --local`); requires `EXPO_TOKEN` in repository secrets. On `release/**` pushes only: the APK is renamed to `{releaseApkBasename}-{version}.apk` (see `expo.extra.releaseApkBasename` in [`app.config.js`](./app.config.js), default `masa-daf`), published as GitHub Release `vX.Y.Z`, and older releases are removed. Every run uploads `*.apk` as a short-lived workflow artifact.
+
+**Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page and in-app updater point at the current APK. Deploys automatically after a successful release-branch APK build (does not run on `master` push — branch protection and merge timing make that unreliable). Use **Run workflow** manually if you change `docs/` without a new APK.
 
 **Maintainer checklist for a release**
 
-1. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it.
-2. Open a pull request from `release/X.Y.Z` into `master` and merge it after review.
-3. CI creates the `vX.Y.Z` tag and runs the Android build; confirm the Release published and that the APK asset name matches `releaseApkBasename`.
+1. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the APK build on that branch).
+2. Open a pull request from `release/X.Y.Z` into `master` and merge after the **CI** quality check passes.
+3. Confirm the GitHub Release published with the APK asset named `{releaseApkBasename}-X.Y.Z.apk`, and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
 
 ---
 

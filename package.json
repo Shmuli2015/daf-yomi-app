@@ -10,7 +10,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "release": "node scripts/release.js",
-    "build:apk": "eas build --platform android --profile preview --local"
+    "build:apk": "eas build --platform android --profile preview --local",
+    "typecheck": "tsc --noEmit",
+    "ci": "npm run typecheck && npx expo-doctor"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
