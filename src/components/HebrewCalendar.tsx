@@ -49,8 +49,8 @@ export default function HebrewCalendar() {
 
   const SLIDE_PX = 40;
   const animateGridChange = useCallback((direction: 'next' | 'prev', changeFn: () => void) => {
-    const outDir = direction === 'next' ? -SLIDE_PX : SLIDE_PX;
-    const enterFrom = direction === 'next' ? SLIDE_PX : -SLIDE_PX;
+    const outDir = direction === 'next' ? SLIDE_PX : -SLIDE_PX;
+    const enterFrom = direction === 'next' ? -SLIDE_PX : SLIDE_PX;
 
     Animated.parallel([
       Animated.timing(gridOpacity, { toValue: 0, duration: 170, useNativeDriver: true }),
