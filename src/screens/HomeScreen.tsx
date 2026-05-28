@@ -14,6 +14,7 @@ import { he } from "date-fns/locale/he";
 import ConfettiCannon from "react-native-confetti-cannon";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import HomeHeader from "../components/HomeHeader";
 import HomeContent from "../components/HomeContent";
 import ShasBanner from "../components/ShasBanner";
@@ -22,10 +23,14 @@ import { getDateStr } from "../utils/dafYomi";
 import { getMasechetDafim } from "../utils/shas";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
 import { useTheme } from "../theme";
-import type { RootStackParamList } from "../navigation/types";
+import type { RootStackParamList, MainTabParamList } from "../navigation/types";
 import { parseStudyLinkMode, shouldShowSefariaLink, shouldShowTzuratLink } from "../utils/studyLinkMode";
 
-export default function HomeScreen({ navigation }: any) {
+type HomeScreenProps = {
+  navigation: BottomTabNavigationProp<MainTabParamList, "Home">;
+};
+
+export default function HomeScreen({ navigation }: HomeScreenProps) {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
@@ -142,6 +147,13 @@ export default function HomeScreen({ navigation }: any) {
     });
   }, [rootNavigation, todayMasechetEn, todayMasechet, todayDafNumValue, todayAmud]);
 
+  const handleOpenMasechet = useCallback(() => {
+    navigation.navigate("History", {
+      openMasechetEn: todayMasechetEn,
+      returnToHomeOnClose: true,
+    });
+  }, [navigation, todayMasechetEn]);
+
   if (!isAppReady) {
     return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
   }
@@ -164,6 +176,7 @@ export default function HomeScreen({ navigation }: any) {
           showSefariaLink={showSefariaLink}
           showTzuratLink={showTzuratLink}
           onOpenTzuratHadaf={handleOpenTzuratHadaf}
+          onPressMasechet={handleOpenMasechet}
           isLearned={isLearned}
           handleToggle={handleToggle}
           masechetProgressPct={masechetStats.pct}

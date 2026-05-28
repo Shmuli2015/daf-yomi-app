@@ -17,6 +17,7 @@ interface HomeHeaderProps {
   showSefariaLink?: boolean;
   showTzuratLink?: boolean;
   onOpenTzuratHadaf?: () => void;
+  onPressMasechet?: () => void;
   isLearned?: boolean;
   handleToggle?: () => void;
   masechetProgressPct?: number;
@@ -39,6 +40,7 @@ const HomeHeader = React.memo(function HomeHeader({
   showSefariaLink = true,
   showTzuratLink = true,
   onOpenTzuratHadaf,
+  onPressMasechet,
   isLearned,
   handleToggle,
   masechetProgressPct = 0,
@@ -183,19 +185,36 @@ const HomeHeader = React.memo(function HomeHeader({
             </View>
           </View>
 
-          <Text style={styles.masechetName} numberOfLines={1} adjustsFontSizeToFit>{todayMasechet}</Text>
+          <TouchableOpacity
+            onPress={onPressMasechet}
+            activeOpacity={0.85}
+            style={styles.masechetPressable}
+            disabled={!onPressMasechet}
+          >
+            <View style={styles.masechetRow}>
+              <View style={styles.masechetContent}>
+                <Text style={styles.masechetName} numberOfLines={1} adjustsFontSizeToFit>{todayMasechet}</Text>
 
-          <View style={styles.progressSection}>
-            <View style={styles.progressInfo}>
-              <Text style={styles.progressLabel}>
-                התקדמות במסכת: {masechetLearnedCount} מתוך {masechetTotalCount} דפים
-              </Text>
-              <Text style={styles.progressValue}>{masechetProgressPct}%</Text>
+                <View style={styles.progressSection}>
+                  <View style={styles.progressInfo}>
+                    <Text style={styles.progressLabel}>
+                      התקדמות במסכת: {masechetLearnedCount} מתוך {masechetTotalCount} דפים
+                    </Text>
+                    <Text style={styles.progressValue}>{masechetProgressPct}%</Text>
+                  </View>
+                  <View style={styles.progressBarBg}>
+                    <Animated.View style={[styles.progressBarFill, animatedProgressStyle]} />
+                  </View>
+                </View>
+              </View>
+
+              {onPressMasechet && (
+                <View style={styles.masechetChevron}>
+                  <Ionicons name="chevron-back" size={20} color={theme.colors.accent} />
+                </View>
+              )}
             </View>
-            <View style={styles.progressBarBg}>
-              <Animated.View style={[styles.progressBarFill, animatedProgressStyle]} />
-            </View>
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.actionStack}>
             <Animated.View style={[styles.mainButtonContainer, animatedButtonStyle]}>
@@ -342,6 +361,20 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       fontSize: 13,
       fontWeight: '800',
     },
+    masechetPressable: {
+      marginBottom: 24,
+    },
+    masechetRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    masechetContent: {
+      flex: 1,
+    },
+    masechetChevron: {
+      paddingStart: 4,
+    },
     masechetName: {
       fontSize: 40,
       fontWeight: '900',
@@ -351,7 +384,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: 20,
     },
     progressSection: {
-      marginBottom: 24,
+      marginBottom: 0,
     },
     progressInfo: {
       flexDirection: 'row',

@@ -5,8 +5,9 @@ import CalendarScreen from '../screens/CalendarScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import StandardTabBar from './StandardTabBar';
+import type { MainTabParamList } from './types';
 
-const Tab = createBottomTabNavigator();
+const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function AppNavigator() {
   return (

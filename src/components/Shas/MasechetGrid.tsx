@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, SEDARIM, Seder } from '../../data/shas';
@@ -7,10 +7,43 @@ import MasechetModal from './MasechetModal';
 import MasechetCard, { MasechetData } from './MasechetCard';
 import SederSection from './SederSection';
 
-export default function MasechetGrid() {
+interface MasechetGridProps {
+  openMasechetEn?: string;
+  returnToHomeOnClose?: boolean;
+  onOpenMasechetConsumed?: () => void;
+  onReturnToHome?: () => void;
+}
+
+export default function MasechetGrid({
+  openMasechetEn,
+  returnToHomeOnClose,
+  onOpenMasechetConsumed,
+  onReturnToHome,
+}: MasechetGridProps) {
   const progressCache = useAppStore(state => state.progressCache);
   const [selectedMasechet, setSelectedMasechet] = useState<typeof SHAS_MASECHTOT[0] | null>(null);
   const [expandedSedarim, setExpandedSedarim] = useState<Set<Seder>>(new Set());
+  const returnToHomeRef = useRef(false);
+
+  useEffect(() => {
+    if (!openMasechetEn) return;
+
+    const masechet = SHAS_MASECHTOT.find((m) => m.en === openMasechetEn);
+    if (masechet) {
+      setSelectedMasechet(masechet);
+      setExpandedSedarim((prev) => new Set(prev).add(masechet.seder));
+      returnToHomeRef.current = returnToHomeOnClose === true;
+    }
+    onOpenMasechetConsumed?.();
+  }, [openMasechetEn, returnToHomeOnClose, onOpenMasechetConsumed]);
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedMasechet(null);
+    if (returnToHomeRef.current) {
+      returnToHomeRef.current = false;
+      onReturnToHome?.();
+    }
+  }, [onReturnToHome]);
 
   const toggleSeder = (seder: Seder) => {
     setExpandedSedarim(prev => {
@@ -88,7 +121,7 @@ export default function MasechetGrid() {
       })}
 
       {selectedMasechet && (
-        <MasechetModal masechet={selectedMasechet} onClose={() => setSelectedMasechet(null)} />
+        <MasechetModal masechet={selectedMasechet} onClose={handleCloseModal} />
       )}
     </View>
   );
