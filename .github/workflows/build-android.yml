@@ -98,7 +98,7 @@ jobs:
 
       - name: Publish GitHub Release
         if: startsWith(github.ref, 'refs/heads/release/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.release_apk.outputs.tag }}
           target_commitish: ${{ github.sha }}
