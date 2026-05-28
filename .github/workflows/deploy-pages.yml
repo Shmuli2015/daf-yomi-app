@@ -1,9 +1,12 @@
 name: Deploy GitHub Pages
 
 on:
-  push:
-    branches:
-      - master
+  workflow_run:
+    workflows:
+      - Build Android APK
+    types:
+      - completed
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,17 +20,27 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    if: >
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_branch, 'release/'))
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Write latest.json from GitHub Release
         env:
@@ -57,7 +70,12 @@ jobs:
             const apk =
               assets.find((a) => a.name?.endsWith('.apk') && a.name.startsWith(`${base}-`)) ||
               assets.find((a) => a.name?.endsWith('.apk'));
-            if (!apk) throw new Error(`No APK asset on release ${release.tag_name}`);
+            if (!apk) {
+              console.log(
+                `No APK asset on release ${release.tag_name}; keeping existing docs/latest.json`,
+              );
+              return;
+            }
             const data = {
               version: String(release.tag_name || '').replace(/^v/i, ''),
               tag: release.tag_name,
