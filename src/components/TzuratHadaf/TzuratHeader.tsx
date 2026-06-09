@@ -12,10 +12,11 @@ interface TzuratHeaderProps {
   dafNum: number;
   amud: Amud;
   isLandscape?: boolean;
-  isLearned?: boolean;
+  studyStatus?: 'none' | 'partial' | 'learned';
   canMarkLearned?: boolean;
   onClose: () => void;
   onToggleLearned?: () => void;
+  onLongPressLearned?: () => void;
 }
 
 export default function TzuratHeader({
@@ -24,11 +25,14 @@ export default function TzuratHeader({
   dafNum,
   amud,
   isLandscape = false,
-  isLearned = false,
+  studyStatus = 'none',
   canMarkLearned = false,
   onClose,
   onToggleLearned,
+  onLongPressLearned,
 }: TzuratHeaderProps) {
+  const isLearned = studyStatus === 'learned';
+  const isPartial = studyStatus === 'partial';
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme, isLandscape), [theme, isLandscape]);
@@ -57,15 +61,17 @@ export default function TzuratHeader({
         {canMarkLearned ? (
           <TouchableOpacity
             onPress={onToggleLearned}
+            onLongPress={studyStatus !== 'learned' ? onLongPressLearned : undefined}
+            delayLongPress={400}
             style={[
               styles.markBtn,
               isLandscape && styles.markBtnLandscape,
-              isLearned ? styles.markBtnLearned : styles.markBtnPending,
+              isLearned ? styles.markBtnLearned : isPartial ? styles.markBtnPartial : styles.markBtnPending,
             ]}
             activeOpacity={0.7}
           >
             <Ionicons
-              name={isLearned ? 'checkmark-circle' : 'checkmark-circle-outline'}
+              name={isLearned ? 'checkmark-circle' : isPartial ? 'ellipse' : 'checkmark-circle-outline'}
               size={iconSize}
               color={isLearned ? theme.colors.success : theme.colors.accent}
             />
@@ -77,7 +83,7 @@ export default function TzuratHeader({
                 ]}
                 numberOfLines={1}
               >
-                {isLearned ? 'נלמד' : 'סמן כנלמד'}
+                {isLearned ? 'נלמד' : isPartial ? 'סיימתי!' : 'סמן כנלמד'}
               </Text>
             )}
           </TouchableOpacity>
@@ -155,6 +161,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) 
     markBtnLearned: {
       backgroundColor: theme.colors.successLight,
       borderColor: '#BBF7D0',
+    },
+    markBtnPartial: {
+      backgroundColor: theme.colors.accentLight,
+      borderColor: theme.colors.accent + '50',
     },
     markBtnText: {
       fontSize: 11,

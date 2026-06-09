@@ -70,13 +70,21 @@ function validateBackupRecord(raw: unknown): BackupRecord | null {
   if (!isRecordStatus(r.status)) return null;
   if (typeof r.learnedAt !== 'string' || !r.learnedAt) return null;
 
+  const percentage =
+    typeof r.percentage === 'number'
+      ? r.percentage
+      : r.status === 'learned'
+        ? 100
+        : r.status === 'partial'
+          ? 50
+          : 0;
+
   return {
     date: r.date,
     masechet: typeof r.masechet === 'string' ? r.masechet : '',
     daf: typeof r.daf === 'string' ? r.daf : '',
     status: r.status,
-    percentage: typeof r.percentage === 'number' ? r.percentage : 0,
-    notes: typeof r.notes === 'string' ? r.notes : '',
+    percentage,
     learnedAt: r.learnedAt,
   };
 }

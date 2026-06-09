@@ -131,6 +131,7 @@ const HomeContent = React.memo(function HomeContent({
             {[...last7Days].map((day, index) => {
               const isToday = index === 6;
               const isLearned = day.status === 'learned';
+              const isPartial = day.status === 'partial';
               let barHeight = 12;
               let barColor: string = theme.colors.progressTrack;
               let barOpacity = 0.5;
@@ -139,6 +140,10 @@ const HomeContent = React.memo(function HomeContent({
                 barHeight = 60;
                 barColor = theme.colors.accent;
                 barOpacity = 1;
+              } else if (isPartial) {
+                barHeight = 36;
+                barColor = theme.colors.accent;
+                barOpacity = 0.65;
               } else if (isToday) {
                 barHeight = 24;
                 barColor = theme.colors.accent;

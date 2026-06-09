@@ -8,11 +8,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../store/useAppStore';
-import { buildLearnedDateSet } from '../utils/shas';
+import { getStudyStatus } from '../utils/dafStatus';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import CalendarDay from './Calendar/CalendarDay';
 import DafDetailModal from './Calendar/DafDetailModal';
 import ConfirmModal from './ConfirmModal';
+import DafMarkMenuModal from './DafMarkMenuModal';
 import { useTheme } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
 
@@ -22,6 +23,7 @@ interface DayData {
   hdate: HDate;
   isCurrentMonth: boolean;
   learned: boolean;
+  partial: boolean;
   isToday: boolean;
   dateKey: string;
   dafLabel?: string;
@@ -33,15 +35,21 @@ export default function HebrewCalendar() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { history, toggleAnyDafLearned, settings } = useAppStore(
-    useShallow((s) => ({ history: s.history, toggleAnyDafLearned: s.toggleAnyDafLearned, settings: s.settings })),
+  const { history, toggleAnyDafLearned, setDafStudyStatus, settings } = useAppStore(
+    useShallow((s) => ({
+      history: s.history,
+      toggleAnyDafLearned: s.toggleAnyDafLearned,
+      setDafStudyStatus: s.setDafStudyStatus,
+      settings: s.settings,
+    })),
   );
-  const learnedDateSet = useMemo(() => buildLearnedDateSet(history), [history]);
+  const recordByDate = useMemo(() => new Map(history.map((r) => [r.date, r])), [history]);
   const showCalendarDaf = settings?.show_calendar_daf === 1;
   const [currentHDate, setCurrentHDate] = useState(new HDate(new Date()));
   const [selectedDate, setSelectedDate] = useState<HDate | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const gridTranslateX = useRef(new Animated.Value(0)).current;
@@ -97,10 +105,13 @@ export default function HebrewCalendar() {
     for (let i = dayOfWeek - 1; i >= 0; i--) {
       const d = new HDate(prevMonth.getDate() - i, prevMonth.getMonth(), prevMonth.getFullYear());
       const dateKey = getDateStr(d.greg());
+      const record = recordByDate.get(dateKey);
+      const studyStatus = getStudyStatus(record);
       days.push({
         hdate: d,
         isCurrentMonth: false,
-        learned: learnedDateSet.has(dateKey),
+        learned: studyStatus === 'learned',
+        partial: studyStatus === 'partial',
         isToday: isSameDay(d, todayHd),
         dateKey,
         dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
@@ -110,10 +121,13 @@ export default function HebrewCalendar() {
     let d = firstDayOfMonth;
     while (d.getMonth() === month) {
       const dateKey = getDateStr(d.greg());
+      const record = recordByDate.get(dateKey);
+      const studyStatus = getStudyStatus(record);
       days.push({
         hdate: d,
         isCurrentMonth: true,
-        learned: learnedDateSet.has(dateKey),
+        learned: studyStatus === 'learned',
+        partial: studyStatus === 'partial',
         isToday: isSameDay(d, todayHd),
         dateKey,
         dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
@@ -124,10 +138,13 @@ export default function HebrewCalendar() {
     const remaining = 42 - days.length;
     for (let i = 1; i <= remaining; i++) {
       const dateKey = getDateStr(d.greg());
+      const record = recordByDate.get(dateKey);
+      const studyStatus = getStudyStatus(record);
       days.push({
         hdate: d,
         isCurrentMonth: false,
-        learned: learnedDateSet.has(dateKey),
+        learned: studyStatus === 'learned',
+        partial: studyStatus === 'partial',
         isToday: isSameDay(d, new HDate()),
         dateKey,
         dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
@@ -135,7 +152,7 @@ export default function HebrewCalendar() {
       d = d.next();
     }
     return days;
-  }, [currentHDate, learnedDateSet, showCalendarDaf]);
+  }, [currentHDate, recordByDate, showCalendarDaf]);
 
 
   function isSameDay(d1: HDate, d2: HDate | null) {
@@ -256,6 +273,7 @@ export default function HebrewCalendar() {
               hdate={day.hdate}
               isCurrentMonth={day.isCurrentMonth}
               learned={day.learned}
+              partial={day.partial}
               isToday={day.isToday}
               isSelected={isSameDay(day.hdate, selectedDate)}
               dafLabel={day.dafLabel}
@@ -270,28 +288,87 @@ export default function HebrewCalendar() {
         onClose={() => setModalVisible(false)}
         selectedDate={selectedDate}
         dafInfo={selectedDafInfo}
-        isLearned={
-          selectedDate ? learnedDateSet.has(getDateStr(selectedDate.greg())) : false
+        studyStatus={
+          selectedDate
+            ? getStudyStatus(recordByDate.get(getDateStr(selectedDate.greg())))
+            : 'none'
         }
         onToggle={() => {
           if (selectedDate && selectedDafInfo) {
-            const currentlyLearned = learnedDateSet.has(getDateStr(selectedDate.greg()));
-            if (currentlyLearned) {
+            const dateKey = getDateStr(selectedDate.greg());
+            const currentStatus = getStudyStatus(recordByDate.get(dateKey));
+            if (currentStatus === 'learned') {
               setShowConfirm(true);
+            } else if (currentStatus === 'partial') {
+              if (settings?.show_confetti) setShowConfetti(true);
+              setDafStudyStatus(dateKey, selectedDafInfo.masechet, selectedDafInfo.daf, 'learned');
+              setModalVisible(false);
             } else {
               if (settings?.show_confetti) setShowConfetti(true);
-              toggleAnyDafLearned(getDateStr(selectedDate.greg()), selectedDafInfo.masechet, selectedDafInfo.daf);
+              toggleAnyDafLearned(dateKey, selectedDafInfo.masechet, selectedDafInfo.daf);
               setModalVisible(false);
             }
           }
         }}
+        onLongPressToggle={() => setShowMarkMenu(true)}
         onOpenTzuratHadaf={handleOpenTzuratHadaf}
+      />
+
+      <DafMarkMenuModal
+        visible={showMarkMenu}
+        onSelectFull={() => {
+          if (selectedDate && selectedDafInfo) {
+            if (settings?.show_confetti) setShowConfetti(true);
+            setDafStudyStatus(
+              getDateStr(selectedDate.greg()),
+              selectedDafInfo.masechet,
+              selectedDafInfo.daf,
+              'learned',
+            );
+          }
+          setShowMarkMenu(false);
+          setModalVisible(false);
+        }}
+        onSelectHalfA={() => {
+          if (selectedDate && selectedDafInfo) {
+            setDafStudyStatus(
+              getDateStr(selectedDate.greg()),
+              selectedDafInfo.masechet,
+              selectedDafInfo.daf,
+              'partial',
+            );
+          }
+          setShowMarkMenu(false);
+          setModalVisible(false);
+        }}
+        onSelectHalfB={() => {
+          if (selectedDate && selectedDafInfo) {
+            setDafStudyStatus(
+              getDateStr(selectedDate.greg()),
+              selectedDafInfo.masechet,
+              selectedDafInfo.daf,
+              'partial',
+            );
+          }
+          setShowMarkMenu(false);
+          setModalVisible(false);
+        }}
+        showUnmark={
+          selectedDate
+            ? getStudyStatus(recordByDate.get(getDateStr(selectedDate.greg()))) === 'partial'
+            : false
+        }
+        onUnmark={() => {
+          setShowMarkMenu(false);
+          setShowConfirm(true);
+        }}
+        onCancel={() => setShowMarkMenu(false)}
       />
 
       <ConfirmModal
         visible={showConfirm}
         title="ביטול לימוד"
-        message="האם אתה בטוח שברצונך לבטל את סימון הדף כנלמד?"
+        message="האם אתה בטוח שברצונך לבטל את סימון הדף?"
         onConfirm={() => {
           if (selectedDate && selectedDafInfo) {
             toggleAnyDafLearned(getDateStr(selectedDate.greg()), selectedDafInfo.masechet, selectedDafInfo.daf);

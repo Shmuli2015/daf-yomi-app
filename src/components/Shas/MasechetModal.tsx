@@ -7,10 +7,10 @@ import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, numberToGematria } from '../../data/shas';
 import {
   getDafDateStr,
-  buildLearnedDateSet,
   getMasechetDafim,
   stripNiqqud,
 } from '../../utils/shas';
+import { getStudyStatus } from '../../utils/dafStatus';
 import { getMasechetProgressFromCache } from '../../utils/progressCache';
 import { useTheme } from '../../theme';
 import BulkActionConfirmOverlay from './BulkActionConfirmOverlay';
@@ -30,18 +30,19 @@ export default function MasechetModal({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { history, progressCache, toggleAnyDafLearned, batchMarkDafim, batchUnmarkDafim, settings } =
+  const { history, progressCache, toggleAnyDafLearned, setDafStudyStatus, batchMarkDafim, batchUnmarkDafim, settings } =
     useAppStore(
       useShallow((s) => ({
         history: s.history,
         progressCache: s.progressCache,
         toggleAnyDafLearned: s.toggleAnyDafLearned,
+        setDafStudyStatus: s.setDafStudyStatus,
         batchMarkDafim: s.batchMarkDafim,
         batchUnmarkDafim: s.batchUnmarkDafim,
         settings: s.settings,
       })),
     );
-  const learnedDateSet = useMemo(() => buildLearnedDateSet(history), [history]);
+  const recordByDate = useMemo(() => new Map(history.map((r) => [r.date, r])), [history]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [pendingAction, setPendingAction] = useState<'markAll' | 'unmarkAll' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -60,17 +61,22 @@ export default function MasechetModal({
     const dateStr = getDafDateStr(masechet.he, dafNum);
     if (!dateStr) return;
 
-    const isCurrentlyLearned = learnedDateSet.has(dateStr);
-    const learnedBefore = progressCache 
-      ? getMasechetProgressFromCache(progressCache, masechet.he).learned 
+    const currentStatus = getStudyStatus(recordByDate.get(dateStr));
+    const learnedBefore = progressCache
+      ? getMasechetProgressFromCache(progressCache, masechet.he).learned
       : 0;
     const dafHeStr = `דף ${numberToGematria(dafNum)}`;
-    toggleAnyDafLearned(dateStr, masechet.he, dafHeStr);
 
-    if (!isCurrentlyLearned && learnedBefore + 1 === dafimArray.length && settings?.show_confetti) {
+    if (currentStatus === 'partial') {
+      setDafStudyStatus(dateStr, masechet.he, dafHeStr, 'learned');
+    } else {
+      toggleAnyDafLearned(dateStr, masechet.he, dafHeStr);
+    }
+
+    if (currentStatus !== 'learned' && learnedBefore + 1 === dafimArray.length && settings?.show_confetti) {
       setTimeout(() => setShowConfetti(true), 200);
     }
-  }, [masechet.he, learnedDateSet, progressCache, dafimArray.length, toggleAnyDafLearned, settings]);
+  }, [masechet.he, recordByDate, progressCache, dafimArray.length, toggleAnyDafLearned, setDafStudyStatus, settings]);
 
   const handleToggleDafRef = useRef(handleToggleDaf);
   handleToggleDafRef.current = handleToggleDaf;
@@ -85,7 +91,7 @@ export default function MasechetModal({
         const dateStr = getDafDateStr(masechet.he, dafNum);
         if (!dateStr) return null;
 
-        if (learnedDateSet.has(dateStr)) return null;
+        if (getStudyStatus(recordByDate.get(dateStr)) === 'learned') return null;
 
         return {
           dateStr,
@@ -99,7 +105,7 @@ export default function MasechetModal({
       batchMarkDafim(updates);
       if (settings?.show_confetti) setTimeout(() => setShowConfetti(true), 200);
     }
-  }, [masechet.he, dafimArray, learnedDateSet, batchMarkDafim, settings]);
+  }, [masechet.he, dafimArray, recordByDate, batchMarkDafim, settings]);
 
   const handleUnmarkAll = useCallback(() => {
     const updates = dafimArray
@@ -107,7 +113,8 @@ export default function MasechetModal({
         const dateStr = getDafDateStr(masechet.he, dafNum);
         if (!dateStr) return null;
 
-        if (!learnedDateSet.has(dateStr)) return null;
+        const status = getStudyStatus(recordByDate.get(dateStr));
+        if (status === 'none') return null;
 
         return {
           dateStr,
@@ -120,7 +127,7 @@ export default function MasechetModal({
     if (updates.length > 0) {
       batchUnmarkDafim(updates);
     }
-  }, [masechet.he, dafimArray, learnedDateSet, batchUnmarkDafim]);
+  }, [masechet.he, dafimArray, recordByDate, batchUnmarkDafim]);
 
   const handleMarkAllPress = () => setPendingAction('markAll');
   const handleUnmarkAllPress = () => setPendingAction('unmarkAll');
@@ -176,12 +183,13 @@ export default function MasechetModal({
           <View style={styles.dafGrid}>
             {dafimArray.map(dafNum => {
               const dateStr = getDafDateStr(masechet.he, dafNum);
-              const isLearned = dateStr ? learnedDateSet.has(dateStr) : false;
+              const studyStatus = dateStr ? getStudyStatus(recordByDate.get(dateStr)) : 'none';
               return (
                 <DafCell
                   key={dafNum}
                   dafNum={dafNum}
-                  isLearned={isLearned}
+                  isLearned={studyStatus === 'learned'}
+                  isPartial={studyStatus === 'partial'}
                   onPress={handleToggleDafStable}
                   styles={styles}
                 />
@@ -296,9 +304,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.accentLight,
       borderColor: 'rgba(201,150,60,0.4)',
     },
+    dafCellPartial: {
+      backgroundColor: theme.colors.accent + '25',
+      borderColor: theme.colors.accent + '70',
+    },
     dafText: { fontSize: 15, fontWeight: '800' },
     dafTextDefault: { color: theme.colors.textSecondary },
     dafTextLearned: { color: theme.colors.accent },
+    dafTextPartial: { color: theme.colors.accent },
     confettiContainer: {
       position: 'absolute',
       top: 0,

@@ -4,6 +4,7 @@ import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, useSharedValue, useAni
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import ConfirmModal from './ConfirmModal';
+import DafMarkMenuModal from './DafMarkMenuModal';
 import { useTheme } from '../theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -18,10 +19,12 @@ interface HomeHeaderProps {
   showTzuratLink?: boolean;
   onOpenTzuratHadaf?: () => void;
   onPressMasechet?: () => void;
-  isLearned?: boolean;
+  studyStatus?: 'none' | 'partial' | 'learned';
   handleToggle?: () => void;
+  onMarkFull?: () => void;
+  onMarkPartial?: () => void;
   masechetProgressPct?: number;
-  masechetLearnedCount?: number;
+  masechetLearnedCountLabel?: string;
   masechetTotalCount?: number;
   showSecularDate?: boolean;
   onPrevDay?: () => void;
@@ -41,10 +44,12 @@ const HomeHeader = React.memo(function HomeHeader({
   showTzuratLink = true,
   onOpenTzuratHadaf,
   onPressMasechet,
-  isLearned,
+  studyStatus = 'none',
   handleToggle,
+  onMarkFull,
+  onMarkPartial,
   masechetProgressPct = 0,
-  masechetLearnedCount = 0,
+  masechetLearnedCountLabel = '0',
   masechetTotalCount = 0,
   showSecularDate = true,
   onPrevDay,
@@ -56,6 +61,10 @@ const HomeHeader = React.memo(function HomeHeader({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showMarkMenu, setShowMarkMenu] = useState(false);
+  const isLearned = studyStatus === 'learned';
+  const isPartial = studyStatus === 'partial';
+  const isMarked = isLearned || isPartial;
   const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
 
   const progressWidth = useSharedValue(0);
@@ -67,7 +76,7 @@ const HomeHeader = React.memo(function HomeHeader({
   useEffect(() => {
     progressWidth.value = withTiming(masechetProgressPct, { duration: 1000, easing: Easing.out(Easing.exp) });
     
-    if (!isLearned) {
+    if (!isMarked) {
       pulseScale.value = withRepeat(
         withSequence(
           withTiming(1.02, { duration: 800, easing: Easing.inOut(Easing.ease) }),
@@ -79,7 +88,7 @@ const HomeHeader = React.memo(function HomeHeader({
     } else {
       pulseScale.value = withSpring(1);
     }
-  }, [masechetProgressPct, isLearned]);
+  }, [masechetProgressPct, isMarked]);
 
   const animatedProgressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
@@ -166,7 +175,11 @@ const HomeHeader = React.memo(function HomeHeader({
 
         <Animated.View 
           entering={FadeInUp.duration(500).delay(100).springify()} 
-          style={[styles.dafCard, isLearned && { borderColor: theme.colors.success + '60', borderWidth: 2 }]}
+          style={[
+            styles.dafCard,
+            isLearned && { borderColor: theme.colors.success + '60', borderWidth: 2 },
+            isPartial && { borderColor: theme.colors.accent + '60', borderWidth: 2 },
+          ]}
         >
 
           <LinearGradient
@@ -198,7 +211,7 @@ const HomeHeader = React.memo(function HomeHeader({
                 <View style={styles.progressSection}>
                   <View style={styles.progressInfo}>
                     <Text style={styles.progressLabel}>
-                      התקדמות במסכת: {masechetLearnedCount} מתוך {masechetTotalCount} דפים
+                      התקדמות במסכת: {masechetLearnedCountLabel} מתוך {masechetTotalCount} דפים
                     </Text>
                     <Text style={styles.progressValue}>{masechetProgressPct}%</Text>
                   </View>
@@ -222,20 +235,34 @@ const HomeHeader = React.memo(function HomeHeader({
                 onPress={() => {
                   if (isLearned) {
                     setShowConfirm(true);
+                  } else if (isPartial) {
+                    onMarkFull?.();
                   } else {
                     handleToggle?.();
                   }
                 }}
-                style={[styles.mainButton, isLearned ? styles.buttonDone : styles.buttonPending]}
+                onLongPress={() => {
+                  if (!isLearned) setShowMarkMenu(true);
+                }}
+                delayLongPress={400}
+                style={[
+                  styles.mainButton,
+                  isLearned ? styles.buttonDone : isPartial ? styles.buttonPartial : styles.buttonPending,
+                ]}
                 activeOpacity={0.8}
               >
                 <Ionicons
-                  name={isLearned ? 'checkmark-circle' : 'checkmark-circle-outline'}
+                  name={isLearned ? 'checkmark-circle' : isPartial ? 'ellipse' : 'checkmark-circle-outline'}
                   size={20}
-                  color={isLearned ? theme.colors.success : '#FFFFFF'}
+                  color={isLearned ? theme.colors.success : isPartial ? theme.colors.accent : '#FFFFFF'}
                 />
-                <Text style={[styles.mainButtonText, isLearned ? styles.buttonTextDone : styles.buttonTextPending]}>
-                  {isLearned ? 'אשריך! הדף נלמד' : 'סמן כנלמד'}
+                <Text
+                  style={[
+                    styles.mainButtonText,
+                    isLearned ? styles.buttonTextDone : isPartial ? styles.buttonTextPartial : styles.buttonTextPending,
+                  ]}
+                >
+                  {isLearned ? 'אשריך! הדף נלמד' : isPartial ? 'סיימתי את הדף!' : 'סמן כנלמד'}
                 </Text>
               </TouchableOpacity>
             </Animated.View>
@@ -269,12 +296,34 @@ const HomeHeader = React.memo(function HomeHeader({
       <ConfirmModal
         visible={showConfirm}
         title="ביטול לימוד"
-        message="האם אתה בטוח שברצונך לבטל את סימון הדף כנלמד?"
+        message="האם אתה בטוח שברצונך לבטל את סימון הדף?"
         onConfirm={() => {
           setShowConfirm(false);
           handleToggle?.();
         }}
         onCancel={() => setShowConfirm(false)}
+      />
+
+      <DafMarkMenuModal
+        visible={showMarkMenu}
+        onSelectFull={() => {
+          setShowMarkMenu(false);
+          onMarkFull?.();
+        }}
+        onSelectHalfA={() => {
+          setShowMarkMenu(false);
+          onMarkPartial?.();
+        }}
+        onSelectHalfB={() => {
+          setShowMarkMenu(false);
+          onMarkPartial?.();
+        }}
+        showUnmark={isPartial}
+        onUnmark={() => {
+          setShowMarkMenu(false);
+          setShowConfirm(true);
+        }}
+        onCancel={() => setShowMarkMenu(false)}
       />
     </View>
   );
@@ -436,6 +485,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderWidth: 1,
       borderColor: theme.colors.success,
     },
+    buttonPartial: {
+      backgroundColor: theme.colors.accentLight,
+      borderWidth: 1,
+      borderColor: theme.colors.accent + '60',
+    },
     mainButtonText: {
       fontSize: 15,
       fontWeight: '800',
@@ -445,6 +499,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     buttonTextDone: {
       color: theme.colors.success,
+    },
+    buttonTextPartial: {
+      color: theme.colors.accent,
     },
     secondaryButton: {
       alignSelf: 'stretch',

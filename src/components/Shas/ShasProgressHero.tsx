@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { useTheme } from '../../theme';
+import { formatProgressCount } from '../../utils/dafStatus';
 import ShasRing from './ShasRing';
 import StatPill from './StatPill';
 
@@ -39,7 +40,7 @@ export default function ShasProgressHero({
       </View>
 
       <View style={styles.statsRow}>
-        <StatPill label="דפים נלמדו" value={learnedDafim.toString()} delay={200} />
+        <StatPill label="דפים נלמדו" value={formatProgressCount(learnedDafim)} delay={200} />
         <View style={styles.statDivider} />
         <StatPill label="מסכתות הושלמו" value={completedMasechtot.toString()} delay={300} />
         <View style={styles.statDivider} />

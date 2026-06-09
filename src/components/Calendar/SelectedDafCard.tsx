@@ -17,12 +17,20 @@ interface SelectedDafCardProps {
     dafNum: number;
     amud: 'a' | 'b';
   };
-  isLearned: boolean;
+  studyStatus?: 'none' | 'partial' | 'learned';
   onToggle?: () => void;
+  onLongPressToggle?: () => void;
   onOpenTzuratHadaf?: () => void;
 }
 
-const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle, onOpenTzuratHadaf }: SelectedDafCardProps) => {
+const SelectedDafCard = ({
+  selectedDate,
+  dafInfo,
+  studyStatus = 'none',
+  onToggle,
+  onLongPressToggle,
+  onOpenTzuratHadaf,
+}: SelectedDafCardProps) => {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
@@ -49,12 +57,31 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle, onOpenTzu
     day: 'numeric', month: 'long', year: 'numeric',
   });
 
-  const toggleBg = isLearned ? theme.colors.successLight : theme.colors.accentLight;
-  const toggleBorder = isLearned ? '#BBF7D0' : 'rgba(201,150,60,0.3)';
+  const isLearned = studyStatus === 'learned';
+  const isPartial = studyStatus === 'partial';
+  const isMarked = isLearned || isPartial;
+  const toggleBg = isLearned
+    ? theme.colors.successLight
+    : isPartial
+      ? theme.colors.accentLight
+      : theme.colors.accentLight;
+  const toggleBorder = isLearned ? '#BBF7D0' : isPartial ? theme.colors.accent + '50' : 'rgba(201,150,60,0.3)';
   const toggleIconColor = isLearned ? theme.colors.success : theme.colors.accent;
   const toggleTextColor = isLearned ? '#16A34A' : theme.colors.accent;
-  const toggleIconName = isLearned ? 'checkmark-done' : isFuture ? 'calendar-outline' : 'book-outline';
-  const toggleLabel = isLearned ? 'אשריך! סיימת' : isFuture ? 'למדתי מראש' : 'סמן כנלמד';
+  const toggleIconName = isLearned
+    ? 'checkmark-done'
+    : isPartial
+      ? 'ellipse'
+      : isFuture
+        ? 'calendar-outline'
+        : 'book-outline';
+  const toggleLabel = isLearned
+    ? 'אשריך! סיימת'
+    : isPartial
+      ? 'סיימתי את הדף!'
+      : isFuture
+        ? 'למדתי מראש'
+        : 'סמן כנלמד';
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale }], opacity }]}>
@@ -80,6 +107,8 @@ const SelectedDafCard = ({ selectedDate, dafInfo, isLearned, onToggle, onOpenTzu
       <View style={styles.actions}>
         <TouchableOpacity
           onPress={onToggle}
+          onLongPress={!isLearned ? onLongPressToggle : undefined}
+          delayLongPress={400}
           activeOpacity={0.85}
           style={[styles.toggleBtn, { backgroundColor: toggleBg, borderColor: toggleBorder }]}
         >
