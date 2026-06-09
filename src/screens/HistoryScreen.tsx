@@ -38,7 +38,7 @@ export default function HistoryScreen() {
       if (!progressCache) return 0;
       return SHAS_MASECHTOT.filter((m) => {
         const progress = progressCache.masechetProgress.get(m.he);
-        return progress && progress.total > 0 && progress.learned === progress.total;
+        return progress && progress.total > 0 && progress.learned >= progress.total;
       }).length;
     },
     [progressCache],

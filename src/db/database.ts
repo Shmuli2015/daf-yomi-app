@@ -9,7 +9,6 @@ export interface DailyRecord {
   daf: string;
   status: 'learned' | 'partial' | 'missed';
   percentage: number;
-  notes: string;
   learnedAt: string;
 }
 
@@ -110,37 +109,52 @@ export function getDailyRecord(dateStr: string): DailyRecord | null {
   return db.getFirstSync('SELECT * FROM daily_daf WHERE date = ?', [dateStr]) as DailyRecord | null;
 }
 
-export function updateDailyRecord(dateStr: string, masechet: string, daf: string, status: string) {
+export function updateDailyRecord(
+  dateStr: string,
+  masechet: string,
+  daf: string,
+  status: 'learned' | 'partial' | 'missed',
+  percentage?: number
+) {
+  const pct = percentage ?? (status === 'learned' ? 100 : status === 'partial' ? 50 : 0);
+  const learnedAt = new Date().toISOString();
   const existing = getDailyRecord(dateStr);
   if (existing) {
     db.runSync(
-      'UPDATE daily_daf SET status = ?, learnedAt = ? WHERE date = ?',
-      [status, new Date().toISOString(), dateStr]
+      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, learnedAt = ? WHERE date = ?',
+      [masechet, daf, status, pct, learnedAt, dateStr]
     );
   } else {
     db.runSync(
-      'INSERT INTO daily_daf (date, masechet, daf, status, learnedAt) VALUES (?, ?, ?, ?, ?)',
-      [dateStr, masechet, daf, status, new Date().toISOString()]
+      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, learnedAt) VALUES (?, ?, ?, ?, ?, ?)',
+      [dateStr, masechet, daf, status, pct, learnedAt]
     );
   }
 }
 
 export function batchUpdateDailyRecords(
-  updates: Array<{ dateStr: string; masechet: string; daf: string; status: 'learned' | 'missed' }>
+  updates: Array<{
+    dateStr: string;
+    masechet: string;
+    daf: string;
+    status: 'learned' | 'partial' | 'missed';
+    percentage?: number;
+  }>
 ) {
   db.withTransactionSync(() => {
     const now = new Date().toISOString();
-    for (const { dateStr, masechet, daf, status } of updates) {
+    for (const { dateStr, masechet, daf, status, percentage } of updates) {
+      const pct = percentage ?? (status === 'learned' ? 100 : status === 'partial' ? 50 : 0);
       const existing = getDailyRecord(dateStr);
       if (existing) {
         db.runSync(
-          'UPDATE daily_daf SET status = ?, learnedAt = ? WHERE date = ?',
-          [status, now, dateStr]
+          'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, learnedAt = ? WHERE date = ?',
+          [masechet, daf, status, pct, now, dateStr]
         );
       } else {
         db.runSync(
-          'INSERT INTO daily_daf (date, masechet, daf, status, learnedAt) VALUES (?, ?, ?, ?, ?)',
-          [dateStr, masechet, daf, status, now]
+          'INSERT INTO daily_daf (date, masechet, daf, status, percentage, learnedAt) VALUES (?, ?, ?, ?, ?, ?)',
+          [dateStr, masechet, daf, status, pct, now]
         );
       }
     }
@@ -208,14 +222,13 @@ export type SettingsInput = Omit<SettingsRecord, 'id'>;
 
 function insertDailyRecord(record: DailyRecordInput) {
   db.runSync(
-    'INSERT INTO daily_daf (date, masechet, daf, status, percentage, notes, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO daily_daf (date, masechet, daf, status, percentage, learnedAt) VALUES (?, ?, ?, ?, ?, ?)',
     [
       record.date,
       record.masechet,
       record.daf,
       record.status,
       record.percentage ?? 0,
-      record.notes ?? '',
       record.learnedAt,
     ]
   );
@@ -223,13 +236,12 @@ function insertDailyRecord(record: DailyRecordInput) {
 
 function updateDailyRecordFromBackup(record: DailyRecordInput) {
   db.runSync(
-    'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, notes = ?, learnedAt = ? WHERE date = ?',
+    'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, learnedAt = ? WHERE date = ?',
     [
       record.masechet,
       record.daf,
       record.status,
       record.percentage ?? 0,
-      record.notes ?? '',
       record.learnedAt,
       record.date,
     ]
@@ -268,7 +280,6 @@ export function importRecords(records: DailyRecordInput[]) {
               daf: existing.daf,
               status: existing.status,
               percentage: existing.percentage,
-              notes: existing.notes,
               learnedAt: existing.learnedAt,
             };
 

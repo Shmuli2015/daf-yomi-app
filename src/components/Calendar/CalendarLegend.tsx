@@ -55,6 +55,13 @@ const CalendarLegend = () => {
           labelStyle={styles.legendLabel}
         />
         <LegendItem
+          label="חצי דף"
+          icon="ellipse"
+          iconColor={theme.colors.accent}
+          dividerColor={theme.colors.border}
+          labelStyle={styles.legendLabel}
+        />
+        <LegendItem
           label="הלימוד להיום"
           icon="calendar"
           iconColor={theme.colors.textPrimary}

@@ -4,6 +4,7 @@ import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, Fad
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme';
+import { formatProgressCount } from '../utils/dafStatus';
 
 interface ShasBannerProps {
   learnedCount: number;
@@ -54,7 +55,7 @@ export default function ShasBanner({ learnedCount, totalPages, percentage, onPre
                 <Text style={styles.percentageSymbol}>%</Text>
               </View>
               <Text style={styles.countText}>
-                {learnedCount} מתוך {totalPages} דפים
+                {formatProgressCount(learnedCount)} מתוך {totalPages} דפים
               </Text>
             </View>
             

@@ -9,6 +9,8 @@ import TzuratHeader from '../components/TzuratHadaf/TzuratHeader';
 import TzuratHadafViewer, { type TzuratPageContent } from '../components/TzuratHadaf/TzuratHadafViewer';
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
 import ConfirmModal from '../components/ConfirmModal';
+import DafMarkMenuModal from '../components/DafMarkMenuModal';
+import { getStudyStatus } from '../utils/dafStatus';
 import { useTheme } from '../theme';
 import { useAppStore } from '../store/useAppStore';
 import type { RootStackParamList } from '../navigation/types';
@@ -60,17 +62,19 @@ export default function TzuratHadafScreen() {
   });
   const [isLandscape, setIsLandscape] = useState(width > height);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
   const [page, setPage] = useState<TzuratPageContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { history, settings, toggleAnyDafLearned } = useAppStore(
+  const { history, settings, toggleAnyDafLearned, setDafStudyStatus } = useAppStore(
     useShallow((s) => ({
       history: s.history,
       settings: s.settings,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
+      setDafStudyStatus: s.setDafStudyStatus,
     })),
   );
 
@@ -126,22 +130,29 @@ export default function TzuratHadafScreen() {
     [location.dafNum],
   );
 
-  const isLearned = useMemo(
-    () => (dateStr ? history.some((r) => r.date === dateStr && r.status === 'learned') : false),
-    [history, dateStr],
-  );
+  const studyStatus = useMemo(() => {
+    if (!dateStr) return 'none' as const;
+    const record = history.find((r) => r.date === dateStr);
+    return getStudyStatus(record);
+  }, [history, dateStr]);
+  const isLearned = studyStatus === 'learned';
 
   const canMarkLearned = dateStr != null && masechetHe != null;
 
   const handleToggleLearned = useCallback(() => {
     if (!canMarkLearned || !dateStr || !masechetHe) return;
-    if (isLearned) {
+    if (studyStatus === 'learned') {
       setShowConfirm(true);
+      return;
+    }
+    if (studyStatus === 'partial') {
+      if (settings?.show_confetti === 1) setShowConfetti(true);
+      setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'learned');
       return;
     }
     if (settings?.show_confetti === 1) setShowConfetti(true);
     toggleAnyDafLearned(dateStr, masechetHe, dafHeStr);
-  }, [canMarkLearned, dateStr, masechetHe, dafHeStr, isLearned, settings, toggleAnyDafLearned]);
+  }, [canMarkLearned, dateStr, masechetHe, dafHeStr, studyStatus, settings, toggleAnyDafLearned, setDafStudyStatus]);
 
   const loadPage = useCallback(async (loc: DafLocation) => {
     const tref = buildSefariaTref(loc.masechetEn, loc.dafNum, loc.amud);
@@ -214,10 +225,11 @@ export default function TzuratHadafScreen() {
         dafNum={location.dafNum}
         amud={location.amud}
         isLandscape={isLandscape}
-        isLearned={isLearned}
+        studyStatus={studyStatus}
         canMarkLearned={canMarkLearned}
         onClose={() => navigation.goBack()}
         onToggleLearned={handleToggleLearned}
+        onLongPressLearned={() => setShowMarkMenu(true)}
       />
 
       <TzuratHadafViewer
@@ -255,10 +267,39 @@ export default function TzuratHadafScreen() {
         }}
       />
 
+      <DafMarkMenuModal
+        visible={showMarkMenu}
+        onSelectFull={() => {
+          if (dateStr && masechetHe) {
+            if (settings?.show_confetti === 1) setShowConfetti(true);
+            setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'learned');
+          }
+          setShowMarkMenu(false);
+        }}
+        onSelectHalfA={() => {
+          if (dateStr && masechetHe) {
+            setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'partial');
+          }
+          setShowMarkMenu(false);
+        }}
+        onSelectHalfB={() => {
+          if (dateStr && masechetHe) {
+            setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'partial');
+          }
+          setShowMarkMenu(false);
+        }}
+        showUnmark={studyStatus === 'partial'}
+        onUnmark={() => {
+          setShowMarkMenu(false);
+          setShowConfirm(true);
+        }}
+        onCancel={() => setShowMarkMenu(false)}
+      />
+
       <ConfirmModal
         visible={showConfirm}
         title="ביטול לימוד"
-        message="האם אתה בטוח שברצונך לבטל את סימון הדף כנלמד?"
+        message="האם אתה בטוח שברצונך לבטל את סימון הדף?"
         onConfirm={() => {
           setShowConfirm(false);
           if (dateStr && masechetHe) {

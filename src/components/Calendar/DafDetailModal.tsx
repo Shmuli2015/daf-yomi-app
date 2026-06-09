@@ -18,8 +18,9 @@ interface DafDetailModalProps {
     dafNum: number;
     amud: 'a' | 'b';
   } | null;
-  isLearned: boolean;
+  studyStatus?: 'none' | 'partial' | 'learned';
   onToggle: () => void;
+  onLongPressToggle?: () => void;
   onOpenTzuratHadaf?: () => void;
 }
 
@@ -28,8 +29,9 @@ const DafDetailModal = ({
   onClose,
   selectedDate,
   dafInfo,
-  isLearned,
+  studyStatus,
   onToggle,
+  onLongPressToggle,
   onOpenTzuratHadaf,
 }: DafDetailModalProps) => {
   const theme = useTheme();
@@ -59,8 +61,9 @@ const DafDetailModal = ({
               <SelectedDafCard
                 selectedDate={selectedDate}
                 dafInfo={dafInfo}
-                isLearned={isLearned}
+                studyStatus={studyStatus}
                 onToggle={onToggle}
+                onLongPressToggle={onLongPressToggle}
                 onOpenTzuratHadaf={onOpenTzuratHadaf}
               />
             )}

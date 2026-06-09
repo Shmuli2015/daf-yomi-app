@@ -21,6 +21,7 @@ import ShasBanner from "../components/ShasBanner";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import { getDateStr } from "../utils/dafYomi";
 import { getMasechetDafim } from "../utils/shas";
+import { getStudyStatus, formatProgressCount } from "../utils/dafStatus";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
 import { useTheme } from "../theme";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
@@ -49,6 +50,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     loadInitialData,
     streak,
     toggleAnyDafLearned,
+    setDafStudyStatus,
     history,
     settings,
     progressCache,
@@ -67,6 +69,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       loadInitialData: s.loadInitialData,
       streak: s.streak,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
+      setDafStudyStatus: s.setDafStudyStatus,
       history: s.history,
       settings: s.settings,
       progressCache: s.progressCache,
@@ -79,12 +82,22 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     loadInitialData();
   }, []);
 
-  const isLearned = todayRecord?.status === "learned";
+  const studyStatus = getStudyStatus(todayRecord);
+  const isLearned = studyStatus === "learned";
 
   const handleToggle = useCallback(() => {
-    if (!isLearned && settings?.show_confetti) setShowConfetti(true);
+    if (!isLearned && studyStatus !== "partial" && settings?.show_confetti) setShowConfetti(true);
     toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
-  }, [isLearned, settings, currentDate, todayMasechet, todayDafNum, toggleAnyDafLearned]);
+  }, [isLearned, studyStatus, settings, currentDate, todayMasechet, todayDafNum, toggleAnyDafLearned]);
+
+  const handleMarkFull = useCallback(() => {
+    if (settings?.show_confetti && studyStatus !== "learned") setShowConfetti(true);
+    setDafStudyStatus(getDateStr(currentDate), todayMasechet, todayDafNum, "learned");
+  }, [settings, studyStatus, currentDate, todayMasechet, todayDafNum, setDafStudyStatus]);
+
+  const handleMarkPartial = useCallback(() => {
+    setDafStudyStatus(getDateStr(currentDate), todayMasechet, todayDafNum, "partial");
+  }, [currentDate, todayMasechet, todayDafNum, setDafStudyStatus]);
 
   const hDate = useMemo(() => new HDate(currentDate), [currentDate]);
   const hebrewDateStr = useMemo(() => hDate.renderGematriya(), [hDate]);
@@ -177,10 +190,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           showTzuratLink={showTzuratLink}
           onOpenTzuratHadaf={handleOpenTzuratHadaf}
           onPressMasechet={handleOpenMasechet}
-          isLearned={isLearned}
+          studyStatus={studyStatus}
           handleToggle={handleToggle}
+          onMarkFull={handleMarkFull}
+          onMarkPartial={handleMarkPartial}
           masechetProgressPct={masechetStats.pct}
-          masechetLearnedCount={masechetStats.learned}
+          masechetLearnedCountLabel={formatProgressCount(masechetStats.learned)}
           masechetTotalCount={masechetStats.total}
           showSecularDate={settings?.show_secular_date === 1}
           onPrevDay={handlePrevDay}
