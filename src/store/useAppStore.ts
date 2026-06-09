@@ -25,6 +25,12 @@ interface AppState {
   refreshHistory: () => void;
   refreshSettings: () => void;
   markTodayAsLearned: () => void;
+  setDafStudyStatus: (
+    dateStr: string,
+    masechet: string,
+    daf: string,
+    status: 'learned' | 'partial' | 'missed'
+  ) => void;
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => void;
   batchMarkDafim: (updates: Array<{ dateStr: string; masechet: string; daf: string }>) => void;
   batchUnmarkDafim: (updates: Array<{ dateStr: string; masechet: string; daf: string }>) => void;
@@ -123,17 +129,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   markTodayAsLearned: () => {
     const { currentDate, todayMasechet, todayDafNum } = get();
     const dateStr = getDateStr(currentDate);
-    
-    updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned');
 
+    updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned', 100);
+
+    get().refreshHistory();
+  },
+
+  setDafStudyStatus: (dateStr, masechet, daf, status) => {
+    updateDailyRecord(dateStr, masechet, daf, status);
     get().refreshHistory();
   },
 
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => {
     const { history } = get();
     const existing = history.find(r => r.date === dateStr);
-    const newStatus = existing?.status === 'learned' ? 'missed' : 'learned';
-    
+    const newStatus =
+      existing?.status === 'learned' || existing?.status === 'partial' ? 'missed' : 'learned';
+
     updateDailyRecord(dateStr, masechet, daf, newStatus);
 
     get().refreshHistory();

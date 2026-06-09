@@ -72,7 +72,7 @@ export default function MasechetGrid({
           total: progress.total, 
           learned: progress.learned, 
           percent, 
-          isCompleted: progress.total > 0 && progress.learned === progress.total 
+          isCompleted: progress.total > 0 && progress.learned >= progress.total 
         };
       }).filter(d => d.total > 0);
       

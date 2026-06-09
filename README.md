@@ -15,13 +15,14 @@
 ### 🏠 Home Dashboard
 - **Day Navigation**: Prev/next arrows on the dashboard move between calendar days for that day's Daf; tap the dates to jump back to today, or use **Return to today** (<span dir="rtl" lang="he">חזור להיום</span>) when you have moved away from the real calendar date
 - **Today's Daf Display**: Shows the Daf Yomi for the selected day (tractate and page) with both Hebrew and Gregorian dates (Gregorian respects the visibility toggle)
-- **Learning Tracker**: Use **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) to record that day's page; the control switches to **Learned** (<span dir="rtl" lang="he">אשריך! הדף נלמד</span>) and asks for confirmation before unsetting
+- **Learning Tracker**: Tap **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) for a full page; **long press** opens a menu for **full page**, **half page (amud א)**, or **half page (amud ב)**. When half-done, the control shows **I finished the page!** (<span dir="rtl" lang="he">סיימתי את הדף!</span>); tap to upgrade to full. When fully learned, it shows **Learned** (<span dir="rtl" lang="he">אשריך! הדף נלמד</span>) and asks for confirmation before unsetting
+- **Partial progress**: Half pages count as **0.5** toward tractate progress (fractional counts such as 3.5 of 10 are possible)
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Opens the Daf in Sefaria in your **external browser** (unchanged behavior)
-- **Tzurat Hadaf Viewer** (<span dir="rtl" lang="he">צורת הדף</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) (Sefaria Manuscripts fallback) with pinch-to-zoom, amud/daf navigation, **mark as learned** from the viewer header, **landscape rotation** for wider reading, and **local PDF cache** for fast re-open
+- **Tzurat Hadaf Viewer** (<span dir="rtl" lang="he">צורת הדף</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) (Sefaria Manuscripts fallback) with pinch-to-zoom, amud/daf navigation, **mark as learned** (including half page via long press) from the viewer header, **landscape rotation** for wider reading, and **local PDF cache** for fast re-open
 - **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **Tzurat Hadaf only**, or **both** on Home and Calendar
-- **Streak Counter**: Track your consecutive days of learning to maintain momentum
-- **7-Day Progress Overview**: In-app mini chart of the last seven days so you can see your week at a glance
+- **Streak Counter**: Track your consecutive days of learning to maintain momentum; half pages **do not break** the streak but **do not add** a day either
+- **7-Day Progress Overview**: In-app mini chart of the last seven days: tall bar = full page, medium bar = half page, short bar = not learned
 - **Share progress as an image** (<span dir="rtl" lang="he">שיתוף תמונה</span>): On the streak card, tap the **share** (<span dir="rtl" lang="he">שתף</span>) control to open a preview, then **Share image** (<span dir="rtl" lang="he">שתף תמונה</span>) — exports a square graphic (streak, Hebrew date, app branding) for WhatsApp Status, Instagram Stories, etc. (requires a **development or production build**, not Expo Go; see Tech Stack)
 - **Shas Progress Banner**: Overall progress across Shas; **tap the banner** to open the History screen for full tractate details
 - **Confetti Celebration**: Optional festive animation when marking a Daf as learned
@@ -29,18 +30,19 @@
 
 ### 📊 History & Progress Tracking
 - **Complete Shas Overview**: All 37 tractates (<span dir="rtl" lang="he">מסכתות</span>) grouped by **Seder** (<span dir="rtl" lang="he">סדר</span>) in collapsible sections, each with its own progress summary
-- **Masechet-by-Masechet Progress**: Individual progress bars for each tractate showing pages learned
+- **Masechet-by-Masechet Progress**: Individual progress bars for each tractate showing pages learned (including half pages)
 - **Completion Statistics**: Track total pages learned and completed tractates
-- **Interactive Masechet Details**: Tap any tractate to see a daf grid; use **Mark all** (<span dir="rtl" lang="he">סמן הכל</span>) or **Clear all** (<span dir="rtl" lang="he">בטל הכל</span>) for bulk updates (with confirmation), or tap individual daf numbers to toggle
+- **Interactive Masechet Details**: Tap any tractate to see a daf grid; use **Mark all** (<span dir="rtl" lang="he">סמן הכל</span>) or **Clear all** (<span dir="rtl" lang="he">בטל הכל</span>) for bulk updates (with confirmation), or tap individual daf numbers to toggle. Partial daf cells use a distinct style; tapping a half page **upgrades** it to full learned (half page marking is available from Home, Calendar, and Tzurat Hadaf only)
 - **Visual Progress Hero**: Large progress ring displaying overall Shas completion percentage
 - **Share Shas progress as an image**: On the History screen, use the **share** control on the hero card (same flow: preview → **Share image**) to export a branded square graphic with ring %, pages learned, and completed tractates count
-- **Learned Pages Counter**: Real-time count of total pages learned across all of Shas
+- **Learned Pages Counter**: Real-time count of total pages learned across all of Shas, including half pages (e.g. 150.5)
 
 ### 📅 Hebrew Calendar View
 - **Monthly Hebrew Calendar**: Hebrew dates (gematria) with gregorian day numbers per cell; optionally show each day's **Daf number** in the cell (<span dir="rtl" lang="he">הצג דף בלוח שנה</span> in Settings)
 - **Navigation**: Month arrows, **swipe left/right** to change months, and a **Return to today** (<span dir="rtl" lang="he">חזרה להיום</span>) shortcut when you are viewing another month
-- **Learned days**: Highlighted with the accent color; **today** uses a lighter accent ring
-- **Day detail**: Tap a date to open a card with that day's Daf, study buttons (Sefaria and/or Tzurat Hadaf per Settings), and learn/unlearn (with confirmation when clearing)
+- **Learned days**: Full pages use solid accent highlight; **half pages** use a lighter/semi-transparent accent; **today** uses a lighter accent ring
+- **Calendar legend**: At the bottom of the calendar: full page learned, half page, today's Daf, not yet learned
+- **Day detail**: Tap a date to open a card with that day's Daf, study buttons (Sefaria and/or Tzurat Hadaf per Settings), and learn/unlearn (with confirmation when clearing). **Long press** the mark control for the half page menu
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
@@ -58,6 +60,7 @@
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
 - **Calendar Daf Labels**: Toggle whether each calendar cell shows that day's Daf number (<span dir="rtl" lang="he">הצג דף בלוח שנה</span>)
 - **Confetti Effects Toggle**: Enable/disable celebration animations
+- **Backup & restore** (<span dir="rtl" lang="he">גיבוי ושחזור</span>): **Save backup to file** writes a JSON backup to a folder on device; **Share backup** sends it via WhatsApp, Drive, etc.; **Import backup** restores from a previous file with a preview. On import, **Merge with existing data** keeps the newer record per date; **Replace all** wipes local data and replaces it with the backup. Recommended before reset or when moving to a new device
 - **Data Management**: Complete reset option to clear all learning history
 - **Privacy-First**: All data stored locally on device with SQLite database
 
@@ -85,9 +88,10 @@
 
 ### 💾 Data Persistence
 - **Local SQLite Database**: Lightning-fast local storage for all learning records
+- **JSON backup export/import**: Full learning history and settings can be exported to a JSON file and restored on another device (no cloud server)
 - **Zustand State Management**: Reactive UI with efficient state updates
 - **Progress Caching**: Optimized calculations for instant performance
-- **Date-based Records**: Track every Daf by date with learned/missed/skipped status
+- **Date-based Records**: Track every Daf by date with learned, partial (half page), or missed status
 - **Settings Persistence**: All preferences saved and restored on app restart
 
 ---

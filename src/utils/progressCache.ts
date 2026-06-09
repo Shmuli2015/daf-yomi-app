@@ -1,7 +1,9 @@
+import { subDays } from 'date-fns';
 import { DailyRecord } from '../db/database';
 import { SHAS_MASECHTOT, Seder, SEDARIM } from '../data/shas';
 import { stripNiqqud } from './shas';
 import { getDateStr } from './dafYomi';
+import { getRecordProgress } from './dafStatus';
 import dafDates from '../data/dafDates.json';
 
 export interface SederProgressData {
@@ -39,46 +41,41 @@ for (const [key, dateStr] of Object.entries(dafDates as Record<string, string | 
 }
 
 function generateHistoryHash(history: DailyRecord[]): string {
-  const learnedCount = history.filter(r => r.status === 'learned').length;
+  const progressSum = history.reduce((sum, r) => sum + getRecordProgress(r), 0);
   const firstDate = history[0]?.date || '';
   const lastDate = history[history.length - 1]?.date || '';
-  return `${history.length}-${learnedCount}-${firstDate}-${lastDate}`;
+  return `${history.length}-${progressSum.toFixed(2)}-${firstDate}-${lastDate}`;
 }
 
 function calculateStreak(records: DailyRecord[]): number {
-  const learnedRecords = records
-    .filter(r => r.status === 'learned')
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const recordByDate = new Map(records.map(r => [r.date, r]));
+  const todayStr = getDateStr(new Date());
+  const yesterdayStr = getDateStr(subDays(new Date(), 1));
 
-  if (learnedRecords.length === 0) return 0;
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayStr = getDateStr(today);
-  
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(0, 0, 0, 0);
-  const yesterdayStr = getDateStr(yesterday);
-
-  const learnedDateSet = new Set(learnedRecords.map(r => r.date));
-  if (!learnedDateSet.has(todayStr) && !learnedDateSet.has(yesterdayStr)) {
-    return 0;
-  }
-
-  const latestDateStr = learnedRecords[0].date;
+  let current = new Date();
+  current.setHours(0, 0, 0, 0);
 
   let streak = 0;
-  let currentDateToCheck = new Date(latestDateStr);
-  currentDateToCheck.setHours(0, 0, 0, 0);
 
-  for (const record of learnedRecords) {
-    if (record.date === getDateStr(currentDateToCheck)) {
+  while (current.getFullYear() >= 2005) {
+    const dateStr = getDateStr(current);
+    const status = recordByDate.get(dateStr)?.status;
+
+    if (status === 'learned') {
       streak++;
-      currentDateToCheck.setDate(currentDateToCheck.getDate() - 1);
+    } else if (status === 'partial') {
+      // partial doesn't break streak but doesn't increase it
     } else {
+      if (streak > 0) break;
+      if (dateStr === todayStr) {
+        current.setDate(current.getDate() - 1);
+        continue;
+      }
+      if (dateStr === yesterdayStr) break;
       break;
     }
+
+    current.setDate(current.getDate() - 1);
   }
 
   return streak;
@@ -91,23 +88,22 @@ export function buildProgressCache(history: DailyRecord[]): ProgressCache {
     return cachedResult;
   }
 
-  const learnedDates = new Set(
-    history.filter(r => r.status === 'learned').map(r => r.date)
-  );
-
   const masechetProgress = new Map<string, { learned: number; total: number }>();
   for (const masechet of SHAS_MASECHTOT) {
     masechetProgress.set(masechet.he, { learned: 0, total: masechet.pages });
   }
 
   let learnedCount = 0;
-  for (const dateStr of learnedDates) {
-    const masechetName = dateToMasechet.get(dateStr);
+  for (const record of history) {
+    const progress = getRecordProgress(record);
+    if (progress <= 0) continue;
+
+    const masechetName = dateToMasechet.get(record.date);
     if (masechetName) {
-      const progress = masechetProgress.get(masechetName);
-      if (progress) {
-        progress.learned++;
-        learnedCount++;
+      const masechetStats = masechetProgress.get(masechetName);
+      if (masechetStats) {
+        masechetStats.learned += progress;
+        learnedCount += progress;
       }
     }
   }
@@ -127,7 +123,7 @@ export function buildProgressCache(history: DailyRecord[]): ProgressCache {
         totalDafim += progress.total;
         learnedDafim += progress.learned;
         
-        if (progress.total > 0 && progress.learned === progress.total) {
+        if (progress.total > 0 && progress.learned >= progress.total) {
           completedMasechtot++;
         }
       }
@@ -191,4 +187,3 @@ export function getSederProgressFromCache(
     percentage: 0
   };
 }
-

@@ -9,6 +9,7 @@ interface CalendarDayProps {
   hdate: HDate;
   isCurrentMonth: boolean;
   learned: boolean;
+  partial?: boolean;
   isToday: boolean;
   isSelected: boolean;
   dafLabel?: string;
@@ -16,7 +17,7 @@ interface CalendarDayProps {
 }
 
 const CalendarDay = React.memo(
-  ({ hdate, isCurrentMonth, learned, isToday, isSelected, dafLabel, onPress }: CalendarDayProps) => {
+  ({ hdate, isCurrentMonth, learned, partial = false, isToday, isSelected, dafLabel, onPress }: CalendarDayProps) => {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
@@ -59,9 +60,15 @@ const CalendarDay = React.memo(
       opacity: pulseOpacity.value,
     }));
 
-    const bg = learned ? theme.colors.accent : isToday ? theme.colors.accentLight : 'transparent';
-    const textColor = learned ? 'white' : isToday ? theme.colors.accent : theme.colors.textPrimary;
-    const subColor = learned ? 'rgba(255,255,255,0.7)' : isToday ? theme.colors.accent : theme.colors.textMuted;
+    const bg = learned
+      ? theme.colors.accent
+      : partial
+        ? theme.colors.accent + '55'
+        : isToday
+          ? theme.colors.accentLight
+          : 'transparent';
+    const textColor = learned || partial ? 'white' : isToday ? theme.colors.accent : theme.colors.textPrimary;
+    const subColor = learned || partial ? 'rgba(255,255,255,0.7)' : isToday ? theme.colors.accent : theme.colors.textMuted;
     const borderColor = isSelected ? theme.colors.accent : 'transparent';
 
     return (
@@ -89,6 +96,7 @@ const CalendarDay = React.memo(
     return (
       prevProps.isCurrentMonth === nextProps.isCurrentMonth &&
       prevProps.learned === nextProps.learned &&
+      prevProps.partial === nextProps.partial &&
       prevProps.isToday === nextProps.isToday &&
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.dafLabel === nextProps.dafLabel &&
