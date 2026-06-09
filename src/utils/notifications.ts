@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
-import { Platform, Linking, Alert } from 'react-native';
+import { Platform } from 'react-native';
 import { getDafByDate } from './dafYomi';
+import { hasExactAlarmPermission, promptForExactAlarmPermission } from './exactAlarm';
 
 export type DaySchedule = { enabled: boolean; hour: number; minute: number };
 
@@ -10,25 +11,30 @@ export const DEFAULT_SCHEDULES: DaySchedule[] = Array.from({ length: 7 }, (_, i)
   minute: 30,
 }));
 
-async function checkAndRequestExactAlarmPermission(): Promise<boolean> {
-  return true;
-}
+export type ScheduleNotificationsOptions = {
+  promptForExactAlarm?: boolean;
+};
 
 export async function scheduleNotifications(
   globalHour: number,
   globalMin: number,
   mode: 'daily' | 'custom',
   schedules: DaySchedule[],
-  enabled: boolean
+  enabled: boolean,
+  options?: ScheduleNotificationsOptions,
 ) {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
     if (!enabled) return;
 
-    const hasPermission = await checkAndRequestExactAlarmPermission();
-    if (!hasPermission) {
-      console.log('Exact alarm permission not granted');
-      return;
+    if (options?.promptForExactAlarm) {
+      await promptForExactAlarmPermission();
+    }
+    const hasExactAlarm = await hasExactAlarmPermission();
+    if (!hasExactAlarm) {
+      console.log(
+        'Exact alarm permission not granted — reminders will be scheduled with approximate timing',
+      );
     }
 
     const isAndroid = Platform.OS === 'android';
@@ -148,11 +154,7 @@ export async function getScheduledNotifications() {
 
 export async function sendTestNotification() {
   try {
-    const hasPermission = await checkAndRequestExactAlarmPermission();
-    if (!hasPermission) {
-      console.log('Cannot send test notification - exact alarm permission not granted');
-      return;
-    }
+    await promptForExactAlarmPermission({ force: true });
 
     const dafInfo = getDafByDate(new Date());
     const isAndroid = Platform.OS === 'android';

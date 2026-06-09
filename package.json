@@ -24,6 +24,7 @@
     "@react-navigation/native-stack": "^7.14.12",
     "babel-preset-expo": "~54.0.10",
     "date-fns": "^4.1.0",
+    "exact-alarm": "file:./modules/exact-alarm",
     "expo": "~54.0.35",
     "expo-constants": "~18.0.13",
     "expo-document-picker": "~14.0.8",

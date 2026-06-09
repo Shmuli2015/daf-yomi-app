@@ -70,6 +70,7 @@
 - **Interactive Actions**: Quick actions directly from notification tray
 - **Snooze Functionality**: One-hour follow-up via <span dir="rtl" lang="he">⏰ הזכר לי עוד שעה</span>
 - **Expo Go**: Local notification scheduling still runs, but behavior can differ from dev/production builds; use a **development build** for full parity
+- **Android exact alarms** (API 31+): For reminders at an exact time (e.g. 7:30), grant **Schedule exact alarms** (<span dir="rtl" lang="he">תזמון התראות מדויק</span>) in system settings. Without it, `expo-notifications` falls back to approximate timing. Settings shows **Exact reminders** (<span dir="rtl" lang="he">תזכורות מדויקות</span>) status on Android; tap to open the permission screen. Requires a **development or production build** (not Expo Go) for the status check
 - **Auto-scheduling**: Notifications automatically reschedule on device reboot
 - **Per-Day Customization**: In **By weekday** (<span dir="rtl" lang="he">לפי ימים</span>) mode, turn individual weekdays on or off and assign each enabled day its own time
 - **Hebrew Text**: All notifications in Hebrew for native speaker experience

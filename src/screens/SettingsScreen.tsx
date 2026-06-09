@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View, Share } from 'react-native';
+import { View, Share, AppState, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { useAppStore } from '../store/useAppStore';
@@ -18,6 +18,12 @@ import {
   sendTestNotification,
   getScheduledNotifications,
 } from '../utils/notifications';
+import {
+  getExactAlarmStatus,
+  openExactAlarmSettings,
+  requiresExactAlarmPermission,
+  type ExactAlarmStatus,
+} from '../utils/exactAlarm';
 import { parseDaySchedulesJson } from '../utils/settingsScreen';
 import { parseStudyLinkMode, type StudyLinkMode } from '../utils/studyLinkMode';
 import type { DaySchedule } from '../components/Settings/DayScheduleList';
@@ -67,6 +73,7 @@ export default function SettingsScreen() {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [scheduledCount, setScheduledCount] = useState(0);
+  const [exactAlarmStatus, setExactAlarmStatus] = useState<ExactAlarmStatus>('not_required');
   const [isSaving, setIsSaving] = useState(false);
   const [pendingBackup, setPendingBackup] = useState<BackupData | null>(null);
   const [backupPreview, setBackupPreview] = useState<BackupPreview | null>(null);
@@ -103,6 +110,14 @@ export default function SettingsScreen() {
     }
   }, [settings]);
 
+  const refreshExactAlarmStatus = useCallback(async () => {
+    if (!requiresExactAlarmPermission()) {
+      setExactAlarmStatus('not_required');
+      return;
+    }
+    setExactAlarmStatus(await getExactAlarmStatus());
+  }, []);
+
   const saveAndSchedule = useCallback(
     async (
       h: number,
@@ -112,6 +127,7 @@ export default function SettingsScreen() {
       enabled: boolean,
       secular: boolean,
       confetti: boolean,
+      promptForExactAlarm = false,
     ) => {
       setIsSaving(true);
       try {
@@ -124,7 +140,8 @@ export default function SettingsScreen() {
           mode,
           JSON.stringify(schedules),
         );
-        await scheduleNotifications(h, m, mode, schedules, enabled);
+        await scheduleNotifications(h, m, mode, schedules, enabled, { promptForExactAlarm });
+        await refreshExactAlarmStatus();
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error('Save error:', error);
@@ -132,7 +149,7 @@ export default function SettingsScreen() {
         setIsSaving(false);
       }
     },
-    [updateNotificationSettings],
+    [updateNotificationSettings, refreshExactAlarmStatus],
   );
 
   const handleModeChange = useCallback(
@@ -192,6 +209,7 @@ export default function SettingsScreen() {
           notificationsEnabled,
           showSecularDate,
           showConfettiPref,
+          notificationsEnabled,
         );
       } else {
         setHour(newHour);
@@ -204,6 +222,7 @@ export default function SettingsScreen() {
           notificationsEnabled,
           showSecularDate,
           showConfettiPref,
+          notificationsEnabled,
         );
       }
       setShowTimePicker(false);
@@ -230,10 +249,15 @@ export default function SettingsScreen() {
         val,
         showSecularDate,
         showConfettiPref,
+        val,
       );
     },
     [hour, minute, notifMode, daySchedules, showSecularDate, showConfettiPref, saveAndSchedule],
   );
+
+  const handleExactAlarmSettingsPress = useCallback(async () => {
+    await openExactAlarmSettings();
+  }, []);
 
   const handleSecularDateToggle = useCallback(
     (val: boolean) => {
@@ -523,6 +547,22 @@ export default function SettingsScreen() {
     checkScheduled();
   }, [notificationsEnabled, hour, minute, notifMode, daySchedules]);
 
+  useEffect(() => {
+    void refreshExactAlarmStatus();
+  }, [refreshExactAlarmStatus]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    const sub = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        void refreshExactAlarmStatus();
+      }
+    });
+
+    return () => sub.remove();
+  }, [refreshExactAlarmStatus]);
+
   if (!settings) {
     return <SettingsLoadingView />;
   }
@@ -536,6 +576,8 @@ export default function SettingsScreen() {
             styles={styles}
             notificationsEnabled={notificationsEnabled}
             onNotificationsToggle={handleNotificationsToggle}
+            exactAlarmStatus={exactAlarmStatus}
+            onExactAlarmSettingsPress={handleExactAlarmSettingsPress}
             notifMode={notifMode}
             onNotifModeChange={handleModeChange}
             hour={hour}
