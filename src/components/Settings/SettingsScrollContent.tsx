@@ -16,11 +16,14 @@ import {
   getThemeModeSettingDisplay,
 } from '../../utils/settingsScreen';
 import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
+import type { ExactAlarmStatus } from '../../utils/exactAlarm';
 
 export type SettingsScrollContentProps = {
   styles: SettingsScreenStyles;
   notificationsEnabled: boolean;
   onNotificationsToggle: (v: boolean) => void;
+  exactAlarmStatus?: ExactAlarmStatus;
+  onExactAlarmSettingsPress?: () => void;
   notifMode: 'daily' | 'custom';
   onNotifModeChange: (mode: 'daily' | 'custom') => void;
   hour: number;
@@ -59,6 +62,8 @@ export default function SettingsScrollContent({
   styles,
   notificationsEnabled,
   onNotificationsToggle,
+  exactAlarmStatus = 'not_required',
+  onExactAlarmSettingsPress,
   notifMode,
   onNotifModeChange,
   hour,
@@ -94,6 +99,16 @@ export default function SettingsScrollContent({
 }: SettingsScrollContentProps) {
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
   const [mailHintVisible, setMailHintVisible] = useState(false);
+  const showExactAlarmRow =
+    notificationsEnabled &&
+    exactAlarmStatus !== 'not_required' &&
+    onExactAlarmSettingsPress != null;
+  const exactAlarmLabel =
+    exactAlarmStatus === 'granted'
+      ? 'פעיל'
+      : exactAlarmStatus === 'denied'
+        ? 'דורש הרשאה'
+        : 'לא זמין ב-Expo Go';
 
   const openSupportEmail = useCallback(async () => {
     try {
@@ -146,6 +161,19 @@ export default function SettingsScrollContent({
                   schedules={daySchedules}
                   onToggleDay={onToggleDay}
                   onEditTime={onEditDayTime}
+                />
+              )}
+              {showExactAlarmRow && (
+                <SettingItem
+                  icon="alarm-outline"
+                  title="תזכורות מדויקות"
+                  description={
+                    exactAlarmStatus === 'denied'
+                      ? 'לחץ כדי לאשר תזמון מדויק בהגדרות המכשיר'
+                      : 'התזכורת תצלצל בדיוק בשעה שבחרת'
+                  }
+                  value={exactAlarmLabel}
+                  onPress={onExactAlarmSettingsPress}
                 />
               )}
             </>
