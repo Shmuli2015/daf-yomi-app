@@ -45,7 +45,9 @@ export type SettingsScrollContentProps = {
   onTestNotification: () => void;
   onCheckScheduled: () => void;
   onResetModalOpen: () => void;
-  /** כבוי כברירת מחדל — הפעלה מציגה חלון עדכון אוטומטית */
+  onSaveBackupToFile?: () => void;
+  onShareBackup?: () => void;
+  onImportBackup?: () => void;
   updateAutoPromptEnabled?: boolean;
   onUpdateAutoPromptToggle?: (enabled: boolean) => void;
   onCheckAppUpdate?: () => void;
@@ -81,6 +83,9 @@ export default function SettingsScrollContent({
   onTestNotification,
   onCheckScheduled,
   onResetModalOpen,
+  onSaveBackupToFile,
+  onShareBackup,
+  onImportBackup,
   updateAutoPromptEnabled,
   onUpdateAutoPromptToggle,
   onCheckAppUpdate,
@@ -270,6 +275,34 @@ export default function SettingsScrollContent({
             </View>
           </>
         )}
+
+        <SectionHeader title="גיבוי ושחזור" />
+        <View style={styles.card}>
+          {onSaveBackupToFile ? (
+            <SettingItem
+              icon="save-outline"
+              title="שמור גיבוי לקובץ"
+              description="בחר תיקייה (למשל הורדות) ושמור קובץ JSON במכשיר"
+              onPress={onSaveBackupToFile}
+            />
+          ) : null}
+          {onShareBackup ? (
+            <SettingItem
+              icon="share-outline"
+              title="שתף גיבוי"
+              description="שלח את קובץ הגיבוי בוואטסאפ, דרייב או אפליקציה אחרת"
+              onPress={onShareBackup}
+            />
+          ) : null}
+          {onImportBackup ? (
+            <SettingItem
+              icon="cloud-upload-outline"
+              title="ייבא גיבוי"
+              description="שחזור נתונים מקובץ גיבוי קודם"
+              onPress={onImportBackup}
+            />
+          ) : null}
+        </View>
 
         <SectionHeader title="נתונים ופרטיות" />
         <View style={styles.card}>

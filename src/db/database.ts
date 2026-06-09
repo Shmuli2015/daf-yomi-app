@@ -25,12 +25,21 @@ export interface SettingsRecord {
   theme_mode: string;
   last_update_check_at: string | null;
   dismissed_update_version: string | null;
-  /** 1 = show update modal when a newer version is detected (startup / foreground) */
   update_auto_prompt_enabled: number;
-  /** sefaria | tzurat | both — which study buttons to show on home/calendar */
   study_link_mode: string;
-  /** 1 = show daf number in calendar day cells */
   show_calendar_daf: number;
+}
+
+function migrateDailyDafColumns() {
+  const dailyDafInfo: { name: string }[] = db.getAllSync('PRAGMA table_info(daily_daf);');
+  const dailyDafColumns = dailyDafInfo.map(c => c.name);
+
+  if (!dailyDafColumns.includes('percentage')) {
+    db.execSync('ALTER TABLE daily_daf ADD COLUMN percentage INTEGER DEFAULT 0;');
+  }
+  if (!dailyDafColumns.includes('notes')) {
+    db.execSync('ALTER TABLE daily_daf ADD COLUMN notes TEXT DEFAULT \'\';');
+  }
 }
 
 export function initDB() {
@@ -51,6 +60,8 @@ export function initDB() {
       notification_minute INTEGER DEFAULT 30
     );
   `);
+
+  migrateDailyDafColumns();
 
   const tableInfo: any[] = db.getAllSync('PRAGMA table_info(settings);');
   const columns = tableInfo.map(c => c.name);
@@ -190,4 +201,113 @@ export function setShowCalendarDaf(enabled: boolean) {
 export function resetDB() {
   db.execSync('DROP TABLE IF EXISTS daily_daf;');
   initDB();
+}
+
+export type DailyRecordInput = Omit<DailyRecord, 'id'>;
+export type SettingsInput = Omit<SettingsRecord, 'id'>;
+
+function insertDailyRecord(record: DailyRecordInput) {
+  db.runSync(
+    'INSERT INTO daily_daf (date, masechet, daf, status, percentage, notes, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    [
+      record.date,
+      record.masechet,
+      record.daf,
+      record.status,
+      record.percentage ?? 0,
+      record.notes ?? '',
+      record.learnedAt,
+    ]
+  );
+}
+
+function updateDailyRecordFromBackup(record: DailyRecordInput) {
+  db.runSync(
+    'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, notes = ?, learnedAt = ? WHERE date = ?',
+    [
+      record.masechet,
+      record.daf,
+      record.status,
+      record.percentage ?? 0,
+      record.notes ?? '',
+      record.learnedAt,
+      record.date,
+    ]
+  );
+}
+
+export function replaceAllRecords(records: DailyRecordInput[]) {
+  migrateDailyDafColumns();
+  db.withTransactionSync(() => {
+    db.runSync('DELETE FROM daily_daf');
+    for (const record of records) {
+      insertDailyRecord(record);
+    }
+  });
+}
+
+export function importRecords(records: DailyRecordInput[]) {
+  migrateDailyDafColumns();
+  db.withTransactionSync(() => {
+    for (const incoming of records) {
+      const existing = getDailyRecord(incoming.date);
+      if (!existing) {
+        insertDailyRecord(incoming);
+        continue;
+      }
+
+      const existingTime = Date.parse(existing.learnedAt);
+      const incomingTime = Date.parse(incoming.learnedAt);
+      const winner =
+        Number.isFinite(incomingTime) &&
+        (!Number.isFinite(existingTime) || incomingTime >= existingTime)
+          ? incoming
+          : {
+              date: existing.date,
+              masechet: existing.masechet,
+              daf: existing.daf,
+              status: existing.status,
+              percentage: existing.percentage,
+              notes: existing.notes,
+              learnedAt: existing.learnedAt,
+            };
+
+      updateDailyRecordFromBackup(winner);
+    }
+  });
+}
+
+export function importSettingsFromBackup(settings: SettingsInput) {
+  db.runSync(
+    `UPDATE settings SET
+      notification_hour = ?,
+      notification_minute = ?,
+      show_secular_date = ?,
+      show_confetti = ?,
+      notifications_enabled = ?,
+      notif_mode = ?,
+      day_schedules = ?,
+      theme_mode = ?,
+      last_update_check_at = ?,
+      dismissed_update_version = ?,
+      update_auto_prompt_enabled = ?,
+      study_link_mode = ?,
+      show_calendar_daf = ?
+    WHERE id = 1`,
+    [
+      settings.notification_hour,
+      settings.notification_minute,
+      settings.show_secular_date,
+      settings.show_confetti,
+      settings.notifications_enabled,
+      settings.notif_mode,
+      settings.day_schedules,
+      settings.theme_mode,
+      settings.last_update_check_at,
+      settings.dismissed_update_version,
+      settings.update_auto_prompt_enabled,
+      settings.study_link_mode,
+      settings.show_calendar_daf,
+    ]
+  );
 }
