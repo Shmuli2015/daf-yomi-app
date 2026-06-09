@@ -7,6 +7,8 @@ import { GuideModal } from './GuideModal';
 import { TimePickerModal } from './TimePickerModal';
 import ConfirmModal from '../ConfirmModal';
 import SuccessModal from '../SuccessModal';
+import BackupImportModal from './BackupImportModal';
+import type { BackupPreview } from '../../services/backup';
 import PulsingBookIcon from './PulsingBookIcon';
 import { createSettingsScreenStyles } from './settingsScreenStyles';
 
@@ -27,6 +29,11 @@ export type SettingsModalsProps = {
   onConfirmReset: () => void;
   showSuccessModal: boolean;
   onSuccessModalClose: () => void;
+  showBackupImportModal: boolean;
+  backupPreview: BackupPreview | null;
+  onBackupImportMerge: () => void;
+  onBackupImportReplace: () => void;
+  onBackupImportCancel: () => void;
   isSaving: boolean;
 };
 
@@ -47,6 +54,11 @@ export default function SettingsModals({
   onConfirmReset,
   showSuccessModal,
   onSuccessModalClose,
+  showBackupImportModal,
+  backupPreview,
+  onBackupImportMerge,
+  onBackupImportReplace,
+  onBackupImportCancel,
   isSaving,
 }: SettingsModalsProps) {
   const theme = useTheme();
@@ -80,6 +92,13 @@ export default function SettingsModals({
         title="הצלחנו!"
         message="הנתונים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי."
         onClose={onSuccessModalClose}
+      />
+      <BackupImportModal
+        visible={showBackupImportModal}
+        preview={backupPreview}
+        onMerge={onBackupImportMerge}
+        onReplace={onBackupImportReplace}
+        onCancel={onBackupImportCancel}
       />
 
       {isSaving && (

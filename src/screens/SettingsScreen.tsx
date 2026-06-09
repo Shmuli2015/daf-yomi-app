@@ -24,12 +24,20 @@ import type { DaySchedule } from '../components/Settings/DayScheduleList';
 import { useAppUpdateControls } from '../context/AppUpdateProvider';
 import { isUpdateCheckConfigured } from '../services/appUpdate';
 import { getDownloadPageUrl } from '../services/apkInstall';
+import {
+  saveBackupToDevice,
+  exportAndShareBackup,
+  pickAndReadBackupFile,
+  getBackupPreview,
+  type BackupData,
+  type BackupPreview,
+} from '../services/backup';
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
   const updateCtl = useAppUpdateControls();
-  const { settings, updateNotificationSettings, updateThemeMode, updateStudyLinkMode, loadInitialData, setUpdateAutoPromptEnabled, setShowCalendarDafEnabled } =
+  const { settings, updateNotificationSettings, updateThemeMode, updateStudyLinkMode, loadInitialData, setUpdateAutoPromptEnabled, setShowCalendarDafEnabled, importBackup } =
     useAppStore(
       useShallow(s => ({
         settings: s.settings,
@@ -39,6 +47,7 @@ export default function SettingsScreen() {
         loadInitialData: s.loadInitialData,
         setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,
         setShowCalendarDafEnabled: s.setShowCalendarDafEnabled,
+        importBackup: s.importBackup,
       })),
     );
   const [hour, setHour] = useState(7);
@@ -59,6 +68,9 @@ export default function SettingsScreen() {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [scheduledCount, setScheduledCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingBackup, setPendingBackup] = useState<BackupData | null>(null);
+  const [backupPreview, setBackupPreview] = useState<BackupPreview | null>(null);
+  const [showBackupImportModal, setShowBackupImportModal] = useState(false);
   const [updateFeedback, setUpdateFeedback] = useState<{
     title: string;
     message: string;
@@ -66,7 +78,6 @@ export default function SettingsScreen() {
     iconName?: InfoModalIconName;
     actionLabel?: string;
     compact?: boolean;
-    /** סגירה אוטומטית אחרי מילישניות (למשל מודל התראת בדיקה) */
     autoCloseMs?: number;
   } | null>(null);
 
@@ -350,6 +361,146 @@ export default function SettingsScreen() {
     });
   }, [updateCtl]);
 
+  const handleSaveBackupToFile = useCallback(async () => {
+    try {
+      const result = await saveBackupToDevice();
+      if (result.status === 'success') {
+        setUpdateFeedback({
+          title: 'הגיבוי נשמר',
+          message: 'קובץ הגיבוי נשמר בהצלחה בתיקייה שבחרת.',
+          emphasis: result.fileName,
+          iconName: 'checkmark-circle',
+          compact: true,
+        });
+      } else if (result.status === 'error') {
+        setUpdateFeedback({
+          title: 'שגיאה בשמירה',
+          message: 'לא הצלחנו לשמור את קובץ הגיבוי. נסה שוב.',
+          iconName: 'alert-circle-outline',
+          compact: true,
+        });
+      }
+    } catch {
+      setUpdateFeedback({
+        title: 'שגיאה בשמירה',
+        message: 'לא הצלחנו לשמור את קובץ הגיבוי. נסה שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    }
+  }, []);
+
+  const handleShareBackup = useCallback(async () => {
+    try {
+      const result = await exportAndShareBackup();
+      if (result === 'error') {
+        setUpdateFeedback({
+          title: 'שגיאה בשיתוף',
+          message: 'לא הצלחנו ליצור את קובץ הגיבוי. נסה שוב.',
+          iconName: 'alert-circle-outline',
+          compact: true,
+        });
+      }
+    } catch {
+      setUpdateFeedback({
+        title: 'שגיאה בשיתוף',
+        message: 'לא הצלחנו ליצור את קובץ הגיבוי. נסה שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    }
+  }, []);
+
+  const handleImportBackupPick = useCallback(async () => {
+    try {
+      const result = await pickAndReadBackupFile();
+      if (result === 'cancelled') return;
+      if (!result.ok) {
+        setUpdateFeedback({
+          title: 'קובץ גיבוי לא תקין',
+          message: result.error,
+          iconName: 'alert-circle-outline',
+        });
+        return;
+      }
+
+      setPendingBackup(result.data);
+      setBackupPreview(getBackupPreview(result.data));
+      setShowBackupImportModal(true);
+    } catch {
+      setUpdateFeedback({
+        title: 'שגיאה בייבוא',
+        message: 'לא הצלחנו לקרוא את קובץ הגיבוי. נסה שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    }
+  }, []);
+
+  const clearBackupImportState = useCallback(() => {
+    setShowBackupImportModal(false);
+    setPendingBackup(null);
+    setBackupPreview(null);
+  }, []);
+
+  const applyBackupImport = useCallback(
+    async (mode: 'merge' | 'replace') => {
+      if (!pendingBackup || !settings) return;
+
+      try {
+        importBackup(pendingBackup, mode);
+
+        if (mode === 'replace') {
+          setHour(pendingBackup.settings.notification_hour);
+          setMinute(pendingBackup.settings.notification_minute);
+          setShowSecularDate(pendingBackup.settings.show_secular_date === 1);
+          setShowCalendarDaf(pendingBackup.settings.show_calendar_daf === 1);
+          setShowConfettiPref(pendingBackup.settings.show_confetti === 1);
+          setNotificationsEnabled(pendingBackup.settings.notifications_enabled === 1);
+          setNotifMode((pendingBackup.settings.notif_mode as 'daily' | 'custom') || 'daily');
+          setThemeMode((pendingBackup.settings.theme_mode as ThemeMode) || 'system');
+          setStudyLinkMode(parseStudyLinkMode(pendingBackup.settings.study_link_mode));
+          setDaySchedules(parseDaySchedulesJson(pendingBackup.settings.day_schedules));
+
+          await scheduleNotifications(
+            pendingBackup.settings.notification_hour,
+            pendingBackup.settings.notification_minute,
+            (pendingBackup.settings.notif_mode as 'daily' | 'custom') || 'daily',
+            parseDaySchedulesJson(pendingBackup.settings.day_schedules),
+            pendingBackup.settings.notifications_enabled === 1,
+          );
+        }
+
+        clearBackupImportState();
+        setUpdateFeedback({
+          title: 'הגיבוי יובא בהצלחה',
+          message:
+            mode === 'merge'
+              ? 'הנתונים מוזגו עם ההיסטוריה הקיימת.'
+              : 'כל הנתונים וההגדרות הוחלפו בגיבוי.',
+          iconName: 'checkmark-circle',
+          compact: true,
+        });
+      } catch (error) {
+        console.error('Backup import error:', error);
+        setUpdateFeedback({
+          title: 'שגיאה בייבוא',
+          message: 'לא הצלחנו לייבא את הגיבוי. נסה שוב.',
+          iconName: 'alert-circle-outline',
+        });
+      }
+    },
+    [pendingBackup, settings, importBackup, clearBackupImportState],
+  );
+
+  const handleBackupImportMerge = useCallback(() => {
+    applyBackupImport('merge');
+  }, [applyBackupImport]);
+
+  const handleBackupImportReplace = useCallback(() => {
+    applyBackupImport('replace');
+  }, [applyBackupImport]);
+
   const handleShareDownloadLink = useCallback(async () => {
     const url = getDownloadPageUrl();
     try {
@@ -359,7 +510,6 @@ export default function SettingsScreen() {
         url,
       });
     } catch {
-      /* user cancelled or share unavailable */
     }
   }, []);
 
@@ -410,6 +560,9 @@ export default function SettingsScreen() {
             onTestNotification={handleTestNotification}
             onCheckScheduled={handleCheckScheduled}
             onResetModalOpen={() => setShowResetModal(true)}
+            onSaveBackupToFile={handleSaveBackupToFile}
+            onShareBackup={handleShareBackup}
+            onImportBackup={handleImportBackupPick}
             updateAutoPromptEnabled={updatesConfigured ? settings.update_auto_prompt_enabled === 1 : undefined}
             onUpdateAutoPromptToggle={updatesConfigured ? handleUpdateAutoPromptToggle : undefined}
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
@@ -435,6 +588,11 @@ export default function SettingsScreen() {
           onConfirmReset={onConfirmReset}
           showSuccessModal={showSuccessModal}
           onSuccessModalClose={() => setShowSuccessModal(false)}
+          showBackupImportModal={showBackupImportModal}
+          backupPreview={backupPreview}
+          onBackupImportMerge={handleBackupImportMerge}
+          onBackupImportReplace={handleBackupImportReplace}
+          onBackupImportCancel={clearBackupImportState}
           isSaving={isSaving}
         />
 

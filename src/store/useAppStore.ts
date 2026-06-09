@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, DailyRecord, SettingsRecord } from '../db/database';
+import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, importRecords, replaceAllRecords, importSettingsFromBackup, DailyRecord, SettingsRecord } from '../db/database';
+import type { BackupData } from '../services/backup';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, ProgressCache } from '../utils/progressCache';
 
@@ -42,6 +43,7 @@ interface AppState {
   setUpdateAutoPromptEnabled: (enabled: boolean) => void;
   setShowCalendarDafEnabled: (enabled: boolean) => void;
   setCurrentDate: (date: Date) => void;
+  importBackup: (data: BackupData, mode: 'merge' | 'replace') => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -181,6 +183,17 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setShowCalendarDafEnabled: (enabled: boolean) => {
     persistShowCalendarDaf(enabled);
+    get().refreshSettings();
+  },
+
+  importBackup: (data, mode) => {
+    if (mode === 'replace') {
+      replaceAllRecords(data.records);
+      importSettingsFromBackup(data.settings);
+    } else {
+      importRecords(data.records);
+    }
+    get().refreshHistory();
     get().refreshSettings();
   },
 
