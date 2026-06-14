@@ -9,6 +9,7 @@ export interface DailyRecord {
   daf: string;
   status: 'learned' | 'partial' | 'missed';
   percentage: number;
+  amud: 'a' | 'b' | null;
   learnedAt: string;
 }
 
@@ -35,6 +36,9 @@ function migrateDailyDafColumns() {
 
   if (!dailyDafColumns.includes('percentage')) {
     db.execSync('ALTER TABLE daily_daf ADD COLUMN percentage INTEGER DEFAULT 0;');
+  }
+  if (!dailyDafColumns.includes('amud')) {
+    db.execSync('ALTER TABLE daily_daf ADD COLUMN amud TEXT DEFAULT NULL;');
   }
   if (dailyDafColumns.includes('notes')) {
     db.execSync('ALTER TABLE daily_daf DROP COLUMN notes;');
@@ -113,20 +117,22 @@ export function updateDailyRecord(
   masechet: string,
   daf: string,
   status: 'learned' | 'partial' | 'missed',
-  percentage?: number
+  percentage?: number,
+  amud?: 'a' | 'b' | null
 ) {
   const pct = percentage ?? (status === 'learned' ? 100 : status === 'partial' ? 50 : 0);
+  const amudValue = amud !== undefined ? amud : status === 'partial' ? null : null;
   const learnedAt = new Date().toISOString();
   const existing = getDailyRecord(dateStr);
   if (existing) {
     db.runSync(
-      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, learnedAt = ? WHERE date = ?',
-      [masechet, daf, status, pct, learnedAt, dateStr]
+      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
+      [masechet, daf, status, pct, amudValue, learnedAt, dateStr]
     );
   } else {
     db.runSync(
-      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, learnedAt) VALUES (?, ?, ?, ?, ?, ?)',
-      [dateStr, masechet, daf, status, pct, learnedAt]
+      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [dateStr, masechet, daf, status, pct, amudValue, learnedAt]
     );
   }
 }
@@ -138,22 +144,24 @@ export function batchUpdateDailyRecords(
     daf: string;
     status: 'learned' | 'partial' | 'missed';
     percentage?: number;
+    amud?: 'a' | 'b' | null;
   }>
 ) {
   db.withTransactionSync(() => {
     const now = new Date().toISOString();
-    for (const { dateStr, masechet, daf, status, percentage } of updates) {
+    for (const { dateStr, masechet, daf, status, percentage, amud } of updates) {
       const pct = percentage ?? (status === 'learned' ? 100 : status === 'partial' ? 50 : 0);
+      const amudValue = amud !== undefined ? amud : null;
       const existing = getDailyRecord(dateStr);
       if (existing) {
         db.runSync(
-          'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, learnedAt = ? WHERE date = ?',
-          [masechet, daf, status, pct, now, dateStr]
+          'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
+          [masechet, daf, status, pct, amudValue, now, dateStr]
         );
       } else {
         db.runSync(
-          'INSERT INTO daily_daf (date, masechet, daf, status, percentage, learnedAt) VALUES (?, ?, ?, ?, ?, ?)',
-          [dateStr, masechet, daf, status, pct, now]
+          'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [dateStr, masechet, daf, status, pct, amudValue, now]
         );
       }
     }
@@ -221,13 +229,14 @@ export type SettingsInput = Omit<SettingsRecord, 'id'>;
 
 function insertDailyRecord(record: DailyRecordInput) {
   db.runSync(
-    'INSERT INTO daily_daf (date, masechet, daf, status, percentage, learnedAt) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
     [
       record.date,
       record.masechet,
       record.daf,
       record.status,
       record.percentage ?? 0,
+      record.amud ?? null,
       record.learnedAt,
     ]
   );
@@ -235,12 +244,13 @@ function insertDailyRecord(record: DailyRecordInput) {
 
 function updateDailyRecordFromBackup(record: DailyRecordInput) {
   db.runSync(
-    'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, learnedAt = ? WHERE date = ?',
+    'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
     [
       record.masechet,
       record.daf,
       record.status,
       record.percentage ?? 0,
+      record.amud ?? null,
       record.learnedAt,
       record.date,
     ]
@@ -279,6 +289,7 @@ export function importRecords(records: DailyRecordInput[]) {
               daf: existing.daf,
               status: existing.status,
               percentage: existing.percentage,
+              amud: existing.amud,
               learnedAt: existing.learnedAt,
             };
 

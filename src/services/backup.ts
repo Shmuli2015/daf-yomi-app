@@ -14,7 +14,7 @@ import {
 } from '../db/database';
 import { toFileSharingUrl } from '../utils/shareProgressImage';
 
-export const CURRENT_BACKUP_VERSION = 1;
+export const CURRENT_BACKUP_VERSION = 2;
 
 export type BackupRecord = Omit<DailyRecord, 'id'>;
 export type BackupSettings = Omit<SettingsRecord, 'id'>;
@@ -79,12 +79,16 @@ function validateBackupRecord(raw: unknown): BackupRecord | null {
           ? 50
           : 0;
 
+  const amud =
+    r.amud === 'a' || r.amud === 'b' ? r.amud : null;
+
   return {
     date: r.date,
     masechet: typeof r.masechet === 'string' ? r.masechet : '',
     daf: typeof r.daf === 'string' ? r.daf : '',
     status: r.status,
     percentage,
+    amud,
     learnedAt: r.learnedAt,
   };
 }

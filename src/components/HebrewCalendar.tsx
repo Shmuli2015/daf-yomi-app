@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../store/useAppStore';
-import { getStudyStatus } from '../utils/dafStatus';
+import { getStudyStatus, getPartialAmud } from '../utils/dafStatus';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import CalendarDay from './Calendar/CalendarDay';
 import DafDetailModal from './Calendar/DafDetailModal';
@@ -35,11 +35,12 @@ export default function HebrewCalendar() {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { history, toggleAnyDafLearned, setDafStudyStatus, settings } = useAppStore(
+  const { history, toggleAnyDafLearned, setDafStudyStatus, markPartialAmud, settings } = useAppStore(
     useShallow((s) => ({
       history: s.history,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
       setDafStudyStatus: s.setDafStudyStatus,
+      markPartialAmud: s.markPartialAmud,
       settings: s.settings,
     })),
   );
@@ -331,11 +332,11 @@ export default function HebrewCalendar() {
         }}
         onSelectHalfA={() => {
           if (selectedDate && selectedDafInfo) {
-            setDafStudyStatus(
+            markPartialAmud(
               getDateStr(selectedDate.greg()),
               selectedDafInfo.masechet,
               selectedDafInfo.daf,
-              'partial',
+              'a',
             );
           }
           setShowMarkMenu(false);
@@ -343,16 +344,21 @@ export default function HebrewCalendar() {
         }}
         onSelectHalfB={() => {
           if (selectedDate && selectedDafInfo) {
-            setDafStudyStatus(
+            markPartialAmud(
               getDateStr(selectedDate.greg()),
               selectedDafInfo.masechet,
               selectedDafInfo.daf,
-              'partial',
+              'b',
             );
           }
           setShowMarkMenu(false);
           setModalVisible(false);
         }}
+        partialAmud={
+          selectedDate
+            ? getPartialAmud(recordByDate.get(getDateStr(selectedDate.greg())))
+            : null
+        }
         showUnmark={
           selectedDate
             ? getStudyStatus(recordByDate.get(getDateStr(selectedDate.greg()))) === 'partial'

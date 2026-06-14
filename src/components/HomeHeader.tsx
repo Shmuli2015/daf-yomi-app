@@ -22,7 +22,9 @@ interface HomeHeaderProps {
   studyStatus?: 'none' | 'partial' | 'learned';
   handleToggle?: () => void;
   onMarkFull?: () => void;
-  onMarkPartial?: () => void;
+  onMarkPartialA?: () => void;
+  onMarkPartialB?: () => void;
+  partialAmud?: 'a' | 'b' | null;
   masechetProgressPct?: number;
   masechetLearnedCountLabel?: string;
   masechetTotalCount?: number;
@@ -47,7 +49,9 @@ const HomeHeader = React.memo(function HomeHeader({
   studyStatus = 'none',
   handleToggle,
   onMarkFull,
-  onMarkPartial,
+  onMarkPartialA,
+  onMarkPartialB,
+  partialAmud = null,
   masechetProgressPct = 0,
   masechetLearnedCountLabel = '0',
   masechetTotalCount = 0,
@@ -312,12 +316,13 @@ const HomeHeader = React.memo(function HomeHeader({
         }}
         onSelectHalfA={() => {
           setShowMarkMenu(false);
-          onMarkPartial?.();
+          onMarkPartialA?.();
         }}
         onSelectHalfB={() => {
           setShowMarkMenu(false);
-          onMarkPartial?.();
+          onMarkPartialB?.();
         }}
+        partialAmud={partialAmud}
         showUnmark={isPartial}
         onUnmark={() => {
           setShowMarkMenu(false);

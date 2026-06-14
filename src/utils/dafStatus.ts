@@ -1,6 +1,25 @@
 import type { DailyRecord } from '../db/database';
 
 export type DafStudyStatus = 'missed' | 'partial' | 'learned';
+export type AmudSide = 'a' | 'b';
+
+export function getPartialAmud(record: DailyRecord | null | undefined): AmudSide | null {
+  if (!record || record.status !== 'partial') return null;
+  return record.amud ?? null;
+}
+
+export function resolveAmudMark(
+  existing: DailyRecord | null | undefined,
+  amud: AmudSide
+): Pick<DailyRecord, 'status' | 'percentage' | 'amud'> {
+  if (existing?.status === 'learned') {
+    return { status: 'learned', percentage: 100, amud: null };
+  }
+  if (existing?.status === 'partial' && existing.amud && existing.amud !== amud) {
+    return { status: 'learned', percentage: 100, amud: null };
+  }
+  return { status: 'partial', percentage: 50, amud };
+}
 
 export function getRecordProgress(record: DailyRecord | null | undefined): number {
   if (!record) return 0;

@@ -10,7 +10,7 @@ import TzuratHadafViewer, { type TzuratPageContent } from '../components/TzuratH
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
-import { getStudyStatus } from '../utils/dafStatus';
+import { getStudyStatus, getPartialAmud } from '../utils/dafStatus';
 import { useTheme } from '../theme';
 import { useAppStore } from '../store/useAppStore';
 import type { RootStackParamList } from '../navigation/types';
@@ -69,12 +69,13 @@ export default function TzuratHadafScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { history, settings, toggleAnyDafLearned, setDafStudyStatus } = useAppStore(
+  const { history, settings, toggleAnyDafLearned, setDafStudyStatus, markPartialAmud } = useAppStore(
     useShallow((s) => ({
       history: s.history,
       settings: s.settings,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
       setDafStudyStatus: s.setDafStudyStatus,
+      markPartialAmud: s.markPartialAmud,
     })),
   );
 
@@ -134,6 +135,11 @@ export default function TzuratHadafScreen() {
     if (!dateStr) return 'none' as const;
     const record = history.find((r) => r.date === dateStr);
     return getStudyStatus(record);
+  }, [history, dateStr]);
+  const partialAmud = useMemo(() => {
+    if (!dateStr) return null;
+    const record = history.find((r) => r.date === dateStr);
+    return getPartialAmud(record);
   }, [history, dateStr]);
   const isLearned = studyStatus === 'learned';
 
@@ -278,16 +284,17 @@ export default function TzuratHadafScreen() {
         }}
         onSelectHalfA={() => {
           if (dateStr && masechetHe) {
-            setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'partial');
+            markPartialAmud(dateStr, masechetHe, dafHeStr, 'a');
           }
           setShowMarkMenu(false);
         }}
         onSelectHalfB={() => {
           if (dateStr && masechetHe) {
-            setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'partial');
+            markPartialAmud(dateStr, masechetHe, dafHeStr, 'b');
           }
           setShowMarkMenu(false);
         }}
+        partialAmud={partialAmud}
         showUnmark={studyStatus === 'partial'}
         onUnmark={() => {
           setShowMarkMenu(false);
