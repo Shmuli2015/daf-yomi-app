@@ -1,8 +1,9 @@
 import { create } from 'zustand';
-import { getAllRecords, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, importRecords, replaceAllRecords, importSettingsFromBackup, DailyRecord, SettingsRecord } from '../db/database';
+import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, importRecords, replaceAllRecords, importSettingsFromBackup, DailyRecord, SettingsRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, ProgressCache } from '../utils/progressCache';
+import { resolveAmudMark, type AmudSide } from '../utils/dafStatus';
 
 interface AppState {
   currentDate: Date;
@@ -30,6 +31,12 @@ interface AppState {
     masechet: string,
     daf: string,
     status: 'learned' | 'partial' | 'missed'
+  ) => void;
+  markPartialAmud: (
+    dateStr: string,
+    masechet: string,
+    daf: string,
+    amud: AmudSide
   ) => void;
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => void;
   batchMarkDafim: (updates: Array<{ dateStr: string; masechet: string; daf: string }>) => void;
@@ -130,13 +137,27 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { currentDate, todayMasechet, todayDafNum } = get();
     const dateStr = getDateStr(currentDate);
 
-    updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned', 100);
+    updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned', 100, null);
 
     get().refreshHistory();
   },
 
   setDafStudyStatus: (dateStr, masechet, daf, status) => {
-    updateDailyRecord(dateStr, masechet, daf, status);
+    updateDailyRecord(dateStr, masechet, daf, status, undefined, null);
+    get().refreshHistory();
+  },
+
+  markPartialAmud: (dateStr, masechet, daf, amud) => {
+    const existing = getDailyRecord(dateStr);
+    const resolved = resolveAmudMark(existing, amud);
+    updateDailyRecord(
+      dateStr,
+      masechet,
+      daf,
+      resolved.status,
+      resolved.percentage,
+      resolved.amud
+    );
     get().refreshHistory();
   },
 
@@ -146,21 +167,21 @@ export const useAppStore = create<AppState>((set, get) => ({
     const newStatus =
       existing?.status === 'learned' || existing?.status === 'partial' ? 'missed' : 'learned';
 
-    updateDailyRecord(dateStr, masechet, daf, newStatus);
+    updateDailyRecord(dateStr, masechet, daf, newStatus, undefined, null);
 
     get().refreshHistory();
   },
 
   batchMarkDafim: (updates) => {
     batchUpdateDailyRecords(
-      updates.map(u => ({ ...u, status: 'learned' as const }))
+      updates.map(u => ({ ...u, status: 'learned' as const, amud: null }))
     );
     get().refreshHistory();
   },
 
   batchUnmarkDafim: (updates) => {
     batchUpdateDailyRecords(
-      updates.map(u => ({ ...u, status: 'missed' as const }))
+      updates.map(u => ({ ...u, status: 'missed' as const, amud: null }))
     );
     get().refreshHistory();
   },

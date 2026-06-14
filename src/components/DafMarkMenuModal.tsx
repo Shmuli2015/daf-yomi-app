@@ -11,6 +11,7 @@ interface DafMarkMenuModalProps {
   onCancel: () => void;
   showUnmark?: boolean;
   onUnmark?: () => void;
+  partialAmud?: 'a' | 'b' | null;
 }
 
 export default function DafMarkMenuModal({
@@ -21,6 +22,7 @@ export default function DafMarkMenuModal({
   onCancel,
   showUnmark = false,
   onUnmark,
+  partialAmud = null,
 }: DafMarkMenuModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -58,13 +60,25 @@ export default function DafMarkMenuModal({
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.optionButton} onPress={onSelectHalfA} activeOpacity={0.8}>
-              <Ionicons name="remove-circle-outline" size={22} color={theme.colors.accent} />
-              <Text style={styles.optionText}>חצי דף (א)</Text>
+              <Ionicons
+                name={partialAmud === 'a' ? 'checkmark-circle' : 'remove-circle-outline'}
+                size={22}
+                color={partialAmud === 'a' ? theme.colors.success : theme.colors.accent}
+              />
+              <Text style={[styles.optionText, partialAmud === 'a' && styles.optionTextDone]}>
+                חצי דף (א){partialAmud === 'a' ? ' ✓' : ''}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.optionButton} onPress={onSelectHalfB} activeOpacity={0.8}>
-              <Ionicons name="remove-circle-outline" size={22} color={theme.colors.accent} />
-              <Text style={styles.optionText}>חצי דף (ב)</Text>
+              <Ionicons
+                name={partialAmud === 'b' ? 'checkmark-circle' : 'remove-circle-outline'}
+                size={22}
+                color={partialAmud === 'b' ? theme.colors.success : theme.colors.accent}
+              />
+              <Text style={[styles.optionText, partialAmud === 'b' && styles.optionTextDone]}>
+                חצי דף (ב){partialAmud === 'b' ? ' ✓' : ''}
+              </Text>
             </TouchableOpacity>
 
             {showUnmark && onUnmark && (
@@ -135,6 +149,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.textPrimary,
       fontSize: 16,
       fontWeight: '700',
+    },
+    optionTextDone: {
+      color: theme.colors.success,
     },
     unmarkButton: {
       flexDirection: 'row',

@@ -21,7 +21,7 @@ import ShasBanner from "../components/ShasBanner";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import { getDateStr } from "../utils/dafYomi";
 import { getMasechetDafim } from "../utils/shas";
-import { getStudyStatus, formatProgressCount } from "../utils/dafStatus";
+import { getStudyStatus, formatProgressCount, getPartialAmud } from "../utils/dafStatus";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
 import { useTheme } from "../theme";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
@@ -51,6 +51,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     streak,
     toggleAnyDafLearned,
     setDafStudyStatus,
+    markPartialAmud,
     history,
     settings,
     progressCache,
@@ -70,6 +71,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       streak: s.streak,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
       setDafStudyStatus: s.setDafStudyStatus,
+      markPartialAmud: s.markPartialAmud,
       history: s.history,
       settings: s.settings,
       progressCache: s.progressCache,
@@ -95,9 +97,15 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     setDafStudyStatus(getDateStr(currentDate), todayMasechet, todayDafNum, "learned");
   }, [settings, studyStatus, currentDate, todayMasechet, todayDafNum, setDafStudyStatus]);
 
-  const handleMarkPartial = useCallback(() => {
-    setDafStudyStatus(getDateStr(currentDate), todayMasechet, todayDafNum, "partial");
-  }, [currentDate, todayMasechet, todayDafNum, setDafStudyStatus]);
+  const handleMarkPartialA = useCallback(() => {
+    markPartialAmud(getDateStr(currentDate), todayMasechet, todayDafNum, "a");
+  }, [currentDate, todayMasechet, todayDafNum, markPartialAmud]);
+
+  const handleMarkPartialB = useCallback(() => {
+    markPartialAmud(getDateStr(currentDate), todayMasechet, todayDafNum, "b");
+  }, [currentDate, todayMasechet, todayDafNum, markPartialAmud]);
+
+  const partialAmud = getPartialAmud(todayRecord);
 
   const hDate = useMemo(() => new HDate(currentDate), [currentDate]);
   const hebrewDateStr = useMemo(() => hDate.renderGematriya(), [hDate]);
@@ -193,7 +201,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           studyStatus={studyStatus}
           handleToggle={handleToggle}
           onMarkFull={handleMarkFull}
-          onMarkPartial={handleMarkPartial}
+          onMarkPartialA={handleMarkPartialA}
+          onMarkPartialB={handleMarkPartialB}
+          partialAmud={partialAmud}
           masechetProgressPct={masechetStats.pct}
           masechetLearnedCountLabel={formatProgressCount(masechetStats.learned)}
           masechetTotalCount={masechetStats.total}
