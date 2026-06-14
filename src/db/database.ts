@@ -36,8 +36,8 @@ function migrateDailyDafColumns() {
   if (!dailyDafColumns.includes('percentage')) {
     db.execSync('ALTER TABLE daily_daf ADD COLUMN percentage INTEGER DEFAULT 0;');
   }
-  if (!dailyDafColumns.includes('notes')) {
-    db.execSync('ALTER TABLE daily_daf ADD COLUMN notes TEXT DEFAULT \'\';');
+  if (dailyDafColumns.includes('notes')) {
+    db.execSync('ALTER TABLE daily_daf DROP COLUMN notes;');
   }
 }
 
@@ -50,7 +50,6 @@ export function initDB() {
       daf TEXT,
       status TEXT,
       percentage INTEGER DEFAULT 0,
-      notes TEXT,
       learnedAt TEXT
     );
     CREATE TABLE IF NOT EXISTS settings (
