@@ -10,9 +10,9 @@ interface Props {
 }
 
 const OPTIONS: { id: StudyLinkMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'both', label: 'שניהם', icon: 'layers-outline' },
   { id: 'sefaria', label: 'ספריא', icon: 'book-outline' },
   { id: 'tzurat', label: 'צורת הדף', icon: 'document-text-outline' },
-  { id: 'both', label: 'שניהם', icon: 'layers-outline' },
 ];
 
 export default function StudyLinkModeToggle({ mode, onChange }: Props) {
