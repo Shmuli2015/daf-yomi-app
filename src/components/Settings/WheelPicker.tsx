@@ -19,6 +19,9 @@ interface WheelPickerProps {
 const ITEM_HEIGHT = 48;
 const VISIBLE_ITEMS = 5;
 const MULTIPLIER = 100;
+const SNAP_THRESHOLD = 2;
+const VELOCITY_THRESHOLD = 0.1;
+
 export const WheelPicker = ({
   items,
   selectedIndex,
@@ -29,6 +32,9 @@ export const WheelPicker = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
   const scrollRef = useRef<ScrollView>(null);
   const lastScrolledIndex = useRef<number>(-1);
+  const isDragging = useRef(false);
+  const isUserScrolling = useRef(false);
+  const isLayoutReady = useRef(false);
   const count = items.length;
   const containerHeight = itemHeight * VISIBLE_ITEMS;
 
@@ -41,18 +47,31 @@ export const WheelPicker = ({
     [middleBlock, itemHeight]
   );
 
+  const scrollToIndex = useCallback(
+    (index: number, animated = false) => {
+      scrollRef.current?.scrollTo({
+        y: getOffset(index),
+        animated,
+      });
+      lastScrolledIndex.current = index;
+    },
+    [getOffset]
+  );
+
   useEffect(() => {
-    if (selectedIndex !== lastScrolledIndex.current) {
-      const timer = setTimeout(() => {
-        scrollRef.current?.scrollTo({
-          y: getOffset(selectedIndex),
-          animated: false,
-        });
-        lastScrolledIndex.current = selectedIndex;
-      }, 80);
-      return () => clearTimeout(timer);
+    if (isUserScrolling.current) return;
+    if (selectedIndex === lastScrolledIndex.current) return;
+
+    if (isLayoutReady.current) {
+      scrollToIndex(selectedIndex);
+      return;
     }
-  }, [selectedIndex, getOffset]);
+
+    const frame = requestAnimationFrame(() => {
+      scrollToIndex(selectedIndex);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [selectedIndex, scrollToIndex]);
 
   const snapToIndex = useCallback(
     (y: number) => {
@@ -61,21 +80,53 @@ export const WheelPicker = ({
         Math.min(count * MULTIPLIER - 1, Math.round(y / itemHeight))
       );
       const realIndex = virtualIndex % count;
-
       const centeredOffset = (middleBlock + realIndex) * itemHeight;
-      scrollRef.current?.scrollTo({ y: centeredOffset, animated: false });
+
+      if (Math.abs(y - centeredOffset) > SNAP_THRESHOLD) {
+        scrollRef.current?.scrollTo({ y: centeredOffset, animated: false });
+      }
 
       if (realIndex !== lastScrolledIndex.current) {
         lastScrolledIndex.current = realIndex;
         onIndexChange(realIndex);
       }
+
+      isUserScrolling.current = false;
     },
     [count, itemHeight, middleBlock, onIndexChange]
   );
 
-  const onScrollEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    snapToIndex(e.nativeEvent.contentOffset.y);
-  };
+  const onScrollBeginDrag = useCallback(() => {
+    isDragging.current = true;
+    isUserScrolling.current = true;
+  }, []);
+
+  const onScrollEndDrag = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      isDragging.current = false;
+      const velocity = e.nativeEvent.velocity?.y ?? 0;
+      if (Math.abs(velocity) < VELOCITY_THRESHOLD) {
+        snapToIndex(e.nativeEvent.contentOffset.y);
+      }
+    },
+    [snapToIndex]
+  );
+
+  const onMomentumScrollEnd = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (!isDragging.current) {
+        snapToIndex(e.nativeEvent.contentOffset.y);
+      }
+    },
+    [snapToIndex]
+  );
+
+  const onLayout = useCallback(() => {
+    isLayoutReady.current = true;
+    if (lastScrolledIndex.current !== selectedIndex) {
+      scrollToIndex(selectedIndex);
+    }
+  }, [selectedIndex, scrollToIndex]);
 
   return (
     <View style={[styles.container, { height: containerHeight }]}>
@@ -88,10 +139,10 @@ export const WheelPicker = ({
         ref={scrollRef}
         showsVerticalScrollIndicator={false}
         scrollEventThrottle={16}
-        onScrollEndDrag={onScrollEnd}
-        onMomentumScrollEnd={onScrollEnd}
-        decelerationRate="fast"
-        snapToInterval={itemHeight}
+        onLayout={onLayout}
+        onScrollBeginDrag={onScrollBeginDrag}
+        onScrollEndDrag={onScrollEndDrag}
+        onMomentumScrollEnd={onMomentumScrollEnd}
         contentContainerStyle={{ paddingVertical: itemHeight * 2 }}
       >
         {virtualItems.map((item, index) => {
