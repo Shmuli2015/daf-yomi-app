@@ -1,10 +1,13 @@
 import {
   ScrollView,
   View,
+  Text,
+  TouchableOpacity,
   StyleSheet,
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import React, { useMemo, useState, useCallback } from "react";
@@ -26,6 +29,7 @@ import { getMasechetProgressFromCache } from "../utils/progressCache";
 import { useTheme } from "../theme";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
 import { parseStudyLinkMode, shouldShowSefariaLink, shouldShowTzuratLink } from "../utils/studyLinkMode";
+import { GuideModal } from "../components/Settings/GuideModal";
 
 type HomeScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, "Home">;
@@ -37,6 +41,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
 
   const {
     currentDate,
@@ -228,6 +233,15 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         <View style={{ height: 20 }} />
 
         <HomeContent streak={streak} last7Days={last7Days} hebrewDateStr={hebrewDateStr} />
+
+        <TouchableOpacity
+          onPress={() => setShowGuideModal(true)}
+          style={styles.bottomGuideBtn}
+          activeOpacity={0.75}
+        >
+          <Ionicons name="help-circle-outline" size={18} color={theme.colors.accent} />
+          <Text style={styles.bottomGuideText}>מדריך לשימוש באפליקציה</Text>
+        </TouchableOpacity>
       </ScrollView>
       </SafeAreaView>
 
@@ -249,6 +263,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           />
         </View>
       )}
+
+      <GuideModal
+        visible={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+      />
     </View>
   );
 }
@@ -262,7 +281,28 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     safeArea: { flex: 1, backgroundColor: "transparent" },
     scroll: { flex: 1, backgroundColor: "transparent" },
-    scrollContent: { paddingTop: 24, paddingBottom: 12 },
+    scrollContent: { paddingTop: 24, paddingBottom: 24 },
+    bottomGuideBtn: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      marginTop: 12,
+      marginBottom: 16,
+      alignSelf: "center",
+      backgroundColor: theme.colors.surface,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      ...theme.shadow.card,
+    },
+    bottomGuideText: {
+      color: theme.colors.textSecondary,
+      fontSize: 13,
+      fontWeight: "700",
+    },
     confettiContainer: {
       position: "absolute",
       top: 0,

@@ -19,7 +19,7 @@
 - **Partial progress**: Half pages count as **0.5** toward tractate progress (fractional counts such as 3.5 of 10 are possible)
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Opens the Daf in Sefaria in your **external browser** (unchanged behavior)
-- **Tzurat Hadaf Viewer** (<span dir="rtl" lang="he">צורת הדף</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) (Sefaria Manuscripts fallback) with pinch-to-zoom, amud/daf navigation, **mark as learned** (including half page via long press) from the viewer header, **landscape rotation** for wider reading, and **local PDF cache** for fast re-open
+- **Tzurat Hadaf & Sefaria Text Reader** (<span dir="rtl" lang="he">צורת הדף וקורא טקסט מובנה</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) with pinch-to-zoom and landscape rotation, plus a built-in **Sefaria Text Reader** with vocalized text (nikud), interactive **commentary bottom sheet** (Rashi, Tosafot, etc.), font size controls (`+`/`-`), and reading theme options (Light, Dark, Sepia). Includes amud/daf navigation, **mark as learned** header control, and local caching
 - **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **Tzurat Hadaf only**, or **both** on Home and Calendar
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum; half pages **do not break** the streak but **do not add** a day either
 - **7-Day Progress Overview**: In-app mini chart of the last seven days: tall bar = full page, medium bar = half page, short bar = not learned
