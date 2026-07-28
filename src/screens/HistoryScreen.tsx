@@ -1,5 +1,6 @@
 import React, { useMemo as useReactMemo, useState, useCallback } from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
@@ -84,6 +85,7 @@ export default function HistoryScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
+          <Animated.View entering={FadeIn.duration(450)}>
           <View style={styles.pageHeader}>
             <View style={styles.headerRow}>
               <View style={styles.accentBar} />
@@ -91,6 +93,7 @@ export default function HistoryScreen() {
             </View>
             <Text style={styles.pageSubtitle}>מעקב לימוד של כל מסכתות הש״ס</Text>
           </View>
+          </Animated.View>
 
           <View style={styles.heroWrapper}>
             <View style={styles.shareButtonRow} pointerEvents="box-none">

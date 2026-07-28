@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, FadeInDown } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme';
@@ -28,7 +28,7 @@ export default function ShasBanner({ learnedCount, totalPages, percentage, onPre
   }));
 
   return (
-    <Animated.View entering={FadeInDown.duration(400).delay(200).springify()}>
+    <View>
       <TouchableOpacity style={styles.container} activeOpacity={0.9} onPress={onPress}>
         <LinearGradient
           colors={[theme.colors.accent + '15', 'transparent']}
@@ -76,7 +76,7 @@ export default function ShasBanner({ learnedCount, totalPages, percentage, onPre
           <Ionicons name="chevron-back" size={20} color={theme.colors.accent} />
         </View>
       </TouchableOpacity>
-    </Animated.View>
+    </View>
   );
 }
 

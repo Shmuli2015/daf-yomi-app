@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { useTheme } from '../../theme';
 
 const CalendarHeader = () => {
@@ -7,13 +8,13 @@ const CalendarHeader = () => {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <View style={styles.container}>
+    <Animated.View entering={FadeIn.duration(450)} style={styles.container}>
       <View style={styles.row}>
         <View style={styles.accentBar} />
         <Text style={styles.title}>לוח שנה</Text>
       </View>
       <Text style={styles.subtitle}>מעקב למידה לפי תאריך עברי</Text>
-    </View>
+    </Animated.View>
   );
 };
 
