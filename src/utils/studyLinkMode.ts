@@ -7,7 +7,7 @@ export function parseStudyLinkMode(value: string | null | undefined): StudyLinkM
 
 export function getStudyLinkModeLabel(mode: StudyLinkMode): string {
   if (mode === 'sefaria') return 'ספריא';
-  if (mode === 'tzurat') return 'צורת הדף';
+  if (mode === 'tzurat') return 'קריאת הדף';
   return 'שניהם';
 }
 

@@ -138,9 +138,9 @@ const SelectedDafCard = ({
           style={styles.tzuratBtn}
         >
           <View style={styles.sefariaIconWrapper}>
-            <Ionicons name="document-text-outline" size={16} color={theme.colors.accent} />
+            <Ionicons name="reader-outline" size={16} color={theme.colors.accent} />
           </View>
-          <Text style={styles.tzuratText}>צורת הדף</Text>
+          <Text style={styles.tzuratText}>קריאת הדף</Text>
         </TouchableOpacity>
         )}
       </View>

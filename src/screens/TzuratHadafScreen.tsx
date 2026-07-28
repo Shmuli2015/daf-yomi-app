@@ -10,6 +10,9 @@ import TzuratHadafViewer, { type TzuratPageContent } from '../components/TzuratH
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
+import ReaderToolbar, { type ViewMode, type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
+import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';
+import { fetchSefariaPageText, type SefariaPageData } from '../services/sefariaTextApi';
 import { getStudyStatus, getPartialAmud } from '../utils/dafStatus';
 import { useTheme } from '../theme';
 import { useAppStore } from '../store/useAppStore';
@@ -69,6 +72,15 @@ export default function TzuratHadafScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [viewMode, setViewMode] = useState<ViewMode>('pdf');
+  const [fontSize, setFontSize] = useState<number>(18);
+  const [readerTheme, setReaderTheme] = useState<ReaderTheme>(
+    theme.colors.background === '#121212' ? 'dark' : 'light'
+  );
+  const [sefariaData, setSefariaData] = useState<SefariaPageData | null>(null);
+  const [sefariaLoading, setSefariaLoading] = useState<boolean>(false);
+  const [sefariaError, setSefariaError] = useState<string | null>(null);
+
   const { history, settings, toggleAnyDafLearned, setDafStudyStatus, markPartialAmud } = useAppStore(
     useShallow((s) => ({
       history: s.history,
@@ -83,7 +95,6 @@ export default function TzuratHadafScreen() {
     try {
       await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     } catch {
-      // orientation lock may fail on some platforms
     }
   }, []);
 
@@ -112,7 +123,6 @@ export default function TzuratHadafScreen() {
         setIsLandscape(true);
       }
     } catch {
-      // ignore orientation errors
     }
   }, [isLandscape]);
 
@@ -141,7 +151,6 @@ export default function TzuratHadafScreen() {
     const record = history.find((r) => r.date === dateStr);
     return getPartialAmud(record);
   }, [history, dateStr]);
-  const isLearned = studyStatus === 'learned';
 
   const canMarkLearned = dateStr != null && masechetHe != null;
 
@@ -160,7 +169,7 @@ export default function TzuratHadafScreen() {
     toggleAnyDafLearned(dateStr, masechetHe, dafHeStr);
   }, [canMarkLearned, dateStr, masechetHe, dafHeStr, studyStatus, settings, toggleAnyDafLearned, setDafStudyStatus]);
 
-  const loadPage = useCallback(async (loc: DafLocation) => {
+  const loadPdfPage = useCallback(async (loc: DafLocation) => {
     const tref = buildSefariaTref(loc.masechetEn, loc.dafNum, loc.amud);
     const pageId = resolveDafYomiPageId(loc.masechetEn, loc.dafNum, loc.amud);
     const remoteUrl = pageId != null ? buildDafYomiPdfUrl(pageId) : undefined;
@@ -208,9 +217,32 @@ export default function TzuratHadafScreen() {
     }
   }, []);
 
+  const loadSefariaText = useCallback(async (loc: DafLocation) => {
+    setSefariaLoading(true);
+    setSefariaError(null);
+    try {
+      const data = await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud);
+      setSefariaData(data);
+    } catch (err: any) {
+      setSefariaError(err.message || 'שגיאה בטעינת הטקסט מספריא');
+    } finally {
+      setSefariaLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    loadPage(location);
-  }, [location, loadPage]);
+    loadPdfPage(location);
+    if (viewMode === 'text') {
+      loadSefariaText(location);
+    }
+  }, [location, loadPdfPage, loadSefariaText, viewMode]);
+
+  const handleToggleViewMode = useCallback((mode: ViewMode) => {
+    setViewMode(mode);
+    if (mode === 'text' && !sefariaData) {
+      loadSefariaText(location);
+    }
+  }, [location, loadSefariaText, sefariaData]);
 
   const canPrevAmud = getPrevAmud(location) !== null;
   const canNextAmud = getNextAmud(location) !== null;
@@ -238,16 +270,37 @@ export default function TzuratHadafScreen() {
         onLongPressLearned={() => setShowMarkMenu(true)}
       />
 
-      <TzuratHadafViewer
-        page={page}
-        loading={loading}
-        error={error}
-        layoutKey={layoutKey}
-        isLandscape={isLandscape}
-        onToggleOrientation={handleToggleOrientation}
-        onOpenSefaria={openSefaria}
-        onRetry={() => loadPage(location)}
+      <ReaderToolbar
+        viewMode={viewMode}
+        onToggleViewMode={handleToggleViewMode}
+        fontSize={fontSize}
+        onIncreaseFontSize={() => setFontSize((s) => Math.min(30, s + 2))}
+        onDecreaseFontSize={() => setFontSize((s) => Math.max(14, s - 2))}
+        accentColor={theme.colors.accent}
       />
+
+      {viewMode === 'pdf' ? (
+        <TzuratHadafViewer
+          page={page}
+          loading={loading}
+          error={error}
+          layoutKey={layoutKey}
+          isLandscape={isLandscape}
+          onToggleOrientation={handleToggleOrientation}
+          onOpenSefaria={openSefaria}
+          onRetry={() => loadPdfPage(location)}
+        />
+      ) : (
+        <SefariaTextContainer
+          data={sefariaData}
+          loading={sefariaLoading}
+          error={sefariaError}
+          onRetry={() => loadSefariaText(location)}
+          fontSize={fontSize}
+          readerTheme={readerTheme}
+          accentColor={theme.colors.accent}
+        />
+      )}
 
       <TzuratNavigationBar
         isLandscape={isLandscape}
