@@ -21,8 +21,8 @@ export function useSplashScreenAnimations(isReady: boolean, onFinish: () => void
     ]).start(() => {
       shimmerLoopRef.current = Animated.loop(
         Animated.sequence([
-          Animated.timing(shimmer, { toValue: 1.06, duration: 750, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.timing(shimmer, { toValue: 1, duration: 750, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(shimmer, { toValue: 1.04, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(shimmer, { toValue: 1, duration: 800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
         ])
       );
       shimmerLoopRef.current.start();
@@ -32,11 +32,12 @@ export function useSplashScreenAnimations(isReady: boolean, onFinish: () => void
   useEffect(() => {
     if (isReady) {
       shimmerLoopRef.current?.stop();
-      Animated.timing(shimmer, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+      Animated.timing(shimmer, { toValue: 1, duration: 150, useNativeDriver: true }).start();
+      
       Animated.timing(containerOpacity, {
         toValue: 0,
-        duration: 500,
-        delay: 150,
+        duration: 400,
+        delay: 50,
         useNativeDriver: true,
       }).start(() => onFinish());
     }
@@ -52,3 +53,5 @@ export function useSplashScreenAnimations(isReady: boolean, onFinish: () => void
     dividerScale,
   };
 }
+
+
