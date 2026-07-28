@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Animated, {
-  FadeInDown,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -99,7 +98,7 @@ const HomeContent = React.memo(function HomeContent({
   }, []);
 
   return (
-    <Animated.View entering={FadeInDown.duration(400).delay(300).springify()} style={[styles.container]}>
+    <View style={[styles.container]}>
       <View style={styles.streakCard}>
         <LinearGradient
           colors={[theme.colors.accent + '10', 'transparent']}
@@ -168,7 +167,7 @@ const HomeContent = React.memo(function HomeContent({
       </View>
 
       <SharePreviewModal visible={shareVisible} onClose={handleShareClose} data={shareData} />
-    </Animated.View>
+    </View>
   );
 });
 

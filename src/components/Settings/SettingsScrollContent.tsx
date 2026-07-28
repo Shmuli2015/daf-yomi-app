@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, Linking, TouchableOpacity } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeMode, useTheme } from '../../theme';
 import { SettingItem } from './SettingItem';
@@ -192,19 +193,21 @@ export default function SettingsScrollContent({
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.body}>
-          <View style={styles.pageHeader}>
+          <Animated.View entering={FadeIn.duration(400).delay(0)} style={styles.pageHeader}>
             <View style={styles.headerRow}>
               <View style={styles.accentBar} />
               <Text style={styles.pageTitle}>הגדרות</Text>
             </View>
             <Text style={styles.pageSubtitle}>התראות, תצוגה וניהול נתונים</Text>
-          </View>
+          </Animated.View>
 
-          <SettingsSearchBar
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            onClear={() => setSearchQuery('')}
-          />
+          <View>
+            <SettingsSearchBar
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onClear={() => setSearchQuery('')}
+            />
+          </View>
 
           {!hasAnyMatch && searchQuery.trim().length > 0 ? (
             <View style={styles.noResultsContainer}>

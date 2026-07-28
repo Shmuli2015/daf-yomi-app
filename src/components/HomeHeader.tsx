@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Linking, StyleSheet, Dimensions } from 'react-native';
-import Animated, { FadeIn, FadeInDown, FadeInUp, FadeOut, useSharedValue, useAnimatedStyle, withTiming, withRepeat, withSequence, Easing, withSpring } from 'react-native-reanimated';
+import { View, Text, TouchableOpacity, Linking, StyleSheet, Dimensions, PanResponder } from 'react-native';
+import Animated, { FadeIn, FadeOut, useSharedValue, useAnimatedStyle, withTiming, Easing, withSpring, withSequence, runOnJS } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import ConfirmModal from './ConfirmModal';
@@ -78,22 +78,57 @@ const HomeHeader = React.memo(function HomeHeader({
   const todayJumpX = useSharedValue(0);
   const todayJumpOpacity = useSharedValue(1);
   const todayBtnScale = useSharedValue(1);
+  const swipeTranslateX = useSharedValue(0);
+
+  const SWIPE_THRESHOLD = 50;
+
+  const triggerSwipe = (direction: 'prev' | 'next') => {
+    const slideOut = direction === 'prev' ? -12 : 12;
+    const slideIn  = direction === 'prev' ?  12 : -12;
+
+    swipeTranslateX.value = withTiming(
+      slideOut,
+      { duration: 110, easing: Easing.out(Easing.ease) },
+      () => {
+        swipeTranslateX.value = slideIn;
+        swipeTranslateX.value = withTiming(0, { duration: 170, easing: Easing.out(Easing.cubic) });
+      },
+    );
+    if (direction === 'prev') {
+      onPrevDay?.();
+    } else {
+      onNextDay?.();
+    }
+  };
+
+  const panResponder = React.useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gs) =>
+          Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy) * 1.5,
+        onPanResponderMove: (_, gs) => {
+          // subtle follow — just enough to feel responsive
+          swipeTranslateX.value = gs.dx * 0.15;
+        },
+        onPanResponderRelease: (_, gs) => {
+          if (gs.dx < -SWIPE_THRESHOLD) {
+            triggerSwipe('prev');
+          } else if (gs.dx > SWIPE_THRESHOLD) {
+            triggerSwipe('next');
+          } else {
+            swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
+          }
+        },
+        onPanResponderTerminate: () => {
+          swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
+        },
+      }),
+    [onPrevDay, onNextDay],
+  );
 
   useEffect(() => {
     progressWidth.value = withTiming(masechetProgressPct, { duration: 1000, easing: Easing.out(Easing.exp) });
-    
-    if (!isMarked) {
-      pulseScale.value = withRepeat(
-        withSequence(
-          withTiming(1.02, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-          withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      );
-    } else {
-      pulseScale.value = withSpring(1);
-    }
+    pulseScale.value = withSpring(1);
   }, [masechetProgressPct, isMarked]);
 
   const animatedProgressStyle = useAnimatedStyle(() => ({
@@ -102,6 +137,10 @@ const HomeHeader = React.memo(function HomeHeader({
 
   const animatedButtonStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulseScale.value }],
+  }));
+
+  const animatedSwipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: swipeTranslateX.value }],
   }));
 
   const animatedTodayJumpStyle = useAnimatedStyle(() => ({
@@ -142,8 +181,7 @@ const HomeHeader = React.memo(function HomeHeader({
 
   return (
     <View style={styles.outerContainer}>
-      <Animated.View entering={FadeInDown.duration(400).springify()}>
-        <Animated.View style={animatedTodayJumpStyle}>
+      <Animated.View style={animatedTodayJumpStyle}>
         <View style={styles.topBar}>
           <TouchableOpacity 
             style={styles.navBtn} 
@@ -179,8 +217,8 @@ const HomeHeader = React.memo(function HomeHeader({
           </Animated.View>
         )}
 
-        <Animated.View 
-          entering={FadeInUp.duration(500).delay(100).springify()} 
+        <Animated.View style={animatedSwipeStyle} {...panResponder.panHandlers}>
+        <View
           style={[
             styles.dafCard,
             isLearned && { borderColor: theme.colors.success + '60', borderWidth: 2 },
@@ -295,9 +333,9 @@ const HomeHeader = React.memo(function HomeHeader({
             </TouchableOpacity>
             )}
           </View>
+        </View>
         </Animated.View>
         </Animated.View>
-      </Animated.View>
 
       <ConfirmModal
         visible={showConfirm}
