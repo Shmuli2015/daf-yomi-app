@@ -15,58 +15,71 @@ export const NotifModeToggle = ({ mode, onChange }: Props) => {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <View style={styles.row}>
-      <TouchableOpacity
-        style={[styles.btn, mode === 'daily' && styles.btnActive]}
-        onPress={() => onChange('daily')}
-        activeOpacity={0.75}
-      >
-        <Ionicons
-          name="calendar-outline"
-          size={14}
-          color={mode === 'daily' ? theme.colors.background : theme.colors.textSecondary}
-        />
-        <Text style={[styles.btnText, mode === 'daily' && styles.btnTextActive]}>כל יום</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.btn, mode === 'custom' && styles.btnActive]}
-        onPress={() => onChange('custom')}
-        activeOpacity={0.75}
-      >
-        <Ionicons
-          name="grid-outline"
-          size={14}
-          color={mode === 'custom' ? theme.colors.background : theme.colors.textSecondary}
-        />
-        <Text style={[styles.btnText, mode === 'custom' && styles.btnTextActive]}>לפי ימים</Text>
-      </TouchableOpacity>
+    <View style={styles.container}>
+      <View style={styles.segmentedControl}>
+        <TouchableOpacity
+          style={[styles.btn, mode === 'daily' && styles.btnActive]}
+          onPress={() => onChange('daily')}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="calendar-outline"
+            size={15}
+            color={mode === 'daily' ? '#FFFFFF' : theme.colors.textSecondary}
+          />
+          <Text style={[styles.btnText, mode === 'daily' && styles.btnTextActive]}>כל יום</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.btn, mode === 'custom' && styles.btnActive]}
+          onPress={() => onChange('custom')}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="grid-outline"
+            size={15}
+            color={mode === 'custom' ? '#FFFFFF' : theme.colors.textSecondary}
+          />
+          <Text style={[styles.btnText, mode === 'custom' && styles.btnTextActive]}>לפי ימים</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    row: {
-      flexDirection: 'row',
-      gap: 8,
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.border,
+    container: {
+      paddingHorizontal: 18,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
     },
-    btn: {
+    segmentedControl: {
       flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingHorizontal: 14,
-      paddingVertical: 8,
-      borderRadius: 20,
+      backgroundColor: theme.colors.background,
+      borderRadius: 14,
+      padding: 4,
+      gap: 4,
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
+    btn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 8,
+      borderRadius: 10,
+    },
     btnActive: {
       backgroundColor: theme.colors.accent,
-      borderColor: theme.colors.accent,
+      shadowColor: theme.colors.accent,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 2,
     },
     btnText: {
       fontSize: 13,
@@ -74,6 +87,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.textSecondary,
     },
     btnTextActive: {
-      color: theme.colors.background,
+      color: '#FFFFFF',
+      fontWeight: '800',
     },
   });

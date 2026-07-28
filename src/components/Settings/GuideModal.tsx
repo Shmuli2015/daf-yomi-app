@@ -619,6 +619,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     modalSafe: {
       flex: 1,
       backgroundColor: theme.colors.background,
+      direction: 'rtl',
     },
     modalHandle: {
       width: 40,
@@ -684,7 +685,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       flex: 1,
       fontSize: 14,
       color: theme.colors.textPrimary,
-      textAlign: 'right',
+      textAlign: 'start' as any,
       padding: 0,
     },
     chipsScrollView: {

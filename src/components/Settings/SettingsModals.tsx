@@ -89,7 +89,7 @@ export default function SettingsModals({
       />
       <SuccessModal
         visible={showSuccessModal}
-        title="הצלחנו!"
+        title="האיפוס הושלם"
         message="הנתונים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי."
         onClose={onSuccessModalClose}
       />

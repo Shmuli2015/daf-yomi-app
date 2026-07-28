@@ -22,7 +22,7 @@ export default function StudyLinkModeToggle({ mode, onChange }: Props) {
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>כפתורי לימוד במסך הבית ובלוח</Text>
-      <View style={styles.row}>
+      <View style={styles.segmentedControl}>
         {OPTIONS.map((option) => {
           const active = mode === option.id;
           return (
@@ -30,12 +30,12 @@ export default function StudyLinkModeToggle({ mode, onChange }: Props) {
               key={option.id}
               style={[styles.btn, active && styles.btnActive]}
               onPress={() => onChange(option.id)}
-              activeOpacity={0.75}
+              activeOpacity={0.8}
             >
               <Ionicons
                 name={option.icon}
                 size={14}
-                color={active ? theme.colors.background : theme.colors.textSecondary}
+                color={active ? '#FFFFFF' : theme.colors.textSecondary}
               />
               <Text style={[styles.btnText, active && styles.btnTextActive]}>{option.label}</Text>
             </TouchableOpacity>
@@ -49,24 +49,26 @@ export default function StudyLinkModeToggle({ mode, onChange }: Props) {
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     wrap: {
-      paddingHorizontal: 20,
+      paddingHorizontal: 18,
       paddingVertical: 14,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.border,
       gap: 10,
-      alignItems: 'stretch',
+      backgroundColor: theme.colors.surface,
     },
     label: {
-      fontSize: 12,
+      fontSize: 12.5,
       fontWeight: '700',
       color: theme.colors.textSecondary,
-      width: '100%',
-      textAlign: 'left',
+      textAlign: 'start' as any,
       writingDirection: 'rtl',
     },
-    row: {
+    segmentedControl: {
       flexDirection: 'row',
-      gap: 8,
+      backgroundColor: theme.colors.background,
+      borderRadius: 14,
+      padding: 4,
+      gap: 4,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
     },
     btn: {
       flex: 1,
@@ -74,22 +76,24 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: 'center',
       justifyContent: 'center',
       gap: 4,
-      paddingHorizontal: 8,
-      paddingVertical: 10,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      paddingVertical: 8,
+      borderRadius: 10,
     },
     btnActive: {
       backgroundColor: theme.colors.accent,
-      borderColor: theme.colors.accent,
+      shadowColor: theme.colors.accent,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 2,
     },
     btnText: {
       fontSize: 12,
-      fontWeight: '800',
+      fontWeight: '700',
       color: theme.colors.textSecondary,
     },
     btnTextActive: {
-      color: theme.colors.background,
+      color: '#FFFFFF',
+      fontWeight: '800',
     },
   });

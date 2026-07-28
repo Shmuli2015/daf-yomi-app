@@ -13,9 +13,9 @@ import { ThemeMode, useTheme } from '../../theme';
 type Option = { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap };
 
 const OPTIONS: Option[] = [
-  { mode: 'system', label: 'מערכת', icon: 'contrast-outline' },
-  { mode: 'dark', label: 'כהה', icon: 'moon-outline' },
-  { mode: 'light', label: 'בהיר', icon: 'sunny-outline' },
+  { mode: 'system', label: 'לפי תצוגת המערכת', icon: 'contrast-outline' },
+  { mode: 'dark', label: 'מצב כהה', icon: 'moon-outline' },
+  { mode: 'light', label: 'מצב בהיר', icon: 'sunny-outline' },
 ];
 
 interface ThemeModeModalProps {
@@ -37,37 +37,46 @@ export function ThemeModeModal({ visible, value, onClose, onSelect }: ThemeModeM
         </TouchableWithoutFeedback>
 
         <View style={styles.card}>
-          <View style={styles.topAccent} />
-          <Text style={styles.title}>בחר מצב תצוגה</Text>
+          <View style={styles.header}>
+            <View style={styles.headerIconCircle}>
+              <Ionicons name="color-palette-outline" size={20} color={theme.colors.accent} />
+            </View>
+            <Text style={styles.title}>בחירת מצב תצוגה</Text>
+            <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+              <Ionicons name="close" size={18} color={theme.colors.textMuted} />
+            </TouchableOpacity>
+          </View>
 
-          {OPTIONS.map((opt) => {
-            const selected = value === opt.mode;
-            return (
-              <TouchableOpacity
-                key={opt.mode}
-                style={[styles.row, selected && styles.rowSelected]}
-                onPress={() => {
-                  onSelect(opt.mode);
-                  onClose();
-                }}
-                activeOpacity={0.75}
-              >
-                <View style={styles.rowLeft}>
-                  <View style={[styles.iconWrap, selected && styles.iconWrapSelected]}>
-                    <Ionicons
-                      name={opt.icon}
-                      size={17}
-                      color={selected ? '#FFFFFF' : theme.colors.accent}
-                    />
+          <View style={styles.optionsList}>
+            {OPTIONS.map((opt) => {
+              const selected = value === opt.mode;
+              return (
+                <TouchableOpacity
+                  key={opt.mode}
+                  style={[styles.row, selected && styles.rowSelected]}
+                  onPress={() => {
+                    onSelect(opt.mode);
+                    onClose();
+                  }}
+                  activeOpacity={0.75}
+                >
+                  <View style={styles.rowLeft}>
+                    <View style={[styles.iconWrap, selected && styles.iconWrapSelected]}>
+                      <Ionicons
+                        name={opt.icon}
+                        size={17}
+                        color={selected ? '#FFFFFF' : theme.colors.accent}
+                      />
+                    </View>
+                    <Text style={[styles.rowLabel, selected && styles.rowLabelSelected]}>{opt.label}</Text>
                   </View>
-                  <Text style={[styles.rowLabel, selected && styles.rowLabelSelected]}>{opt.label}</Text>
-                </View>
-                {selected && (
-                  <Ionicons name="checkmark-circle" size={20} color={theme.colors.accent} />
-                )}
-              </TouchableOpacity>
-            );
-          })}
+                  {selected && (
+                    <Ionicons name="checkmark-circle" size={20} color={theme.colors.accent} />
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
       </View>
     </Modal>
@@ -78,45 +87,68 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: 'rgba(12,12,12,0.85)',
+      backgroundColor: 'rgba(0,0,0,0.65)',
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 40,
+      paddingHorizontal: 28,
     },
     card: {
       backgroundColor: theme.colors.surface,
       width: '100%',
-      maxWidth: 272,
-      borderRadius: 20,
+      maxWidth: 320,
+      borderRadius: 24,
       overflow: 'hidden',
       borderWidth: 1,
       borderColor: theme.colors.border,
-      paddingBottom: 6,
+      padding: 18,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.25,
+      shadowRadius: 20,
+      elevation: 10,
       direction: 'rtl',
     },
-    topAccent: {
-      height: 3,
-      backgroundColor: theme.colors.accent,
-      width: '100%',
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: 16,
+      gap: 12,
+    },
+    headerIconCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: theme.colors.accentLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(201,150,60,0.2)',
     },
     title: {
-      fontSize: 15,
-      fontWeight: '900',
+      flex: 1,
+      fontSize: 16,
+      fontWeight: '800',
       color: theme.colors.textPrimary,
-      textAlign: 'center',
-      paddingTop: 12,
-      paddingBottom: 4,
-      paddingHorizontal: 16,
+      textAlign: 'start' as any,
+    },
+    closeBtn: {
+      width: 30,
+      height: 30,
+      borderRadius: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    optionsList: {
+      gap: 8,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingVertical: 10,
-      paddingHorizontal: 12,
-      marginHorizontal: 8,
-      marginVertical: 3,
-      borderRadius: 12,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
+      borderRadius: 14,
       borderWidth: 1,
       borderColor: theme.colors.border,
       backgroundColor: theme.colors.background,
@@ -128,7 +160,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     rowLeft: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 12,
     },
     iconWrap: {
       width: 34,
@@ -143,10 +175,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     rowLabel: {
       fontSize: 14,
-      fontWeight: '800',
+      fontWeight: '700',
       color: theme.colors.textPrimary,
     },
     rowLabelSelected: {
       color: theme.colors.textPrimary,
+      fontWeight: '800',
     },
   });
