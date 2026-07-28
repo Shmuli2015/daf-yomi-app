@@ -38,9 +38,9 @@ export default function SplashScreen({ isReady, onFinish }: SplashScreenProps) {
           <Text style={styles.title}>מסע דף</Text>
         </Animated.View>
 
-        <Animated.Text style={[styles.subtitle, { opacity: subtitleOpacity }]}>
-          {randomQuote}
-        </Animated.Text>
+        <Animated.View style={[styles.quoteCard, { opacity: subtitleOpacity }]}>
+          <Text style={styles.subtitle}>{randomQuote}</Text>
+        </Animated.View>
 
         <Animated.View style={[styles.dividerRow, { transform: [{ scaleX: dividerScale }] }]}>
           <View style={styles.dividerLine} />
@@ -66,27 +66,30 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       width: 320,
       height: 320,
       borderRadius: 160,
-      backgroundColor: 'rgba(201,150,60,0.05)',
+      backgroundColor: theme.colors.accent,
+      opacity: 0.04,
       top: -80,
       right: -80,
     },
     bgCircle2: {
       position: 'absolute',
-      width: 240,
-      height: 240,
-      borderRadius: 120,
-      backgroundColor: theme.colors.textMuted.replace('1)', '0.03)'),
-      bottom: -40,
+      width: 260,
+      height: 260,
+      borderRadius: 130,
+      backgroundColor: theme.colors.accent,
+      opacity: 0.03,
+      bottom: -50,
       left: -60,
     },
     content: {
       alignItems: 'center',
+      paddingHorizontal: 24,
     },
     iconContainer: {
       width: 100,
       height: 100,
       borderRadius: 28,
-      backgroundColor: theme.colors.accentLight,
+      backgroundColor: theme.colors.surface,
       justifyContent: 'center',
       alignItems: 'center',
       marginBottom: 28,
@@ -100,19 +103,27 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       textAlign: 'center',
       letterSpacing: -1.5,
     },
+    quoteCard: {
+      marginTop: 14,
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 16,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      maxWidth: 320,
+    },
     subtitle: {
-      fontSize: 15,
+      fontSize: 14,
       color: theme.colors.textSecondary,
       textAlign: 'center',
-      marginTop: 10,
       fontWeight: '600',
-      letterSpacing: 0.5,
-      opacity: 0.7,
+      lineHeight: 20,
     },
     dividerRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: 28,
+      marginTop: 24,
       gap: 8,
     },
     dividerLine: {
@@ -129,3 +140,5 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       opacity: 0.7,
     },
   });
+
+
