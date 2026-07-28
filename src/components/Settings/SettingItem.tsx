@@ -11,6 +11,44 @@ export interface SettingItemProps {
   onPress?: (value?: any) => void;
   type?: 'switch' | 'arrow' | 'none';
   isDestructive?: boolean;
+  isLast?: boolean;
+  highlightText?: string;
+}
+
+function HighlightedText({
+  text,
+  highlight,
+  baseStyle,
+  highlightStyle,
+}: {
+  text: string;
+  highlight?: string;
+  baseStyle: any;
+  highlightStyle: any;
+}) {
+  if (!highlight || !highlight.trim()) {
+    return <Text style={baseStyle}>{text}</Text>;
+  }
+
+  const query = highlight.trim().toLowerCase();
+  const lowerText = text.toLowerCase();
+  const index = lowerText.indexOf(query);
+
+  if (index === -1) {
+    return <Text style={baseStyle}>{text}</Text>;
+  }
+
+  const before = text.slice(0, index);
+  const match = text.slice(index, index + query.length);
+  const after = text.slice(index + query.length);
+
+  return (
+    <Text style={baseStyle}>
+      {before}
+      <Text style={highlightStyle}>{match}</Text>
+      {after}
+    </Text>
+  );
 }
 
 export const SettingItem = React.memo(function SettingItem({
@@ -21,6 +59,8 @@ export const SettingItem = React.memo(function SettingItem({
   onPress,
   type = 'arrow',
   isDestructive = false,
+  isLast = false,
+  highlightText,
 }: SettingItemProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -34,15 +74,27 @@ export const SettingItem = React.memo(function SettingItem({
       onPress={type === 'switch' ? undefined : onPress}
       disabled={type === 'switch'}
       activeOpacity={0.7}
-      style={styles.row}
+      style={[styles.row, isLast && styles.rowLast]}
     >
       <View style={styles.left}>
         <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
           <Ionicons name={icon} size={19} color={iconColor} />
         </View>
         <View style={styles.textBlock}>
-          <Text style={[styles.title, { color: titleColor }]}>{title}</Text>
-          {description && <Text style={styles.description}>{description}</Text>}
+          <HighlightedText
+            text={title}
+            highlight={highlightText}
+            baseStyle={[styles.title, { color: titleColor }]}
+            highlightStyle={styles.highlight}
+          />
+          {description ? (
+            <HighlightedText
+              text={description}
+              highlight={highlightText}
+              baseStyle={styles.description}
+              highlightStyle={styles.highlight}
+            />
+          ) : null}
         </View>
       </View>
 
@@ -51,18 +103,20 @@ export const SettingItem = React.memo(function SettingItem({
           <Switch
             value={value as boolean}
             onValueChange={onPress as any}
-            trackColor={{ false: theme.colors.border, true: 'rgba(201,150,60,0.35)' }}
+            trackColor={{ false: theme.colors.border, true: theme.colors.accentLight }}
             thumbColor={value ? theme.colors.accent : '#FFFFFF'}
             ios_backgroundColor={theme.colors.border}
           />
         ) : type === 'arrow' ? (
           <View style={styles.arrowRow}>
             {value !== undefined && value !== false && (
-              <Text style={styles.valueText} numberOfLines={1}>
-                {value as string}
-              </Text>
+              <View style={styles.badge}>
+                <Text style={styles.valueText} numberOfLines={1}>
+                  {value as string}
+                </Text>
+              </View>
             )}
-            <Ionicons name="chevron-back" size={16} color={theme.colors.border} />
+            <Ionicons name="chevron-back" size={16} color={theme.colors.textMuted} />
           </View>
         ) : null}
       </View>
@@ -76,17 +130,20 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      paddingHorizontal: 20,
-      paddingVertical: 16,
+      paddingHorizontal: 18,
+      paddingVertical: 15,
       backgroundColor: theme.colors.surface,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border,
+    },
+    rowLast: {
+      borderBottomWidth: 0,
     },
     left: {
       flexDirection: 'row',
       alignItems: 'center',
       flex: 1,
-      gap: 16,
+      gap: 14,
     },
     iconBox: {
       width: 42,
@@ -94,32 +151,47 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: 'rgba(201,150,60,0.15)',
     },
     textBlock: {
       flex: 1,
     },
     title: {
-      fontSize: 16,
+      fontSize: 15,
       fontWeight: '700',
-      letterSpacing: -0.3,
+      letterSpacing: -0.2,
     },
     description: {
-      fontSize: 13,
+      fontSize: 12.5,
       color: theme.colors.textSecondary,
       marginTop: 2,
-      lineHeight: 18,
-      opacity: 0.8,
+      lineHeight: 17,
+      opacity: 0.85,
+    },
+    highlight: {
+      backgroundColor: theme.colors.accentLight,
+      color: theme.colors.accent,
+      fontWeight: '900',
     },
     right: {
-      paddingStart: 12,
+      paddingStart: 10,
     },
     arrowRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
     },
+    badge: {
+      backgroundColor: theme.colors.accentLight,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: 'rgba(201,150,60,0.2)',
+    },
     valueText: {
-      fontSize: 15,
+      fontSize: 13,
       color: theme.colors.accent,
       fontWeight: '700',
     },

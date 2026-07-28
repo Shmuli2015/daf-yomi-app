@@ -100,6 +100,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderColor: theme.colors.border,
       ...theme.shadow.cardMedium,
       elevation: 20,
+      direction: 'rtl',
     },
     topAccent: {
       height: 4,
