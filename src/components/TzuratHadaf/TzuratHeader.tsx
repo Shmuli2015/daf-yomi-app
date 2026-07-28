@@ -52,7 +52,7 @@ export default function TzuratHeader({
       </TouchableOpacity>
 
       <View style={styles.titleBlock}>
-        {!isLandscape && <Text style={styles.badge}>צורת הדף</Text>}
+        {!isLandscape && <Text style={styles.badge}>קריאת הדף</Text>}
         <Text style={styles.masechet} numberOfLines={1}>{title}</Text>
         <Text style={styles.daf}>{formatDafLabel(dafNum, amud)}</Text>
       </View>
