@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { HALF_DAF_TIP_VERSION } from '../constants/halfDafTip';
 
 const db = SQLite.openDatabaseSync('dafYomi.db');
 
@@ -28,6 +29,7 @@ export interface SettingsRecord {
   update_auto_prompt_enabled: number;
   study_link_mode: string;
   show_calendar_daf: number;
+  dismissed_half_daf_tip: number;
 }
 
 function migrateDailyDafColumns() {
@@ -100,6 +102,9 @@ export function initDB() {
   }
   if (!columns.includes('show_calendar_daf')) {
     db.execSync('ALTER TABLE settings ADD COLUMN show_calendar_daf INTEGER DEFAULT 0;');
+  }
+  if (!columns.includes('dismissed_half_daf_tip')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN dismissed_half_daf_tip INTEGER DEFAULT 0;');
   }
 
   db.execSync(`
@@ -219,6 +224,10 @@ export function setShowCalendarDaf(enabled: boolean) {
   db.runSync('UPDATE settings SET show_calendar_daf = ? WHERE id = 1', [enabled ? 1 : 0]);
 }
 
+export function setDismissedHalfDafTip(version: number = HALF_DAF_TIP_VERSION) {
+  db.runSync('UPDATE settings SET dismissed_half_daf_tip = ? WHERE id = 1', [version]);
+}
+
 export function resetDB() {
   db.execSync('DROP TABLE IF EXISTS daily_daf;');
   initDB();
@@ -313,7 +322,8 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       dismissed_update_version = ?,
       update_auto_prompt_enabled = ?,
       study_link_mode = ?,
-      show_calendar_daf = ?
+      show_calendar_daf = ?,
+      dismissed_half_daf_tip = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -329,6 +339,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.update_auto_prompt_enabled,
       settings.study_link_mode,
       settings.show_calendar_daf,
+      settings.dismissed_half_daf_tip,
     ]
   );
 }

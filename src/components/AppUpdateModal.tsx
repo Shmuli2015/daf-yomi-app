@@ -103,12 +103,12 @@ export function AppUpdateModal({
         setErrorMessage(e.message);
         return;
       }
-      const message =
+      setPhase('error');
+      setErrorMessage(
         e instanceof ApkInstallError
           ? e.message
-          : 'משהו השתבש. נסו שוב או הורידו מהדפדפן.';
-      setPhase('error');
-      setErrorMessage(message);
+          : 'לא הצלחנו להוריד או להתקין את העדכון. אפשר לנסות שוב או להוריד מהדפדפן.',
+      );
     }
   }, [offer, openDownloadPage]);
 
@@ -127,17 +127,28 @@ export function AppUpdateModal({
   const progressPct =
     progress && progress.progress > 0 ? Math.min(100, Math.round(progress.progress * 100)) : null;
 
+  const titleText =
+    phase === 'downloading'
+      ? 'מורידים את העדכון'
+      : phase === 'installing'
+        ? 'מוכנים להתקנה'
+        : phase === 'needs_permission'
+          ? 'נדרשת הרשאה'
+          : phase === 'error'
+            ? 'ההורדה נכשלה'
+            : 'יש עדכון חדש';
+
   const bodyText =
     phase === 'downloading'
-      ? 'מוריד את העדכון…'
+      ? 'הקובץ יורד ברקע. אפשר להמתין כאן עד לסיום.'
       : phase === 'installing'
-        ? 'פותח את מסך ההתקנה… לחצו «התקן» במסך שיופיע.'
+        ? 'מסך ההתקנה עומד להיפתח. לחצו התקן כשיופיע.'
         : phase === 'needs_permission'
           ? errorMessage ??
-            'יש לאשר «התקנה ממקורות לא ידועים» עבור מסע דף, ואז לנסות שוב.'
+            'כדי להתקין עדכונים, אשרו למסע דף התקנה ממקורות לא ידועים בהגדרות המכשיר, ואז נסו שוב.'
           : phase === 'error'
-            ? errorMessage ?? 'משהו השתבש.'
-            : 'לחצו «הורד והתקן» — העדכון יורד ויפתח מסך ההתקנה. לחצו «התקן» במסך שיופיע.';
+            ? errorMessage ?? 'לא הצלחנו להוריד או להתקין את העדכון. אפשר לנסות שוב או להוריד מהדפדפן.'
+            : 'גרסה חדשה של מסע דף מוכנה. ההורדה תתחיל מיד, ואחריה ייפתח מסך ההתקנה.';
 
   return (
     <Modal
@@ -155,12 +166,12 @@ export function AppUpdateModal({
               <Ionicons name="cloud-download-outline" size={38} color={theme.colors.accent} />
             )}
           </View>
-          <Text style={styles.title}>עדכון זמין למסע דף</Text>
+          <Text style={styles.title}>{titleText}</Text>
           <Text style={styles.body}>{bodyText}</Text>
           <Text style={styles.versions}>
-            מותקן: {installedVersion}
+            גרסה נוכחית: {installedVersion}
             {'\n'}
-            חדש: {offer.latestVersion}
+            גרסה חדשה: {offer.latestVersion}
           </Text>
 
           {phase === 'downloading' && (
@@ -184,7 +195,7 @@ export function AppUpdateModal({
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.secondaryBtn} onPress={onDismissLater} activeOpacity={0.75}>
-                <Text style={styles.secondaryLabel}>אחר כך</Text>
+                <Text style={styles.secondaryLabel}>מאוחר יותר</Text>
               </TouchableOpacity>
             </>
           )}
@@ -206,10 +217,10 @@ export function AppUpdateModal({
                 <Text style={styles.primaryLabel}>נסה שוב</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.secondaryBtn} onPress={openDownloadPage} activeOpacity={0.75}>
-                <Text style={styles.secondaryLabel}>הורד בדפדפן</Text>
+                <Text style={styles.secondaryLabel}>הורד מהדפדפן</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.tertiaryBtn} onPress={onDismissLater} activeOpacity={0.75}>
-                <Text style={styles.secondaryLabel}>אחר כך</Text>
+                <Text style={styles.secondaryLabel}>מאוחר יותר</Text>
               </TouchableOpacity>
             </>
           )}

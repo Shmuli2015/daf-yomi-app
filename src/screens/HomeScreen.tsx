@@ -30,6 +30,7 @@ import { useTheme } from "../theme";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
 import { parseStudyLinkMode, shouldShowSefariaLink, shouldShowTzuratLink } from "../utils/studyLinkMode";
 import { GuideModal } from "../components/Settings/GuideModal";
+import { HALF_DAF_TIP_VERSION } from "../constants/halfDafTip";
 
 type HomeScreenProps = {
   navigation: BottomTabNavigationProp<MainTabParamList, "Home">;
@@ -62,6 +63,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     progressCache,
     isAppReady,
     setCurrentDate,
+    dismissHalfDafTip,
   } = useAppStore(
     useShallow((s) => ({
       currentDate: s.currentDate,
@@ -82,6 +84,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       progressCache: s.progressCache,
       isAppReady: s.isAppReady,
       setCurrentDate: s.setCurrentDate,
+      dismissHalfDafTip: s.dismissHalfDafTip,
     })),
   );
 
@@ -91,6 +94,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   const studyStatus = getStudyStatus(todayRecord);
   const isLearned = studyStatus === "learned";
+  const showHalfDafTip =
+    settings?.dismissed_half_daf_tip !== HALF_DAF_TIP_VERSION && studyStatus === "none";
 
   const handleToggle = useCallback(() => {
     if (!isLearned && studyStatus !== "partial" && settings?.show_confetti) setShowConfetti(true);
@@ -209,6 +214,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           onMarkPartialA={handleMarkPartialA}
           onMarkPartialB={handleMarkPartialB}
           partialAmud={partialAmud}
+          showHalfDafTip={showHalfDafTip}
+          onDismissHalfDafTip={dismissHalfDafTip}
           masechetProgressPct={masechetStats.pct}
           masechetLearnedCountLabel={formatProgressCount(masechetStats.learned)}
           masechetTotalCount={masechetStats.total}

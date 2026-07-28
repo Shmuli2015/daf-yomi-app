@@ -36,8 +36,7 @@ export function useAppUpdateCheck() {
   }, []);
 
   const onDismissLater = useCallback(() => {
-    const mockUrl = 'https://example.com';
-    if (offer?.latestVersion && offer.downloadUrl !== mockUrl) {
+    if (offer?.latestVersion) {
       setDismissedUpdateVersion(offer.latestVersion);
       refreshSettings();
     }

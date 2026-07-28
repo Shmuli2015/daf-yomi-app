@@ -118,6 +118,7 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     update_auto_prompt_enabled: num('update_auto_prompt_enabled', 0),
     study_link_mode: str('study_link_mode', 'both'),
     show_calendar_daf: num('show_calendar_daf', 0),
+    dismissed_half_daf_tip: num('dismissed_half_daf_tip', 0),
   };
 }
 
