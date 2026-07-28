@@ -68,12 +68,10 @@ export default function TzuratHadafScreen() {
   const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // PDF Page state
   const [page, setPage] = useState<TzuratPageContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Sefaria Reader state
   const [viewMode, setViewMode] = useState<ViewMode>('pdf');
   const [fontSize, setFontSize] = useState<number>(18);
   const [readerTheme, setReaderTheme] = useState<ReaderTheme>(
@@ -97,7 +95,6 @@ export default function TzuratHadafScreen() {
     try {
       await ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
     } catch {
-      // orientation lock may fail on some platforms
     }
   }, []);
 
@@ -126,7 +123,6 @@ export default function TzuratHadafScreen() {
         setIsLandscape(true);
       }
     } catch {
-      // ignore orientation errors
     }
   }, [isLandscape]);
 

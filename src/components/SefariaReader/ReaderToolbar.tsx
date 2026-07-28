@@ -74,10 +74,8 @@ export default function ReaderToolbar({
         </TouchableOpacity>
       </View>
 
-      {/* Controls only shown in Text Mode */}
       {viewMode === 'text' && (
         <View style={styles.rightControls}>
-          {/* Font Controls */}
           <View style={styles.fontControls}>
             <TouchableOpacity
               style={styles.fontBtn}
