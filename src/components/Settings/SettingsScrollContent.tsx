@@ -393,7 +393,7 @@ export default function SettingsScrollContent({
                           <SettingItem
                             icon="alert-circle-outline"
                             title="התראות עדכון אוטומטיות"
-                            description="בדיקת עדכונים אוטומטית בפתיחת האפליקציה או בחזרה מהרקע, והתראה עם «הורד והתקן» כשמתפרסם עדכון"
+                            description="בדיקת עדכונים אוטומטית בפתיחת האפליקציה או בחזרה מהרקע, והתראה עם הורד והתקן כשמתפרסם עדכון"
                             type="switch"
                             value={updateAutoPromptEnabled}
                             onPress={onUpdateAutoPromptToggle}

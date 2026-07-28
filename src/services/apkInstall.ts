@@ -99,7 +99,7 @@ export async function installDownloadedApk(localUri: string): Promise<void> {
     if (/unknown sources|install packages|REQUEST_INSTALL/i.test(msg)) {
       throw new ApkInstallError(
         'permission_needed',
-        'יש לאשר «התקנה ממקורות לא ידועים» עבור מסע דף.',
+        'יש לאשר למסע דף התקנה ממקורות לא ידועים בהגדרות המכשיר.',
       );
     }
     throw new ApkInstallError('install_failed', 'לא הצלחנו לפתוח את מסך ההתקנה.');

@@ -26,6 +26,8 @@ interface HomeHeaderProps {
   onMarkPartialA?: () => void;
   onMarkPartialB?: () => void;
   partialAmud?: 'a' | 'b' | null;
+  showHalfDafTip?: boolean;
+  onDismissHalfDafTip?: () => void;
   masechetProgressPct?: number;
   masechetLearnedCountLabel?: string;
   masechetTotalCount?: number;
@@ -54,6 +56,8 @@ const HomeHeader = React.memo(function HomeHeader({
   onMarkPartialA,
   onMarkPartialB,
   partialAmud = null,
+  showHalfDafTip = false,
+  onDismissHalfDafTip,
   masechetProgressPct = 0,
   masechetLearnedCountLabel = '0',
   masechetTotalCount = 0,
@@ -286,7 +290,10 @@ const HomeHeader = React.memo(function HomeHeader({
                   }
                 }}
                 onLongPress={() => {
-                  if (!isLearned) setShowMarkMenu(true);
+                  if (!isLearned) {
+                    setShowMarkMenu(true);
+                    onDismissHalfDafTip?.();
+                  }
                 }}
                 delayLongPress={400}
                 style={[
@@ -309,6 +316,22 @@ const HomeHeader = React.memo(function HomeHeader({
                   {isLearned ? 'אשריך! הדף נלמד' : isPartial ? 'סיימתי את הדף!' : 'סמן כנלמד'}
                 </Text>
               </TouchableOpacity>
+
+              {showHalfDafTip && (
+                <View style={styles.halfDafTip}>
+                  <TouchableOpacity
+                    onPress={onDismissHalfDafTip}
+                    style={styles.halfDafTipClose}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    accessibilityLabel="סגור טיפ"
+                  >
+                    <Ionicons name="close" size={14} color={theme.colors.textSecondary} />
+                  </TouchableOpacity>
+                  <Text style={styles.halfDafTipText}>
+                    לחיצה ארוכה · סימון חצי דף
+                  </Text>
+                </View>
+              )}
             </Animated.View>
 
             {showSefariaLink && (
@@ -533,6 +556,34 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     mainButtonContainer: {
       alignSelf: 'stretch',
+      gap: 8,
+    },
+    halfDafTip: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      alignSelf: 'center',
+      maxWidth: '100%',
+      paddingVertical: 6,
+      paddingStart: 12,
+      paddingEnd: 6,
+      borderRadius: 10,
+      backgroundColor: theme.colors.accentLight,
+    },
+    halfDafTipText: {
+      color: theme.colors.textSecondary,
+      fontSize: 12,
+      fontWeight: '600',
+      textAlign: 'center',
+      writingDirection: 'rtl',
+    },
+    halfDafTipClose: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     mainButton: {
       alignSelf: 'stretch',

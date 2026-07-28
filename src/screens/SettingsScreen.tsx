@@ -369,7 +369,7 @@ export default function SettingsScreen() {
     if (r === 'dismissed') {
       setUpdateFeedback({
         title: 'העדכון נדחה',
-        message: 'כשתפורסם גרסה חדשה יותר, נציג שוב.',
+        message: 'דחיתם את העדכון הנוכחי. כשתופיע גרסה חדשה יותר, נזכיר שוב.',
         iconName: 'time-outline',
         compact: true,
       });
@@ -377,8 +377,8 @@ export default function SettingsScreen() {
     }
     const ver = Constants.expoConfig?.version;
     setUpdateFeedback({
-      title: 'אין עדכון חדש',
-      message: 'מותקנת אצלך הגרסה האחרונה שפורסמה.',
+      title: 'הכל מעודכן',
+      message: 'אתם כבר על הגרסה העדכנית ביותר של מסע דף.',
       emphasis: ver ? `גרסה ${ver}` : undefined,
       iconName: 'checkmark-circle',
       compact: true,
