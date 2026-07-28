@@ -19,6 +19,7 @@ interface HomeHeaderProps {
   showTzuratLink?: boolean;
   onOpenTzuratHadaf?: () => void;
   onPressMasechet?: () => void;
+  onOpenGuide?: () => void;
   studyStatus?: 'none' | 'partial' | 'learned';
   handleToggle?: () => void;
   onMarkFull?: () => void;
@@ -46,6 +47,7 @@ const HomeHeader = React.memo(function HomeHeader({
   showTzuratLink = true,
   onOpenTzuratHadaf,
   onPressMasechet,
+  onOpenGuide,
   studyStatus = 'none',
   handleToggle,
   onMarkFull,
@@ -388,6 +390,27 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 12,
+    },
+    headerRightActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    guideIconBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: theme.colors.accentLight,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: 'rgba(201, 150, 60, 0.3)',
+    },
+    guideIconText: {
+      color: theme.colors.accent,
+      fontSize: 12,
+      fontWeight: '800',
     },
     dailyStudyBadge: {
       backgroundColor: theme.colors.accentLight,
