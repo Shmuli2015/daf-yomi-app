@@ -44,8 +44,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: 'transparent',
     },
     content: {
-      paddingTop: 24,
-      paddingHorizontal: 20,
-      paddingBottom: 12,
+      paddingTop: 16,
+      paddingHorizontal: 16,
+      paddingBottom: 24,
+      flexGrow: 1,
     },
   });
+
