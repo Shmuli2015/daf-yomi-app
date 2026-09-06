@@ -23,9 +23,7 @@ function parsePdfErrorMessage(data: string): string | null {
     if (parsed.type === 'pdfError') {
       return parsed.message || 'לא ניתן להציג את קובץ ה-PDF.';
     }
-  } catch {
-    // ignore non-json messages
-  }
+  } catch {}
   return null;
 }
 

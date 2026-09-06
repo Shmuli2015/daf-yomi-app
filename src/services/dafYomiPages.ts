@@ -69,7 +69,6 @@ export async function fetchDafYomiPage(
     await clearCachedManuscriptImage(tref);
     return { kind: 'pdf', uri: localUri, remoteUrl };
   } catch {
-    // If downloading fails (e.g. on web or disk write error), return remoteUrl for online webview rendering
     return { kind: 'pdf', uri: remoteUrl, remoteUrl };
   }
 }

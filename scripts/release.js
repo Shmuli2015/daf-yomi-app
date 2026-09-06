@@ -14,30 +14,25 @@ function runQuiet(command) {
 
 function readVersion() {
   delete require.cache[require.resolve('../package.json')];
-  // eslint-disable-next-line import/no-dynamic-require, global-require
   return require('../package.json').version;
 }
 
 console.log('\x1b[1m🚀 Starting release preparation...\x1b[0m\n');
 
-// 1. Check working directory status
 const status = runQuiet('git status --porcelain');
 if (status) {
   console.error('\x1b[31m❌ Error: Git working tree is not clean. Please commit or stash changes before releasing.\x1b[0m');
   process.exit(1);
 }
 
-// 2. Check branch
 const currentBranch = runQuiet('git rev-parse --abbrev-ref HEAD');
 if (currentBranch !== 'master') {
   console.warn(`\x1b[33m⚠️  Warning: Currently on branch '${currentBranch}'. Releases are recommended from 'master'.\x1b[0m`);
 }
 
-// 3. Run pre-release validation
 console.log('\n\x1b[1m🔍 Running CI checks (typecheck, tests, expo-doctor)...\x1b[0m');
 run('npm run ci');
 
-// 4. Bump version
 const releaseType = process.argv[2] || 'patch';
 console.log(`\n\x1b[1m📦 Bumping version (${releaseType})...\x1b[0m`);
 run(`npm version ${releaseType} --no-git-tag-version`);
@@ -45,14 +40,12 @@ run(`npm version ${releaseType} --no-git-tag-version`);
 const version = readVersion();
 const branch = `release/${version}`;
 
-// 5. Create branch and commit
 console.log(`\n\x1b[1m🌿 Creating branch ${branch}...\x1b[0m`);
 run(`git checkout -b ${branch}`);
 run('git add package.json package-lock.json');
 run(`git commit -m "Release ${version}"`);
 run('git push -u origin HEAD');
 
-// 6. Open Pull Request to master
 console.log('\n\x1b[1m📝 Opening PR to master...\x1b[0m');
 try {
   run(`gh pr create --title "Release ${version}" --body "Automated release PR for version ${version}." --base master`);

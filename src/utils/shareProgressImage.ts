@@ -7,7 +7,6 @@ import type { View } from 'react-native';
 
 export const CARD_SIZE = 1080;
 
-/** expo-sharing Android requires URI scheme `file` (see Expo SharingModule). */
 export function toFileSharingUrl(pathOrUri: string): string {
   const trimmed = pathOrUri.trim();
   if (trimmed.startsWith('file://')) return trimmed;

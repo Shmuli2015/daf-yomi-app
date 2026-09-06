@@ -1,4 +1,3 @@
-/** כתובת תמיכה, משוב והצעות לשיפור */
 export const SUPPORT_EMAIL = 'support.masa.daf@gmail.com';
 
 const SUPPORT_MAIL_SUBJECT = 'מסע דף, יצירת קשר / הצעה לשיפור';

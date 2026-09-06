@@ -18,12 +18,9 @@ interface InfoModalProps {
   onClose: () => void;
   title: string;
   message: string;
-  /** Optional line shown below the message (e.g. email) — accent styling, selectable */
   emphasis?: string;
   actionLabel?: string;
-  /** Ionicons glyph — default info circle */
   iconName?: InfoModalIconName;
-  /** Tighter card and typography for lightweight notices */
   compact?: boolean;
 }
 

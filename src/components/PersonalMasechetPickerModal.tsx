@@ -38,7 +38,6 @@ export default function PersonalMasechetPickerModal({
     return map;
   }, [personalTrackRecords]);
 
-  // Active masechtot with progress
   const activeProgressMasechtot = useMemo(() => {
     return SHAS_MASECHTOT.filter((m) => {
       const info = progressMap.get(m.en);
@@ -83,7 +82,6 @@ export default function PersonalMasechetPickerModal({
               </TouchableOpacity>
             )}
 
-            {/* Active Learning Section */}
             {activeProgressMasechtot.length > 0 && (
               <View style={styles.activeSection}>
                 <View style={styles.sectionHeaderRow}>
@@ -131,7 +129,6 @@ export default function PersonalMasechetPickerModal({
               </View>
             )}
 
-            {/* Full Shas List by Sedarim */}
             {SEDARIM.map((seder) => {
               const sederMasechtot = SHAS_MASECHTOT.filter((m) => m.seder === seder.id);
               return (

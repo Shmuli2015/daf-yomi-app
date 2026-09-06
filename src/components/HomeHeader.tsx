@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Linking, StyleSheet, Dimensions, PanResponder } from 'react-native';
-import Animated, { FadeIn, FadeOut, useSharedValue, useAnimatedStyle, withTiming, Easing, withSpring, withSequence, runOnJS } from 'react-native-reanimated';
+import React, { useState, useMemo } from 'react';
+import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import ConfirmModal from './ConfirmModal';
 import DafMarkMenuModal from './DafMarkMenuModal';
 import { useTheme } from '../theme';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { useHomeHeaderSwipe } from '../hooks/useHomeHeaderSwipe';
+import { createHomeHeaderStyles } from './Home/HomeHeader.styles';
 
 interface HomeHeaderProps {
   gregorianDateStr: string;
@@ -49,7 +49,6 @@ const HomeHeader = React.memo(function HomeHeader({
   showTzuratLink = true,
   onOpenTzuratHadaf,
   onPressMasechet,
-  onOpenGuide,
   studyStatus = 'none',
   handleToggle,
   onMarkFull,
@@ -69,7 +68,7 @@ const HomeHeader = React.memo(function HomeHeader({
   currentDate,
 }: HomeHeaderProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createHomeHeaderStyles(theme), [theme]);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showMarkMenu, setShowMarkMenu] = useState(false);
   const isLearned = studyStatus === 'learned';
@@ -77,131 +76,43 @@ const HomeHeader = React.memo(function HomeHeader({
   const isMarked = isLearned || isPartial;
   const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
 
-  const progressWidth = useSharedValue(0);
-  const pulseScale = useSharedValue(1);
-  const todayJumpX = useSharedValue(0);
-  const todayJumpOpacity = useSharedValue(1);
-  const todayBtnScale = useSharedValue(1);
-  const swipeTranslateX = useSharedValue(0);
-
-  const SWIPE_THRESHOLD = 50;
-
-  const triggerSwipe = (direction: 'prev' | 'next') => {
-    const slideOut = direction === 'prev' ? -12 : 12;
-    const slideIn  = direction === 'prev' ?  12 : -12;
-
-    swipeTranslateX.value = withTiming(
-      slideOut,
-      { duration: 110, easing: Easing.out(Easing.ease) },
-      () => {
-        swipeTranslateX.value = slideIn;
-        swipeTranslateX.value = withTiming(0, { duration: 170, easing: Easing.out(Easing.cubic) });
-      },
-    );
-    if (direction === 'prev') {
-      onPrevDay?.();
-    } else {
-      onNextDay?.();
-    }
-  };
-
-  const panResponder = React.useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gs) =>
-          Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy) * 1.5,
-        onPanResponderMove: (_, gs) => {
-          // subtle follow — just enough to feel responsive
-          swipeTranslateX.value = gs.dx * 0.15;
-        },
-        onPanResponderRelease: (_, gs) => {
-          if (gs.dx < -SWIPE_THRESHOLD) {
-            triggerSwipe('prev');
-          } else if (gs.dx > SWIPE_THRESHOLD) {
-            triggerSwipe('next');
-          } else {
-            swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
-          }
-        },
-        onPanResponderTerminate: () => {
-          swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
-        },
-      }),
-    [onPrevDay, onNextDay],
-  );
-
-  useEffect(() => {
-    progressWidth.value = withTiming(masechetProgressPct, { duration: 1000, easing: Easing.out(Easing.exp) });
-    pulseScale.value = withSpring(1);
-  }, [masechetProgressPct, isMarked]);
-
-  const animatedProgressStyle = useAnimatedStyle(() => ({
-    width: `${progressWidth.value}%`,
-  }));
-
-  const animatedButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-  }));
-
-  const animatedSwipeStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: swipeTranslateX.value }],
-  }));
-
-  const animatedTodayJumpStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: todayJumpX.value }],
-    opacity: todayJumpOpacity.value,
-  }));
-
-  const animatedTodayBtnStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: todayBtnScale.value }],
-  }));
-
-  const handleTodayPress = () => {
-    if (!onTodayPress) return;
-
-    if (isToday) {
-      onTodayPress();
-      return;
-    }
-
-    todayBtnScale.value = withSequence(
-      withTiming(0.9, { duration: 80, easing: Easing.out(Easing.ease) }),
-      withSpring(1, { damping: 12, stiffness: 200 }),
-    );
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const viewing = new Date(currentDate ?? today);
-    viewing.setHours(0, 0, 0, 0);
-    const slideFrom = viewing < today ? -18 : 18;
-
-    todayJumpX.value = slideFrom;
-    todayJumpOpacity.value = 0.55;
-    todayJumpX.value = withSpring(0, { damping: 16, stiffness: 180 });
-    todayJumpOpacity.value = withTiming(1, { duration: 260, easing: Easing.out(Easing.cubic) });
-
-    onTodayPress();
-  };
+  const {
+    panResponder,
+    animatedProgressStyle,
+    animatedButtonStyle,
+    animatedSwipeStyle,
+    animatedTodayJumpStyle,
+    animatedTodayBtnStyle,
+    handleTodayPress,
+  } = useHomeHeaderSwipe({
+    onPrevDay,
+    onNextDay,
+    onTodayPress,
+    isToday,
+    currentDate,
+    masechetProgressPct,
+    isMarked,
+  });
 
   return (
     <View style={styles.outerContainer}>
       <Animated.View style={animatedTodayJumpStyle}>
         <View style={styles.topBar}>
-          <TouchableOpacity 
-            style={styles.navBtn} 
+          <TouchableOpacity
+            style={styles.navBtn}
             onPress={onPrevDay}
             activeOpacity={0.7}
           >
             <Ionicons name="chevron-forward" size={24} color={theme.colors.textPrimary} />
           </TouchableOpacity>
-          
+
           <TouchableOpacity style={styles.datesContainer} onPress={handleTodayPress} activeOpacity={0.7}>
             <Text style={styles.hebrewDate}>{cleanHebrewDate}</Text>
             {showSecularDate && <Text style={styles.gregorianDate}>{gregorianDateStr}</Text>}
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={styles.navBtn} 
+          <TouchableOpacity
+            style={styles.navBtn}
             onPress={onNextDay}
             activeOpacity={0.7}
           >
@@ -222,148 +133,158 @@ const HomeHeader = React.memo(function HomeHeader({
         )}
 
         <Animated.View style={animatedSwipeStyle} {...panResponder.panHandlers}>
-        <View
-          style={[
-            styles.dafCard,
-            isLearned && { borderColor: theme.colors.success + '60', borderWidth: 2 },
-            isPartial && { borderColor: theme.colors.accent + '60', borderWidth: 2 },
-          ]}
-        >
-
-          <LinearGradient
-            colors={['rgba(255,255,255,0.05)', 'transparent']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          
-          <View style={styles.cardHeader}>
-            <View style={styles.dailyStudyBadge}>
-              <Text style={styles.dailyStudyText}>הלימוד היומי</Text>
-            </View>
-            <View style={styles.dafBadgeSmall}>
-              <Text style={styles.dafBadgeText}>{todayDafNum}</Text>
-            </View>
-          </View>
-
-          <TouchableOpacity
-            onPress={onPressMasechet}
-            activeOpacity={0.85}
-            style={styles.masechetPressable}
-            disabled={!onPressMasechet}
+          <View
+            style={[
+              styles.dafCard,
+              isLearned && { borderColor: theme.colors.success + '60', borderWidth: 2 },
+              isPartial && { borderColor: theme.colors.accent + '60', borderWidth: 2 },
+            ]}
           >
-            <View style={styles.masechetRow}>
-              <View style={styles.masechetContent}>
-                <Text style={styles.masechetName} numberOfLines={1} adjustsFontSizeToFit>{todayMasechet}</Text>
+            <LinearGradient
+              colors={['rgba(255,255,255,0.05)', 'transparent']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
 
-                <View style={styles.progressSection}>
-                  <View style={styles.progressInfo}>
-                    <Text style={styles.progressLabel} numberOfLines={1} adjustsFontSizeToFit>
-                      {masechetLearnedCountLabel} מתוך {masechetTotalCount} דפים
-                    </Text>
-                    <Text style={styles.progressValue}>{masechetProgressPct}%</Text>
-                  </View>
-                  <View style={styles.progressBarBg}>
-                    <Animated.View style={[styles.progressBarFill, animatedProgressStyle]} />
-                  </View>
-                </View>
+            <View style={styles.cardHeader}>
+              <View style={styles.dailyStudyBadge}>
+                <Text style={styles.dailyStudyText}>הלימוד היומי</Text>
               </View>
-
-              {onPressMasechet && (
-                <View style={styles.masechetChevron}>
-                  <Ionicons name="chevron-back" size={20} color={theme.colors.accent} />
-                </View>
-              )}
+              <View style={styles.dafBadgeSmall}>
+                <Text style={styles.dafBadgeText}>{todayDafNum}</Text>
+              </View>
             </View>
-          </TouchableOpacity>
 
-          <View style={styles.actionStack}>
-            <Animated.View style={[styles.mainButtonContainer, animatedButtonStyle]}>
-              <TouchableOpacity
-                onPress={() => {
-                  if (isLearned) {
-                    setShowConfirm(true);
-                  } else if (isPartial) {
-                    onMarkFull?.();
-                  } else {
-                    handleToggle?.();
-                  }
-                }}
-                onLongPress={() => {
-                  if (!isLearned) {
-                    setShowMarkMenu(true);
-                    onDismissHalfDafTip?.();
-                  }
-                }}
-                delayLongPress={400}
-                style={[
-                  styles.mainButton,
-                  isLearned ? styles.buttonDone : isPartial ? styles.buttonPartial : styles.buttonPending,
-                ]}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name={isLearned ? 'checkmark-circle' : isPartial ? 'ellipse' : 'checkmark-circle-outline'}
-                  size={20}
-                  color={isLearned ? theme.colors.success : isPartial ? theme.colors.accent : '#FFFFFF'}
-                />
-                <Text
-                  style={[
-                    styles.mainButtonText,
-                    isLearned ? styles.buttonTextDone : isPartial ? styles.buttonTextPartial : styles.buttonTextPending,
-                  ]}
-                >
-                  {isLearned ? 'אשריך! הדף נלמד' : isPartial ? 'סיימתי את הדף!' : 'סמן כנלמד'}
+            <TouchableOpacity
+              onPress={onPressMasechet}
+              activeOpacity={0.85}
+              style={styles.masechetPressable}
+              disabled={!onPressMasechet}
+            >
+              <View style={styles.masechetRow}>
+                <View style={styles.masechetContent}>
+                  <Text style={styles.masechetName} numberOfLines={1} adjustsFontSizeToFit>{todayMasechet}</Text>
+
+                  <View style={styles.masechetSubRow}>
+                    <Text style={styles.dafBadgeTextMain}>{todayDafNum}</Text>
+                    {onPressMasechet && (
+                      <Text style={styles.masechetBrowseHint}>• כל דפי המסכת</Text>
+                    )}
+                  </View>
+                </View>
+
+                {onPressMasechet && (
+                  <View style={styles.masechetChevron}>
+                    <Ionicons name="chevron-back" size={20} color={theme.colors.accent} />
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <View style={styles.progressSection}>
+              <View style={styles.progressHeader}>
+                <Text style={styles.progressTitle}>
+                  התקדמות במסכת: {masechetLearnedCountLabel} מתוך {masechetTotalCount} דפים
                 </Text>
-              </TouchableOpacity>
+                <Text style={styles.progressValue}>{masechetProgressPct}%</Text>
+              </View>
+              <View style={styles.progressBarBg}>
+                <Animated.View style={[styles.progressBarFill, animatedProgressStyle]} />
+              </View>
+            </View>
+
+            <View style={styles.actionsContainer}>
+              <Animated.View style={animatedButtonStyle}>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (isLearned) {
+                      setShowConfirm(true);
+                    } else if (isPartial) {
+                      onMarkFull?.();
+                    } else {
+                      handleToggle?.();
+                    }
+                  }}
+                  onLongPress={() => {
+                    if (!isLearned) {
+                      setShowMarkMenu(true);
+                      onDismissHalfDafTip?.();
+                    }
+                  }}
+                  delayLongPress={400}
+                  style={[
+                    styles.mainButton,
+                    isLearned ? styles.buttonDone : isPartial ? styles.buttonPartial : styles.buttonPending,
+                  ]}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.mainButtonContent}>
+                    <Ionicons
+                      name={isLearned ? 'checkmark-circle' : isPartial ? 'ellipse' : 'checkmark-circle-outline'}
+                      size={20}
+                      color={isLearned ? theme.colors.success : isPartial ? theme.colors.accent : '#FFFFFF'}
+                    />
+                    <Text
+                      style={[
+                        styles.mainButtonText,
+                        isLearned ? styles.buttonTextDone : isPartial ? styles.buttonTextPartial : styles.buttonTextPending,
+                      ]}
+                    >
+                      {isLearned ? 'אשריך! הדף נלמד' : isPartial ? 'סיימתי את הדף!' : 'סמן כנלמד'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
 
               {showHalfDafTip && (
                 <View style={styles.halfDafTip}>
-                  <TouchableOpacity
-                    onPress={onDismissHalfDafTip}
-                    style={styles.halfDafTipClose}
-                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    accessibilityLabel="סגור טיפ"
-                  >
-                    <Ionicons name="close" size={14} color={theme.colors.textSecondary} />
-                  </TouchableOpacity>
-                  <Text style={styles.halfDafTipText}>
-                    לחיצה ארוכה · סימון חצי דף
-                  </Text>
+                  <View style={styles.halfDafTipInner}>
+                    <Text style={styles.halfDafTipText}>
+                      <Text style={styles.halfDafTipBold}>טיפ: </Text>
+                      לחיצה ארוכה על הכפתור מאפשרת סימון חצי דף (עמוד א' או עמוד ב') בנפרד.
+                    </Text>
+                    <TouchableOpacity
+                      onPress={onDismissHalfDafTip}
+                      style={styles.halfDafTipDismiss}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <Ionicons name="close" size={16} color={theme.colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
-            </Animated.View>
 
-            {showSefariaLink && (
-            <TouchableOpacity
-              onPress={() => Linking.openURL(sefariaUrl)}
-              style={styles.secondaryButton}
-              activeOpacity={0.75}
-            >
-              <Ionicons name="book-outline" size={20} color={theme.colors.textPrimary} />
-              <Text style={styles.secondaryButtonText}>ספריא</Text>
-            </TouchableOpacity>
-            )}
+              {showSefariaLink && (
+                <TouchableOpacity
+                  onPress={() => Linking.openURL(sefariaUrl)}
+                  style={styles.secondaryButton}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="book-outline" size={18} color={theme.colors.textPrimary} />
+                  <Text style={styles.secondaryButtonText}>ספריא</Text>
+                </TouchableOpacity>
+              )}
 
-            {showTzuratLink && (
-            <TouchableOpacity
-              onPress={onOpenTzuratHadaf}
-              style={styles.tzuratButton}
-              activeOpacity={0.75}
-            >
-              <Ionicons name="reader-outline" size={20} color={theme.colors.accent} />
-              <Text style={styles.tzuratButtonText}>קריאת הדף</Text>
-            </TouchableOpacity>
-            )}
+              {showTzuratLink && (
+                <TouchableOpacity
+                  onPress={onOpenTzuratHadaf}
+                  style={styles.tzuratButton}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons name="reader-outline" size={18} color={theme.colors.accent} />
+                  <Text style={styles.tzuratButtonText}>צורת הדף (PDF) וטקסט</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-        </View>
         </Animated.View>
-        </Animated.View>
+      </Animated.View>
 
       <ConfirmModal
         visible={showConfirm}
-        title="ביטול לימוד"
-        message="האם אתה בטוח שברצונך לבטל את סימון הדף?"
+        title="ביטול סימון דף"
+        message="האם לבטל את סימון הדף כנלמד?"
         onConfirm={() => {
           setShowConfirm(false);
           handleToggle?.();
@@ -398,278 +319,3 @@ const HomeHeader = React.memo(function HomeHeader({
 });
 
 export default HomeHeader;
-
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
-  StyleSheet.create({
-    outerContainer: {
-      position: 'relative',
-    },
-    topBar: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 20,
-      marginBottom: 20,
-    },
-    navBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
-      backgroundColor: theme.colors.surface,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      ...theme.shadow.card,
-    },
-    datesContainer: {
-      alignItems: 'center',
-    },
-    hebrewDate: {
-      color: theme.colors.textPrimary,
-      fontSize: 17,
-      fontWeight: '800',
-    },
-    gregorianDate: {
-      color: theme.colors.textSecondary,
-      fontSize: 13,
-      fontWeight: '500',
-      marginTop: 2,
-    },
-    dafCard: {
-      backgroundColor: theme.colors.surface,
-      marginHorizontal: 20,
-      borderRadius: 32,
-      padding: 24,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      overflow: 'hidden',
-      ...theme.shadow.hero,
-    },
-    cardHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    headerRightActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    guideIconBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      backgroundColor: theme.colors.accentLight,
-      paddingHorizontal: 10,
-      paddingVertical: 4,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: 'rgba(201, 150, 60, 0.3)',
-    },
-    guideIconText: {
-      color: theme.colors.accent,
-      fontSize: 12,
-      fontWeight: '800',
-    },
-    dailyStudyBadge: {
-      backgroundColor: theme.colors.accentLight,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 10,
-    },
-    dailyStudyText: {
-      color: theme.colors.accent,
-      fontSize: 11,
-      fontWeight: '800',
-      textTransform: 'uppercase',
-      letterSpacing: 0.5,
-    },
-    dafBadgeSmall: {
-      backgroundColor: theme.colors.background,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    dafBadgeText: {
-      color: theme.colors.textPrimary,
-      fontSize: 13,
-      fontWeight: '800',
-    },
-    masechetPressable: {
-      marginBottom: 24,
-    },
-    masechetRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    masechetContent: {
-      flex: 1,
-    },
-    masechetChevron: {
-      paddingStart: 4,
-    },
-    masechetName: {
-      fontSize: 40,
-      fontWeight: '900',
-      color: theme.colors.textPrimary,
-      textAlign: 'left',
-      letterSpacing: -1,
-      marginBottom: 20,
-    },
-    progressSection: {
-      marginBottom: 0,
-    },
-    progressInfo: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 10,
-      gap: 8,
-    },
-    progressLabel: {
-      color: theme.colors.textSecondary,
-      fontSize: 13,
-      fontWeight: '600',
-      flexShrink: 1,
-    },
-    progressValue: {
-      color: theme.colors.accent,
-      fontSize: 13,
-      fontWeight: '800',
-    },
-    progressBarBg: {
-      height: 8,
-      backgroundColor: theme.colors.progressTrack,
-      borderRadius: 4,
-      overflow: 'hidden',
-    },
-    progressBarFill: {
-      height: '100%',
-      backgroundColor: theme.colors.accent,
-      borderRadius: 4,
-    },
-    actionStack: {
-      gap: 12,
-    },
-    mainButtonContainer: {
-      alignSelf: 'stretch',
-      gap: 8,
-    },
-    halfDafTip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      alignSelf: 'center',
-      maxWidth: '100%',
-      paddingVertical: 6,
-      paddingStart: 12,
-      paddingEnd: 6,
-      borderRadius: 10,
-      backgroundColor: theme.colors.accentLight,
-    },
-    halfDafTipText: {
-      color: theme.colors.textSecondary,
-      fontSize: 12,
-      fontWeight: '600',
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
-    halfDafTipClose: {
-      width: 22,
-      height: 22,
-      borderRadius: 11,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    mainButton: {
-      alignSelf: 'stretch',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 14,
-      borderRadius: 18,
-      gap: 8,
-    },
-    buttonPending: {
-      backgroundColor: theme.colors.accent,
-    },
-    buttonDone: {
-      backgroundColor: theme.colors.success + '15',
-      borderWidth: 1,
-      borderColor: theme.colors.success,
-    },
-    buttonPartial: {
-      backgroundColor: theme.colors.accentLight,
-      borderWidth: 1,
-      borderColor: theme.colors.accent + '60',
-    },
-    mainButtonText: {
-      fontSize: 15,
-      fontWeight: '800',
-    },
-    buttonTextPending: {
-      color: '#FFFFFF',
-    },
-    buttonTextDone: {
-      color: theme.colors.success,
-    },
-    buttonTextPartial: {
-      color: theme.colors.accent,
-    },
-    secondaryButton: {
-      alignSelf: 'stretch',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 14,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.background,
-    },
-    secondaryButtonText: {
-      color: theme.colors.textPrimary,
-      fontSize: 15,
-      fontWeight: '700',
-    },
-    tzuratButton: {
-      alignSelf: 'stretch',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 14,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: theme.colors.accent + '40',
-      backgroundColor: theme.colors.accentLight,
-    },
-    tzuratButtonText: {
-      color: theme.colors.accent,
-      fontSize: 15,
-      fontWeight: '800',
-    },
-    todayButton: {
-      alignSelf: 'center',
-      backgroundColor: theme.colors.accentLight,
-      paddingHorizontal: 16,
-      paddingVertical: 6,
-      borderRadius: 20,
-      marginTop: -10,
-      marginBottom: 10,
-    },
-    todayButtonText: {
-      color: theme.colors.accent,
-      fontSize: 12,
-      fontWeight: '800',
-    },
-  });
-
-
