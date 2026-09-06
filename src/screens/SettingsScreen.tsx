@@ -43,7 +43,7 @@ export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
   const updateCtl = useAppUpdateControls();
-  const { settings, updateNotificationSettings, updateThemeMode, updateStudyLinkMode, loadInitialData, setUpdateAutoPromptEnabled, setShowCalendarDafEnabled, importBackup } =
+  const { settings, updateNotificationSettings, updateThemeMode, updateStudyLinkMode, loadInitialData, setUpdateAutoPromptEnabled, setShowCalendarDafEnabled, setShowPersonalTrackBannerEnabled, importBackup } =
     useAppStore(
       useShallow(s => ({
         settings: s.settings,
@@ -53,6 +53,7 @@ export default function SettingsScreen() {
         loadInitialData: s.loadInitialData,
         setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,
         setShowCalendarDafEnabled: s.setShowCalendarDafEnabled,
+        setShowPersonalTrackBannerEnabled: s.setShowPersonalTrackBannerEnabled,
         importBackup: s.importBackup,
       })),
     );
@@ -60,6 +61,7 @@ export default function SettingsScreen() {
   const [minute, setMinute] = useState(30);
   const [showSecularDate, setShowSecularDate] = useState(true);
   const [showCalendarDaf, setShowCalendarDaf] = useState(false);
+  const [showPersonalTrackBannerPref, setShowPersonalTrackBannerPref] = useState(true);
   const [showConfettiPref, setShowConfettiPref] = useState(true);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -101,6 +103,7 @@ export default function SettingsScreen() {
       setMinute(settings.notification_minute);
       setShowSecularDate(settings.show_secular_date === 1);
       setShowCalendarDaf(settings.show_calendar_daf === 1);
+      setShowPersonalTrackBannerPref(settings.show_personal_track_banner !== 0);
       setShowConfettiPref(settings.show_confetti === 1);
       setNotificationsEnabled(settings.notifications_enabled === 1);
       setNotifMode((settings.notif_mode as 'daily' | 'custom') || 'daily');
@@ -273,6 +276,14 @@ export default function SettingsScreen() {
       );
     },
     [hour, minute, showConfettiPref, notificationsEnabled, notifMode, daySchedules, updateNotificationSettings],
+  );
+
+  const handlePersonalTrackBannerToggle = useCallback(
+    (val: boolean) => {
+      setShowPersonalTrackBannerPref(val);
+      setShowPersonalTrackBannerEnabled(val);
+    },
+    [setShowPersonalTrackBannerEnabled],
   );
 
   const handleConfettiToggle = useCallback(
@@ -593,6 +604,8 @@ export default function SettingsScreen() {
             onSecularDateToggle={handleSecularDateToggle}
             showCalendarDaf={showCalendarDaf}
             onCalendarDafToggle={handleCalendarDafToggle}
+            showPersonalTrackBannerPref={showPersonalTrackBannerPref}
+            onPersonalTrackBannerToggle={handlePersonalTrackBannerToggle}
             showConfettiPref={showConfettiPref}
             onConfettiToggle={handleConfettiToggle}
             studyLinkMode={studyLinkMode}

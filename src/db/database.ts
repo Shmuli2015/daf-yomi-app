@@ -14,6 +14,14 @@ export interface DailyRecord {
   learnedAt: string;
 }
 
+export interface PersonalTrackRecord {
+  id?: number;
+  masechet: string;
+  daf_num: number;
+  status: 'learned' | 'partial';
+  learnedAt: string;
+}
+
 export interface SettingsRecord {
   id: number;
   notification_hour: number;
@@ -30,6 +38,8 @@ export interface SettingsRecord {
   study_link_mode: string;
   show_calendar_daf: number;
   dismissed_half_daf_tip: number;
+  active_personal_masechet: string | null;
+  show_personal_track_banner: number;
 }
 
 function migrateDailyDafColumns() {
@@ -57,6 +67,14 @@ export function initDB() {
       status TEXT,
       percentage INTEGER DEFAULT 0,
       learnedAt TEXT
+    );
+    CREATE TABLE IF NOT EXISTS personal_track_daf (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      masechet TEXT NOT NULL,
+      daf_num INTEGER NOT NULL,
+      status TEXT NOT NULL,
+      learnedAt TEXT,
+      UNIQUE(masechet, daf_num)
     );
     CREATE TABLE IF NOT EXISTS settings (
       id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -105,6 +123,12 @@ export function initDB() {
   }
   if (!columns.includes('dismissed_half_daf_tip')) {
     db.execSync('ALTER TABLE settings ADD COLUMN dismissed_half_daf_tip INTEGER DEFAULT 0;');
+  }
+  if (!columns.includes('active_personal_masechet')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN active_personal_masechet TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('show_personal_track_banner')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN show_personal_track_banner INTEGER DEFAULT 1;');
   }
 
   db.execSync(`
@@ -343,3 +367,46 @@ export function importSettingsFromBackup(settings: SettingsInput) {
     ]
   );
 }
+
+export function getPersonalTrackRecords(masechet?: string): PersonalTrackRecord[] {
+  if (masechet) {
+    return db.getAllSync('SELECT * FROM personal_track_daf WHERE masechet = ? ORDER BY daf_num ASC', [masechet]) as PersonalTrackRecord[];
+  }
+  return db.getAllSync('SELECT * FROM personal_track_daf ORDER BY daf_num ASC') as PersonalTrackRecord[];
+}
+
+export function updatePersonalTrackRecord(masechet: string, dafNum: number, status: 'learned' | 'partial' | 'none') {
+  const now = new Date().toISOString();
+  if (status === 'none') {
+    db.runSync('DELETE FROM personal_track_daf WHERE masechet = ? AND daf_num = ?', [masechet, dafNum]);
+  } else {
+    const existing = db.getFirstSync('SELECT id FROM personal_track_daf WHERE masechet = ? AND daf_num = ?', [masechet, dafNum]);
+    if (existing) {
+      db.runSync('UPDATE personal_track_daf SET status = ?, learnedAt = ? WHERE masechet = ? AND daf_num = ?', [status, now, masechet, dafNum]);
+    } else {
+      db.runSync('INSERT INTO personal_track_daf (masechet, daf_num, status, learnedAt) VALUES (?, ?, ?, ?)', [masechet, dafNum, status, now]);
+    }
+  }
+}
+
+export function setActivePersonalMasechet(masechetEn: string | null) {
+  db.runSync('UPDATE settings SET active_personal_masechet = ? WHERE id = 1', [masechetEn]);
+}
+
+export function replaceAllPersonalTrackRecords(records: PersonalTrackRecord[]) {
+  db.withTransactionSync(() => {
+    db.runSync('DELETE FROM personal_track_daf');
+    const now = new Date().toISOString();
+    for (const r of records) {
+      db.runSync(
+        'INSERT INTO personal_track_daf (masechet, daf_num, status, learnedAt) VALUES (?, ?, ?, ?)',
+        [r.masechet, r.daf_num, r.status, r.learnedAt || now]
+      );
+    }
+  });
+}
+
+export function setShowPersonalTrackBanner(enabled: boolean) {
+  db.runSync('UPDATE settings SET show_personal_track_banner = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
