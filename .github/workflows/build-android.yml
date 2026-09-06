@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - 'release/**'
+    tags:
+      - 'v*.*.*'
 
 permissions:
   contents: write
@@ -22,44 +24,78 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check if release is needed
+        id: check_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          VER=$(node -p "require('./package.json').version")
+          TAG="v${VER}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Triggered manually via workflow_dispatch: building."
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists on GitHub. Skipping build."
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "New release version $TAG detected. Proceeding with build."
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup Node
+        if: steps.check_release.outputs.should_build == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
 
       - name: Setup Java
+        if: steps.check_release.outputs.should_build == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: zulu
           java-version: '17'
 
       - name: Setup Android SDK
+        if: steps.check_release.outputs.should_build == 'true'
         uses: android-actions/setup-android@v4
 
       - name: Setup Gradle
+        if: steps.check_release.outputs.should_build == 'true'
         uses: gradle/actions/setup-gradle@v4
 
       - name: Install dependencies
+        if: steps.check_release.outputs.should_build == 'true'
         run: npm ci
 
       - name: Run quality checks
+        if: steps.check_release.outputs.should_build == 'true'
         run: npm run ci
 
       - name: Build APK
+        if: steps.check_release.outputs.should_build == 'true'
         run: npx --yes eas-cli@16 build --platform android --profile preview --local --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Rename APK for GitHub Release
         id: release_apk
-        if: startsWith(github.ref, 'refs/heads/release/')
+        if: steps.check_release.outputs.should_build == 'true'
         shell: bash
         run: |
           set -euo pipefail
           BASE=$(node -p "require('./app.config.js').expo.extra.releaseApkBasename")
-          VER=$(node -p "require('./package.json').version")
+          VER="${{ steps.check_release.outputs.version }}"
           shopt -s nullglob
           files=(./*.apk)
           if [ ${#files[@]} -eq 0 ]; then
@@ -70,13 +106,12 @@ jobs:
           DEST="${BASE}-${VER}.apk"
           mv "$SRC" "$DEST"
           echo "filename=$DEST" >> "$GITHUB_OUTPUT"
-          echo "tag=v${VER}" >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/heads/release/')
+        if: steps.check_release.outputs.should_build == 'true'
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.release_apk.outputs.tag }}
+          tag_name: ${{ steps.check_release.outputs.tag }}
           target_commitish: ${{ github.sha }}
           files: ${{ steps.release_apk.outputs.filename }}
           generate_release_notes: true
@@ -84,7 +119,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Keep only the latest release
-        if: startsWith(github.ref, 'refs/heads/release/')
+        if: steps.check_release.outputs.should_build == 'true'
         shell: bash
         run: |
           echo "Fetching releases..."
@@ -98,6 +133,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload APK artifact
+        if: steps.check_release.outputs.should_build == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: android-apk

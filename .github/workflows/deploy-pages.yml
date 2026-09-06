@@ -23,7 +23,7 @@ jobs:
     if: >
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' &&
-       startsWith(github.event.workflow_run.head_branch, 'release/'))
+       (github.event.workflow_run.head_branch == 'master' || startsWith(github.event.workflow_run.head_branch, 'release/')))
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
