@@ -5,8 +5,10 @@ import { ThemeMode, useTheme } from '../../theme';
 import { ThemeModeModal } from './ThemeModeModal';
 import { GuideModal } from './GuideModal';
 import { TimePickerModal } from './TimePickerModal';
-import ConfirmModal from '../ConfirmModal';
+import ResetOptionsModal from './ResetOptionsModal';
+import { ResetOptionType } from './ResetOptionsModal.types';
 import SuccessModal from '../SuccessModal';
+import ConfirmModal from '../ConfirmModal';
 import BackupImportModal from './BackupImportModal';
 import type { BackupPreview } from '../../services/backup';
 import PulsingBookIcon from './PulsingBookIcon';
@@ -26,8 +28,15 @@ export type SettingsModalsProps = {
   onTimeSave: (hour: number, minute: number) => void;
   showResetModal: boolean;
   onResetModalClose: () => void;
-  onConfirmReset: () => void;
+  onConfirmReset: (type: ResetOptionType) => void;
+  showResetConfirmModal: boolean;
+  resetConfirmTitle: string;
+  resetConfirmMessage: string;
+  onResetConfirmClose: () => void;
+  onExecuteReset: () => void;
   showSuccessModal: boolean;
+  resetSuccessTitle?: string;
+  resetSuccessMessage?: string;
   onSuccessModalClose: () => void;
   showBackupImportModal: boolean;
   backupPreview: BackupPreview | null;
@@ -52,7 +61,14 @@ export default function SettingsModals({
   showResetModal,
   onResetModalClose,
   onConfirmReset,
+  showResetConfirmModal,
+  resetConfirmTitle,
+  resetConfirmMessage,
+  onResetConfirmClose,
+  onExecuteReset,
   showSuccessModal,
+  resetSuccessTitle,
+  resetSuccessMessage,
   onSuccessModalClose,
   showBackupImportModal,
   backupPreview,
@@ -80,17 +96,22 @@ export default function SettingsModals({
         minute={timePickerMinute}
         onSave={onTimeSave}
       />
-      <ConfirmModal
+      <ResetOptionsModal
         visible={showResetModal}
-        title="מחיקת נתונים"
-        message="האם אתה בטוח שברצונך למחוק את כל היסטוריית הלימוד? פעולה זו אינה ניתנת לביטול."
         onConfirm={onConfirmReset}
-        onCancel={onResetModalClose}
+        onClose={onResetModalClose}
+      />
+      <ConfirmModal
+        visible={showResetConfirmModal}
+        title={resetConfirmTitle}
+        message={resetConfirmMessage}
+        onConfirm={onExecuteReset}
+        onCancel={onResetConfirmClose}
       />
       <SuccessModal
         visible={showSuccessModal}
-        title="האיפוס הושלם"
-        message="הנתונים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי."
+        title={resetSuccessTitle || 'האיפוס הושלם'}
+        message={resetSuccessMessage || 'הנתונים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי.'}
         onClose={onSuccessModalClose}
       />
       <BackupImportModal

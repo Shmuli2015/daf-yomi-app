@@ -254,7 +254,17 @@ export function setDismissedHalfDafTip(version: number = HALF_DAF_TIP_VERSION) {
 
 export function resetDB() {
   db.execSync('DROP TABLE IF EXISTS daily_daf;');
+  db.execSync('DROP TABLE IF EXISTS personal_track_daf;');
   initDB();
+}
+
+export function resetDafYomiRecords() {
+  db.execSync('DELETE FROM daily_daf;');
+}
+
+export function resetPersonalTrackRecords() {
+  db.execSync('DELETE FROM personal_track_daf;');
+  db.runSync('UPDATE settings SET active_personal_masechet = NULL WHERE id = 1;');
 }
 
 export type DailyRecordInput = Omit<DailyRecord, 'id'>;
@@ -406,6 +416,36 @@ export function replaceAllPersonalTrackRecords(records: PersonalTrackRecord[]) {
         'INSERT INTO personal_track_daf (masechet, daf_num, status, learnedAt) VALUES (?, ?, ?, ?)',
         [r.masechet, r.daf_num, r.status, r.learnedAt || now]
       );
+    }
+  });
+}
+
+export function mergePersonalTrackRecords(records: PersonalTrackRecord[]) {
+  db.withTransactionSync(() => {
+    const now = new Date().toISOString();
+    for (const r of records) {
+      const existing = db.getFirstSync<{ id: number; status: string; learnedAt: string }>(
+        'SELECT id, status, learnedAt FROM personal_track_daf WHERE masechet = ? AND daf_num = ?',
+        [r.masechet, r.daf_num]
+      );
+      if (!existing) {
+        db.runSync(
+          'INSERT INTO personal_track_daf (masechet, daf_num, status, learnedAt) VALUES (?, ?, ?, ?)',
+          [r.masechet, r.daf_num, r.status, r.learnedAt || now]
+        );
+      } else {
+        const existingTime = Date.parse(existing.learnedAt);
+        const incomingTime = Date.parse(r.learnedAt);
+        const incomingWins =
+          Number.isFinite(incomingTime) &&
+          (!Number.isFinite(existingTime) || incomingTime >= existingTime);
+        if (incomingWins) {
+          db.runSync(
+            'UPDATE personal_track_daf SET status = ?, learnedAt = ? WHERE id = ?',
+            [r.status, r.learnedAt || now, existing.id]
+          );
+        }
+      }
     }
   });
 }

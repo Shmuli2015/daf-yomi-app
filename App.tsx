@@ -12,10 +12,13 @@ import SplashScreen from './src/components/SplashScreen';
 import { ThemeProvider, ThemeMode, resolveThemeScheme, getNavigationThemeColors } from './src/theme';
 import { useColorScheme } from 'react-native';
 import SystemChromeThemeSync from './src/components/SystemChromeThemeSync';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { AppUpdateProvider } from './src/context/AppUpdateProvider';
 
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
+
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -26,20 +29,20 @@ Notifications.setNotificationHandler({
   }),
 });
 
-
-
-void Notifications.setNotificationCategoryAsync('study-reminder', [
-  {
-    identifier: 'finish-daf',
-    buttonTitle: '✅ סיימתי את הדף!',
-    options: { opensAppToForeground: false },
-  },
-  {
-    identifier: 'later',
-    buttonTitle: '⏰ הזכר לי עוד שעה',
-    options: { opensAppToForeground: false },
-  },
-]).catch(() => {});
+if (!isExpoGo) {
+  void Notifications.setNotificationCategoryAsync('study-reminder', [
+    {
+      identifier: 'finish-daf',
+      buttonTitle: '✅ סיימתי את הדף!',
+      options: { opensAppToForeground: false },
+    },
+    {
+      identifier: 'later',
+      buttonTitle: '⏰ הזכר לי עוד שעה',
+      options: { opensAppToForeground: false },
+    },
+  ]).catch(() => {});
+}
 
 
 

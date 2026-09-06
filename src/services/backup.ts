@@ -36,6 +36,7 @@ export type BackupPreview = {
   lastLearnedDate: string | null;
   lastLearnedLabel: string | null;
   exportedAtLabel: string;
+  personalTrackCount?: number;
 };
 
 export type BackupParseResult =
@@ -235,6 +236,7 @@ export function getBackupPreview(data: BackupData): BackupPreview {
     lastLearnedDate,
     lastLearnedLabel: formatBackupDate(lastLearnedDate),
     exportedAtLabel,
+    personalTrackCount: data.personalTrackRecords?.length ?? 0,
   };
 }
 

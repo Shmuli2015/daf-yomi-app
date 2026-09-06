@@ -223,7 +223,7 @@ const HomeHeader = React.memo(function HomeHeader({
                     <Ionicons
                       name={isLearned ? 'checkmark-circle' : isPartial ? 'ellipse' : 'checkmark-circle-outline'}
                       size={20}
-                      color={isLearned ? theme.colors.success : isPartial ? theme.colors.accent : '#FFFFFF'}
+                      color={isLearned ? '#FFFFFF' : isPartial ? theme.colors.accent : '#FFFFFF'}
                     />
                     <Text
                       style={[

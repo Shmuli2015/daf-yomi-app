@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
@@ -11,6 +11,7 @@ interface PersonalMasechetPickerModalProps {
   selectedMasechetEn: string | null;
   personalTrackRecords: PersonalTrackRecord[];
   onSelectMasechet: (masechetEn: string | null) => void;
+  onOpenMasechetDetail?: (masechetEn: string) => void;
   onClose: () => void;
 }
 
@@ -19,6 +20,7 @@ export default function PersonalMasechetPickerModal({
   selectedMasechetEn,
   personalTrackRecords,
   onSelectMasechet,
+  onOpenMasechetDetail,
   onClose,
 }: PersonalMasechetPickerModalProps) {
   const theme = useTheme();
@@ -50,6 +52,11 @@ export default function PersonalMasechetPickerModal({
     onClose();
   };
 
+  const handleOpenDetail = (masechetEn: string) => {
+    onClose();
+    onOpenMasechetDetail?.(masechetEn);
+  };
+
   return (
     <Modal
       visible={visible}
@@ -58,6 +65,7 @@ export default function PersonalMasechetPickerModal({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <SafeAreaView style={styles.container}>
           <View style={styles.header}>
             <Text style={styles.title}>בחירת מסכת ללימוד אישי</Text>
@@ -67,18 +75,23 @@ export default function PersonalMasechetPickerModal({
           </View>
 
           <Text style={styles.subtitle}>
-            כל הנתונים של המסכתות שלמדת נשמרים תמיד! בחר מסכת כדי לעקוב אחריה במסך הבית.
+            כל דף שתסמן מצטרף להספק הש״ס הכללי. בחר מסכת להצגה במסך הבית, או היכנס לכל מסכת כדי לסמן דפים.
           </Text>
 
           <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
             {selectedMasechetEn !== null && (
               <TouchableOpacity
-                style={[styles.masechetCard, styles.noneCard]}
+                style={styles.cancelBannerCard}
                 onPress={() => handleSelect(null)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="close-circle-outline" size={20} color={theme.colors.danger} />
-                <Text style={styles.noneText}>ללא מסכת פעילה במסך הבית (הסר באנר)</Text>
+                <View style={styles.cancelIconCircle}>
+                  <Ionicons name="close" size={20} color={theme.colors.danger} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cancelTitle}>הסר מסכת ממסך הבית</Text>
+                  <Text style={styles.cancelSubtitle}>מעבר לסקירה כללית במסך הבית (כל הדפים שסומנו נשמרים תמיד)</Text>
+                </View>
               </TouchableOpacity>
             )}
 
@@ -233,18 +246,34 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingHorizontal: 20,
       paddingBottom: 40,
     },
-    noneCard: {
+    cancelBannerCard: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 12,
       marginBottom: 16,
-      borderColor: theme.colors.danger,
-      width: '100%',
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      padding: 14,
+      borderWidth: 1.5,
+      borderColor: theme.colors.danger + '60',
     },
-    noneText: {
+    cancelIconCircle: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: theme.colors.danger + '15',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    cancelTitle: {
       fontSize: 14,
-      fontWeight: '700',
+      fontWeight: '800',
       color: theme.colors.danger,
+    },
+    cancelSubtitle: {
+      fontSize: 12,
+      color: theme.colors.textSecondary,
+      marginTop: 2,
     },
     activeSection: {
       marginBottom: 24,

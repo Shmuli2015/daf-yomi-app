@@ -57,6 +57,9 @@ export default function BackupImportModal({
             {`${preview.learnedCount} דפים נלמדו · ${preview.totalRecords} רשומות`}
           </Text>
           <Text style={styles.detail}>{lastDateLine}</Text>
+          {preview.personalTrackCount != null && preview.personalTrackCount > 0 ? (
+            <Text style={styles.detail}>{`${preview.personalTrackCount} דפים במסלול אישי`}</Text>
+          ) : null}
           <Text style={styles.detail}>נוצר ב־{preview.exportedAtLabel}</Text>
           <Text style={styles.hint}>
             "מזג" ישמור את הרשומה המאוחרת יותר לכל תאריך. "החלף הכל" ימחק את כל הנתונים הקיימים.

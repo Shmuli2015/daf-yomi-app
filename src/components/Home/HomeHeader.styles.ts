@@ -228,24 +228,30 @@ export const createHomeHeaderStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.accent,
     },
     buttonDone: {
-      backgroundColor: theme.colors.success + '15',
-      borderWidth: 1,
-      borderColor: theme.colors.success,
+      backgroundColor: theme.colors.success,
+      borderWidth: 0,
+      shadowColor: theme.colors.success,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.28,
+      shadowRadius: 10,
+      elevation: 4,
     },
     buttonPartial: {
       backgroundColor: theme.colors.accentLight,
-      borderWidth: 1,
-      borderColor: theme.colors.accent + '60',
+      borderWidth: 1.5,
+      borderColor: theme.colors.accent + '80',
+      elevation: 0,
+      shadowOpacity: 0,
     },
     mainButtonText: {
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: '800',
     },
     buttonTextPending: {
       color: '#FFFFFF',
     },
     buttonTextDone: {
-      color: theme.colors.success,
+      color: '#FFFFFF',
     },
     buttonTextPartial: {
       color: theme.colors.accent,

@@ -1,4 +1,5 @@
 import { registerRootComponent } from 'expo';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as TaskManager from 'expo-task-manager';
 import * as Notifications from 'expo-notifications';
 import { getDafByDate } from './src/utils/dafYomi';
@@ -7,6 +8,7 @@ import { useAppStore } from './src/store/useAppStore';
 
 import App from './App';
 
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 const BACKGROUND_NOTIFICATION_TASK = 'BACKGROUND-NOTIFICATION-TASK';
 
 TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error, executionInfo }) => {
@@ -57,6 +59,8 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error, execu
   }
 });
 
-Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK).catch(() => {});
+if (!isExpoGo) {
+  Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK).catch(() => {});
+}
 
 registerRootComponent(App);

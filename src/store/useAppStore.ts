@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setDismissedHalfDafTip as persistDismissedHalfDafTip, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
+import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setDismissedHalfDafTip as persistDismissedHalfDafTip, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, ProgressCache } from '../utils/progressCache';
@@ -30,6 +30,7 @@ interface AppState {
   refreshSettings: () => void;
   refreshPersonalTrack: () => void;
   setActivePersonalMasechet: (masechetEn: string | null) => void;
+  clearActivePersonalMasechet: () => void;
   togglePersonalDafLearned: (masechetEn: string, dafNum: number) => void;
   markPersonalDafLearned: (masechetEn: string, dafNum: number) => void;
 
@@ -67,6 +68,10 @@ interface AppState {
   dismissHalfDafTip: () => void;
   setCurrentDate: (date: Date) => void;
   importBackup: (data: BackupData, mode: 'merge' | 'replace') => void;
+  resetDafYomiState: () => void;
+  resetPersonalTrackState: () => void;
+  resetAllState: () => void;
+  resetAppState: () => void;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -105,9 +110,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
     
     const settings = get().settings || getSettings();
-    const cache = buildProgressCache(history);
-    const record = history.find(r => r.date === dateStr) || null;
     const personalTrackRecords = getPersonalTrackRecords();
+    const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
+    const cache = buildProgressCache(history, isPersonalTrackEnabled ? personalTrackRecords : []);
+    const record = history.find(r => r.date === dateStr) || null;
     const activePersonalMasechet = settings?.active_personal_masechet || null;
 
     set({
@@ -130,9 +136,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshHistory: () => {
-    const { currentDate } = get();
+    const { currentDate, personalTrackRecords, settings } = get();
     const history = getAllRecords();
-    const cache = buildProgressCache(history);
+    const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
+    const cache = buildProgressCache(history, isPersonalTrackEnabled ? personalTrackRecords : []);
     const dateStr = getDateStr(currentDate);
     const record = history.find(r => r.date === dateStr) || null;
 
@@ -146,19 +153,30 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   refreshSettings: () => {
     const settings = getSettings();
+    const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
+    const cache = buildProgressCache(get().history, isPersonalTrackEnabled ? get().personalTrackRecords : []);
     set({
       settings,
       activePersonalMasechet: settings?.active_personal_masechet || null,
+      progressCache: cache,
     });
   },
 
   refreshPersonalTrack: () => {
     const personalTrackRecords = getPersonalTrackRecords();
-    set({ personalTrackRecords });
+    const isPersonalTrackEnabled = (get().settings?.show_personal_track_banner ?? 1) !== 0;
+    const cache = buildProgressCache(get().history, isPersonalTrackEnabled ? personalTrackRecords : []);
+    set({ personalTrackRecords, progressCache: cache });
   },
 
   setActivePersonalMasechet: (masechetEn) => {
     persistActivePersonalMasechet(masechetEn);
+    get().refreshSettings();
+    get().refreshPersonalTrack();
+  },
+
+  clearActivePersonalMasechet: () => {
+    persistActivePersonalMasechet(null);
     get().refreshSettings();
     get().refreshPersonalTrack();
   },
@@ -278,23 +296,70 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (mode === 'replace') {
       replaceAllRecords(data.records);
       importSettingsFromBackup(data.settings);
+      if (data.personalTrackRecords) {
+        replaceAllPersonalTrackRecords(data.personalTrackRecords);
+      }
     } else {
       importRecords(data.records);
-    }
-    if (data.personalTrackRecords) {
-      const { replaceAllPersonalTrackRecords } = require('../db/database');
-      replaceAllPersonalTrackRecords(data.personalTrackRecords);
+      if (data.personalTrackRecords) {
+        mergePersonalTrackRecords(data.personalTrackRecords);
+      }
     }
     get().refreshHistory();
     get().refreshSettings();
     get().refreshPersonalTrack();
   },
 
-  clearAllHistory: () => {
-    const { initDB } = require('../db/database');
-    const SQLite = require('expo-sqlite');
-    const db = SQLite.openDatabaseSync('dafYomi.db');
-    db.runSync('DELETE FROM daily_daf');
-    get().loadInitialData();
-  }
+  resetDafYomiState: () => {
+    resetDafYomiRecords();
+    const { personalTrackRecords, settings } = get();
+    const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
+    const cache = buildProgressCache([], isPersonalTrackEnabled ? personalTrackRecords : []);
+    set({
+      history: [],
+      todayRecord: null,
+      streak: 0,
+      progressCache: cache,
+    });
+  },
+
+  resetPersonalTrackState: () => {
+    resetPersonalTrackRecords();
+    const { history } = get();
+    const cache = buildProgressCache(history, []);
+    set({
+      personalTrackRecords: [],
+      activePersonalMasechet: null,
+      progressCache: cache,
+    });
+  },
+
+  resetAllState: () => {
+    resetDB();
+    const today = new Date();
+    const dafInfo = getDafByDate(today);
+    const settings = getSettings();
+    const cache = buildProgressCache([], []);
+    set({
+      currentDate: today,
+      todayRecord: null,
+      history: [],
+      settings,
+      personalTrackRecords: [],
+      activePersonalMasechet: null,
+      todayDafText: dafInfo.fullText,
+      todayMasechet: dafInfo.masechet,
+      todayDafNum: dafInfo.daf,
+      todaySefariaUrl: dafInfo.sefariaUrl,
+      todayMasechetEn: dafInfo.masechetEn,
+      todayDafNumValue: dafInfo.dafNum,
+      todayAmud: dafInfo.amud,
+      streak: 0,
+      progressCache: cache,
+    });
+  },
+
+  resetAppState: () => {
+    get().resetAllState();
+  },
 }));

@@ -49,6 +49,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showPersonalPickerModal, setShowPersonalPickerModal] = useState(false);
   const [showPersonalDetailModal, setShowPersonalDetailModal] = useState(false);
+  const [detailMasechetEn, setDetailMasechetEn] = useState<string | null>(null);
 
   const {
     currentDate,
@@ -73,6 +74,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     activePersonalMasechet,
     personalTrackRecords,
     setActivePersonalMasechet,
+    clearActivePersonalMasechet,
     togglePersonalDafLearned,
   } = useAppStore(
     useShallow((s) => ({
@@ -98,6 +100,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       activePersonalMasechet: s.activePersonalMasechet,
       personalTrackRecords: s.personalTrackRecords,
       setActivePersonalMasechet: s.setActivePersonalMasechet,
+      clearActivePersonalMasechet: s.clearActivePersonalMasechet,
       togglePersonalDafLearned: s.togglePersonalDafLearned,
     })),
   );
@@ -259,9 +262,13 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               activeMasechetEn={activePersonalMasechet}
               personalTrackRecords={personalTrackRecords}
               onSelectMasechetPress={() => setShowPersonalPickerModal(true)}
-              onOpenMasechetDetailPress={() => setShowPersonalDetailModal(true)}
+              onOpenMasechetDetailPress={() => {
+                setDetailMasechetEn(activePersonalMasechet);
+                setShowPersonalDetailModal(true);
+              }}
               onToggleDafLearned={togglePersonalDafLearned}
               onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
+              onClearActiveMasechet={clearActivePersonalMasechet}
             />
           </>
         )}
@@ -294,16 +301,34 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         visible={showPersonalPickerModal}
         selectedMasechetEn={activePersonalMasechet}
         personalTrackRecords={personalTrackRecords}
-        onSelectMasechet={setActivePersonalMasechet}
+        onSelectMasechet={(mEn) => {
+          setActivePersonalMasechet(mEn);
+          setDetailMasechetEn(mEn);
+        }}
+        onOpenMasechetDetail={(mEn) => {
+          setDetailMasechetEn(mEn);
+          setShowPersonalDetailModal(true);
+        }}
         onClose={() => setShowPersonalPickerModal(false)}
       />
 
       <PersonalMasechetDetailModal
         visible={showPersonalDetailModal}
-        masechetEn={activePersonalMasechet}
+        masechetEn={detailMasechetEn || activePersonalMasechet}
         personalTrackRecords={personalTrackRecords}
+        isHomeActive={activePersonalMasechet === (detailMasechetEn || activePersonalMasechet)}
+        onToggleHomeActive={() => {
+          const current = detailMasechetEn || activePersonalMasechet;
+          if (!current) return;
+          if (activePersonalMasechet === current) {
+            clearActivePersonalMasechet();
+          } else {
+            setActivePersonalMasechet(current);
+          }
+        }}
         onToggleDafLearned={togglePersonalDafLearned}
         onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
+        onOpenPicker={() => setShowPersonalPickerModal(true)}
         onClose={() => setShowPersonalDetailModal(false)}
       />
 
