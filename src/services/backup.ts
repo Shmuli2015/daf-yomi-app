@@ -128,6 +128,22 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
   };
 }
 
+function validatePersonalTrackRecord(raw: unknown): PersonalTrackRecord | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.masechet !== 'string' || !r.masechet) return null;
+  if (typeof r.daf_num !== 'number' || !Number.isFinite(r.daf_num)) return null;
+  if (r.status !== 'learned' && r.status !== 'partial') return null;
+  if (typeof r.learnedAt !== 'string' || !r.learnedAt) return null;
+
+  return {
+    masechet: r.masechet,
+    daf_num: r.daf_num,
+    status: r.status,
+    learnedAt: r.learnedAt,
+  };
+}
+
 function migrateBackup(raw: Record<string, unknown>): BackupData | null {
   const version =
     typeof raw.backupVersion === 'number'
@@ -151,6 +167,16 @@ function migrateBackup(raw: Record<string, unknown>): BackupData | null {
   const settings = validateBackupSettings(raw.settings);
   if (!settings) return null;
 
+  let personalTrackRecords: PersonalTrackRecord[] | undefined;
+  if (Array.isArray(raw.personalTrackRecords)) {
+    personalTrackRecords = [];
+    for (const item of raw.personalTrackRecords) {
+      const record = validatePersonalTrackRecord(item);
+      if (!record) return null;
+      personalTrackRecords.push(record);
+    }
+  }
+
   return {
     backupVersion: version,
     exportedAt:
@@ -158,6 +184,7 @@ function migrateBackup(raw: Record<string, unknown>): BackupData | null {
     appVersion: typeof raw.appVersion === 'string' ? raw.appVersion : 'unknown',
     records,
     settings,
+    ...(personalTrackRecords ? { personalTrackRecords } : {}),
   };
 }
 

@@ -347,7 +347,9 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       update_auto_prompt_enabled = ?,
       study_link_mode = ?,
       show_calendar_daf = ?,
-      dismissed_half_daf_tip = ?
+      dismissed_half_daf_tip = ?,
+      active_personal_masechet = ?,
+      show_personal_track_banner = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -364,6 +366,8 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.study_link_mode,
       settings.show_calendar_daf,
       settings.dismissed_half_daf_tip,
+      settings.active_personal_masechet,
+      settings.show_personal_track_banner,
     ]
   );
 }
