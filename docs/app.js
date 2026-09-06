@@ -89,9 +89,9 @@ async function copyPageLink() {
       document.execCommand('copy');
       input.remove();
     }
-    statusEl.textContent = 'הקישור הועתק. הדביקו ב-Chrome ופתחו מהדפדפן.';
+    statusEl.textContent = 'הקישור הועתק בהצלחה. ניתן להדביק אותו בדפדפן המכשיר.';
   } catch {
-    statusEl.textContent = 'לא הצלחנו להעתיק. ⋮ → «פתיחה בדפדפן».';
+    statusEl.textContent = 'לא הצלחנו להעתיק את הקישור. נסו דרך תפריט הדפדפן: ⋮ ➔ פתיחה בדפדפן.';
   }
 }
 
@@ -107,7 +107,7 @@ function hideInAppUi() {
 }
 
 function downloadApkDirect(url) {
-  statusEl.textContent = 'מתחיל הורדה…';
+  statusEl.textContent = 'ההורדה מתחילה…';
   window.location.assign(url);
 }
 

@@ -216,7 +216,7 @@ export default function SettingsScrollContent({
               </View>
               <Text style={styles.noResultsTitle}>לא נמצאו הגדרות תואמות</Text>
               <Text style={styles.noResultsText}>
-                לא מצאנו תוצאות עבור «{searchQuery.trim()}»
+                לא מצאנו תוצאות עבור "{searchQuery.trim()}"
               </Text>
               <TouchableOpacity
                 style={styles.clearSearchBtn}

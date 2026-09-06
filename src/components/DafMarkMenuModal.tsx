@@ -52,7 +52,7 @@ export default function DafMarkMenuModal({
         <Pressable style={styles.panel} onPress={(e) => e.stopPropagation()}>
           <Animated.View style={[styles.container, { opacity, transform: [{ scale }] }]}>
             <Text style={styles.title}>סימון לימוד</Text>
-            <Text style={styles.subtitle}>בחר כמה למדת היום</Text>
+            <Text style={styles.subtitle}>בחרו כמה למדתם היום</Text>
 
             <TouchableOpacity style={styles.optionButton} onPress={onSelectFull} activeOpacity={0.8}>
               <Ionicons name="checkmark-circle" size={22} color={theme.colors.success} />
