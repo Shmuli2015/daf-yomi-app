@@ -136,7 +136,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       padding: 20,
     },
     backdrop: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: 'rgba(0,0,0,0.7)',
     },
     container: {

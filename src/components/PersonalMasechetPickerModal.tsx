@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { SHAS_MASECHTOT, SEDARIM } from '../data/shas';
