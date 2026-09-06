@@ -120,7 +120,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>, compact: boolean) =>
       padding: 20,
     },
     backdrop: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: 'rgba(0,0,0,0.7)',
     },
     container: {

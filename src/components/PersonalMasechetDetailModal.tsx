@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, useWindowDimensions } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { SHAS_MASECHTOT, numberToGematria } from '../data/shas';

@@ -55,7 +55,7 @@ export default function SplashScreen({ isReady, onFinish }: SplashScreenProps) {
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     container: {
-      ...StyleSheet.absoluteFillObject,
+      ...StyleSheet.absoluteFill,
       backgroundColor: theme.colors.background,
       justifyContent: 'center',
       alignItems: 'center',

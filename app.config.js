@@ -41,6 +41,8 @@ module.exports = {
           color: '#C9963C',
         },
       ],
+      'expo-sharing',
+      'expo-status-bar',
     ],
     extra: {
       eas: {

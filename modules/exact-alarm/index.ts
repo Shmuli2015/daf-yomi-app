@@ -1,4 +1,4 @@
-import { requireOptionalNativeModule } from 'expo-modules-core';
+import { requireOptionalNativeModule } from 'expo';
 
 type ExactAlarmNativeModule = {
   canScheduleExactAlarmsAsync: () => Promise<boolean>;
