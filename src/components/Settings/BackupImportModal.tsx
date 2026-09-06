@@ -59,7 +59,7 @@ export default function BackupImportModal({
           <Text style={styles.detail}>{lastDateLine}</Text>
           <Text style={styles.detail}>נוצר ב־{preview.exportedAtLabel}</Text>
           <Text style={styles.hint}>
-            «מזג» ישמור את הרשומה המאוחרת יותר לכל תאריך. «החלף הכל» ימחק את כל הנתונים הקיימים.
+            "מזג" ישמור את הרשומה המאוחרת יותר לכל תאריך. "החלף הכל" ימחק את כל הנתונים הקיימים.
           </Text>
 
           <TouchableOpacity style={styles.mergeButton} onPress={onMerge} activeOpacity={0.8}>
