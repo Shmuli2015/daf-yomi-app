@@ -258,8 +258,8 @@ const HomeHeader = React.memo(function HomeHeader({
 
                 <View style={styles.progressSection}>
                   <View style={styles.progressInfo}>
-                    <Text style={styles.progressLabel}>
-                      התקדמות במסכת: {masechetLearnedCountLabel} מתוך {masechetTotalCount} דפים
+                    <Text style={styles.progressLabel} numberOfLines={1} adjustsFontSizeToFit>
+                      {masechetLearnedCountLabel} מתוך {masechetTotalCount} דפים
                     </Text>
                     <Text style={styles.progressValue}>{masechetProgressPct}%</Text>
                   </View>
@@ -529,11 +529,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 10,
+      gap: 8,
     },
     progressLabel: {
       color: theme.colors.textSecondary,
       fontSize: 13,
       fontWeight: '600',
+      flexShrink: 1,
     },
     progressValue: {
       color: theme.colors.accent,

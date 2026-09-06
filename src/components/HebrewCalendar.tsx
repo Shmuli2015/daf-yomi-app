@@ -266,7 +266,7 @@ export default function HebrewCalendar() {
         ))}
       </View>
 
-      <Animated.View style={{ transform: [{ translateX: gridTranslateX }], opacity: gridOpacity }}>
+      <Animated.View style={{ flex: 1, justifyContent: 'space-between', transform: [{ translateX: gridTranslateX }], opacity: gridOpacity }}>
         <View style={styles.grid}>
           {calendarData.map((day) => (
             <CalendarDay
@@ -408,9 +408,11 @@ export default function HebrewCalendar() {
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     card: {
+      flex: 1,
+      minHeight: 460,
       backgroundColor: theme.colors.surface,
-      borderRadius: 32,
-      padding: 20,
+      borderRadius: 28,
+      padding: 16,
       borderWidth: 1,
       borderColor: theme.colors.border,
       shadowColor: theme.colors.primary,
@@ -419,17 +421,18 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       shadowRadius: 16,
       elevation: 5,
       direction: 'rtl',
+      justifyContent: 'space-between',
     },
     navRow: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: 20,
+      marginBottom: 14,
     },
     navBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 14,
+      width: 38,
+      height: 38,
+      borderRadius: 13,
       backgroundColor: theme.colors.background,
       alignItems: 'center',
       justifyContent: 'center',
@@ -438,7 +441,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     monthCenter: { alignItems: 'center' },
     monthName: {
-      fontSize: 22,
+      fontSize: 21,
       fontWeight: '900',
       color: theme.colors.primary,
       letterSpacing: -0.3,
@@ -449,23 +452,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       fontWeight: '700',
       letterSpacing: 1,
       textTransform: 'uppercase',
-      marginTop: 2,
+      marginTop: 1,
     },
     todayBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      marginTop: 10,
-      paddingVertical: 8,
-      paddingHorizontal: 14,
-      borderRadius: 14,
+      gap: 5,
+      marginTop: 6,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
+      borderRadius: 12,
       backgroundColor: theme.colors.accentLight,
       borderWidth: 1,
       borderColor: theme.colors.accent,
     },
     todayBtnLabel: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.colors.accent,
       fontWeight: '800',
       letterSpacing: 0.2,
@@ -473,7 +476,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     weekLabels: {
       flexDirection: 'row',
       justifyContent: 'space-around',
-      marginBottom: 8,
+      marginBottom: 6,
     },
     weekLabel: {
       width: '14.28%',
@@ -485,8 +488,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       letterSpacing: 0.5,
     },
     grid: {
+      flex: 1,
       flexDirection: 'row',
       flexWrap: 'wrap',
+      alignContent: 'space-around',
     },
     confettiContainer: {
       position: 'absolute',
@@ -500,3 +505,4 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       direction: 'ltr',
     },
   });
+

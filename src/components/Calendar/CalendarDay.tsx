@@ -51,9 +51,15 @@ const CalendarDay = React.memo(
       onPress(hdate);
     };
 
+    const containerOpacity = isCurrentMonth
+      ? 1
+      : learned || partial
+        ? 0.75
+        : 0.35;
+
     const animatedContainerStyle = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
-      opacity: isCurrentMonth ? 1 : 0.3,
+      opacity: containerOpacity,
     }));
 
     const animatedPulseStyle = useAnimatedStyle(() => ({
@@ -67,8 +73,8 @@ const CalendarDay = React.memo(
         : isToday
           ? theme.colors.accentLight
           : 'transparent';
-    const textColor = learned || partial ? 'white' : isToday ? theme.colors.accent : theme.colors.textPrimary;
-    const subColor = learned || partial ? 'rgba(255,255,255,0.7)' : isToday ? theme.colors.accent : theme.colors.textMuted;
+    const textColor = learned || partial ? '#FFFFFF' : isToday ? theme.colors.accent : theme.colors.textPrimary;
+    const subColor = learned || partial ? 'rgba(255,255,255,0.95)' : isToday ? theme.colors.accent : theme.colors.textMuted;
     const borderColor = isSelected ? theme.colors.accent : 'transparent';
 
     return (
@@ -112,10 +118,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     cell: {
       width: '14.28%',
-      height: 56,
+      minHeight: 50,
       justifyContent: 'center',
       alignItems: 'center',
-      marginVertical: 2,
+      marginVertical: 1,
     },
     circle: {
       width: 44,
@@ -123,6 +129,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderRadius: 22,
       justifyContent: 'center',
       alignItems: 'center',
+      paddingVertical: 2,
     },
     pulseRing: {
       position: 'absolute',
@@ -136,9 +143,27 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       top: -2,
       zIndex: -1,
     },
-    dayText: { fontSize: 14, fontWeight: '800' },
-    gregText: { fontSize: 9, fontWeight: '500', marginTop: -1 },
-    dafText: { fontSize: 8, fontWeight: '600', marginTop: -1 },
+    dayText: {
+      fontSize: 13,
+      fontWeight: '800',
+      lineHeight: 15,
+      textAlign: 'center',
+    },
+    gregText: {
+      fontSize: 8.5,
+      fontWeight: '600',
+      lineHeight: 10,
+      marginTop: 1,
+      textAlign: 'center',
+    },
+    dafText: {
+      fontSize: 7.5,
+      fontWeight: '700',
+      lineHeight: 9,
+      marginTop: 1,
+      textAlign: 'center',
+    },
   });
 
 export default CalendarDay;
+
