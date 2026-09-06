@@ -21,8 +21,12 @@ import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import HomeHeader from "../components/HomeHeader";
 import HomeContent from "../components/HomeContent";
 import ShasBanner from "../components/ShasBanner";
+import PersonalTrackBanner from "../components/PersonalTrackBanner";
+import PersonalMasechetPickerModal from "../components/PersonalMasechetPickerModal";
+import PersonalMasechetDetailModal from "../components/PersonalMasechetDetailModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import { getDateStr } from "../utils/dafYomi";
+import { SHAS_MASECHTOT } from "../data/shas";
 import { getMasechetDafim } from "../utils/shas";
 import { getStudyStatus, formatProgressCount, getPartialAmud } from "../utils/dafStatus";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
@@ -43,6 +47,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showPersonalPickerModal, setShowPersonalPickerModal] = useState(false);
+  const [showPersonalDetailModal, setShowPersonalDetailModal] = useState(false);
 
   const {
     currentDate,
@@ -64,6 +70,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     isAppReady,
     setCurrentDate,
     dismissHalfDafTip,
+    activePersonalMasechet,
+    personalTrackRecords,
+    setActivePersonalMasechet,
+    togglePersonalDafLearned,
   } = useAppStore(
     useShallow((s) => ({
       currentDate: s.currentDate,
@@ -85,6 +95,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       isAppReady: s.isAppReady,
       setCurrentDate: s.setCurrentDate,
       dismissHalfDafTip: s.dismissHalfDafTip,
+      activePersonalMasechet: s.activePersonalMasechet,
+      personalTrackRecords: s.personalTrackRecords,
+      setActivePersonalMasechet: s.setActivePersonalMasechet,
+      togglePersonalDafLearned: s.togglePersonalDafLearned,
     })),
   );
 
@@ -178,6 +192,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     });
   }, [rootNavigation, todayMasechetEn, todayMasechet, todayDafNumValue, todayAmud]);
 
+  const handleOpenPersonalTzuratHadaf = useCallback((masechetEn: string, dafNum: number) => {
+    const match = SHAS_MASECHTOT.find(m => m.en === masechetEn);
+    rootNavigation.navigate('TzuratHadaf', {
+      masechetEn,
+      masechetHe: match ? match.he : masechetEn,
+      dafNum,
+      amud: 'a',
+    });
+  }, [rootNavigation]);
+
   const handleOpenMasechet = useCallback(() => {
     navigation.navigate("History", {
       openMasechetEn: todayMasechetEn,
@@ -228,6 +252,20 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         />
 
 
+        {settings?.show_personal_track_banner !== 0 && (
+          <>
+            <View style={{ height: 20 }} />
+            <PersonalTrackBanner
+              activeMasechetEn={activePersonalMasechet}
+              personalTrackRecords={personalTrackRecords}
+              onSelectMasechetPress={() => setShowPersonalPickerModal(true)}
+              onOpenMasechetDetailPress={() => setShowPersonalDetailModal(true)}
+              onToggleDafLearned={togglePersonalDafLearned}
+              onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
+            />
+          </>
+        )}
+
         <View style={{ height: 20 }} />
 
         <ShasBanner
@@ -251,6 +289,23 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         </TouchableOpacity>
       </ScrollView>
       </SafeAreaView>
+
+      <PersonalMasechetPickerModal
+        visible={showPersonalPickerModal}
+        selectedMasechetEn={activePersonalMasechet}
+        personalTrackRecords={personalTrackRecords}
+        onSelectMasechet={setActivePersonalMasechet}
+        onClose={() => setShowPersonalPickerModal(false)}
+      />
+
+      <PersonalMasechetDetailModal
+        visible={showPersonalDetailModal}
+        masechetEn={activePersonalMasechet}
+        personalTrackRecords={personalTrackRecords}
+        onToggleDafLearned={togglePersonalDafLearned}
+        onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
+        onClose={() => setShowPersonalDetailModal(false)}
+      />
 
       {showConfetti && (
         <View style={styles.confettiContainer} pointerEvents="none">

@@ -42,6 +42,8 @@ export type SettingsScrollContentProps = {
   onSecularDateToggle: (v: boolean) => void;
   showCalendarDaf: boolean;
   onCalendarDafToggle: (v: boolean) => void;
+  showPersonalTrackBannerPref?: boolean;
+  onPersonalTrackBannerToggle?: (v: boolean) => void;
   showConfettiPref: boolean;
   onConfettiToggle: (v: boolean) => void;
   studyLinkMode: StudyLinkMode;
@@ -82,6 +84,8 @@ export default function SettingsScrollContent({
   onSecularDateToggle,
   showCalendarDaf,
   onCalendarDafToggle,
+  showPersonalTrackBannerPref,
+  onPersonalTrackBannerToggle,
   showConfettiPref,
   onConfettiToggle,
   studyLinkMode,
@@ -338,6 +342,17 @@ export default function SettingsScrollContent({
                         type="switch"
                         value={showCalendarDaf}
                         onPress={onCalendarDafToggle}
+                        highlightText={searchQuery}
+                      />
+                    )}
+                    {onPersonalTrackBannerToggle != null && showPersonalTrackBannerPref != null && matchItem('באנר מסלול אישי', 'הצגת באנר מעקב אישי אחר מסכת במסך הבית') && (
+                      <SettingItem
+                        icon="bookmark-outline"
+                        title="באנר מסלול אישי"
+                        description="הצגת באנר מעקב אישי אחר מסכת במסך הבית"
+                        type="switch"
+                        value={showPersonalTrackBannerPref}
+                        onPress={onPersonalTrackBannerToggle}
                         highlightText={searchQuery}
                       />
                     )}

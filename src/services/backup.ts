@@ -9,8 +9,10 @@ import { Share } from 'react-native';
 import {
   getAllRecords,
   getSettings,
+  getPersonalTrackRecords,
   type DailyRecord,
   type SettingsRecord,
+  type PersonalTrackRecord,
 } from '../db/database';
 import { toFileSharingUrl } from '../utils/shareProgressImage';
 
@@ -25,6 +27,7 @@ export type BackupData = {
   appVersion: string;
   records: BackupRecord[];
   settings: BackupSettings;
+  personalTrackRecords?: PersonalTrackRecord[];
 };
 
 export type BackupPreview = {
@@ -56,6 +59,7 @@ export function buildBackupData(): BackupData {
     appVersion: Constants.expoConfig?.version ?? 'unknown',
     records: getAllRecords().map(stripRecordId),
     settings: stripSettingsId(getSettings()),
+    personalTrackRecords: getPersonalTrackRecords(),
   };
 }
 
@@ -119,6 +123,8 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     study_link_mode: str('study_link_mode', 'both'),
     show_calendar_daf: num('show_calendar_daf', 0),
     dismissed_half_daf_tip: num('dismissed_half_daf_tip', 0),
+    active_personal_masechet: nullableStr('active_personal_masechet'),
+    show_personal_track_banner: num('show_personal_track_banner', 1),
   };
 }
 
