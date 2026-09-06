@@ -18,7 +18,7 @@ describe('shas utils', () => {
       const dafim = getMasechetDafim('ברכות');
       expect(Array.isArray(dafim)).toBe(true);
       expect(dafim.length).toBeGreaterThan(0);
-      expect(dafim[0]).toBe(2); // Daf Yomi starts on daf 2
+      expect(dafim[0]).toBe(2);
     });
 
     it('works regardless of niqqud in input', () => {

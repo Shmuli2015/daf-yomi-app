@@ -12,7 +12,6 @@ export type LatestReleaseOffer = {
   downloadUrl: string;
   releasePageUrl: string;
   rawTag: string;
-  /** שם קובץ ה-APK ב-release (לאימות מול ההורדה) */
   apkFileName: string;
 };
 
@@ -39,12 +38,10 @@ export function isUpdateCheckConfigured(extra = getAppExtra()): boolean {
   );
 }
 
-/** Strip leading "v" from tag names */
 export function normalizeVersionString(raw: string): string {
   return raw.trim().replace(/^v/i, '');
 }
 
-/** Numeric semver tuple for comparison (major, minor, patch only). */
 export function parseSemverParts(version: string): [number, number, number] {
   const core = normalizeVersionString(version).split('-')[0] ?? '';
   const parts = core.split('.').map(p => parseInt(p, 10));
@@ -54,7 +51,6 @@ export function parseSemverParts(version: string): [number, number, number] {
   return [a, b, c];
 }
 
-/** Positive if a > b */
 export function compareSemver(a: string, b: string): number {
   const [a1, a2, a3] = parseSemverParts(a);
   const [b1, b2, b3] = parseSemverParts(b);
@@ -63,9 +59,6 @@ export function compareSemver(a: string, b: string): number {
   return a3 - b3;
 }
 
-/**
- * בוחר את נכס ה-APK: קודם לפי קידומת masa-daf-, אחרת קובץ .apk ראשון בתוצאת ה-API.
- */
 export function pickApkAsset(
   assets: GithubAsset[] | undefined,
   releaseApkBasename: string,
@@ -78,10 +71,6 @@ export function pickApkAsset(
   return preferred ?? apkRows[0];
 }
 
-/**
- * קישור הורדה יציב ל-GitHub (לא תלוי ב-browser_download_url מה-API שעלול להיות מבלבל).
- * פורמט: https://github.com/{owner}/{repo}/releases/download/{tag}/{filename}
- */
 export function buildGithubReleaseDownloadUrl(
   owner: string,
   repo: string,
@@ -117,7 +106,6 @@ export async function fetchLatestGitHubRelease(
       },
     });
     if (!res.ok) {
-      // 404 = אין עדיין Release מפורסם בריפו — צפוי לפני טאג/פרסום ראשון
       if (__DEV__ && res.status !== 404) {
         console.warn('[appUpdate] releases/latest HTTP', res.status);
       }
@@ -130,7 +118,6 @@ export async function fetchLatestGitHubRelease(
   }
 }
 
-/** Resolved offer only when remote is newer than installedVersion */
 export async function resolveUpdateOfferIfAny(installedVersion: string): Promise<LatestReleaseOffer | null> {
   const extra = getAppExtra();
   if (!isUpdateCheckConfigured(extra)) return null;

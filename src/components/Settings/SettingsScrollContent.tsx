@@ -140,7 +140,6 @@ export default function SettingsScrollContent({
     }
   }, []);
 
-  // Section match checks
   const sec1Match =
     matchItem('תזכורת יומית', 'קבל התראה בשעה היעודה') ||
     (notificationsEnabled &&

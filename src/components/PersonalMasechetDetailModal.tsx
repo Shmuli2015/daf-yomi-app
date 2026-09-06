@@ -64,7 +64,6 @@ export default function PersonalMasechetDetailModal({
     >
       <View style={styles.modalOverlay}>
         <SafeAreaView style={styles.container}>
-          {/* Header */}
           <View style={styles.header}>
             <View>
               <Text style={styles.tagText}>מסלול אישי</Text>
@@ -75,7 +74,6 @@ export default function PersonalMasechetDetailModal({
             </TouchableOpacity>
           </View>
 
-          {/* Stats Bar */}
           <View style={styles.statsCard}>
             <View style={styles.statBox}>
               <Text style={styles.statValue}>
@@ -94,7 +92,6 @@ export default function PersonalMasechetDetailModal({
             לחץ על דף כדי לסמן אות כנלמד במסלול האישי (או לבטל סימון).
           </Text>
 
-          {/* Dafim Grid */}
           <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
             <View style={styles.grid}>
               {dafimArray.map((dafNum) => {

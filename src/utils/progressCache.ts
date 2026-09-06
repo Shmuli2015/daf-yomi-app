@@ -63,9 +63,7 @@ function calculateStreak(records: DailyRecord[]): number {
 
     if (status === 'learned') {
       streak++;
-    } else if (status === 'partial') {
-      // partial doesn't break streak but doesn't increase it
-    } else {
+    } else if (status !== 'partial') {
       if (streak > 0) break;
       if (dateStr === todayStr) {
         current.setDate(current.getDate() - 1);

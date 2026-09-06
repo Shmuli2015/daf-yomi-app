@@ -38,9 +38,7 @@ export async function openExactAlarmSettings(): Promise<void> {
   } catch {
     try {
       await Linking.openSettings();
-    } catch {
-      // User can open settings manually.
-    }
+    } catch {}
   }
 }
 

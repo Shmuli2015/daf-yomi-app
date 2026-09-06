@@ -10,7 +10,6 @@ import {
   type LatestReleaseOffer,
 } from '../services/appUpdate';
 
-/** Minimal gap between automatic checks — avoids duplicate calls on launch/state flicker */
 const AUTO_CHECK_MIN_GAP_MS = 5000;
 
 function shouldSkipDueToDismissed(remote: string, dismissed: string | null | undefined): boolean {

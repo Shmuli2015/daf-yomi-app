@@ -48,9 +48,7 @@ export async function cleanupOldApkDownloads(keepFileName?: string): Promise<voi
         .filter(name => name.endsWith('.apk') && name !== keepFileName)
         .map(name => FileSystem.deleteAsync(`${UPDATES_DIR}${name}`, { idempotent: true })),
     );
-  } catch {
-    /* cache cleanup is best-effort */
-  }
+  } catch {}
 }
 
 export async function downloadApk(
