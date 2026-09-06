@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
@@ -12,8 +12,11 @@ interface PersonalMasechetDetailModalProps {
   visible: boolean;
   masechetEn: string | null;
   personalTrackRecords: PersonalTrackRecord[];
+  isHomeActive?: boolean;
+  onToggleHomeActive?: () => void;
   onToggleDafLearned: (masechetEn: string, dafNum: number) => void;
   onOpenTzuratHadaf?: (masechetEn: string, dafNum: number) => void;
+  onOpenPicker?: () => void;
   onClose: () => void;
 }
 
@@ -21,8 +24,11 @@ export default function PersonalMasechetDetailModal({
   visible,
   masechetEn,
   personalTrackRecords,
+  isHomeActive = false,
+  onToggleHomeActive,
   onToggleDafLearned,
   onOpenTzuratHadaf,
+  onOpenPicker,
   onClose,
 }: PersonalMasechetDetailModalProps) {
   const theme = useTheme();
@@ -63,15 +69,32 @@ export default function PersonalMasechetDetailModal({
       onRequestClose={onClose}
     >
       <View style={styles.modalOverlay}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
         <SafeAreaView style={styles.container}>
           <View style={styles.header}>
             <View>
-              <Text style={styles.tagText}>מסלול אישי</Text>
+              <Text style={styles.tagText}>לימוד אישי</Text>
               <Text style={styles.title}>מסכת {masechet.he}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
-            </TouchableOpacity>
+
+            <View style={styles.headerRightActions}>
+              {onOpenPicker && (
+                <TouchableOpacity
+                  onPress={() => {
+                    onClose();
+                    onOpenPicker();
+                  }}
+                  style={styles.switchMasechetBtn}
+                  activeOpacity={0.7}
+                >
+                  <Ionicons name="swap-horizontal" size={16} color={theme.colors.accent} />
+                  <Text style={styles.switchMasechetText}>החלף</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={theme.colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.statsCard}>
@@ -86,10 +109,29 @@ export default function PersonalMasechetDetailModal({
               <Text style={styles.statValue}>{pct}%</Text>
               <Text style={styles.statLabel}>התקדמות במסכת</Text>
             </View>
+            {onToggleHomeActive && (
+              <>
+                <View style={styles.statDivider} />
+                <TouchableOpacity
+                  style={[styles.homeToggleBtn, isHomeActive && styles.homeToggleBtnActive]}
+                  onPress={onToggleHomeActive}
+                  activeOpacity={0.75}
+                >
+                  <Ionicons
+                    name={isHomeActive ? 'bookmark' : 'bookmark-outline'}
+                    size={16}
+                    color={isHomeActive ? '#FFF' : theme.colors.accent}
+                  />
+                  <Text style={[styles.homeToggleText, isHomeActive && styles.homeToggleTextActive]}>
+                    {isHomeActive ? 'הסר ממסך הבית' : 'הצג במסך הבית'}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
 
           <Text style={styles.hintText}>
-            לחץ על דף כדי לסמן אות כנלמד במסלול האישי (או לבטל סימון).
+            לחץ על דף כדי לסמן כנלמד בלימוד אישי (הדף יצטרף להספק הש״ס וניתן ללמוד אותו גם בבוא יומו בדף היומי).
           </Text>
 
           <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
@@ -165,12 +207,34 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     closeButton: {
       padding: 4,
     },
+    headerRightActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    switchMasechetBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 6,
+      paddingHorizontal: 10,
+      backgroundColor: theme.colors.accentLight + '40',
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: theme.colors.accentBorder,
+    },
+    switchMasechetText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: theme.colors.accent,
+    },
     statsCard: {
       flexDirection: 'row',
       backgroundColor: theme.colors.surface,
       marginHorizontal: 20,
       borderRadius: 16,
       paddingVertical: 14,
+      paddingHorizontal: 12,
       borderWidth: 1,
       borderColor: theme.colors.border,
       alignItems: 'center',
@@ -181,12 +245,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: 'center',
     },
     statValue: {
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: '900',
       color: theme.colors.accent,
     },
     statLabel: {
-      fontSize: 12,
+      fontSize: 11,
       color: theme.colors.textSecondary,
       fontWeight: '500',
       marginTop: 2,
@@ -195,6 +259,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       width: 1,
       height: '60%',
       backgroundColor: theme.colors.border,
+    },
+    homeToggleBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 8,
+      paddingHorizontal: 10,
+      borderRadius: 10,
+      backgroundColor: theme.colors.accentLight + '40',
+      borderWidth: 1,
+      borderColor: theme.colors.accentBorder,
+    },
+    homeToggleBtnActive: {
+      backgroundColor: theme.colors.accent,
+      borderColor: theme.colors.accent,
+    },
+    homeToggleText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.colors.accent,
+    },
+    homeToggleTextActive: {
+      color: '#FFF',
     },
     hintText: {
       fontSize: 12,

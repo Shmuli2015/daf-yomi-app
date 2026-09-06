@@ -4,7 +4,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
 import { useAppStore } from '../store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
-import { resetDB } from '../db/database';
 import ScreenTopGradient from '../components/ScreenTopGradient';
 import SettingsLoadingView from '../components/Settings/SettingsLoadingView';
 import SettingsScrollContent from '../components/Settings/SettingsScrollContent';
@@ -20,6 +19,7 @@ import { getDownloadPageUrl } from '../services/apkInstall';
 import { useSettingsNotifications } from '../hooks/useSettingsNotifications';
 import { useSettingsBackup } from '../hooks/useSettingsBackup';
 import type { BackupData } from '../services/backup';
+import type { ResetOptionType } from '../components/Settings/ResetOptionsModal.types';
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -36,6 +36,9 @@ export default function SettingsScreen() {
     setShowCalendarDafEnabled,
     setShowPersonalTrackBannerEnabled,
     importBackup,
+    resetDafYomiState,
+    resetPersonalTrackState,
+    resetAllState,
   } = useAppStore(
     useShallow(s => ({
       settings: s.settings,
@@ -47,6 +50,9 @@ export default function SettingsScreen() {
       setShowCalendarDafEnabled: s.setShowCalendarDafEnabled,
       setShowPersonalTrackBannerEnabled: s.setShowPersonalTrackBannerEnabled,
       importBackup: s.importBackup,
+      resetDafYomiState: s.resetDafYomiState,
+      resetPersonalTrackState: s.resetPersonalTrackState,
+      resetAllState: s.resetAllState,
     })),
   );
 
@@ -55,7 +61,10 @@ export default function SettingsScreen() {
   const [showPersonalTrackBannerPref, setShowPersonalTrackBannerPref] = useState(true);
   const [showConfettiPref, setShowConfettiPref] = useState(true);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [pendingResetType, setPendingResetType] = useState<ResetOptionType | null>(null);
+  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [resetSuccessFeedback, setResetSuccessFeedback] = useState<{ title: string; message: string } | null>(null);
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [studyLinkMode, setStudyLinkMode] = useState<StudyLinkMode>('both');
   const [showThemeModal, setShowThemeModal] = useState(false);
@@ -155,12 +164,63 @@ export default function SettingsScreen() {
     onApplyBackup: handleApplyBackup,
   });
 
-  const onConfirmReset = useCallback(() => {
-    resetDB();
-    loadInitialData();
+  const handleSelectResetOption = useCallback((type: ResetOptionType) => {
+    setPendingResetType(type);
     setShowResetModal(false);
+    setShowResetConfirmModal(true);
+  }, []);
+
+  const handleCancelResetConfirm = useCallback(() => {
+    setShowResetConfirmModal(false);
+    setPendingResetType(null);
+  }, []);
+
+  const handleExecuteReset = useCallback(() => {
+    if (!pendingResetType) return;
+    if (pendingResetType === 'dafYomi') {
+      resetDafYomiState();
+      setResetSuccessFeedback({
+        title: 'איפוס הדף היומי הושלם',
+        message: 'כל סימוני הדף היומי והרצף נמחקו בהצלחה. המסלול האישי וההגדרות נשמרו.',
+      });
+    } else if (pendingResetType === 'personalTrack') {
+      resetPersonalTrackState();
+      setResetSuccessFeedback({
+        title: 'איפוס מסלול אישי הושלם',
+        message: 'כל נתוני והתקדמות המסלול האישי נמחקו בהצלחה. נתוני הדף היומי וההגדרות נשמרו.',
+      });
+    } else {
+      resetAllState();
+      setResetSuccessFeedback({
+        title: 'איפוס כללי הושלם',
+        message: 'כל הנתונים וההגדרות נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי.',
+      });
+    }
+    setShowResetConfirmModal(false);
+    setPendingResetType(null);
     setShowSuccessModal(true);
-  }, [loadInitialData]);
+  }, [pendingResetType, resetDafYomiState, resetPersonalTrackState, resetAllState]);
+
+  const resetConfirmTexts = useMemo(() => {
+    switch (pendingResetType) {
+      case 'dafYomi':
+        return {
+          title: 'אישור איפוס הדף היומי',
+          message: 'האם אתה בטוח שברצונך למחוק את כל היסטוריית הדף היומי? נתוני המסלול האישי וההגדרות יישמרו. פעולה זו אינה ניתנת לביטול.',
+        };
+      case 'personalTrack':
+        return {
+          title: 'אישור איפוס מסלול אישי',
+          message: 'האם אתה בטוח שברצונך למחוק את כל סימוני המסלול האישי? היסטוריית הדף היומי וההגדרות יישמרו. פעולה זו אינה ניתנת לביטול.',
+        };
+      case 'all':
+      default:
+        return {
+          title: 'אישור איפוס כללי',
+          message: 'האם אתה בטוח שברצונך למחוק את כל הנתונים ולאפס את כל הגדרות האפליקציה למצב ההתחלתי? פעולה זו אינה ניתנת לביטול.',
+        };
+    }
+  }, [pendingResetType]);
 
   const handleSecularDateToggle = useCallback(
     (val: boolean) => {
@@ -389,8 +449,15 @@ export default function SettingsScreen() {
           onTimeSave={handleTimeSave}
           showResetModal={showResetModal}
           onResetModalClose={() => setShowResetModal(false)}
-          onConfirmReset={onConfirmReset}
+          onConfirmReset={handleSelectResetOption}
+          showResetConfirmModal={showResetConfirmModal}
+          resetConfirmTitle={resetConfirmTexts.title}
+          resetConfirmMessage={resetConfirmTexts.message}
+          onResetConfirmClose={handleCancelResetConfirm}
+          onExecuteReset={handleExecuteReset}
           showSuccessModal={showSuccessModal}
+          resetSuccessTitle={resetSuccessFeedback?.title}
+          resetSuccessMessage={resetSuccessFeedback?.message}
           onSuccessModalClose={() => setShowSuccessModal(false)}
           showBackupImportModal={showBackupImportModal}
           backupPreview={backupPreview}

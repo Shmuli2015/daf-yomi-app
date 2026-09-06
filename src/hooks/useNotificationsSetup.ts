@@ -35,13 +35,17 @@ export function useNotificationsSetup() {
           console.log('Running in Expo Go - Push notifications (remote) are restricted.');
         }
 
-        if (Platform.OS === 'android') {
-          await Notifications.setNotificationChannelAsync('default', {
-            name: 'default',
-            importance: Notifications.AndroidImportance.MAX,
-            vibrationPattern: [0, 250, 250, 250],
-            lightColor: '#FF231F7C',
-          });
+        if (Platform.OS === 'android' && !isExpoGo) {
+          try {
+            await Notifications.setNotificationChannelAsync('default', {
+              name: 'default',
+              importance: Notifications.AndroidImportance.MAX,
+              vibrationPattern: [0, 250, 250, 250],
+              lightColor: '#FF231F7C',
+            });
+          } catch (channelError) {
+            console.warn('Notification channel error:', channelError);
+          }
         }
 
         const { status } = await Notifications.requestPermissionsAsync();

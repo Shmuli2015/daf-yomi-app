@@ -172,7 +172,7 @@ export default function SettingsScrollContent({
     (onShareBackup != null && matchItem('שתף גיבוי', 'שלח את קובץ הגיבוי')) ||
     (onImportBackup != null && matchItem('ייבא גיבוי', 'שחזור נתונים מקובץ גיבוי קודם'));
 
-  const sec7Match = matchItem('איפוס נתונים', 'מחיקת כל התקדמות הלימוד');
+  const sec7Match = matchItem('איפוס נתונים', 'מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי');
 
   const visibleSections = [
     sec1Match,
@@ -344,11 +344,11 @@ export default function SettingsScrollContent({
                         highlightText={searchQuery}
                       />
                     )}
-                    {onPersonalTrackBannerToggle != null && showPersonalTrackBannerPref != null && matchItem('באנר מסלול אישי', 'הצגת באנר מעקב אישי אחר מסכת במסך הבית') && (
+                    {onPersonalTrackBannerToggle != null && showPersonalTrackBannerPref != null && matchItem('לימוד אישי', 'מעקב עצמאי אחר מסכתות והצגת לימוד אישי במסך הבית ובש״ס') && (
                       <SettingItem
                         icon="bookmark-outline"
-                        title="באנר מסלול אישי"
-                        description="הצגת באנר מעקב אישי אחר מסכת במסך הבית"
+                        title="לימוד אישי"
+                        description="מעקב עצמאי אחר מסכתות והצגת לימוד אישי במסך הבית ובש״ס"
                         type="switch"
                         value={showPersonalTrackBannerPref}
                         onPress={onPersonalTrackBannerToggle}
@@ -550,7 +550,7 @@ export default function SettingsScrollContent({
                     <SettingItem
                       icon="trash-outline"
                       title="איפוס נתונים"
-                      description="מחיקת כל התקדמות הלימוד"
+                      description="מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי"
                       isDestructive
                       onPress={onResetModalOpen}
                       isLast

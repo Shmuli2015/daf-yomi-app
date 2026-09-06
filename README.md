@@ -24,6 +24,7 @@
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum; half pages **do not break** the streak but **do not add** a day either
 - **7-Day Progress Overview**: In-app mini chart of the last seven days: tall bar = full page, medium bar = half page, short bar = not learned
 - **Share progress as an image** (<span dir="rtl" lang="he">שיתוף תמונה</span>): On the streak card, tap the **share** (<span dir="rtl" lang="he">שתף</span>) control to open a preview, then **Share image** (<span dir="rtl" lang="he">שתף תמונה</span>) — exports a square graphic (streak, Hebrew date, app branding) for WhatsApp Status, Instagram Stories, etc. (requires a **development or production build**, not Expo Go; see Tech Stack)
+- **Personal Track Banner & Quick Overview Card** (<span dir="rtl" lang="he">מסלול אישי</span>): Track self-paced tractate study separate from the Daf Yomi cycle. Set an active tractate, view an overview card with real-time statistics (pages completed, progress percentage, next page), mark the next page directly with one tap, or open the full tractate daf grid
 - **Shas Progress Banner**: Overall progress across Shas; **tap the banner** to open the History screen for full tractate details
 - **Confetti Celebration**: Optional festive animation when marking a Daf as learned
 
@@ -33,6 +34,7 @@
 - **Masechet-by-Masechet Progress**: Individual progress bars for each tractate showing pages learned (including half pages)
 - **Completion Statistics**: Track total pages learned and completed tractates
 - **Interactive Masechet Details**: Tap any tractate to see a daf grid; use **Mark all** (<span dir="rtl" lang="he">סמן הכל</span>) or **Clear all** (<span dir="rtl" lang="he">בטל הכל</span>) for bulk updates (with confirmation), or tap individual daf numbers to toggle. Partial daf cells use a distinct style; tapping a half page **upgrades** it to full learned (half page marking is available from Home, Calendar, and Tzurat Hadaf only)
+- **Daf Yomi vs. Personal Track Mode Toggle**: Within any tractate modal, switch between **Daf Yomi** (<span dir="rtl" lang="he">דף יומי</span>) and **Personal Track** (<span dir="rtl" lang="he">מסכת אישית</span>). Study and track individual tractates independently without affecting the global Daf Yomi calendar history
 - **Visual Progress Hero**: Large progress ring displaying overall Shas completion percentage
 - **Share Shas progress as an image**: On the History screen, use the **share** control on the hero card (same flow: preview → **Share image**) to export a branded square graphic with ring %, pages learned, and completed tractates count
 - **Learned Pages Counter**: Real-time count of total pages learned across all of Shas, including half pages (e.g. 150.5)
@@ -59,9 +61,10 @@
 - **Study Link Mode** (<span dir="rtl" lang="he">כפתורי לימוד</span>): Show **Sefaria**, **Tzurat Hadaf**, or **both** on the Home dashboard and Calendar day card
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
 - **Calendar Daf Labels**: Toggle whether each calendar cell shows that day's Daf number (<span dir="rtl" lang="he">הצג דף בלוח שנה</span>)
+- **Personal Track Banner Toggle**: Toggle visibility of the Personal Track banner on the Home dashboard (<span dir="rtl" lang="he">באנר מסלול אישי בבית</span>)
 - **Confetti Effects Toggle**: Enable/disable celebration animations
 - **Backup & restore** (<span dir="rtl" lang="he">גיבוי ושחזור</span>): **Save backup to file** writes a JSON backup to a folder on device; **Share backup** sends it via WhatsApp, Drive, etc.; **Import backup** restores from a previous file with a preview. On import, **Merge with existing data** keeps the newer record per date; **Replace all** wipes local data and replaces it with the backup. Recommended before reset or when moving to a new device
-- **Data Management**: Complete reset option to clear all learning history
+- **Data Management & Reset Options** (<span dir="rtl" lang="he">איפוס נתונים</span>): Choose between 3 granular reset modes: **Daf Yomi records only** (<span dir="rtl" lang="he">ניקוי נתוני הדף היומי</span>), **Personal Track records only** (<span dir="rtl" lang="he">ניקוי מסלול אישי בלבד</span>), or **Complete app reset** (<span dir="rtl" lang="he">איפוס כללי מלא</span>)
 - **Privacy-First**: All data stored locally on device with SQLite database
 
 ### 🔔 Smart Notifications

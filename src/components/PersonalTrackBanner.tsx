@@ -8,6 +8,7 @@ import { numberToGematria } from '../data/shas';
 import { formatProgressCount } from '../utils/dafStatus';
 import { usePersonalTrackStats } from '../hooks/usePersonalTrackStats';
 import { createPersonalTrackBannerStyles } from './PersonalTrack/PersonalTrackBanner.styles';
+import PersonalTrackOverviewCard from './PersonalTrack/PersonalTrackOverviewCard';
 import type { PersonalTrackRecord } from '../db/database';
 
 interface PersonalTrackBannerProps {
@@ -17,6 +18,7 @@ interface PersonalTrackBannerProps {
   onOpenMasechetDetailPress?: () => void;
   onToggleDafLearned: (masechetEn: string, dafNum: number) => void;
   onOpenTzuratHadaf?: (masechetEn: string, dafNum: number) => void;
+  onClearActiveMasechet?: () => void;
 }
 
 export default function PersonalTrackBanner({
@@ -26,6 +28,7 @@ export default function PersonalTrackBanner({
   onOpenMasechetDetailPress,
   onToggleDafLearned,
   onOpenTzuratHadaf,
+  onClearActiveMasechet,
 }: PersonalTrackBannerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createPersonalTrackBannerStyles(theme), [theme]);
@@ -39,36 +42,16 @@ export default function PersonalTrackBanner({
     animatedProgressStyle,
   } = usePersonalTrackStats(activeMasechetEn, personalTrackRecords);
 
+  const totalPersonalLearnedCount = useMemo(() => {
+    return personalTrackRecords.filter((r) => r.status === 'learned').length;
+  }, [personalTrackRecords]);
+
   if (!masechet) {
     return (
-      <View style={styles.outerContainer}>
-        <TouchableOpacity
-          style={styles.emptyContainer}
-          activeOpacity={0.85}
-          onPress={onSelectMasechetPress}
-        >
-          <LinearGradient
-            colors={[theme.colors.accent + '0C', 'transparent']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.emptyHeaderRow}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons name="bookmark-outline" size={22} color={theme.colors.accent} />
-            </View>
-            <View style={styles.emptyTitleSection}>
-              <Text style={styles.emptyTitle}>המסלול האישי שלי</Text>
-              <Text style={styles.emptySubtitle}>מעקב עצמאי אחר מסכת לבחירתך בקצב שלך</Text>
-            </View>
-          </View>
-
-          <View style={styles.addBtn}>
-            <Ionicons name="add-circle" size={18} color="#FFF" />
-            <Text style={styles.addBtnText}>בחר מסכת ללימוד</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+      <PersonalTrackOverviewCard
+        totalLearned={totalPersonalLearnedCount}
+        onOpenPicker={onSelectMasechetPress}
+      />
     );
   }
 
@@ -95,7 +78,7 @@ export default function PersonalTrackBanner({
             </View>
             <View>
               <Text style={styles.bannerTag}>מסלול אישי</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              <View style={styles.titleWithChevron}>
                 <Text style={styles.masechetTitle}>מסכת {masechet.he}</Text>
                 <Ionicons name="chevron-back" size={16} color={theme.colors.accent} />
               </View>
@@ -104,32 +87,34 @@ export default function PersonalTrackBanner({
 
           <View style={styles.actionButtonsGroup}>
             <TouchableOpacity
-              style={styles.gridBtn}
-              onPress={onOpenMasechetDetailPress}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="grid-outline" size={14} color={theme.colors.accent} />
-              <Text style={styles.gridBtnText}>כל הדפים</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
               style={styles.changeMasechetBtn}
               onPress={onSelectMasechetPress}
               activeOpacity={0.7}
             >
-              <Ionicons name="swap-horizontal" size={14} color={theme.colors.textSecondary} />
+              <Ionicons name="swap-horizontal" size={14} color={theme.colors.accent} />
+              <Text style={styles.changeMasechetText}>החלף</Text>
             </TouchableOpacity>
+
+            {onClearActiveMasechet && (
+              <TouchableOpacity
+                style={styles.clearMasechetBtn}
+                onPress={onClearActiveMasechet}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="close" size={16} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
         <View style={styles.progressSection}>
           <View style={styles.statsRow}>
-            <View style={styles.mainStat}>
-              <Text style={styles.percentageText}>{percentage}</Text>
-              <Text style={styles.percentageSymbol}>%</Text>
-            </View>
             <Text style={styles.countText}>
               {formatProgressCount(learnedCount)} מתוך {totalPages} דפים
+            </Text>
+            <Text style={styles.percentageText}>
+              {`\u2066${percentage}%\u2069`}
             </Text>
           </View>
 
@@ -148,7 +133,7 @@ export default function PersonalTrackBanner({
         <View style={styles.footerRow}>
           {nextDafNum ? (
             <View style={styles.nextDafInfo}>
-              <Text style={styles.nextDafLabel}>הדף הבא בתור:</Text>
+              <Text style={styles.nextDafLabel}>הדף הבא:</Text>
               <TouchableOpacity
                 onPress={() => onOpenTzuratHadaf?.(masechet.en, nextDafNum)}
                 activeOpacity={0.7}
