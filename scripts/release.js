@@ -21,4 +21,10 @@ run('git add package.json package-lock.json');
 run(`git commit -m "Release ${version}"`);
 run('git push -u origin HEAD');
 
+try {
+  run(`gh pr create --title "Release ${version}" --body "Automated release PR for version ${version}" --base master`);
+} catch (error) {
+  console.warn('\nNote: GitHub CLI (gh) command failed or is not installed. You can open the PR manually on GitHub.');
+}
+
 console.log(`\nRelease ${version} pushed on branch ${branch}.`);
