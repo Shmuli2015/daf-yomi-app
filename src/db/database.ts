@@ -91,6 +91,8 @@ export function initDB() {
       notification_hour INTEGER DEFAULT 7,
       notification_minute INTEGER DEFAULT 30
     );
+    CREATE INDEX IF NOT EXISTS idx_daily_daf_status ON daily_daf(status);
+    CREATE INDEX IF NOT EXISTS idx_personal_track_status ON personal_track_daf(status);
   `);
 
   migrateDailyDafColumns();
@@ -163,18 +165,18 @@ export function updateDailyRecord(
   const pct = percentage ?? (status === 'learned' ? 100 : status === 'partial' ? 50 : 0);
   const amudValue = amud !== undefined ? amud : status === 'partial' ? null : null;
   const learnedAt = new Date().toISOString();
-  const existing = getDailyRecord(dateStr);
-  if (existing) {
-    db.runSync(
-      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
-      [masechet, daf, status, pct, amudValue, learnedAt, dateStr]
-    );
-  } else {
-    db.runSync(
-      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [dateStr, masechet, daf, status, pct, amudValue, learnedAt]
-    );
-  }
+  db.runSync(
+    `INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(date) DO UPDATE SET
+       masechet = excluded.masechet,
+       daf = excluded.daf,
+       status = excluded.status,
+       percentage = excluded.percentage,
+       amud = excluded.amud,
+       learnedAt = excluded.learnedAt`,
+    [dateStr, masechet, daf, status, pct, amudValue, learnedAt]
+  );
 }
 
 export function batchUpdateDailyRecords(
@@ -192,18 +194,18 @@ export function batchUpdateDailyRecords(
     for (const { dateStr, masechet, daf, status, percentage, amud } of updates) {
       const pct = percentage ?? (status === 'learned' ? 100 : status === 'partial' ? 50 : 0);
       const amudValue = amud !== undefined ? amud : null;
-      const existing = getDailyRecord(dateStr);
-      if (existing) {
-        db.runSync(
-          'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
-          [masechet, daf, status, pct, amudValue, now, dateStr]
-        );
-      } else {
-        db.runSync(
-          'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
-          [dateStr, masechet, daf, status, pct, amudValue, now]
-        );
-      }
+      db.runSync(
+        `INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(date) DO UPDATE SET
+           masechet = excluded.masechet,
+           daf = excluded.daf,
+           status = excluded.status,
+           percentage = excluded.percentage,
+           amud = excluded.amud,
+           learnedAt = excluded.learnedAt`,
+        [dateStr, masechet, daf, status, pct, amudValue, now]
+      );
     }
   });
 }
@@ -411,18 +413,15 @@ export function updatePersonalTrackRecord(
   if (status === 'none') {
     db.runSync('DELETE FROM personal_track_daf WHERE masechet = ? AND daf_num = ?', [masechet, dafNum]);
   } else {
-    const existing = db.getFirstSync('SELECT id FROM personal_track_daf WHERE masechet = ? AND daf_num = ?', [masechet, dafNum]);
-    if (existing) {
-      db.runSync(
-        'UPDATE personal_track_daf SET status = ?, amud = ?, learnedAt = ? WHERE masechet = ? AND daf_num = ?',
-        [status, amud ?? null, now, masechet, dafNum]
-      );
-    } else {
-      db.runSync(
-        'INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt) VALUES (?, ?, ?, ?, ?)',
-        [masechet, dafNum, status, amud ?? null, now]
-      );
-    }
+    db.runSync(
+      `INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(masechet, daf_num) DO UPDATE SET
+         status = excluded.status,
+         amud = excluded.amud,
+         learnedAt = excluded.learnedAt`,
+      [masechet, dafNum, status, amud ?? null, now]
+    );
   }
 }
 

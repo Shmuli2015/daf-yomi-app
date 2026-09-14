@@ -194,10 +194,24 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   const last7Days = useMemo(() => {
     const daysHe = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
-    return Array.from({ length: 7 }).map((_, i) => {
+    const historyMap = new Map<string, (typeof history)[0]>();
+    const targetDates = new Set<string>();
+    const days = Array.from({ length: 7 }).map((_, i) => {
       const d = subDays(currentDate, 6 - i);
       const dateStr = getDateStr(d);
-      const record = history.find((r) => r.date === dateStr);
+      targetDates.add(dateStr);
+      return { d, dateStr };
+    });
+
+    for (const r of history) {
+      if (targetDates.has(r.date)) {
+        historyMap.set(r.date, r);
+        if (historyMap.size === targetDates.size) break;
+      }
+    }
+
+    return days.map(({ d, dateStr }) => {
+      const record = historyMap.get(dateStr);
       return {
         date: d,
         dateStr,

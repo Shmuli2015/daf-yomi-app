@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setDismissedHalfDafTip as persistDismissedHalfDafTip, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
-import { buildProgressCache, ProgressCache } from '../utils/progressCache';
+import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from '../utils/progressCache';
 import { resolveAmudMark, type AmudSide } from '../utils/dafStatus';
 
 interface AppState {
@@ -26,9 +26,9 @@ interface AppState {
 
   loadInitialData: () => void;
   setAppReady: (ready: boolean) => void;
-  refreshHistory: () => void;
+  refreshHistory: (masechetIdentifier?: string) => void;
   refreshSettings: () => void;
-  refreshPersonalTrack: () => void;
+  refreshPersonalTrack: (masechetIdentifier?: string) => void;
   setActivePersonalMasechet: (masechetEn: string | null) => void;
   clearActivePersonalMasechet: () => void;
   togglePersonalDafLearned: (masechetEn: string, dafNum: number) => void;
@@ -142,11 +142,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
-  refreshHistory: () => {
-    const { currentDate, personalTrackRecords, settings } = get();
+  refreshHistory: (masechetIdentifier?: string) => {
+    const { currentDate, personalTrackRecords, settings, progressCache } = get();
     const history = getAllRecords();
     const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
-    const cache = buildProgressCache(history, isPersonalTrackEnabled ? personalTrackRecords : []);
+    const personalRecords = isPersonalTrackEnabled ? personalTrackRecords : [];
+    const cache = masechetIdentifier && progressCache
+      ? updateMasechetProgressInCache(progressCache, masechetIdentifier, history, personalRecords)
+      : buildProgressCache(history, personalRecords);
     const dateStr = getDateStr(currentDate);
     const record = history.find(r => r.date === dateStr) || null;
 
@@ -169,10 +172,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
-  refreshPersonalTrack: () => {
+  refreshPersonalTrack: (masechetIdentifier?: string) => {
     const personalTrackRecords = getPersonalTrackRecords();
     const isPersonalTrackEnabled = (get().settings?.show_personal_track_banner ?? 1) !== 0;
-    const cache = buildProgressCache(get().history, isPersonalTrackEnabled ? personalTrackRecords : []);
+    const personalRecords = isPersonalTrackEnabled ? personalTrackRecords : [];
+    const cache = masechetIdentifier && get().progressCache
+      ? updateMasechetProgressInCache(get().progressCache, masechetIdentifier, get().history, personalRecords)
+      : buildProgressCache(get().history, personalRecords);
     set({ personalTrackRecords, progressCache: cache });
   },
 
@@ -195,12 +201,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     );
     const newStatus = existing?.status === 'learned' ? 'none' : 'learned';
     updatePersonalTrackRecord(masechetEn, dafNum, newStatus, null);
-    get().refreshPersonalTrack();
+    get().refreshPersonalTrack(masechetEn);
   },
 
   markPersonalDafLearned: (masechetEn, dafNum) => {
     updatePersonalTrackRecord(masechetEn, dafNum, 'learned', null);
-    get().refreshPersonalTrack();
+    get().refreshPersonalTrack(masechetEn);
   },
 
   markPersonalPartialAmud: (masechetEn, dafNum, amud) => {
@@ -215,12 +221,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       resolved.status,
       resolved.amud
     );
-    get().refreshPersonalTrack();
+    get().refreshPersonalTrack(masechetEn);
   },
 
   setPersonalDafStudyStatus: (masechetEn, dafNum, status, amud = null) => {
     updatePersonalTrackRecord(masechetEn, dafNum, status, amud);
-    get().refreshPersonalTrack();
+    get().refreshPersonalTrack(masechetEn);
   },
 
   markTodayAsLearned: () => {
@@ -229,12 +235,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned', 100, null);
 
-    get().refreshHistory();
+    get().refreshHistory(todayMasechet);
   },
 
   setDafStudyStatus: (dateStr, masechet, daf, status) => {
     updateDailyRecord(dateStr, masechet, daf, status, undefined, null);
-    get().refreshHistory();
+    get().refreshHistory(masechet);
   },
 
   markPartialAmud: (dateStr, masechet, daf, amud) => {
@@ -248,7 +254,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       resolved.percentage,
       resolved.amud
     );
-    get().refreshHistory();
+    get().refreshHistory(masechet);
   },
 
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => {
@@ -258,8 +264,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       existing?.status === 'learned' || existing?.status === 'partial' ? 'missed' : 'learned';
 
     updateDailyRecord(dateStr, masechet, daf, newStatus, undefined, null);
-
-    get().refreshHistory();
+    get().refreshHistory(masechet);
   },
 
   batchMarkDafim: (updates) => {

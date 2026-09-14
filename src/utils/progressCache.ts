@@ -47,7 +47,20 @@ function normalizeMasechetKey(name: string): string {
     .replace(/v/g, 'b');
 }
 
+const shasMasechetByLookup = new Map<string, typeof SHAS_MASECHTOT[0]>();
+for (const m of SHAS_MASECHTOT) {
+  shasMasechetByLookup.set(normalizeMasechetKey(m.en), m);
+  shasMasechetByLookup.set(m.en.toLowerCase(), m);
+  shasMasechetByLookup.set(stripNiqqud(m.he), m);
+}
+
 function findShasMasechet(name: string) {
+  const direct =
+    shasMasechetByLookup.get(name) ||
+    shasMasechetByLookup.get(name.trim().toLowerCase()) ||
+    shasMasechetByLookup.get(normalizeMasechetKey(name)) ||
+    shasMasechetByLookup.get(stripNiqqud(name));
+  if (direct) return direct;
   const clean = normalizeMasechetKey(name);
   return SHAS_MASECHTOT.find(
     m =>
@@ -66,8 +79,10 @@ function generateHistoryHash(history: DailyRecord[], personalRecords: PersonalTr
   return `${history.length}-${progressSum.toFixed(2)}-${firstDate}-${lastDate}-${personalRecords.length}-${personalLearnedCount}-${personalPartialCount}`;
 }
 
-function calculateStreak(records: DailyRecord[]): number {
-  const recordByDate = new Map(records.map(r => [r.date, r]));
+function calculateStreak(recordsOrMap: DailyRecord[] | Map<string, DailyRecord>): number {
+  const recordByDate = recordsOrMap instanceof Map
+    ? recordsOrMap
+    : new Map(recordsOrMap.map(r => [r.date, r]));
   const todayStr = getDateStr(new Date());
   const yesterdayStr = getDateStr(subDays(new Date(), 1));
 
@@ -238,4 +253,120 @@ export function getSederProgressFromCache(
     totalMasechtot: 0,
     percentage: 0
   };
+}
+
+export function updateMasechetProgressInCache(
+  cache: ProgressCache | null,
+  masechetIdentifier: string,
+  history: DailyRecord[],
+  personalRecords: PersonalTrackRecord[] = []
+): ProgressCache {
+  if (!cache) {
+    return buildProgressCache(history, personalRecords);
+  }
+
+  const masechet = findShasMasechet(masechetIdentifier);
+  if (!masechet) {
+    return buildProgressCache(history, personalRecords);
+  }
+
+  const historyByDate = new Map<string, DailyRecord>();
+  for (const r of history) {
+    historyByDate.set(r.date, r);
+  }
+
+  const personalByKey = new Map<string, PersonalTrackRecord>();
+  for (const r of personalRecords) {
+    if (r.masechet === masechet.en || normalizeMasechetKey(r.masechet) === normalizeMasechetKey(masechet.en)) {
+      personalByKey.set(`${masechet.en}_${r.daf_num}`, r);
+    }
+  }
+
+  const oldMasechetInfo = cache.masechetProgress.get(masechet.he) || {
+    learned: 0,
+    total: masechet.pages,
+    dafYomiLearned: 0,
+    personalLearned: 0,
+  };
+
+  const dafim = getMasechetDafim(masechet.he);
+  let masechetLearned = 0;
+  let dafYomiLearned = 0;
+  let personalLearned = 0;
+
+  for (const dafNum of dafim) {
+    const dateStr = getDafDateStr(masechet.he, dafNum);
+    const historyRecord = dateStr ? historyByDate.get(dateStr) : undefined;
+    const personalRecord = personalByKey.get(`${masechet.en}_${dafNum}`);
+
+    const dafYomiProg = historyRecord ? getRecordProgress(historyRecord) : 0;
+    const personalProg = personalRecord?.status === 'learned' ? 1 : personalRecord?.status === 'partial' ? 0.5 : 0;
+
+    if (dafYomiProg > 0) dafYomiLearned += dafYomiProg;
+    if (personalProg > 0) personalLearned += personalProg;
+
+    const combinedProg = Math.max(dafYomiProg, personalProg);
+    masechetLearned += combinedProg;
+  }
+
+  const newMasechetInfo: MasechetProgressInfo = {
+    learned: masechetLearned,
+    total: masechet.pages,
+    dafYomiLearned,
+    personalLearned,
+  };
+
+  const diffLearned = newMasechetInfo.learned - oldMasechetInfo.learned;
+  const diffDafYomi = newMasechetInfo.dafYomiLearned - oldMasechetInfo.dafYomiLearned;
+  const diffPersonal = newMasechetInfo.personalLearned - oldMasechetInfo.personalLearned;
+
+  const newMasechetProgress = new Map(cache.masechetProgress);
+  newMasechetProgress.set(masechet.he, newMasechetInfo);
+
+  const newSederProgress = new Map(cache.sederProgress);
+  const oldSederInfo = cache.sederProgress.get(masechet.seder);
+  if (oldSederInfo) {
+    const wasCompleted = oldMasechetInfo.total > 0 && oldMasechetInfo.learned >= oldMasechetInfo.total;
+    const isCompleted = newMasechetInfo.total > 0 && newMasechetInfo.learned >= newMasechetInfo.total;
+    const completedDelta = (isCompleted ? 1 : 0) - (wasCompleted ? 1 : 0);
+
+    const newLearnedDafim = Math.max(0, oldSederInfo.learnedDafim + diffLearned);
+    const newCompletedMasechtot = Math.max(0, oldSederInfo.completedMasechtot + completedDelta);
+    const percentage = oldSederInfo.totalDafim > 0
+      ? Math.round((newLearnedDafim / oldSederInfo.totalDafim) * 100)
+      : 0;
+
+    newSederProgress.set(masechet.seder, {
+      ...oldSederInfo,
+      learnedDafim: newLearnedDafim,
+      completedMasechtot: newCompletedMasechtot,
+      percentage,
+    });
+  }
+
+  const totalLearnedCount = Math.max(0, cache.totalShasProgress.learnedCount + diffLearned);
+  const totalDafYomiCount = Math.max(0, cache.totalShasProgress.dafYomiCount + diffDafYomi);
+  const totalPersonalCount = Math.max(0, cache.totalShasProgress.personalCount + diffPersonal);
+  const totalPages = 2711;
+  const totalPercentage = Math.round((totalLearnedCount / totalPages) * 100);
+
+  const streak = calculateStreak(historyByDate);
+  const historyHash = generateHistoryHash(history, personalRecords);
+
+  const updatedCache: ProgressCache = {
+    historyHash,
+    masechetProgress: newMasechetProgress,
+    sederProgress: newSederProgress,
+    totalShasProgress: {
+      learnedCount: totalLearnedCount,
+      totalPages,
+      percentage: totalPercentage,
+      dafYomiCount: totalDafYomiCount,
+      personalCount: totalPersonalCount,
+    },
+    streak,
+  };
+
+  cachedResult = updatedCache;
+  return updatedCache;
 }
