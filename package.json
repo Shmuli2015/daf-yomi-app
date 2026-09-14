@@ -10,6 +10,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "release": "node scripts/release.js",
+    "release:minor": "node scripts/release.js minor",
+    "release:major": "node scripts/release.js major",
     "build:apk": "eas build --platform android --profile preview --local",
     "typecheck": "tsc --noEmit",
     "test": "jest",
