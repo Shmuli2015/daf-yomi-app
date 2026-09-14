@@ -19,6 +19,7 @@ interface HomeHeaderProps {
   showTzuratLink?: boolean;
   onOpenTzuratHadaf?: () => void;
   onPressMasechet?: () => void;
+  onOpenQuickJump?: () => void;
   onOpenGuide?: () => void;
   studyStatus?: 'none' | 'partial' | 'learned';
   handleToggle?: () => void;
@@ -49,6 +50,7 @@ const HomeHeader = React.memo(function HomeHeader({
   showTzuratLink = true,
   onOpenTzuratHadaf,
   onPressMasechet,
+  onOpenQuickJump,
   studyStatus = 'none',
   handleToggle,
   onMarkFull,
@@ -151,8 +153,33 @@ const HomeHeader = React.memo(function HomeHeader({
               <View style={styles.dailyStudyBadge}>
                 <Text style={styles.dailyStudyText}>הלימוד היומי</Text>
               </View>
-              <View style={styles.dafBadgeSmall}>
-                <Text style={styles.dafBadgeText}>{todayDafNum}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                {onOpenQuickJump && (
+                  <TouchableOpacity
+                    onPress={onOpenQuickJump}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: theme.radius.full,
+                      backgroundColor: theme.colors.surface,
+                      borderWidth: 1,
+                      borderColor: theme.colors.border,
+                    }}
+                    activeOpacity={0.75}
+                    accessibilityLabel="קפיצה מהירה לדף"
+                  >
+                    <Ionicons name="flash-outline" size={13} color={theme.colors.accent} />
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: theme.colors.accent }}>
+                      קפיצה לדף
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                <View style={styles.dafBadgeSmall}>
+                  <Text style={styles.dafBadgeText}>{todayDafNum}</Text>
+                </View>
               </View>
             </View>
 

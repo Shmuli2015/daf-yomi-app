@@ -18,6 +18,7 @@ export default function TzuratHadafViewer({
   error,
   layoutKey,
   isLandscape = false,
+  isFullscreen = false,
   onToggleOrientation,
   onOpenSefaria,
   onRetry,
@@ -101,12 +102,14 @@ export default function TzuratHadafViewer({
           setContentLoading(true);
         }}
       />
-      <TzuratZoomHint
-        styles={styles}
-        textMuted={theme.colors.textMuted}
-        isLandscape={isLandscape}
-        onToggleOrientation={onToggleOrientation}
-      />
+      {!isFullscreen && (
+        <TzuratZoomHint
+          styles={styles}
+          textMuted={theme.colors.textMuted}
+          isLandscape={isLandscape}
+          onToggleOrientation={onToggleOrientation}
+        />
+      )}
     </View>
   );
 }

@@ -1,17 +1,20 @@
-import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, SEDARIM, Seder } from '../../data/shas';
-import { getMasechetProgressFromCache, getSederProgressFromCache } from '../../utils/progressCache';
+import { getSederProgressFromCache } from '../../utils/progressCache';
 import MasechetModal from './MasechetModal';
-import MasechetCard, { MasechetData } from './MasechetCard';
+import MasechetCard from './MasechetCard';
 import SederSection from './SederSection';
+import SederFilterBar from './SederFilterBar';
+import { useShasFilter } from '../../hooks/useShasFilter';
 
 interface MasechetGridProps {
   openMasechetEn?: string;
   returnToHomeOnClose?: boolean;
   onOpenMasechetConsumed?: () => void;
   onReturnToHome?: () => void;
+  onOpenQuickJump?: () => void;
 }
 
 export default function MasechetGrid({
@@ -19,11 +22,26 @@ export default function MasechetGrid({
   returnToHomeOnClose,
   onOpenMasechetConsumed,
   onReturnToHome,
+  onOpenQuickJump,
 }: MasechetGridProps) {
-  const progressCache = useAppStore(state => state.progressCache);
-  const [selectedMasechet, setSelectedMasechet] = useState<typeof SHAS_MASECHTOT[0] | null>(null);
+  const progressCache = useAppStore((state) => state.progressCache);
+  const [selectedMasechet, setSelectedMasechet] = useState<
+    (typeof SHAS_MASECHTOT)[0] | null
+  >(null);
   const [expandedSedarim, setExpandedSedarim] = useState<Set<Seder>>(new Set());
   const returnToHomeRef = useRef(false);
+
+  const {
+    selectedSeder,
+    setSelectedSeder,
+    selectedStatus,
+    setSelectedStatus,
+    searchQuery,
+    setSearchQuery,
+    filteredSedarimData,
+    matchedCount,
+    totalCount,
+  } = useShasFilter(progressCache);
 
   useEffect(() => {
     if (!openMasechetEn) return;
@@ -46,7 +64,7 @@ export default function MasechetGrid({
   }, [onReturnToHome]);
 
   const toggleSeder = (seder: Seder) => {
-    setExpandedSedarim(prev => {
+    setExpandedSedarim((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(seder)) {
         newSet.delete(seder);
@@ -57,42 +75,42 @@ export default function MasechetGrid({
     });
   };
 
-  const allMasechetData = useMemo(() => {
-    if (!progressCache) return new Map<Seder, MasechetData[]>();
-    
-    const dataMap = new Map<Seder, MasechetData[]>();
-    
-    SEDARIM.forEach(seder => {
-      const sederMasechtot = SHAS_MASECHTOT.filter(m => m.seder === seder.id);
-      const data = sederMasechtot.map(m => {
-        const progress = getMasechetProgressFromCache(progressCache, m.he);
-        const percent = progress.total > 0 ? Math.round((progress.learned / progress.total) * 100) : 0;
-        return { 
-          m, 
-          total: progress.total, 
-          learned: progress.learned, 
-          percent, 
-          isCompleted: progress.total > 0 && progress.learned >= progress.total 
-        };
-      }).filter(d => d.total > 0);
-      
-      dataMap.set(seder.id, data);
-    });
-    
-    return dataMap;
-  }, [progressCache]);
+  const isFilteringActive = selectedSeder !== null || searchQuery.trim().length > 0 || selectedStatus !== 'all';
 
   return (
     <View style={styles.container}>
+      <SederFilterBar
+        selectedSeder={selectedSeder}
+        onSelectSeder={(seder) => {
+          setSelectedSeder(seder);
+          if (seder) {
+            setExpandedSedarim((prev) => new Set(prev).add(seder));
+          }
+        }}
+        selectedStatus={selectedStatus}
+        onSelectStatus={setSelectedStatus}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        matchedCount={matchedCount}
+        totalCount={totalCount}
+        onOpenQuickJump={onOpenQuickJump}
+      />
+
       {SEDARIM.map((seder) => {
-        const masechetData = allMasechetData.get(seder.id) || [];
+        const masechetData = filteredSedarimData.get(seder.id) || [];
         if (masechetData.length === 0) return null;
 
-        const sederProgress = progressCache 
+        const sederProgress = progressCache
           ? getSederProgressFromCache(progressCache, seder.id)
-          : { percentage: 0, learnedDafim: 0, totalDafim: 0, completedMasechtot: 0, totalMasechtot: 0 };
-        
-        const isExpanded = expandedSedarim.has(seder.id);
+          : {
+              percentage: 0,
+              learnedDafim: 0,
+              totalDafim: 0,
+              completedMasechtot: 0,
+              totalMasechtot: 0,
+            };
+
+        const isExpanded = isFilteringActive || expandedSedarim.has(seder.id);
 
         return (
           <SederSection

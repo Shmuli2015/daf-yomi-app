@@ -20,6 +20,8 @@ import DafCell from './DafCell';
 import DafMarkMenuModal from '../DafMarkMenuModal';
 import MasechetModalModeToggle, { type MasechetStudyMode } from './MasechetModalModeToggle';
 import MasechetModalStats from './MasechetModalStats';
+import SiyumModal from '../Siyum/SiyumModal';
+import { triggerImpact } from '../../utils/haptics';
 import type { DailyRecord, PersonalTrackRecord } from '../../db/database';
 
 interface MasechetModalProps {
@@ -65,6 +67,7 @@ export default function MasechetModal({
   );
 
   const [selectedDafForMenu, setSelectedDafForMenu] = useState<number | null>(null);
+  const [showSiyum, setShowSiyum] = useState(false);
 
   const dafimArray = useMemo(() => getMasechetDafim(masechet.he), [masechet.he]);
 
@@ -145,6 +148,11 @@ export default function MasechetModal({
 
   const handleToggleDaf = useCallback((dafNum: number) => {
     if (effectiveMode === 'personal') {
+      void triggerImpact('light');
+      const isAlreadyLearned = personalLearnedSet.has(dafNum);
+      if (!isAlreadyLearned && personalLearnedSet.size + 1 === dafimArray.length) {
+        setShowSiyum(true);
+      }
       togglePersonalDafLearned(masechet.en, dafNum);
       return;
     }
@@ -152,6 +160,7 @@ export default function MasechetModal({
     const dateStr = getDafDateStr(masechet.he, dafNum);
     if (!dateStr) return;
 
+    void triggerImpact('light');
     const currentStatus = getStudyStatus(recordByDate.get(dateStr));
     const learnedBefore = progressCache
       ? getMasechetProgressFromCache(progressCache, masechet.he).learned
@@ -164,10 +173,12 @@ export default function MasechetModal({
       toggleAnyDafLearned(dateStr, masechet.he, dafHeStr);
     }
 
-    if (currentStatus !== 'learned' && learnedBefore + 1 === dafimArray.length && settings?.show_confetti) {
+    if (currentStatus !== 'learned' && learnedBefore + 1 === dafimArray.length) {
+      setShowSiyum(true);
+    } else if (currentStatus !== 'learned' && settings?.show_confetti) {
       setTimeout(() => setShowConfetti(true), 200);
     }
-  }, [effectiveMode, masechet.en, masechet.he, togglePersonalDafLearned, recordByDate, progressCache, dafimArray.length, toggleAnyDafLearned, setDafStudyStatus, settings]);
+  }, [effectiveMode, masechet.en, masechet.he, togglePersonalDafLearned, personalLearnedSet, recordByDate, progressCache, dafimArray.length, toggleAnyDafLearned, setDafStudyStatus, settings]);
 
   const handleToggleDafRef = useRef(handleToggleDaf);
   handleToggleDafRef.current = handleToggleDaf;
@@ -475,6 +486,13 @@ export default function MasechetModal({
             onCancel={() => setSelectedDafForMenu(null)}
           />
         )}
+
+        <SiyumModal
+          visible={showSiyum}
+          masechetHe={masechet.he}
+          totalPages={masechet.pages}
+          onClose={() => setShowSiyum(false)}
+        />
       </SafeAreaView>
     </Modal>
   );

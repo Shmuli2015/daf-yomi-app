@@ -26,6 +26,19 @@ describe('shas utils', () => {
       const dafimWithout = getMasechetDafim('ברכות');
       expect(dafimWithNiqqud).toEqual(dafimWithout);
     });
+
+    it('includes daf 64 as the last daf of Berachot', () => {
+      const dafim = getMasechetDafim('ברכות');
+      expect(dafim[dafim.length - 1]).toBe(64);
+      expect(dafim.includes(64)).toBe(true);
+      expect(dafim.length).toBe(63);
+    });
+
+    it('works when passed an English masechet name', () => {
+      const dafim = getMasechetDafim('Berachot');
+      expect(dafim[dafim.length - 1]).toBe(64);
+      expect(dafim.includes(64)).toBe(true);
+    });
   });
 
   describe('getDafDateStr', () => {
@@ -35,6 +48,11 @@ describe('shas utils', () => {
       if (dateStr) {
         expect(dateStr).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       }
+    });
+
+    it('returns a date string for Berachot 64', () => {
+      const dateStr = getDafDateStr('ברכות', 64);
+      expect(dateStr).toBe('2020-03-07');
     });
   });
 });

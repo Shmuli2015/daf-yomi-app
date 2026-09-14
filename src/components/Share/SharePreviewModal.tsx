@@ -5,12 +5,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
-  InteractionManager,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import ShareProgressCard from './ShareProgressCard';
-import { CARD_SIZE, captureAndShare, type ShareProgressData } from '../../utils/shareProgressImage';
+import { CARD_SIZE, captureAndShare, waitForShareCaptureReady, type ShareProgressData } from '../../utils/shareProgressImage';
 import BottomSheetModal from '../BottomSheetModal';
 
 const PREVIEW_WIDTH = 300;
@@ -42,14 +41,7 @@ export default function SharePreviewModal({ visible, onClose, data }: SharePrevi
     if (!data || sharing) return;
     setSharing(true);
     try {
-      await new Promise<void>((resolve) =>
-        InteractionManager.runAfterInteractions(() => resolve(undefined)),
-      );
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-      await new Promise<void>((resolve) => setTimeout(resolve, 50));
-      if (!captureLaidOut) {
-        await new Promise<void>((resolve) => setTimeout(resolve, 120));
-      }
+      await waitForShareCaptureReady(captureLaidOut);
       await captureAndShare(captureRef);
     } finally {
       setSharing(false);

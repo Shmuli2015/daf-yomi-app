@@ -1,10 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
-import { SHAS_MASECHTOT, SEDARIM } from '../data/shas';
+import { SHAS_MASECHTOT, SEDARIM, Seder } from '../data/shas';
 import { PersonalTrackRecord } from '../db/database';
+import PersonalSederDropdown from './PersonalTrack/PersonalSederDropdown';
 
 interface PersonalMasechetPickerModalProps {
   visible: boolean;
@@ -25,6 +26,25 @@ export default function PersonalMasechetPickerModal({
 }: PersonalMasechetPickerModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const [expandedSedarim, setExpandedSedarim] = useState<Set<Seder>>(new Set());
+
+  useEffect(() => {
+    if (!visible) return;
+    const selected = SHAS_MASECHTOT.find((m) => m.en === selectedMasechetEn);
+    setExpandedSedarim(selected ? new Set([selected.seder]) : new Set());
+  }, [visible, selectedMasechetEn]);
+
+  const toggleSeder = (seder: Seder) => {
+    setExpandedSedarim((prev) => {
+      const next = new Set(prev);
+      if (next.has(seder)) {
+        next.delete(seder);
+      } else {
+        next.add(seder);
+      }
+      return next;
+    });
+  };
 
   const progressMap = useMemo(() => {
     const map = new Map<string, { learned: number; total: number; pct: number }>();
@@ -145,10 +165,12 @@ export default function PersonalMasechetPickerModal({
             {SEDARIM.map((seder) => {
               const sederMasechtot = SHAS_MASECHTOT.filter((m) => m.seder === seder.id);
               return (
-                <View key={seder.id} style={styles.sederSection}>
-                  <View style={styles.sederHeader}>
-                    <Text style={styles.sederTitle}>סדר {seder.he}</Text>
-                  </View>
+                <PersonalSederDropdown
+                  key={seder.id}
+                  sederName={seder.he}
+                  isExpanded={expandedSedarim.has(seder.id)}
+                  onToggle={() => toggleSeder(seder.id)}
+                >
                   <View style={styles.grid}>
                     {sederMasechtot.map((m) => {
                       const isSelected = selectedMasechetEn === m.en;
@@ -192,7 +214,7 @@ export default function PersonalMasechetPickerModal({
                       );
                     })}
                   </View>
-                </View>
+                </PersonalSederDropdown>
               );
             })}
           </ScrollView>
@@ -360,20 +382,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       fontSize: 12,
       fontWeight: '700',
       color: theme.colors.textSecondary,
-    },
-    sederSection: {
-      marginBottom: 20,
-    },
-    sederHeader: {
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-      paddingBottom: 6,
-      marginBottom: 12,
-    },
-    sederTitle: {
-      fontSize: 16,
-      fontWeight: '800',
-      color: theme.colors.accent,
     },
     grid: {
       flexDirection: 'row',

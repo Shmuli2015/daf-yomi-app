@@ -3,11 +3,14 @@ import { View, StyleSheet, Linking, useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ScreenOrientation from 'expo-screen-orientation';
+import { StatusBar } from 'expo-status-bar';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useShallow } from 'zustand/react/shallow';
 import TzuratHeader from '../components/TzuratHadaf/TzuratHeader';
 import TzuratHadafViewer, { type TzuratPageContent } from '../components/TzuratHadaf/TzuratHadafViewer';
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
+import FullscreenExitButton from '../components/TzuratHadaf/FullscreenExitButton';
+import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
 import ReaderToolbar, { type ViewMode, type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
@@ -41,6 +44,9 @@ import {
 } from '../services/sefariaManuscripts';
 import { SHAS_MASECHTOT, numberToGematria } from '../data/shas';
 import { getDafDateStr } from '../utils/shas';
+import { getMasechetProgressFromCache } from '../utils/progressCache';
+import { useDafSwipeGesture } from '../hooks/useDafSwipeGesture';
+import { triggerImpact, triggerSelection } from '../utils/haptics';
 
 type Route = RouteProp<RootStackParamList, 'TzuratHadaf'>;
 type Nav = NativeStackNavigationProp<RootStackParamList, 'TzuratHadaf'>;
@@ -64,9 +70,11 @@ export default function TzuratHadafScreen() {
     amud: route.params.amud,
   });
   const [isLandscape, setIsLandscape] = useState(width > height);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [showSiyumModal, setShowSiyumModal] = useState(false);
 
   const [page, setPage] = useState<TzuratPageContent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,17 +82,25 @@ export default function TzuratHadafScreen() {
 
   const [viewMode, setViewMode] = useState<ViewMode>('pdf');
   const [fontSize, setFontSize] = useState<number>(18);
-  const [readerTheme, setReaderTheme] = useState<ReaderTheme>(
+  const [readerTheme] = useState<ReaderTheme>(
     theme.colors.background === '#121212' ? 'dark' : 'light'
   );
   const [sefariaData, setSefariaData] = useState<SefariaPageData | null>(null);
   const [sefariaLoading, setSefariaLoading] = useState<boolean>(false);
   const [sefariaError, setSefariaError] = useState<string | null>(null);
 
-  const { history, settings, toggleAnyDafLearned, setDafStudyStatus, markPartialAmud } = useAppStore(
+  const {
+    history,
+    settings,
+    progressCache,
+    toggleAnyDafLearned,
+    setDafStudyStatus,
+    markPartialAmud,
+  } = useAppStore(
     useShallow((s) => ({
       history: s.history,
       settings: s.settings,
+      progressCache: s.progressCache,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
       setDafStudyStatus: s.setDafStudyStatus,
       markPartialAmud: s.markPartialAmud,
@@ -131,6 +147,11 @@ export default function TzuratHadafScreen() {
     [location.masechetEn, route.params.masechetHe],
   );
 
+  const masechetTotalPages = useMemo(
+    () => SHAS_MASECHTOT.find((m) => m.he === masechetHe)?.pages ?? 0,
+    [masechetHe],
+  );
+
   const dateStr = useMemo(
     () => (masechetHe ? getDafDateStr(masechetHe, location.dafNum) : null),
     [masechetHe, location.dafNum],
@@ -146,6 +167,7 @@ export default function TzuratHadafScreen() {
     const record = history.find((r) => r.date === dateStr);
     return getStudyStatus(record);
   }, [history, dateStr]);
+
   const partialAmud = useMemo(() => {
     if (!dateStr) return null;
     const record = history.find((r) => r.date === dateStr);
@@ -160,14 +182,42 @@ export default function TzuratHadafScreen() {
       setShowConfirm(true);
       return;
     }
+
+    void triggerImpact('medium');
+
+    const learnedBefore = progressCache
+      ? getMasechetProgressFromCache(progressCache, masechetHe).learned
+      : 0;
+    const isCompleting = masechetTotalPages > 0 && learnedBefore + 1 === masechetTotalPages;
+
     if (studyStatus === 'partial') {
-      if (settings?.show_confetti === 1) setShowConfetti(true);
+      if (isCompleting) {
+        setShowSiyumModal(true);
+      } else if (settings?.show_confetti === 1) {
+        setShowConfetti(true);
+      }
       setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'learned');
       return;
     }
-    if (settings?.show_confetti === 1) setShowConfetti(true);
+
+    if (isCompleting) {
+      setShowSiyumModal(true);
+    } else if (settings?.show_confetti === 1) {
+      setShowConfetti(true);
+    }
     toggleAnyDafLearned(dateStr, masechetHe, dafHeStr);
-  }, [canMarkLearned, dateStr, masechetHe, dafHeStr, studyStatus, settings, toggleAnyDafLearned, setDafStudyStatus]);
+  }, [
+    canMarkLearned,
+    dateStr,
+    masechetHe,
+    dafHeStr,
+    studyStatus,
+    settings,
+    progressCache,
+    masechetTotalPages,
+    toggleAnyDafLearned,
+    setDafStudyStatus,
+  ]);
 
   const loadPdfPage = useCallback(async (loc: DafLocation) => {
     const tref = buildSefariaTref(loc.masechetEn, loc.dafNum, loc.amud);
@@ -260,6 +310,52 @@ export default function TzuratHadafScreen() {
   const canPrevDaf = getPrevDaf(location) !== null;
   const canNextDaf = getNextDaf(location) !== null;
 
+  const handlePrevAmud = useCallback(() => {
+    const prev = getPrevAmud(location);
+    if (prev) {
+      void triggerSelection();
+      setLocation(prev);
+    }
+  }, [location]);
+
+  const handleNextAmud = useCallback(() => {
+    const next = getNextAmud(location);
+    if (next) {
+      void triggerSelection();
+      setLocation(next);
+    }
+  }, [location]);
+
+  const handlePrevDaf = useCallback(() => {
+    const prev = getPrevDaf(location);
+    if (prev) {
+      void triggerSelection();
+      setLocation(prev);
+    }
+  }, [location]);
+
+  const handleNextDaf = useCallback(() => {
+    const next = getNextDaf(location);
+    if (next) {
+      void triggerSelection();
+      setLocation(next);
+    }
+  }, [location]);
+
+  const swipeHandlers = useDafSwipeGesture({
+    canSwipeNext: canNextAmud || canNextDaf,
+    canSwipePrev: canPrevAmud || canPrevDaf,
+    onSwipeNext: () => {
+      if (canNextAmud) handleNextAmud();
+      else if (canNextDaf) handleNextDaf();
+    },
+    onSwipePrev: () => {
+      if (canPrevAmud) handlePrevAmud();
+      else if (canPrevDaf) handlePrevDaf();
+    },
+    enabled: true,
+  });
+
   const openSefaria = useCallback(() => {
     Linking.openURL(buildSefariaTextUrl(location.masechetEn, location.dafNum, location.amud));
   }, [location]);
@@ -268,79 +364,83 @@ export default function TzuratHadafScreen() {
 
   return (
     <View style={styles.container}>
-      <TzuratHeader
-        masechetHe={masechetHe}
-        masechetEn={location.masechetEn}
-        dafNum={location.dafNum}
-        amud={location.amud}
-        isLandscape={isLandscape}
-        studyStatus={studyStatus}
-        canMarkLearned={canMarkLearned}
-        onClose={() => navigation.goBack()}
-        onToggleLearned={handleToggleLearned}
-        onLongPressLearned={() => setShowMarkMenu(true)}
-      />
+      <StatusBar hidden={isFullscreen} />
 
-      <ReaderToolbar
-        viewMode={viewMode}
-        onToggleViewMode={handleToggleViewMode}
-        fontSize={fontSize}
-        onIncreaseFontSize={() => setFontSize((s) => Math.min(30, s + 2))}
-        onDecreaseFontSize={() => setFontSize((s) => Math.max(14, s - 2))}
-        accentColor={theme.colors.accent}
-      />
-
-      {viewMode === 'pdf' ? (
-        <TzuratHadafViewer
-          page={page}
-          loading={loading}
-          error={error}
-          layoutKey={layoutKey}
-          isLandscape={isLandscape}
-          onToggleOrientation={handleToggleOrientation}
-          onOpenSefaria={openSefaria}
-          onRetry={() => loadPdfPage(location)}
-        />
+      {isFullscreen ? (
+        <FullscreenExitButton onPress={() => setIsFullscreen(false)} />
       ) : (
-        <SefariaTextContainer
-          data={sefariaData}
-          loading={sefariaLoading}
-          error={sefariaError}
-          onRetry={() => loadSefariaText(location)}
-          fontSize={fontSize}
-          readerTheme={readerTheme}
-          accentColor={theme.colors.accent}
-        />
+        <>
+          <TzuratHeader
+            masechetHe={masechetHe}
+            masechetEn={location.masechetEn}
+            dafNum={location.dafNum}
+            amud={location.amud}
+            isLandscape={isLandscape}
+            studyStatus={studyStatus}
+            canMarkLearned={canMarkLearned}
+            isFullscreen={isFullscreen}
+            onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
+            onClose={() => navigation.goBack()}
+            onToggleLearned={handleToggleLearned}
+            onLongPressLearned={() => setShowMarkMenu(true)}
+          />
+
+          <ReaderToolbar
+            viewMode={viewMode}
+            onToggleViewMode={handleToggleViewMode}
+            fontSize={fontSize}
+            onIncreaseFontSize={() => setFontSize((s) => Math.min(30, s + 2))}
+            onDecreaseFontSize={() => setFontSize((s) => Math.max(14, s - 2))}
+            accentColor={theme.colors.accent}
+          />
+        </>
       )}
 
-      <TzuratNavigationBar
-        isLandscape={isLandscape}
-        canPrevAmud={canPrevAmud}
-        canNextAmud={canNextAmud}
-        canPrevDaf={canPrevDaf}
-        canNextDaf={canNextDaf}
-        onPrevAmud={() => {
-          const prev = getPrevAmud(location);
-          if (prev) setLocation(prev);
-        }}
-        onNextAmud={() => {
-          const next = getNextAmud(location);
-          if (next) setLocation(next);
-        }}
-        onPrevDaf={() => {
-          const prev = getPrevDaf(location);
-          if (prev) setLocation(prev);
-        }}
-        onNextDaf={() => {
-          const next = getNextDaf(location);
-          if (next) setLocation(next);
-        }}
-      />
+      <View style={styles.viewerContainer} {...swipeHandlers}>
+        {viewMode === 'pdf' ? (
+          <TzuratHadafViewer
+            page={page}
+            loading={loading}
+            error={error}
+            layoutKey={layoutKey}
+            isLandscape={isLandscape}
+            isFullscreen={isFullscreen}
+            onToggleOrientation={handleToggleOrientation}
+            onOpenSefaria={openSefaria}
+            onRetry={() => loadPdfPage(location)}
+          />
+        ) : (
+          <SefariaTextContainer
+            data={sefariaData}
+            loading={sefariaLoading}
+            error={sefariaError}
+            onRetry={() => loadSefariaText(location)}
+            fontSize={fontSize}
+            readerTheme={readerTheme}
+            accentColor={theme.colors.accent}
+          />
+        )}
+      </View>
+
+      {!isFullscreen && (
+        <TzuratNavigationBar
+          isLandscape={isLandscape}
+          canPrevAmud={canPrevAmud}
+          canNextAmud={canNextAmud}
+          canPrevDaf={canPrevDaf}
+          canNextDaf={canNextDaf}
+          onPrevAmud={handlePrevAmud}
+          onNextAmud={handleNextAmud}
+          onPrevDaf={handlePrevDaf}
+          onNextDaf={handleNextDaf}
+        />
+      )}
 
       <DafMarkMenuModal
         visible={showMarkMenu}
         onSelectFull={() => {
           if (dateStr && masechetHe) {
+            void triggerImpact('medium');
             if (settings?.show_confetti === 1) setShowConfetti(true);
             setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'learned');
           }
@@ -348,12 +448,14 @@ export default function TzuratHadafScreen() {
         }}
         onSelectHalfA={() => {
           if (dateStr && masechetHe) {
+            void triggerImpact('light');
             markPartialAmud(dateStr, masechetHe, dafHeStr, 'a');
           }
           setShowMarkMenu(false);
         }}
         onSelectHalfB={() => {
           if (dateStr && masechetHe) {
+            void triggerImpact('light');
             markPartialAmud(dateStr, masechetHe, dafHeStr, 'b');
           }
           setShowMarkMenu(false);
@@ -374,10 +476,18 @@ export default function TzuratHadafScreen() {
         onConfirm={() => {
           setShowConfirm(false);
           if (dateStr && masechetHe) {
+            void triggerImpact('light');
             toggleAnyDafLearned(dateStr, masechetHe, dafHeStr);
           }
         }}
         onCancel={() => setShowConfirm(false)}
+      />
+
+      <SiyumModal
+        visible={showSiyumModal}
+        masechetHe={masechetHe || ''}
+        totalPages={masechetTotalPages}
+        onClose={() => setShowSiyumModal(false)}
       />
 
       {showConfetti && (
@@ -403,12 +513,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       flex: 1,
       backgroundColor: theme.colors.background,
     },
+    viewerContainer: {
+      flex: 1,
+    },
     confettiContainer: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
+      ...StyleSheet.absoluteFill,
       zIndex: 1000,
       justifyContent: 'center',
       alignItems: 'center',

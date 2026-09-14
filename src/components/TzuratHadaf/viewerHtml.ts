@@ -15,20 +15,19 @@ export function buildZoomableHtml(imageUrl: string, backgroundColor: string): st
       margin: 0;
       padding: 0;
       width: 100%;
-      height: 100%;
+      min-height: 100%;
       background: ${backgroundColor};
       overflow: auto;
       -webkit-overflow-scrolling: touch;
     }
     body {
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      min-height: 100%;
+      display: block;
       padding: 12px;
+      text-align: center;
     }
     img {
       display: block;
+      margin: 0 auto;
       width: 100%;
       max-width: 100%;
       height: auto;
@@ -37,7 +36,23 @@ export function buildZoomableHtml(imageUrl: string, backgroundColor: string): st
   </style>
 </head>
 <body>
-  <img src="${safeUrl}" alt="צורת הדף" />
+  <img id="page-img" src="${safeUrl}" alt="צורת הדף" onload="adjustVerticalPosition()" />
+  <script>
+    function adjustVerticalPosition() {
+      var img = document.getElementById('page-img');
+      if (!img) return;
+      var h = img.offsetHeight || img.getBoundingClientRect().height;
+      var vh = window.innerHeight;
+      if (h > 0 && h < vh - 24) {
+        var topMargin = Math.floor((vh - h) / 2);
+        document.body.style.paddingTop = topMargin + 'px';
+      } else {
+        document.body.style.paddingTop = '12px';
+      }
+    }
+    window.addEventListener('resize', adjustVerticalPosition);
+    window.addEventListener('load', adjustVerticalPosition);
+  </script>
 </body>
 </html>`;
 }
@@ -54,23 +69,22 @@ export function buildPdfJsHtml(pdfSource: string, backgroundColor: string): stri
       margin: 0;
       padding: 0;
       width: 100%;
-      height: 100%;
+      min-height: 100%;
       background: ${backgroundColor};
       overflow: auto;
       -webkit-overflow-scrolling: touch;
     }
     body {
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      min-height: 100%;
+      display: block;
       padding: 12px;
+      text-align: center;
     }
     #status {
       display: none;
     }
     canvas {
       display: none;
+      margin: 0 auto;
       width: 100%;
       max-width: 100%;
       height: auto;
@@ -83,6 +97,20 @@ export function buildPdfJsHtml(pdfSource: string, backgroundColor: string): stri
   <div id="status"></div>
   <canvas id="pdf-canvas"></canvas>
   <script>
+    function adjustVerticalPosition() {
+      var canvas = document.getElementById('pdf-canvas');
+      if (!canvas) return;
+      var h = canvas.offsetHeight || canvas.getBoundingClientRect().height;
+      var vh = window.innerHeight;
+      if (h > 0 && h < vh - 24) {
+        var topMargin = Math.floor((vh - h) / 2);
+        document.body.style.paddingTop = topMargin + 'px';
+      } else {
+        document.body.style.paddingTop = '12px';
+      }
+    }
+    window.addEventListener('resize', adjustVerticalPosition);
+
     (function () {
       pdfjsLib.GlobalWorkerOptions.workerSrc =
         'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -104,9 +132,11 @@ export function buildPdfJsHtml(pdfSource: string, backgroundColor: string): stri
           canvas.height = viewport.height;
           canvas.style.width = cssWidth + 'px';
           canvas.style.height = (viewport.height / pixelRatio) + 'px';
+          adjustVerticalPosition();
           return page.render({ canvasContext: context, viewport: viewport }).promise;
         })
         .then(function () {
+          adjustVerticalPosition();
           window.ReactNativeWebView && window.ReactNativeWebView.postMessage('pdf-rendered');
         })
         .catch(function (err) {

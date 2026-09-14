@@ -3,6 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { TAB_CONFIG } from './tabConfig';
+import { triggerSelection } from '../utils/haptics';
 
 type Props = {
   isFocused: boolean;
@@ -16,6 +17,7 @@ export default function TabButton({ isFocused, config, onPress }: Props) {
   const scale = useRef(new Animated.Value(1)).current;
 
   const handlePress = () => {
+    void triggerSelection();
     Animated.sequence([
       Animated.spring(scale, { toValue: 0.9, damping: 10, stiffness: 300, useNativeDriver: true }),
       Animated.spring(scale, { toValue: 1, damping: 12, stiffness: 200, useNativeDriver: true }),

@@ -1,6 +1,7 @@
 import { DAF_YOMI_MASECHET_START_IDS } from '../data/dafYomiPageStarts';
 import { SHAS_MASECHTOT } from '../data/shas';
 import { Amud, normalizeMasechetEn } from './dafNavigation';
+import { getMasechetDafim, doesMasechetEndOnAmudA } from './shas';
 
 const PDF_BASE_URL = 'https://daf-yomi.com/Data/UploadedFiles/DY_Page';
 
@@ -18,14 +19,19 @@ export function resolveDafYomiPageId(
   dafNum: number,
   amud: Amud
 ): number | null {
-  const idx = findMasechetIndex(masechetEn);
+  const normalized = normalizeMasechetEn(masechetEn);
+  const idx = findMasechetIndex(normalized);
   if (idx === -1) return null;
 
   const startId = DAF_YOMI_MASECHET_START_IDS[idx];
   if (startId == null) return null;
 
-  const lastDaf = 2 + SHAS_MASECHTOT[idx].pages - 1;
-  if (dafNum < 2 || dafNum > lastDaf) return null;
+  const dafim = getMasechetDafim(normalized);
+  const startDaf = dafim.length > 0 ? dafim[0] : 2;
+  const lastDaf = dafim.length > 0 ? dafim[dafim.length - 1] : startDaf + SHAS_MASECHTOT[idx].pages - 1;
 
-  return startId + (dafNum - 2) * 2 + (amud === 'b' ? 1 : 0);
+  if (dafNum < startDaf || dafNum > lastDaf) return null;
+  if (dafNum === lastDaf && amud === 'b' && doesMasechetEndOnAmudA(normalized)) return null;
+
+  return startId + (dafNum - startDaf) * 2 + (amud === 'b' ? 1 : 0);
 }
