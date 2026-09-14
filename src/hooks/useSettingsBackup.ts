@@ -7,24 +7,17 @@ import {
   type BackupData,
   type BackupPreview,
 } from '../services/backup';
-import type { InfoModalIconName } from '../components/InfoModal';
-
-interface FeedbackState {
-  title: string;
-  message: string;
-  emphasis?: string;
-  iconName?: InfoModalIconName;
-  compact?: boolean;
-}
+import { scheduleNotifications } from '../utils/notifications';
+import type { SettingsFeedback } from './useSettingsFeedback';
 
 interface UseSettingsBackupParams {
-  onFeedback: (feedback: FeedbackState) => void;
-  onApplyBackup: (backup: BackupData, mode: 'merge' | 'replace') => Promise<void>;
+  onFeedback: (feedback: SettingsFeedback) => void;
+  importBackup: (backup: BackupData, mode: 'merge' | 'replace') => void;
 }
 
 export function useSettingsBackup({
   onFeedback,
-  onApplyBackup,
+  importBackup,
 }: UseSettingsBackupParams) {
   const [pendingBackup, setPendingBackup] = useState<BackupData | null>(null);
   const [backupPreview, setBackupPreview] = useState<BackupPreview | null>(null);
@@ -112,17 +105,42 @@ export function useSettingsBackup({
     }
   }, [onFeedback]);
 
+  const applyBackup = useCallback(
+    async (backup: BackupData, mode: 'merge' | 'replace') => {
+      importBackup(backup, mode);
+      if (mode === 'replace') {
+        await scheduleNotifications(
+          backup.settings.notification_hour,
+          backup.settings.notification_minute,
+          (backup.settings.notif_mode as 'daily' | 'custom') || 'daily',
+          JSON.parse(backup.settings.day_schedules || '[]'),
+          backup.settings.notifications_enabled === 1,
+        );
+      }
+      onFeedback({
+        title: 'הגיבוי יובא בהצלחה',
+        message:
+          mode === 'merge'
+            ? 'הנתונים מוזגו עם ההיסטוריה הקיימת.'
+            : 'כל הנתונים וההגדרות הוחלפו בגיבוי.',
+        iconName: 'checkmark-circle',
+        compact: true,
+      });
+    },
+    [importBackup, onFeedback],
+  );
+
   const handleBackupImportMerge = useCallback(async () => {
     if (!pendingBackup) return;
-    await onApplyBackup(pendingBackup, 'merge');
+    await applyBackup(pendingBackup, 'merge');
     clearBackupImportState();
-  }, [pendingBackup, onApplyBackup, clearBackupImportState]);
+  }, [pendingBackup, applyBackup, clearBackupImportState]);
 
   const handleBackupImportReplace = useCallback(async () => {
     if (!pendingBackup) return;
-    await onApplyBackup(pendingBackup, 'replace');
+    await applyBackup(pendingBackup, 'replace');
     clearBackupImportState();
-  }, [pendingBackup, onApplyBackup, clearBackupImportState]);
+  }, [pendingBackup, applyBackup, clearBackupImportState]);
 
   return {
     pendingBackup,

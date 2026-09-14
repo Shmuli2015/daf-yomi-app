@@ -1,37 +1,31 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View, Share, AppState, Platform } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
 import { useAppStore } from '../store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
 import ScreenTopGradient from '../components/ScreenTopGradient';
 import SettingsLoadingView from '../components/Settings/SettingsLoadingView';
 import SettingsScrollContent from '../components/Settings/SettingsScrollContent';
 import SettingsModals from '../components/Settings/SettingsModals';
-import InfoModal, { type InfoModalIconName } from '../components/InfoModal';
+import InfoModal from '../components/InfoModal';
 import { createSettingsScreenStyles } from '../components/Settings/settingsScreenStyles';
-import { ThemeMode, useTheme } from '../theme';
-import { sendTestNotification, getScheduledNotifications, scheduleNotifications } from '../utils/notifications';
-import { parseStudyLinkMode, type StudyLinkMode } from '../utils/studyLinkMode';
-import { useAppUpdateControls } from '../context/AppUpdateProvider';
-import { isUpdateCheckConfigured } from '../services/appUpdate';
-import { getDownloadPageUrl } from '../services/apkInstall';
+import { useTheme } from '../theme';
+import { useSettingsFeedback } from '../hooks/useSettingsFeedback';
+import { useSettingsDisplayPrefs } from '../hooks/useSettingsDisplayPrefs';
 import { useSettingsNotifications } from '../hooks/useSettingsNotifications';
 import { useSettingsBackup } from '../hooks/useSettingsBackup';
-import type { BackupData } from '../services/backup';
-import type { ResetOptionType } from '../components/Settings/ResetOptionsModal.types';
+import { useSettingsReset } from '../hooks/useSettingsReset';
+import { useSettingsAppUpdates } from '../hooks/useSettingsAppUpdates';
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
-  const updateCtl = useAppUpdateControls();
 
   const {
     settings,
     updateNotificationSettings,
     updateThemeMode,
     updateStudyLinkMode,
-    loadInitialData,
     setUpdateAutoPromptEnabled,
     setShowCalendarDafEnabled,
     setShowPersonalTrackBannerEnabled,
@@ -45,7 +39,6 @@ export default function SettingsScreen() {
       updateNotificationSettings: s.updateNotificationSettings,
       updateThemeMode: s.updateThemeMode,
       updateStudyLinkMode: s.updateStudyLinkMode,
-      loadInitialData: s.loadInitialData,
       setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,
       setShowCalendarDafEnabled: s.setShowCalendarDafEnabled,
       setShowPersonalTrackBannerEnabled: s.setShowPersonalTrackBannerEnabled,
@@ -56,48 +49,32 @@ export default function SettingsScreen() {
     })),
   );
 
-  const [showSecularDate, setShowSecularDate] = useState(true);
-  const [showCalendarDaf, setShowCalendarDaf] = useState(false);
-  const [showPersonalTrackBannerPref, setShowPersonalTrackBannerPref] = useState(true);
-  const [showConfettiPref, setShowConfettiPref] = useState(true);
-  const [showResetModal, setShowResetModal] = useState(false);
-  const [pendingResetType, setPendingResetType] = useState<ResetOptionType | null>(null);
-  const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [resetSuccessFeedback, setResetSuccessFeedback] = useState<{ title: string; message: string } | null>(null);
-  const [themeMode, setThemeMode] = useState<ThemeMode>('system');
-  const [studyLinkMode, setStudyLinkMode] = useState<StudyLinkMode>('both');
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
-  const [scheduledCount, setScheduledCount] = useState(0);
 
-  const [updateFeedback, setUpdateFeedback] = useState<{
-    title: string;
-    message: string;
-    emphasis?: string;
-    iconName?: InfoModalIconName;
-    actionLabel?: string;
-    compact?: boolean;
-    autoCloseMs?: number;
-  } | null>(null);
+  const { feedback, showFeedback, clearFeedback } = useSettingsFeedback();
 
-  useEffect(() => {
-    const ms = updateFeedback?.autoCloseMs;
-    if (ms == null || ms <= 0) return;
-    const id = setTimeout(() => setUpdateFeedback(null), ms);
-    return () => clearTimeout(id);
-  }, [updateFeedback]);
-
-  useEffect(() => {
-    if (settings) {
-      setShowSecularDate(settings.show_secular_date === 1);
-      setShowCalendarDaf(settings.show_calendar_daf === 1);
-      setShowPersonalTrackBannerPref(settings.show_personal_track_banner !== 0);
-      setShowConfettiPref(settings.show_confetti === 1);
-      setThemeMode((settings.theme_mode as ThemeMode) || 'system');
-      setStudyLinkMode(parseStudyLinkMode(settings.study_link_mode));
-    }
-  }, [settings]);
+  const {
+    showSecularDate,
+    showCalendarDaf,
+    showPersonalTrackBannerPref,
+    showConfettiPref,
+    themeMode,
+    studyLinkMode,
+    handleSecularDateToggle,
+    handleConfettiToggle,
+    handleCalendarDafToggle,
+    handlePersonalTrackBannerToggle,
+    handleThemeModeSelect,
+    handleStudyLinkModeChange,
+  } = useSettingsDisplayPrefs({
+    settings,
+    updateNotificationSettings,
+    updateThemeMode,
+    updateStudyLinkMode,
+    setShowCalendarDafEnabled,
+    setShowPersonalTrackBannerEnabled,
+  });
 
   const {
     hour,
@@ -109,7 +86,7 @@ export default function SettingsScreen() {
     showTimePicker,
     exactAlarmStatus,
     isSaving,
-    refreshExactAlarmStatus,
+    scheduledCount,
     handleModeChange,
     handleToggleDay,
     handleEditDayTime,
@@ -118,37 +95,15 @@ export default function SettingsScreen() {
     handleExactAlarmSettingsPress,
     handleTimePickerOpen,
     handleTimePickerClose,
+    handleTestNotification,
+    handleCheckScheduled,
   } = useSettingsNotifications({
     settings,
     updateNotificationSettings,
     showSecularDate,
     showConfettiPref,
+    onFeedback: showFeedback,
   });
-
-  const handleApplyBackup = useCallback(
-    async (backup: BackupData, mode: 'merge' | 'replace') => {
-      importBackup(backup, mode);
-      if (mode === 'replace') {
-        await scheduleNotifications(
-          backup.settings.notification_hour,
-          backup.settings.notification_minute,
-          (backup.settings.notif_mode as 'daily' | 'custom') || 'daily',
-          JSON.parse(backup.settings.day_schedules || '[]'),
-          backup.settings.notifications_enabled === 1,
-        );
-      }
-      setUpdateFeedback({
-        title: 'הגיבוי יובא בהצלחה',
-        message:
-          mode === 'merge'
-            ? 'הנתונים מוזגו עם ההיסטוריה הקיימת.'
-            : 'כל הנתונים וההגדרות הוחלפו בגיבוי.',
-        iconName: 'checkmark-circle',
-        compact: true,
-      });
-    },
-    [importBackup],
-  );
 
   const {
     backupPreview,
@@ -160,228 +115,38 @@ export default function SettingsScreen() {
     handleBackupImportMerge,
     handleBackupImportReplace,
   } = useSettingsBackup({
-    onFeedback: setUpdateFeedback,
-    onApplyBackup: handleApplyBackup,
+    onFeedback: showFeedback,
+    importBackup,
   });
 
-  const handleSelectResetOption = useCallback((type: ResetOptionType) => {
-    setPendingResetType(type);
-    setShowResetModal(false);
-    setShowResetConfirmModal(true);
-  }, []);
+  const {
+    showResetModal,
+    showResetConfirmModal,
+    showSuccessModal,
+    resetConfirmTexts,
+    resetSuccessFeedback,
+    openResetModal,
+    closeResetModal,
+    closeSuccessModal,
+    handleSelectResetOption,
+    handleCancelResetConfirm,
+    handleExecuteReset,
+  } = useSettingsReset({
+    resetDafYomiState,
+    resetPersonalTrackState,
+    resetAllState,
+  });
 
-  const handleCancelResetConfirm = useCallback(() => {
-    setShowResetConfirmModal(false);
-    setPendingResetType(null);
-  }, []);
-
-  const handleExecuteReset = useCallback(() => {
-    if (!pendingResetType) return;
-    if (pendingResetType === 'dafYomi') {
-      resetDafYomiState();
-      setResetSuccessFeedback({
-        title: 'איפוס הדף היומי הושלם',
-        message: 'כל סימוני הדף היומי והרצף נמחקו בהצלחה. המסלול האישי וההגדרות נשמרו.',
-      });
-    } else if (pendingResetType === 'personalTrack') {
-      resetPersonalTrackState();
-      setResetSuccessFeedback({
-        title: 'איפוס מסלול אישי הושלם',
-        message: 'כל נתוני והתקדמות המסלול האישי נמחקו בהצלחה. נתוני הדף היומי וההגדרות נשמרו.',
-      });
-    } else {
-      resetAllState();
-      setResetSuccessFeedback({
-        title: 'איפוס כללי הושלם',
-        message: 'כל הנתונים וההגדרות נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי.',
-      });
-    }
-    setShowResetConfirmModal(false);
-    setPendingResetType(null);
-    setShowSuccessModal(true);
-  }, [pendingResetType, resetDafYomiState, resetPersonalTrackState, resetAllState]);
-
-  const resetConfirmTexts = useMemo(() => {
-    switch (pendingResetType) {
-      case 'dafYomi':
-        return {
-          title: 'אישור איפוס הדף היומי',
-          message: 'האם אתה בטוח שברצונך למחוק את כל היסטוריית הדף היומי? נתוני המסלול האישי וההגדרות יישמרו. פעולה זו אינה ניתנת לביטול.',
-        };
-      case 'personalTrack':
-        return {
-          title: 'אישור איפוס מסלול אישי',
-          message: 'האם אתה בטוח שברצונך למחוק את כל סימוני המסלול האישי? היסטוריית הדף היומי וההגדרות יישמרו. פעולה זו אינה ניתנת לביטול.',
-        };
-      case 'all':
-      default:
-        return {
-          title: 'אישור איפוס כללי',
-          message: 'האם אתה בטוח שברצונך למחוק את כל הנתונים ולאפס את כל הגדרות האפליקציה למצב ההתחלתי? פעולה זו אינה ניתנת לביטול.',
-        };
-    }
-  }, [pendingResetType]);
-
-  const handleSecularDateToggle = useCallback(
-    (val: boolean) => {
-      setShowSecularDate(val);
-      updateNotificationSettings(
-        hour,
-        minute,
-        val,
-        showConfettiPref,
-        notificationsEnabled,
-        notifMode,
-        JSON.stringify(daySchedules),
-      );
-    },
-    [hour, minute, showConfettiPref, notificationsEnabled, notifMode, daySchedules, updateNotificationSettings],
-  );
-
-  const handlePersonalTrackBannerToggle = useCallback(
-    (val: boolean) => {
-      setShowPersonalTrackBannerPref(val);
-      setShowPersonalTrackBannerEnabled(val);
-    },
-    [setShowPersonalTrackBannerEnabled],
-  );
-
-  const handleConfettiToggle = useCallback(
-    (val: boolean) => {
-      setShowConfettiPref(val);
-      updateNotificationSettings(
-        hour,
-        minute,
-        showSecularDate,
-        val,
-        notificationsEnabled,
-        notifMode,
-        JSON.stringify(daySchedules),
-      );
-    },
-    [hour, minute, showSecularDate, notificationsEnabled, notifMode, daySchedules, updateNotificationSettings],
-  );
-
-  const handleThemeModeSelect = useCallback(
-    (mode: ThemeMode) => {
-      setThemeMode(mode);
-      updateThemeMode(mode);
-    },
-    [updateThemeMode],
-  );
-
-  const handleStudyLinkModeChange = useCallback(
-    (mode: StudyLinkMode) => {
-      setStudyLinkMode(mode);
-      updateStudyLinkMode(mode);
-    },
-    [updateStudyLinkMode],
-  );
-
-  const handleCalendarDafToggle = useCallback(
-    (val: boolean) => {
-      setShowCalendarDaf(val);
-      setShowCalendarDafEnabled(val);
-    },
-    [setShowCalendarDafEnabled],
-  );
-
-  const handleTestNotification = useCallback(async () => {
-    await sendTestNotification();
-    setUpdateFeedback({
-      title: 'התראת בדיקה',
-      message: 'התראת בדיקה תגיע בעוד 5 שניות',
-      iconName: 'notifications-outline',
-      compact: true,
-      autoCloseMs: 3000,
-    });
-  }, []);
-
-  const handleCheckScheduled = useCallback(async () => {
-    const notifications = await getScheduledNotifications();
-    setScheduledCount(notifications.length);
-    setUpdateFeedback({
-      title: 'התראות מתוזמנות',
-      message: `יש ${notifications.length} התראות מתוזמנות במערכת`,
-      iconName: 'list-outline',
-      compact: true,
-    });
-  }, []);
-
-  const handleUpdateAutoPromptToggle = useCallback(
-    (val: boolean) => {
-      setUpdateAutoPromptEnabled(val);
-    },
-    [setUpdateAutoPromptEnabled],
-  );
-
-  const handleCheckAppUpdates = useCallback(async () => {
-    if (!isUpdateCheckConfigured()) {
-      setUpdateFeedback({
-        title: 'בדיקת עדכונים',
-        message: 'חיבור לשרת העדכונים לא מוגדר. יש להגדיר בקובץ app.config את githubOwner ואת githubRepo.',
-        iconName: 'settings-outline',
-        compact: true,
-      });
-      return;
-    }
-    const r = await updateCtl.checkManualAsync();
-    if (r === 'opened') return;
-    if (r === 'dismissed') {
-      setUpdateFeedback({
-        title: 'העדכון נדחה',
-        message: 'דחיתם את העדכון הנוכחי. כשתופיע גרסה חדשה יותר, נזכיר שוב.',
-        iconName: 'time-outline',
-        compact: true,
-      });
-      return;
-    }
-    const ver = Constants.expoConfig?.version;
-    setUpdateFeedback({
-      title: 'הכל מעודכן',
-      message: 'אתם כבר על הגרסה העדכנית ביותר של מסע דף.',
-      emphasis: ver ? `גרסה ${ver}` : undefined,
-      iconName: 'checkmark-circle',
-      compact: true,
-    });
-  }, [updateCtl]);
-
-  const handleShareDownloadLink = useCallback(async () => {
-    const url = getDownloadPageUrl();
-    try {
-      await Share.share({
-        title: 'מסע דף',
-        message: `מסע דף: מעקב דף יומי בעברית\n${url}`,
-        url,
-      });
-    } catch {}
-  }, []);
-
-  const updatesConfigured = isUpdateCheckConfigured();
-
-  useEffect(() => {
-    async function checkScheduled() {
-      const notifications = await getScheduledNotifications();
-      setScheduledCount(notifications.length);
-    }
-    checkScheduled();
-  }, [notificationsEnabled, hour, minute, notifMode, daySchedules]);
-
-  useEffect(() => {
-    void refreshExactAlarmStatus();
-  }, [refreshExactAlarmStatus]);
-
-  useEffect(() => {
-    if (Platform.OS !== 'android') return;
-
-    const sub = AppState.addEventListener('change', nextState => {
-      if (nextState === 'active') {
-        void refreshExactAlarmStatus();
-      }
-    });
-
-    return () => sub.remove();
-  }, [refreshExactAlarmStatus]);
+  const {
+    updatesConfigured,
+    probeGithubRelease,
+    handleUpdateAutoPromptToggle,
+    handleCheckAppUpdates,
+    handleShareDownloadLink,
+  } = useSettingsAppUpdates({
+    onFeedback: showFeedback,
+    setUpdateAutoPromptEnabled,
+  });
 
   if (!settings) {
     return <SettingsLoadingView />;
@@ -423,14 +188,14 @@ export default function SettingsScreen() {
             scheduledCount={scheduledCount}
             onTestNotification={handleTestNotification}
             onCheckScheduled={handleCheckScheduled}
-            onResetModalOpen={() => setShowResetModal(true)}
+            onResetModalOpen={openResetModal}
             onSaveBackupToFile={handleSaveBackupToFile}
             onShareBackup={handleShareBackup}
             onImportBackup={handleImportBackupPick}
             updateAutoPromptEnabled={updatesConfigured ? settings.update_auto_prompt_enabled === 1 : undefined}
             onUpdateAutoPromptToggle={updatesConfigured ? handleUpdateAutoPromptToggle : undefined}
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
-            onProbeGithubRelease={__DEV__ ? updateCtl.probeGithubRelease : undefined}
+            onProbeGithubRelease={__DEV__ ? probeGithubRelease : undefined}
             onShareDownloadLink={handleShareDownloadLink}
           />
         </View>
@@ -448,7 +213,7 @@ export default function SettingsScreen() {
           timePickerMinute={editingDay !== null ? daySchedules[editingDay].minute : minute}
           onTimeSave={handleTimeSave}
           showResetModal={showResetModal}
-          onResetModalClose={() => setShowResetModal(false)}
+          onResetModalClose={closeResetModal}
           onConfirmReset={handleSelectResetOption}
           showResetConfirmModal={showResetConfirmModal}
           resetConfirmTitle={resetConfirmTexts.title}
@@ -458,7 +223,7 @@ export default function SettingsScreen() {
           showSuccessModal={showSuccessModal}
           resetSuccessTitle={resetSuccessFeedback?.title}
           resetSuccessMessage={resetSuccessFeedback?.message}
-          onSuccessModalClose={() => setShowSuccessModal(false)}
+          onSuccessModalClose={closeSuccessModal}
           showBackupImportModal={showBackupImportModal}
           backupPreview={backupPreview}
           onBackupImportMerge={handleBackupImportMerge}
@@ -468,14 +233,14 @@ export default function SettingsScreen() {
         />
 
         <InfoModal
-          compact={updateFeedback?.compact}
-          visible={updateFeedback != null}
-          onClose={() => setUpdateFeedback(null)}
-          title={updateFeedback?.title ?? ''}
-          message={updateFeedback?.message ?? ''}
-          emphasis={updateFeedback?.emphasis}
-          iconName={updateFeedback?.iconName}
-          actionLabel={updateFeedback?.actionLabel ?? 'הבנתי'}
+          compact={feedback?.compact}
+          visible={feedback != null}
+          onClose={clearFeedback}
+          title={feedback?.title ?? ''}
+          message={feedback?.message ?? ''}
+          emphasis={feedback?.emphasis}
+          iconName={feedback?.iconName}
+          actionLabel={feedback?.actionLabel ?? 'הבנתי'}
         />
       </SafeAreaView>
     </View>
