@@ -28,6 +28,11 @@ export const MASECHTOT_ENDING_ON_AMUD_A = new Set([
   'Horayot',
   'Zevachim',
   'Menachot',
+  'Chullin',
+  'Bechorot',
+  'Arachin',
+  'Temurah',
+  'Meilah',
   'Niddah',
 ]);
 
@@ -43,6 +48,11 @@ const MASECHTOT_ENDING_ON_AMUD_A_HE = new Set([
   'הוריות',
   'זבחים',
   'מנחות',
+  'חולין',
+  'בכורות',
+  'ערכין',
+  'תמורה',
+  'מעילה',
   'נדה',
 ]);
 

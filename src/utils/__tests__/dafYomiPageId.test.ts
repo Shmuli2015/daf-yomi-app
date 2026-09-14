@@ -65,6 +65,24 @@ describe('Berachot tzurat hadaf page ids', () => {
   });
 });
 
+describe('Chullin tzurat hadaf page ids', () => {
+  it('resolves Vilna PDF ids and has no phantom 142b', () => {
+    expect(resolveDafYomiPageId('Chullin', 142, 'a')).toBe(4888);
+    expect(resolveDafYomiPageId('Chullin', 142, 'b')).toBeNull();
+    expect(resolveDafYomiPageId('Bechorot', 2, 'a')).toBe(4889);
+  });
+
+  it('navigates from Chullin 142a directly to Bechorot 2a', () => {
+    const next = getNextAmud({ masechetEn: 'Chullin', dafNum: 142, amud: 'a' });
+    expect(next).toEqual({ masechetEn: 'Bechorot', dafNum: 2, amud: 'a' });
+  });
+
+  it('navigates backwards from Bechorot 2a to Chullin 142a', () => {
+    const prev = getPrevAmud({ masechetEn: 'Bechorot', dafNum: 2, amud: 'a' });
+    expect(prev).toEqual({ masechetEn: 'Chullin', dafNum: 142, amud: 'a' });
+  });
+});
+
 describe('all masechtot tzurat hadaf page ids', () => {
   it('maps every Shas masechet to a PDF id for first and last amud', () => {
     expect(SHAS_MASECHTOT).toHaveLength(DAF_YOMI_MASECHET_START_IDS.length);
