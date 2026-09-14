@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,7 +20,7 @@ import DafCell from './DafCell';
 import DafMarkMenuModal from '../DafMarkMenuModal';
 import MasechetModalModeToggle, { type MasechetStudyMode } from './MasechetModalModeToggle';
 import MasechetModalStats from './MasechetModalStats';
-import type { PersonalTrackRecord } from '../../db/database';
+import type { DailyRecord, PersonalTrackRecord } from '../../db/database';
 
 interface MasechetModalProps {
   masechet: typeof SHAS_MASECHTOT[0];
@@ -36,47 +36,58 @@ export default function MasechetModal({
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [mode, setMode] = useState<MasechetStudyMode>('dafYomi');
 
+  const toggleAnyDafLearned = useAppStore((s) => s.toggleAnyDafLearned);
+  const setDafStudyStatus = useAppStore((s) => s.setDafStudyStatus);
+  const markPartialAmud = useAppStore((s) => s.markPartialAmud);
+  const batchMarkDafim = useAppStore((s) => s.batchMarkDafim);
+  const batchUnmarkDafim = useAppStore((s) => s.batchUnmarkDafim);
+  const togglePersonalDafLearned = useAppStore((s) => s.togglePersonalDafLearned);
+  const markPersonalDafLearned = useAppStore((s) => s.markPersonalDafLearned);
+  const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
+  const setPersonalDafStudyStatus = useAppStore((s) => s.setPersonalDafStudyStatus);
+  const setActivePersonalMasechet = useAppStore((s) => s.setActivePersonalMasechet);
+  const clearActivePersonalMasechet = useAppStore((s) => s.clearActivePersonalMasechet);
+
   const {
     history,
     progressCache,
-    toggleAnyDafLearned,
-    setDafStudyStatus,
-    markPartialAmud,
-    batchMarkDafim,
-    batchUnmarkDafim,
     personalTrackRecords,
-    togglePersonalDafLearned,
-    markPersonalDafLearned,
-    markPersonalPartialAmud,
-    setPersonalDafStudyStatus,
     activePersonalMasechet,
-    setActivePersonalMasechet,
-    clearActivePersonalMasechet,
     settings,
   } = useAppStore(
     useShallow((s) => ({
       history: s.history,
       progressCache: s.progressCache,
-      toggleAnyDafLearned: s.toggleAnyDafLearned,
-      setDafStudyStatus: s.setDafStudyStatus,
-      markPartialAmud: s.markPartialAmud,
-      batchMarkDafim: s.batchMarkDafim,
-      batchUnmarkDafim: s.batchUnmarkDafim,
       personalTrackRecords: s.personalTrackRecords,
-      togglePersonalDafLearned: s.togglePersonalDafLearned,
-      markPersonalDafLearned: s.markPersonalDafLearned,
-      markPersonalPartialAmud: s.markPersonalPartialAmud,
-      setPersonalDafStudyStatus: s.setPersonalDafStudyStatus,
       activePersonalMasechet: s.activePersonalMasechet,
-      setActivePersonalMasechet: s.setActivePersonalMasechet,
-      clearActivePersonalMasechet: s.clearActivePersonalMasechet,
       settings: s.settings,
     })),
   );
 
   const [selectedDafForMenu, setSelectedDafForMenu] = useState<number | null>(null);
 
-  const recordByDate = useMemo(() => new Map(history.map((r) => [r.date, r])), [history]);
+  const dafimArray = useMemo(() => getMasechetDafim(masechet.he), [masechet.he]);
+
+  const numColumns = useMemo(() => {
+    const availableWidth = windowWidth - 40;
+    return Math.max(4, Math.floor((availableWidth + 8) / (48 + 8)));
+  }, [windowWidth]);
+
+  const recordByDate = useMemo(() => {
+    const map = new Map<string, DailyRecord>();
+    const dates = new Set<string>();
+    for (const d of dafimArray) {
+      const dt = getDafDateStr(masechet.he, d);
+      if (dt) dates.add(dt);
+    }
+    for (const r of history) {
+      if (dates.has(r.date)) {
+        map.set(r.date, r);
+      }
+    }
+    return map;
+  }, [history, dafimArray, masechet.he]);
+
   const masechetPersonalRecords = useMemo(() => {
     return personalTrackRecords.filter((r) => r.masechet === masechet.en);
   }, [masechet.en, personalTrackRecords]);
@@ -100,8 +111,6 @@ export default function MasechetModal({
   const [showConfetti, setShowConfetti] = useState(false);
   const [pendingAction, setPendingAction] = useState<'markAll' | 'unmarkAll' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  const dafimArray = useMemo(() => getMasechetDafim(masechet.he), [masechet.he]);
 
   const masechetStats = useMemo(() => {
     if (!progressCache) {
@@ -331,37 +340,44 @@ export default function MasechetModal({
           </View>
         </View>
 
-        <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>
-          <View style={styles.dafGrid}>
-            {dafimArray.map((dafNum) => {
-              const dateStr = getDafDateStr(masechet.he, dafNum);
-              const rec = dateStr ? recordByDate.get(dateStr) : undefined;
-              const studyStatus = rec ? getStudyStatus(rec) : 'none';
-              const partialAmud = rec ? getPartialAmud(rec) : null;
-              const isPersonal = isPersonalTrackEnabled && personalLearnedSet.has(dafNum);
-              const personalRec = isPersonalTrackEnabled ? personalPartialMap.get(dafNum) : undefined;
-              const isPersonalPartial = personalRec != null;
-              const personalPartialAmud = personalRec?.amud || null;
-              return (
-                <DafCell
-                  key={dafNum}
-                  dafNum={dafNum}
-                  isLearned={studyStatus === 'learned'}
-                  isPartial={studyStatus === 'partial'}
-                  partialAmud={partialAmud}
-                  isPersonalLearned={isPersonal}
-                  isPersonalPartial={isPersonalPartial}
-                  personalPartialAmud={personalPartialAmud}
-                  mode={effectiveMode}
-                  onPress={handleToggleDafStable}
-                  onLongPress={handleLongPressDafStable}
-                  styles={styles}
-                />
-              );
-            })}
-          </View>
-          <View style={{ height: 24 }} />
-        </ScrollView>
+        <FlatList
+          data={dafimArray}
+          keyExtractor={(item) => String(item)}
+          numColumns={numColumns}
+          key={`masechet-grid-${numColumns}`}
+          columnWrapperStyle={styles.dafRow}
+          contentContainerStyle={styles.modalContent}
+          initialNumToRender={36}
+          maxToRenderPerBatch={24}
+          windowSize={5}
+          showsVerticalScrollIndicator={true}
+          renderItem={({ item: dafNum }) => {
+            const dateStr = getDafDateStr(masechet.he, dafNum);
+            const rec = dateStr ? recordByDate.get(dateStr) : undefined;
+            const studyStatus = rec ? getStudyStatus(rec) : 'none';
+            const partialAmud = rec ? getPartialAmud(rec) : null;
+            const isPersonal = isPersonalTrackEnabled && personalLearnedSet.has(dafNum);
+            const personalRec = isPersonalTrackEnabled ? personalPartialMap.get(dafNum) : undefined;
+            const isPersonalPartial = personalRec != null;
+            const personalPartialAmud = personalRec?.amud || null;
+            return (
+              <DafCell
+                dafNum={dafNum}
+                isLearned={studyStatus === 'learned'}
+                isPartial={studyStatus === 'partial'}
+                partialAmud={partialAmud}
+                isPersonalLearned={isPersonal}
+                isPersonalPartial={isPersonalPartial}
+                personalPartialAmud={personalPartialAmud}
+                mode={effectiveMode}
+                onPress={handleToggleDafStable}
+                onLongPress={handleLongPressDafStable}
+                styles={styles}
+              />
+            );
+          }}
+          ListFooterComponent={<View style={{ height: 24 }} />}
+        />
 
         {showConfetti && (
           <View style={styles.confettiContainer} pointerEvents="none">
@@ -561,6 +577,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     modalScroll: { flex: 1 },
     modalContent: { padding: 20 },
     dafGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    dafRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
     dafCell: {
       width: 48,
       height: 48,

@@ -1,4 +1,4 @@
-import { buildProgressCache, invalidateProgressCache } from '../progressCache';
+import { buildProgressCache, updateMasechetProgressInCache, invalidateProgressCache } from '../progressCache';
 import type { DailyRecord, PersonalTrackRecord } from '../../db/database';
 
 describe('progressCache utils', () => {
@@ -66,5 +66,21 @@ describe('progressCache utils', () => {
     expect(berakhot?.learned).toBe(2);
     expect(berakhot?.dafYomiLearned).toBe(1);
     expect(berakhot?.personalLearned).toBe(2);
+  });
+
+  it('updateMasechetProgressInCache incrementally matches full buildProgressCache', () => {
+    const initialCache = buildProgressCache([], []);
+    const personalRecords: PersonalTrackRecord[] = [
+      { masechet: 'Berakhot', daf_num: 2, status: 'learned', learnedAt: '2026-01-01' },
+      { masechet: 'Berakhot', daf_num: 3, status: 'learned', learnedAt: '2026-01-02' },
+    ];
+
+    const updatedCache = updateMasechetProgressInCache(initialCache, 'Berakhot', [], personalRecords);
+    const fullCache = buildProgressCache([], personalRecords);
+
+    expect(updatedCache.totalShasProgress.learnedCount).toBe(fullCache.totalShasProgress.learnedCount);
+    expect(updatedCache.totalShasProgress.percentage).toBe(fullCache.totalShasProgress.percentage);
+    expect(updatedCache.masechetProgress.get('ברכות')?.learned).toBe(fullCache.masechetProgress.get('ברכות')?.learned);
+    expect(updatedCache.sederProgress.get('zeraim')?.learnedDafim).toBe(fullCache.sederProgress.get('zeraim')?.learnedDafim);
   });
 });
