@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { initDB } from '../db/database';
 import { useAppStore } from '../store/useAppStore';
+import { cleanupAllApkDownloads } from '../services/apkInstall';
 
 const MIN_SPLASH_MS = 1800;
 const SPLASH_HARD_MAX_MS = 6000;
@@ -15,6 +16,7 @@ export function useAppInitialization() {
     try {
       initDB();
       loadInitialData();
+      void cleanupAllApkDownloads();
     } catch (e) {
       console.warn('DB init error:', e);
     }

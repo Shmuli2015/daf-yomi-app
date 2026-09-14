@@ -16,6 +16,7 @@ import { useSettingsNotifications } from '../hooks/useSettingsNotifications';
 import { useSettingsBackup } from '../hooks/useSettingsBackup';
 import { useSettingsReset } from '../hooks/useSettingsReset';
 import { useSettingsAppUpdates } from '../hooks/useSettingsAppUpdates';
+import { useStorageCache } from '../hooks/useStorageCache';
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -148,6 +149,17 @@ export default function SettingsScreen() {
     setUpdateAutoPromptEnabled,
   });
 
+  const {
+    storageSizeFormatted,
+    isClearing: isClearingStorage,
+    showClearCacheModal,
+    openClearCacheModal,
+    closeClearCacheModal,
+    handleClearCacheConfirm,
+  } = useStorageCache({
+    onFeedback: showFeedback,
+  });
+
   if (!settings) {
     return <SettingsLoadingView />;
   }
@@ -197,6 +209,8 @@ export default function SettingsScreen() {
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
             onProbeGithubRelease={__DEV__ ? probeGithubRelease : undefined}
             onShareDownloadLink={handleShareDownloadLink}
+            storageSizeFormatted={storageSizeFormatted}
+            onClearCacheOpen={openClearCacheModal}
           />
         </View>
 
@@ -230,6 +244,11 @@ export default function SettingsScreen() {
           onBackupImportReplace={handleBackupImportReplace}
           onBackupImportCancel={clearBackupImportState}
           isSaving={isSaving}
+          showClearCacheModal={showClearCacheModal}
+          clearCacheSizeFormatted={storageSizeFormatted}
+          isClearingCache={isClearingStorage}
+          onClearCacheConfirm={handleClearCacheConfirm}
+          onClearCacheClose={closeClearCacheModal}
         />
 
         <InfoModal
