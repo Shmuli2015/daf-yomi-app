@@ -27,7 +27,7 @@ export function getRecordProgress(record: DailyRecord | null | undefined): numbe
   return 0;
 }
 
-export function getStudyStatus(record: DailyRecord | null | undefined): 'none' | 'partial' | 'learned' {
+export function getStudyStatus(record: StatusRecordLike | null | undefined): 'none' | 'partial' | 'learned' {
   if (!record) return 'none';
   if (record.status === 'learned') return 'learned';
   if (record.status === 'partial') return 'partial';

@@ -5,20 +5,18 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { StatusBar } from 'expo-status-bar';
 import ConfettiCannon from 'react-native-confetti-cannon';
-import { useShallow } from 'zustand/react/shallow';
 import TzuratHeader from '../components/TzuratHadaf/TzuratHeader';
 import TzuratHadafViewer, { type TzuratPageContent } from '../components/TzuratHadaf/TzuratHadafViewer';
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
 import FullscreenExitButton from '../components/TzuratHadaf/FullscreenExitButton';
+import TzuratMarkTrackModal from '../components/TzuratHadaf/TzuratMarkTrackModal';
 import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
 import ReaderToolbar, { type ViewMode, type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
 import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';
 import { fetchSefariaPageText, type SefariaPageData } from '../services/sefariaTextApi';
-import { getStudyStatus, getPartialAmud } from '../utils/dafStatus';
 import { useTheme } from '../theme';
-import { useAppStore } from '../store/useAppStore';
 import type { RootStackParamList } from '../navigation/types';
 import {
   buildSefariaTextUrl,
@@ -42,11 +40,10 @@ import {
   resolveCachedImageUri,
   clearCachedManuscriptImage,
 } from '../services/sefariaManuscripts';
-import { SHAS_MASECHTOT, numberToGematria } from '../data/shas';
-import { getDafDateStr } from '../utils/shas';
-import { getMasechetProgressFromCache } from '../utils/progressCache';
+import { SHAS_MASECHTOT } from '../data/shas';
 import { useDafSwipeGesture } from '../hooks/useDafSwipeGesture';
-import { triggerImpact, triggerSelection } from '../utils/haptics';
+import { useTzuratLearnedMark } from '../hooks/useTzuratLearnedMark';
+import { triggerSelection } from '../utils/haptics';
 
 type Route = RouteProp<RootStackParamList, 'TzuratHadaf'>;
 type Nav = NativeStackNavigationProp<RootStackParamList, 'TzuratHadaf'>;
@@ -71,10 +68,7 @@ export default function TzuratHadafScreen() {
   });
   const [isLandscape, setIsLandscape] = useState(width > height);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [showMarkMenu, setShowMarkMenu] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showSiyumModal, setShowSiyumModal] = useState(false);
 
   const [page, setPage] = useState<TzuratPageContent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -88,24 +82,6 @@ export default function TzuratHadafScreen() {
   const [sefariaData, setSefariaData] = useState<SefariaPageData | null>(null);
   const [sefariaLoading, setSefariaLoading] = useState<boolean>(false);
   const [sefariaError, setSefariaError] = useState<string | null>(null);
-
-  const {
-    history,
-    settings,
-    progressCache,
-    toggleAnyDafLearned,
-    setDafStudyStatus,
-    markPartialAmud,
-  } = useAppStore(
-    useShallow((s) => ({
-      history: s.history,
-      settings: s.settings,
-      progressCache: s.progressCache,
-      toggleAnyDafLearned: s.toggleAnyDafLearned,
-      setDafStudyStatus: s.setDafStudyStatus,
-      markPartialAmud: s.markPartialAmud,
-    })),
-  );
 
   const lockPortrait = useCallback(async () => {
     try {
@@ -147,77 +123,39 @@ export default function TzuratHadafScreen() {
     [location.masechetEn, route.params.masechetHe],
   );
 
-  const masechetTotalPages = useMemo(
-    () => SHAS_MASECHTOT.find((m) => m.he === masechetHe)?.pages ?? 0,
-    [masechetHe],
-  );
-
-  const dateStr = useMemo(
-    () => (masechetHe ? getDafDateStr(masechetHe, location.dafNum) : null),
-    [masechetHe, location.dafNum],
-  );
-
-  const dafHeStr = useMemo(
-    () => `דף ${numberToGematria(location.dafNum)}`,
-    [location.dafNum],
-  );
-
-  const studyStatus = useMemo(() => {
-    if (!dateStr) return 'none' as const;
-    const record = history.find((r) => r.date === dateStr);
-    return getStudyStatus(record);
-  }, [history, dateStr]);
-
-  const partialAmud = useMemo(() => {
-    if (!dateStr) return null;
-    const record = history.find((r) => r.date === dateStr);
-    return getPartialAmud(record);
-  }, [history, dateStr]);
-
-  const canMarkLearned = dateStr != null && masechetHe != null;
-
-  const handleToggleLearned = useCallback(() => {
-    if (!canMarkLearned || !dateStr || !masechetHe) return;
-    if (studyStatus === 'learned') {
-      setShowConfirm(true);
-      return;
-    }
-
-    void triggerImpact('medium');
-
-    const learnedBefore = progressCache
-      ? getMasechetProgressFromCache(progressCache, masechetHe).learned
-      : 0;
-    const isCompleting = masechetTotalPages > 0 && learnedBefore + 1 === masechetTotalPages;
-
-    if (studyStatus === 'partial') {
-      if (isCompleting) {
-        setShowSiyumModal(true);
-      } else if (settings?.show_confetti === 1) {
-        setShowConfetti(true);
-      }
-      setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'learned');
-      return;
-    }
-
-    if (isCompleting) {
-      setShowSiyumModal(true);
-    } else if (settings?.show_confetti === 1) {
-      setShowConfetti(true);
-    }
-    toggleAnyDafLearned(dateStr, masechetHe, dafHeStr);
-  }, [
-    canMarkLearned,
-    dateStr,
-    masechetHe,
-    dafHeStr,
+  const {
+    personalEnabled,
     studyStatus,
-    settings,
-    progressCache,
+    dafYomiStatus,
+    personalStatus,
+    dafYomiPartialAmud,
+    personalPartialAmud,
+    menuPartialAmud,
+    menuStudyStatus,
+    canMarkLearned,
+    canMarkDafYomi,
     masechetTotalPages,
-    toggleAnyDafLearned,
-    setDafStudyStatus,
-  ]);
+    handleToggleLearned,
+    handleSelectTrack,
+    handleOpenHalfMenuForTrack,
+    handleSelectFull,
+    handleSelectHalfA,
+    handleSelectHalfB,
+    handleConfirmUnmark,
+    requestUnmarkPending,
+    showTrackPicker,
+    setShowTrackPicker,
+    showConfirm,
+    setShowConfirm,
+    showSiyumModal,
+    setShowSiyumModal,
+    showConfetti,
+    setShowConfetti,
+  } = useTzuratLearnedMark({
+    masechetEn: location.masechetEn,
+    masechetHe,
+    dafNum: location.dafNum,
+  });
 
   const loadPdfPage = useCallback(async (loc: DafLocation) => {
     const tref = buildSefariaTref(loc.masechetEn, loc.dafNum, loc.amud);
@@ -382,7 +320,13 @@ export default function TzuratHadafScreen() {
             onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
             onClose={() => navigation.goBack()}
             onToggleLearned={handleToggleLearned}
-            onLongPressLearned={() => setShowMarkMenu(true)}
+            onLongPressLearned={() => {
+              if (personalEnabled) {
+                setShowTrackPicker(true);
+              } else {
+                setShowMarkMenu(true);
+              }
+            }}
           />
 
           <ReaderToolbar
@@ -436,35 +380,45 @@ export default function TzuratHadafScreen() {
         />
       )}
 
+      <TzuratMarkTrackModal
+        visible={showTrackPicker}
+        dafYomiStatus={dafYomiStatus}
+        personalStatus={personalStatus}
+        dafYomiPartialAmud={dafYomiPartialAmud}
+        personalPartialAmud={personalPartialAmud}
+        canMarkDafYomi={canMarkDafYomi}
+        onSelectDafYomi={() => handleSelectTrack('dafYomi')}
+        onSelectPersonal={() => handleSelectTrack('personal')}
+        onLongPressDafYomi={() => {
+          handleOpenHalfMenuForTrack('dafYomi');
+          setShowMarkMenu(true);
+        }}
+        onLongPressPersonal={() => {
+          handleOpenHalfMenuForTrack('personal');
+          setShowMarkMenu(true);
+        }}
+        onCancel={() => setShowTrackPicker(false)}
+      />
+
       <DafMarkMenuModal
         visible={showMarkMenu}
         onSelectFull={() => {
-          if (dateStr && masechetHe) {
-            void triggerImpact('medium');
-            if (settings?.show_confetti === 1) setShowConfetti(true);
-            setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'learned');
-          }
+          handleSelectFull();
           setShowMarkMenu(false);
         }}
         onSelectHalfA={() => {
-          if (dateStr && masechetHe) {
-            void triggerImpact('light');
-            markPartialAmud(dateStr, masechetHe, dafHeStr, 'a');
-          }
+          handleSelectHalfA();
           setShowMarkMenu(false);
         }}
         onSelectHalfB={() => {
-          if (dateStr && masechetHe) {
-            void triggerImpact('light');
-            markPartialAmud(dateStr, masechetHe, dafHeStr, 'b');
-          }
+          handleSelectHalfB();
           setShowMarkMenu(false);
         }}
-        partialAmud={partialAmud}
-        showUnmark={studyStatus === 'partial'}
+        partialAmud={menuPartialAmud}
+        showUnmark={menuStudyStatus === 'partial'}
         onUnmark={() => {
           setShowMarkMenu(false);
-          setShowConfirm(true);
+          requestUnmarkPending();
         }}
         onCancel={() => setShowMarkMenu(false)}
       />
@@ -473,13 +427,7 @@ export default function TzuratHadafScreen() {
         visible={showConfirm}
         title="ביטול לימוד"
         message="האם אתה בטוח שברצונך לבטל את סימון הדף?"
-        onConfirm={() => {
-          setShowConfirm(false);
-          if (dateStr && masechetHe) {
-            void triggerImpact('light');
-            toggleAnyDafLearned(dateStr, masechetHe, dafHeStr);
-          }
-        }}
+        onConfirm={handleConfirmUnmark}
         onCancel={() => setShowConfirm(false)}
       />
 

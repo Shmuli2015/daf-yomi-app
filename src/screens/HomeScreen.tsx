@@ -32,6 +32,7 @@ import { SHAS_MASECHTOT } from "../data/shas";
 import { getMasechetDafim } from "../utils/shas";
 import { getStudyStatus, formatProgressCount, getPartialAmud } from "../utils/dafStatus";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
+import { isPersonalTrackEnabled } from "../utils/personalTrack";
 import { triggerImpact, triggerSelection } from "../utils/haptics";
 import { useTheme } from "../theme";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
@@ -296,7 +297,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         />
 
 
-        {settings?.show_personal_track_banner !== 0 && (
+        {isPersonalTrackEnabled(settings) && (
           <>
             <View style={{ height: 20 }} />
             <PersonalTrackBanner
