@@ -4,19 +4,22 @@ import Animated, { FadeIn } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import MasechetGrid from "../components/Shas/MasechetGrid";
 import ShasProgressHero from "../components/Shas/ShasProgressHero";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import ShareIconButton from "../components/Share/ShareIconButton";
 import SharePreviewModal from "../components/Share/SharePreviewModal";
+import QuickJumpModal from "../components/QuickJump/QuickJumpModal";
 import { useAppStore } from "../store/useAppStore";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { useTheme } from "../theme";
-import type { MainTabParamList } from "../navigation/types";
+import type { MainTabParamList, RootStackParamList } from "../navigation/types";
 import type { ShasShareData } from "../utils/shareProgressImage";
 
 export default function HistoryScreen() {
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList, "History">>();
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<MainTabParamList, "History">>();
   const openMasechetEn = route.params?.openMasechetEn;
   const returnToHomeOnClose = route.params?.returnToHomeOnClose;
@@ -50,6 +53,7 @@ export default function HistoryScreen() {
 
   const [shareVisible, setShareVisible] = useState(false);
   const [shareData, setShareData] = useState<ShasShareData | null>(null);
+  const [showQuickJump, setShowQuickJump] = useState(false);
 
   const handleSharePress = useCallback(() => {
     setShareData({
@@ -113,11 +117,25 @@ export default function HistoryScreen() {
             returnToHomeOnClose={returnToHomeOnClose}
             onOpenMasechetConsumed={handleOpenMasechetConsumed}
             onReturnToHome={handleReturnToHome}
+            onOpenQuickJump={() => setShowQuickJump(true)}
           />
         </ScrollView>
       </SafeAreaView>
 
       <SharePreviewModal visible={shareVisible} onClose={handleShareClose} data={shareData} />
+
+      <QuickJumpModal
+        visible={showQuickJump}
+        onNavigate={(params) => {
+          rootNavigation.navigate("TzuratHadaf", {
+            masechetEn: params.masechetEn,
+            masechetHe: params.masechetHe,
+            dafNum: params.dafNum,
+            amud: params.amud,
+          });
+        }}
+        onClose={() => setShowQuickJump(false)}
+      />
     </View>
   );
 }

@@ -14,6 +14,8 @@ interface TzuratHeaderProps {
   isLandscape?: boolean;
   studyStatus?: 'none' | 'partial' | 'learned';
   canMarkLearned?: boolean;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
   onClose: () => void;
   onToggleLearned?: () => void;
   onLongPressLearned?: () => void;
@@ -27,6 +29,8 @@ export default function TzuratHeader({
   isLandscape = false,
   studyStatus = 'none',
   canMarkLearned = false,
+  isFullscreen = false,
+  onToggleFullscreen,
   onClose,
   onToggleLearned,
   onLongPressLearned,
@@ -58,6 +62,21 @@ export default function TzuratHeader({
       </View>
 
       <View style={styles.actions}>
+        {onToggleFullscreen && (
+          <TouchableOpacity
+            onPress={onToggleFullscreen}
+            style={[styles.iconBtn, { width: btnSize, height: btnSize }]}
+            activeOpacity={0.7}
+            accessibilityLabel="מסך מלא"
+          >
+            <Ionicons
+              name={isFullscreen ? 'contract-outline' : 'expand-outline'}
+              size={iconSize}
+              color={theme.colors.accent}
+            />
+          </TouchableOpacity>
+        )}
+
         {canMarkLearned ? (
           <TouchableOpacity
             onPress={onToggleLearned}

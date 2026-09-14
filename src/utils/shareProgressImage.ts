@@ -30,6 +30,25 @@ export type ShasShareData = {
 
 export type ShareProgressData = StreakShareData | ShasShareData;
 
+function waitForIdle(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => resolve());
+      return;
+    }
+    requestAnimationFrame(() => resolve());
+  });
+}
+
+export async function waitForShareCaptureReady(captureLaidOut: boolean): Promise<void> {
+  await waitForIdle();
+  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+  await new Promise<void>((resolve) => setTimeout(resolve, 50));
+  if (!captureLaidOut) {
+    await new Promise<void>((resolve) => setTimeout(resolve, 120));
+  }
+}
+
 function isUserCancel(error: unknown): boolean {
   if (!error || typeof error !== 'object') return false;
   const message = 'message' in error ? String((error as { message: unknown }).message) : '';

@@ -1,4 +1,5 @@
 import { SHAS_MASECHTOT, numberToGematria } from '../data/shas';
+import { getMasechetDafim, doesMasechetEndOnAmudA } from './shas';
 
 export type Amud = 'a' | 'b';
 
@@ -8,11 +9,10 @@ export interface DafLocation {
   amud: Amud;
 }
 
-const HEBCAL_TO_SEFARIA: Record<string, string> = {
-  Berakhot: 'Berakhot',
-  Berachot: 'Berakhot',
+const ALIASES_TO_SHAS: Record<string, string> = {
+  Berakhot: 'Berachot',
   Eiruvin: 'Eruvin',
-  Gitin: 'Gitin',
+  Gittin: 'Gitin',
   Chullin: 'Chullin',
   "Bava Kamma": 'Baba Kamma',
   "Bava Metzia": 'Baba Metzia',
@@ -22,13 +22,28 @@ const HEBCAL_TO_SEFARIA: Record<string, string> = {
   "Rosh Hashanah": 'Rosh Hashana',
   Taanit: 'Taanit',
   Shekalim: 'Shekalim',
+  Bekhorot: 'Bechorot',
+  Arakhin: 'Arachin',
+  Middot: 'Midot',
+};
+
+const SHAS_TO_SEFARIA: Record<string, string> = {
+  Berachot: 'Berakhot',
+  Gitin: 'Gittin',
+  'Baba Kamma': 'Bava Kamma',
+  'Baba Metzia': 'Bava Metzia',
+  'Baba Batra': 'Bava Batra',
+  'Rosh Hashana': 'Rosh Hashanah',
+  Bechorot: 'Bekhorot',
+  Arachin: 'Arakhin',
+  Midot: 'Middot',
 };
 
 const FIRST_DAF = 2;
 
 export function normalizeMasechetEn(name: string): string {
   const trimmed = name.trim();
-  if (HEBCAL_TO_SEFARIA[trimmed]) return HEBCAL_TO_SEFARIA[trimmed];
+  if (ALIASES_TO_SHAS[trimmed]) return ALIASES_TO_SHAS[trimmed];
 
   const fromShas = SHAS_MASECHTOT.find(
     (m) => m.en.toLowerCase() === trimmed.toLowerCase()
@@ -39,7 +54,9 @@ export function normalizeMasechetEn(name: string): string {
 }
 
 function sefariaRefName(masechetEn: string): string {
-  return normalizeMasechetEn(masechetEn).replace(/ /g, '_');
+  const shasName = normalizeMasechetEn(masechetEn);
+  const sefariaName = SHAS_TO_SEFARIA[shasName] ?? shasName;
+  return sefariaName.replace(/ /g, '_');
 }
 
 export function buildSefariaTref(masechetEn: string, dafNum: number, amud: Amud): string {
@@ -55,18 +72,29 @@ function findMasechetIndex(masechetEn: string): number {
   return SHAS_MASECHTOT.findIndex((m) => m.en === normalized);
 }
 
+function firstDafNum(masechetEn: string): number {
+  const dafim = getMasechetDafim(masechetEn);
+  if (dafim.length > 0) return dafim[0];
+  return FIRST_DAF;
+}
+
 function lastDafNum(masechetEn: string): number {
+  const dafim = getMasechetDafim(masechetEn);
+  if (dafim.length > 0) return dafim[dafim.length - 1];
   const idx = findMasechetIndex(masechetEn);
   if (idx === -1) return FIRST_DAF;
   return FIRST_DAF + SHAS_MASECHTOT[idx].pages - 1;
 }
 
 function firstLocationForMasechet(masechetEn: string): DafLocation {
-  return { masechetEn: normalizeMasechetEn(masechetEn), dafNum: FIRST_DAF, amud: 'a' };
+  return { masechetEn: normalizeMasechetEn(masechetEn), dafNum: firstDafNum(masechetEn), amud: 'a' };
 }
 
 function lastLocationForMasechet(masechetEn: string): DafLocation {
-  return { masechetEn: normalizeMasechetEn(masechetEn), dafNum: lastDafNum(masechetEn), amud: 'b' };
+  const norm = normalizeMasechetEn(masechetEn);
+  const lastDaf = lastDafNum(norm);
+  const lastAmud: Amud = doesMasechetEndOnAmudA(norm) ? 'a' : 'b';
+  return { masechetEn: norm, dafNum: lastDaf, amud: lastAmud };
 }
 
 export function formatDafLabel(dafNum: number, amud: Amud): string {
@@ -79,6 +107,11 @@ export function getNextAmud(loc: DafLocation): DafLocation | null {
   const lastDaf = lastDafNum(masechetEn);
 
   if (loc.amud === 'a') {
+    if (loc.dafNum === lastDaf && doesMasechetEndOnAmudA(masechetEn)) {
+      const idx = findMasechetIndex(masechetEn);
+      if (idx === -1 || idx >= SHAS_MASECHTOT.length - 1) return null;
+      return firstLocationForMasechet(SHAS_MASECHTOT[idx + 1].en);
+    }
     return { masechetEn, dafNum: loc.dafNum, amud: 'b' };
   }
 
@@ -93,12 +126,13 @@ export function getNextAmud(loc: DafLocation): DafLocation | null {
 
 export function getPrevAmud(loc: DafLocation): DafLocation | null {
   const masechetEn = normalizeMasechetEn(loc.masechetEn);
+  const firstDaf = firstDafNum(masechetEn);
 
   if (loc.amud === 'b') {
     return { masechetEn, dafNum: loc.dafNum, amud: 'a' };
   }
 
-  if (loc.dafNum > FIRST_DAF) {
+  if (loc.dafNum > firstDaf) {
     return { masechetEn, dafNum: loc.dafNum - 1, amud: 'b' };
   }
 
@@ -122,8 +156,9 @@ export function getNextDaf(loc: DafLocation): DafLocation | null {
 
 export function getPrevDaf(loc: DafLocation): DafLocation | null {
   const masechetEn = normalizeMasechetEn(loc.masechetEn);
+  const firstDaf = firstDafNum(masechetEn);
 
-  if (loc.dafNum > FIRST_DAF) {
+  if (loc.dafNum > firstDaf) {
     return { masechetEn, dafNum: loc.dafNum - 1, amud: 'a' };
   }
 

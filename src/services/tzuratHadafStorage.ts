@@ -1,4 +1,8 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import {
+  enforceTzuratHadafCacheLimit,
+  touchTzuratHadafAccess,
+} from './tzuratHadafCacheEviction';
 
 export const MIN_PDF_BYTES = 2048;
 export const MIN_IMAGE_BYTES = 1024;
@@ -44,6 +48,7 @@ export async function findTzuratHadafFile(
   for (const path of tzuratHadafPaths(tref, extension)) {
     const info = await FileSystem.getInfoAsync(path);
     if (info.exists && (info.size ?? 0) >= minBytes) {
+      void touchTzuratHadafAccess(path);
       return path;
     }
   }
@@ -57,6 +62,15 @@ async function validateDownloadedFile(path: string, minBytes: number): Promise<s
     throw new Error('Download produced an invalid file');
   }
   return path;
+}
+
+async function validateAndTrimCache(path: string, minBytes: number): Promise<string> {
+  const validPath = await validateDownloadedFile(path, minBytes);
+  try {
+    await touchTzuratHadafAccess(validPath);
+    await enforceTzuratHadafCacheLimit(validPath);
+  } catch {}
+  return validPath;
 }
 
 export async function downloadTzuratHadafFile(
@@ -77,14 +91,14 @@ export async function downloadTzuratHadafFile(
 
   try {
     const result = await FileSystem.downloadAsync(remoteUrl, path);
-    return validateDownloadedFile(result.uri, minBytes);
+    return validateAndTrimCache(result.uri, minBytes);
   } catch {
     const resumable = FileSystem.createDownloadResumable(remoteUrl, path);
     const result = await resumable.downloadAsync();
     if (!result?.uri) {
       throw new Error('Download failed');
     }
-    return validateDownloadedFile(result.uri, minBytes);
+    return validateAndTrimCache(result.uri, minBytes);
   }
 }
 

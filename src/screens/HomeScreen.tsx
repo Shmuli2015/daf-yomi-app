@@ -24,12 +24,15 @@ import ShasBanner from "../components/ShasBanner";
 import PersonalTrackBanner from "../components/PersonalTrackBanner";
 import PersonalMasechetPickerModal from "../components/PersonalMasechetPickerModal";
 import PersonalMasechetDetailModal from "../components/PersonalMasechetDetailModal";
+import QuickJumpModal from "../components/QuickJump/QuickJumpModal";
+import SiyumModal from "../components/Siyum/SiyumModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import { getDateStr } from "../utils/dafYomi";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { getMasechetDafim } from "../utils/shas";
 import { getStudyStatus, formatProgressCount, getPartialAmud } from "../utils/dafStatus";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
+import { triggerImpact, triggerSelection } from "../utils/haptics";
 import { useTheme } from "../theme";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
 import { parseStudyLinkMode, shouldShowSefariaLink, shouldShowTzuratLink } from "../utils/studyLinkMode";
@@ -49,6 +52,9 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showPersonalPickerModal, setShowPersonalPickerModal] = useState(false);
   const [showPersonalDetailModal, setShowPersonalDetailModal] = useState(false);
+  const [showQuickJumpModal, setShowQuickJumpModal] = useState(false);
+  const [showSiyumModal, setShowSiyumModal] = useState(false);
+  const [siyumMasechet, setSiyumMasechet] = useState<{ he: string; pages: number } | null>(null);
   const [detailMasechetEn, setDetailMasechetEn] = useState<string | null>(null);
 
   const {
@@ -114,21 +120,47 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const showHalfDafTip =
     settings?.dismissed_half_daf_tip !== HALF_DAF_TIP_VERSION && studyStatus === "none";
 
+  const masechetStats = useMemo(() => {
+    const total = getMasechetDafim(todayMasechet).length;
+    if (!progressCache) return { pct: 0, learned: 0, total };
+    const progress = getMasechetProgressFromCache(progressCache, todayMasechet);
+    const pct = total > 0 ? Math.round((progress.learned / total) * 100) : 0;
+    return { pct, learned: progress.learned, total };
+  }, [todayMasechet, progressCache]);
+
   const handleToggle = useCallback(() => {
-    if (!isLearned && studyStatus !== "partial" && settings?.show_confetti) setShowConfetti(true);
+    void triggerImpact("medium");
+    if (!isLearned && studyStatus !== "partial") {
+      if (masechetStats.total > 0 && masechetStats.learned + 1 === masechetStats.total) {
+        setSiyumMasechet({ he: todayMasechet, pages: masechetStats.total });
+        setShowSiyumModal(true);
+      } else if (settings?.show_confetti) {
+        setShowConfetti(true);
+      }
+    }
     toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
-  }, [isLearned, studyStatus, settings, currentDate, todayMasechet, todayDafNum, toggleAnyDafLearned]);
+  }, [isLearned, studyStatus, settings, currentDate, todayMasechet, todayDafNum, toggleAnyDafLearned, masechetStats]);
 
   const handleMarkFull = useCallback(() => {
-    if (settings?.show_confetti && studyStatus !== "learned") setShowConfetti(true);
+    void triggerImpact("medium");
+    if (studyStatus !== "learned") {
+      if (masechetStats.total > 0 && masechetStats.learned + 1 === masechetStats.total) {
+        setSiyumMasechet({ he: todayMasechet, pages: masechetStats.total });
+        setShowSiyumModal(true);
+      } else if (settings?.show_confetti) {
+        setShowConfetti(true);
+      }
+    }
     setDafStudyStatus(getDateStr(currentDate), todayMasechet, todayDafNum, "learned");
-  }, [settings, studyStatus, currentDate, todayMasechet, todayDafNum, setDafStudyStatus]);
+  }, [settings, studyStatus, currentDate, todayMasechet, todayDafNum, setDafStudyStatus, masechetStats]);
 
   const handleMarkPartialA = useCallback(() => {
+    void triggerImpact("light");
     markPartialAmud(getDateStr(currentDate), todayMasechet, todayDafNum, "a");
   }, [currentDate, todayMasechet, todayDafNum, markPartialAmud]);
 
   const handleMarkPartialB = useCallback(() => {
+    void triggerImpact("light");
     markPartialAmud(getDateStr(currentDate), todayMasechet, todayDafNum, "b");
   }, [currentDate, todayMasechet, todayDafNum, markPartialAmud]);
 
@@ -143,24 +175,18 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   );
 
   const handlePrevDay = useCallback(() => {
+    void triggerSelection();
     setCurrentDate(subDays(currentDate, 1));
   }, [currentDate, setCurrentDate]);
 
   const handleNextDay = useCallback(() => {
+    void triggerSelection();
     setCurrentDate(addDays(currentDate, 1));
   }, [currentDate, setCurrentDate]);
 
   const isToday = useMemo(() => {
     return getDateStr(currentDate) === getDateStr(new Date());
   }, [currentDate]);
-
-  const masechetStats = useMemo(() => {
-    const total = getMasechetDafim(todayMasechet).length;
-    if (!progressCache) return { pct: 0, learned: 0, total };
-    const progress = getMasechetProgressFromCache(progressCache, todayMasechet);
-    const pct = total > 0 ? Math.round((progress.learned / total) * 100) : 0;
-    return { pct, learned: progress.learned, total };
-  }, [todayMasechet, progressCache]);
 
   const shasProgress = useMemo(() => {
     return progressCache?.totalShasProgress || { learnedCount: 0, totalPages: 2711, percentage: 0 };
@@ -235,6 +261,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           showTzuratLink={showTzuratLink}
           onOpenTzuratHadaf={handleOpenTzuratHadaf}
           onPressMasechet={handleOpenMasechet}
+          onOpenQuickJump={() => setShowQuickJumpModal(true)}
           studyStatus={studyStatus}
           handleToggle={handleToggle}
           onMarkFull={handleMarkFull}
@@ -331,6 +358,32 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         onOpenPicker={() => setShowPersonalPickerModal(true)}
         onClose={() => setShowPersonalDetailModal(false)}
       />
+
+      <QuickJumpModal
+        visible={showQuickJumpModal}
+        initialMasechetEn={todayMasechetEn}
+        onNavigate={(params) => {
+          rootNavigation.navigate("TzuratHadaf", {
+            masechetEn: params.masechetEn,
+            masechetHe: params.masechetHe,
+            dafNum: params.dafNum,
+            amud: params.amud,
+          });
+        }}
+        onClose={() => setShowQuickJumpModal(false)}
+      />
+
+      {siyumMasechet && (
+        <SiyumModal
+          visible={showSiyumModal}
+          masechetHe={siyumMasechet.he}
+          totalPages={siyumMasechet.pages}
+          onClose={() => {
+            setShowSiyumModal(false);
+            setSiyumMasechet(null);
+          }}
+        />
+      )}
 
       {showConfetti && (
         <View style={styles.confettiContainer} pointerEvents="none">

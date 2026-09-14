@@ -1,0 +1,131 @@
+import { StyleSheet } from 'react-native';
+import type { Theme } from '../../theme';
+import { CARD_SIZE } from '../../utils/shareProgressImage';
+
+export function createSiyumModalStyles(theme: Theme) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.75)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      paddingHorizontal: 20,
+    },
+    modalContainer: {
+      width: '100%',
+      maxWidth: 420,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.xl,
+      borderWidth: 1.5,
+      borderColor: theme.colors.accent,
+      overflow: 'hidden',
+      direction: 'rtl',
+      ...theme.shadow.gold,
+    },
+    headerGradient: {
+      paddingVertical: 24,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+      backgroundColor: theme.colors.accentLight,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.accentBorder,
+    },
+    crownIconContainer: {
+      width: 64,
+      height: 64,
+      borderRadius: theme.radius.full,
+      backgroundColor: theme.colors.surface,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginBottom: 12,
+      borderWidth: 2,
+      borderColor: theme.colors.accent,
+      ...theme.shadow.cardMedium,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: theme.colors.accent,
+      textAlign: 'center',
+      marginBottom: 6,
+    },
+    subtitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: theme.colors.textPrimary,
+      textAlign: 'center',
+    },
+    body: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+    },
+    verseCard: {
+      backgroundColor: theme.colors.background,
+      borderRadius: theme.radius.md,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    completionText: {
+      fontSize: 16,
+      fontWeight: '600',
+      lineHeight: 24,
+      color: theme.colors.textPrimary,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      width: '100%',
+    },
+    actionsContainer: {
+      padding: 20,
+      borderTopWidth: 1,
+      borderTopColor: theme.colors.border,
+      gap: 10,
+    },
+    shareButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.accent,
+      borderRadius: theme.radius.lg,
+      paddingVertical: 14,
+      gap: 8,
+    },
+    shareButtonDisabled: {
+      opacity: 0.85,
+    },
+    shareButtonText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: theme.colors.surface,
+    },
+    captureHost: {
+      position: 'absolute',
+      left: -10000,
+      top: 0,
+      width: CARD_SIZE,
+      height: CARD_SIZE,
+      opacity: 1,
+    },
+    closeButton: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 12,
+      borderRadius: theme.radius.lg,
+      backgroundColor: theme.colors.background,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    closeButtonText: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: theme.colors.textSecondary,
+    },
+    confettiContainer: {
+      ...StyleSheet.absoluteFill,
+      zIndex: 1000,
+      justifyContent: 'center',
+      alignItems: 'center',
+      direction: 'ltr',
+    },
+  });
+}

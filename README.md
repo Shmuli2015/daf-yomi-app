@@ -14,12 +14,14 @@
 
 ### 🏠 Home Dashboard
 - **Day Navigation**: Prev/next arrows on the dashboard move between calendar days for that day's Daf; tap the dates to jump back to today, or use **Return to today** (<span dir="rtl" lang="he">חזור להיום</span>) when you have moved away from the real calendar date
+- **Quick Jump to Daf** (<span dir="rtl" lang="he">קפיצה מהירה</span>): Header shortcut to jump directly to any tractate and page in Shas. Search by selecting a tractate and page from a searchable dropdown, or type the page number using numerals or Hebrew gematria (e.g. "סד", "קכ", "12"). Direct one-tap jump to either Tzurat Hadaf or Sefaria
 - **Today's Daf Display**: Shows the Daf Yomi for the selected day (tractate and page) with both Hebrew and Gregorian dates (Gregorian respects the visibility toggle)
 - **Learning Tracker**: Tap **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) for a full page; **long press** opens a menu for **full page**, **half page (amud א)**, or **half page (amud ב)**. When half-done, the control shows **I finished the page!** (<span dir="rtl" lang="he">סיימתי את הדף!</span>); tap to upgrade to full. When fully learned, it shows **Learned** (<span dir="rtl" lang="he">אשריך! הדף נלמד</span>) and asks for confirmation before unsetting
 - **Partial progress**: Half pages count as **0.5** toward tractate progress (fractional counts such as 3.5 of 10 are possible)
+- **Siyum Masechet Celebration & Share** (<span dir="rtl" lang="he">סיום מסכת ושיתוף</span>): Marking the final page of a tractate triggers a festive celebration modal featuring the traditional "Hadran Alach" (<span dir="rtl" lang="he">הדרן עלך</span>) blessing, animated confetti, and an exclusive branded Siyum share card for social media and messaging
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Opens the Daf in Sefaria in your **external browser** (unchanged behavior)
-- **Tzurat Hadaf & Sefaria Text Reader** (<span dir="rtl" lang="he">צורת הדף וקורא טקסט מובנה</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) with pinch-to-zoom and landscape rotation, plus a built-in **Sefaria Text Reader** with vocalized text (nikud), interactive **commentary bottom sheet** (Rashi, Tosafot, etc.), font size controls (`+`/`-`), and reading theme options (Light, Dark, Sepia). Includes amud/daf navigation, **mark as learned** header control, and local caching
+- **Tzurat Hadaf & Sefaria Text Reader** (<span dir="rtl" lang="he">צורת הדף וקורא טקסט מובנה</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) with pinch-to-zoom and landscape rotation, plus a built-in **Sefaria Text Reader** with vocalized text (nikud), interactive **commentary bottom sheet** (Rashi, Tosafot, etc.), font size controls (`+`/`-`), and reading theme options (Light, Dark, Sepia). Includes amud/daf navigation, **fullscreen mode**, **swipe gestures**, **mark as learned** header control, and local caching
 - **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **Tzurat Hadaf only**, or **both** on Home and Calendar
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum; half pages **do not break** the streak but **do not add** a day either
 - **7-Day Progress Overview**: In-app mini chart of the last seven days: tall bar = full page, medium bar = half page, short bar = not learned
@@ -30,8 +32,10 @@
 
 
 ### 📊 History & Progress Tracking
+- **Seder Filter Bar** (<span dir="rtl" lang="he">סרגל סינון סדרים</span>): Filter Shas tractates at the top of the History screen with quick tabs: All (<span dir="rtl" lang="he">הכל</span>), Zeraim, Moed, Nashim, Nezikin, Kodashim, and Taharot
 - **Complete Shas Overview**: All 37 tractates (<span dir="rtl" lang="he">מסכתות</span>) grouped by **Seder** (<span dir="rtl" lang="he">סדר</span>) in collapsible sections, each with its own progress summary
 - **Masechet-by-Masechet Progress**: Individual progress bars for each tractate showing pages learned (including half pages)
+- **Accurate Tractate Boundaries**: 12 tractates ending on amud א' (such as Berakhot 64a, Moed Katan, Chagigah, Niddah) are strictly bounded; amud ב' is omitted and navigation continues directly to the next tractate
 - **Completion Statistics**: Track total pages learned and completed tractates
 - **Interactive Masechet Details**: Tap any tractate to see a daf grid; use **Mark all** (<span dir="rtl" lang="he">סמן הכל</span>) or **Clear all** (<span dir="rtl" lang="he">בטל הכל</span>) for bulk updates (with confirmation), or tap individual daf numbers to toggle. Partial daf cells use a distinct style; tapping a half page **upgrades** it to full learned (half page marking is available from Home, Calendar, and Tzurat Hadaf only)
 - **Daf Yomi vs. Personal Track Mode Toggle**: Within any tractate modal, switch between **Daf Yomi** (<span dir="rtl" lang="he">דף יומי</span>) and **Personal Track** (<span dir="rtl" lang="he">מסכת אישית</span>). Study and track individual tractates independently without affecting the global Daf Yomi calendar history
@@ -80,6 +84,8 @@
 
 ### 📱 User Experience
 - **Full RTL Support**: Complete Right-to-Left layout optimized for Hebrew
+- **Haptic Feedback** (<span dir="rtl" lang="he">משוב רטט</span>): Tactile vibration feedback powered by `expo-haptics` upon marking pages, toggling states, and navigating
+- **Hebrew Gematria Parser**: Automatic resolution of Hebrew letter numbering (e.g. "סד", "קכ") or Arabic numerals for rapid page lookup
 - **Smooth Animations**: Powered by React Native Reanimated for fluid transitions
 - **Splash Screen**: Elegant branded loading screen on app launch with a random inspirational quote about Torah learning
 - **Tab Navigation**: Intuitive bottom tab bar with Home, Calendar, History, and Settings; Tzurat Hadaf opens as a full-screen modal over the tabs

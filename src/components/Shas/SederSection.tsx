@@ -1,8 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
-import { Seder } from '../../data/shas';
+import { useGuideSectionAnimation } from '../Settings/useGuideSectionAnimation';
+import AccordionSlideContent from '../AccordionSlideContent';
 
 interface SederSectionProps {
   sederName: string;
@@ -29,6 +31,7 @@ const SederSection = React.memo(function SederSection({
 }: SederSectionProps) {
   const theme = useTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
+  const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
 
   return (
     <View style={styles.container}>
@@ -63,21 +66,23 @@ const SederSection = React.memo(function SederSection({
             <View style={[styles.progressFill, { width: `${percentage}%` }]} />
           </View>
           <View style={styles.chevronBox}>
-            <Ionicons
-              name={isExpanded ? 'chevron-up' : 'chevron-down'}
-              size={16}
-              color={theme.colors.textMuted}
-            />
+            <Animated.View style={animatedChevronStyle}>
+              <Ionicons
+                name="chevron-down-outline"
+                size={16}
+                color={theme.colors.textMuted}
+              />
+            </Animated.View>
           </View>
         </View>
       </TouchableOpacity>
       
-      {isExpanded && children && (
+      <AccordionSlideContent isExpanded={Boolean(isExpanded && children)}>
         <View style={styles.contentContainer}>
           <View style={styles.contentDivider} />
           {children}
         </View>
-      )}
+      </AccordionSlideContent>
     </View>
   );
 });

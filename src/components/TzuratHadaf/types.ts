@@ -10,6 +10,7 @@ export interface TzuratHadafViewerProps {
   error: string | null;
   layoutKey?: string;
   isLandscape?: boolean;
+  isFullscreen?: boolean;
   onToggleOrientation?: () => void;
   onOpenSefaria?: () => void;
   onRetry?: () => void;

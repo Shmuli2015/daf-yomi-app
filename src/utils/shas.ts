@@ -16,12 +16,74 @@ for (const [key, value] of Object.entries(dafDates as Record<string, string>)) {
   normalizedDafDates.set(`${masechetPart}_${dafPart}`, value);
 }
 
+export const MASECHTOT_ENDING_ON_AMUD_A = new Set([
+  'Berachot',
+  'Moed Katan',
+  'Chagigah',
+  'Yevamot',
+  'Ketubot',
+  'Nedarim',
+  'Nazir',
+  'Sotah',
+  'Horayot',
+  'Zevachim',
+  'Menachot',
+  'Niddah',
+]);
+
+const MASECHTOT_ENDING_ON_AMUD_A_HE = new Set([
+  'ברכות',
+  'מועד קטן',
+  'חגיגה',
+  'יבמות',
+  'כתובות',
+  'נדרים',
+  'נזיר',
+  'סוטה',
+  'הוריות',
+  'זבחים',
+  'מנחות',
+  'נדה',
+]);
+
+export function doesMasechetEndOnAmudA(masechetName: string): boolean {
+  const clean = stripNiqqud(masechetName).trim().toLowerCase();
+  for (const en of MASECHTOT_ENDING_ON_AMUD_A) {
+    if (en.toLowerCase() === clean) return true;
+  }
+  for (const he of MASECHTOT_ENDING_ON_AMUD_A_HE) {
+    if (stripNiqqud(he) === clean) return true;
+  }
+  return false;
+}
+
+export function isAmudAvailable(masechetName: string, dafNum: number, amud: 'a' | 'b'): boolean {
+  if (amud === 'a') return true;
+  const dafim = getMasechetDafim(masechetName);
+  const lastDaf = dafim.length > 0 ? dafim[dafim.length - 1] : 2;
+  if (dafNum === lastDaf && doesMasechetEndOnAmudA(masechetName)) {
+    return false;
+  }
+  return true;
+}
+
 const masechetDafimByName = new Map<string, number[]>();
 
-export function getMasechetDafim(masechetHe: string): number[] {
-  const masechetNameSafe = stripNiqqud(masechetHe);
-  const hit = masechetDafimByName.get(masechetNameSafe);
+export function getMasechetDafim(masechetName: string): number[] {
+  const cleanName = stripNiqqud(masechetName).trim();
+  const hit = masechetDafimByName.get(cleanName);
   if (hit !== undefined) return hit;
+
+  const match = SHAS_MASECHTOT.find(
+    (m) => m.en.toLowerCase() === cleanName.toLowerCase() || stripNiqqud(m.he) === cleanName
+  );
+  const masechetNameSafe = match ? stripNiqqud(match.he) : cleanName;
+
+  const cachedByHebrew = masechetDafimByName.get(masechetNameSafe);
+  if (cachedByHebrew !== undefined) {
+    masechetDafimByName.set(cleanName, cachedByHebrew);
+    return cachedByHebrew;
+  }
 
   const prefix = masechetNameSafe + '_';
   const dafim: number[] = [];
@@ -32,7 +94,13 @@ export function getMasechetDafim(masechetHe: string): number[] {
     }
   }
   dafim.sort((a, b) => a - b);
+  if (dafim.length === 0 && match) {
+    for (let i = 0; i < match.pages; i++) {
+      dafim.push(i + 2);
+    }
+  }
   masechetDafimByName.set(masechetNameSafe, dafim);
+  masechetDafimByName.set(cleanName, dafim);
   return dafim;
 }
 
