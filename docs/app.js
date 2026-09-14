@@ -1,6 +1,8 @@
 const GITHUB_OWNER = 'Shmuli2015';
 const GITHUB_REPO = 'daf-yomi-app';
 const APK_BASENAME = 'masa-daf';
+const GITHUB_API_TIMEOUT_MS = 4000;
+const LATEST_JSON_TIMEOUT_MS = 8000;
 
 const versionLine = document.getElementById('version-line');
 const downloadBtn = document.getElementById('download-btn');
@@ -44,13 +46,6 @@ function isInAppBrowser() {
   );
 }
 
-function cameFromInAppReferrer() {
-  const ref = document.referrer || '';
-  return /whatsapp|facebook|instagram|messenger|t\.me|telegram|twitter|x\.com|tiktok|snapchat|linkedin/i.test(
-    ref
-  );
-}
-
 function isStandaloneAndroidBrowser() {
   const ua = navigator.userAgent || '';
   if (!isAndroid() || isInAppBrowser()) return false;
@@ -60,7 +55,7 @@ function isStandaloneAndroidBrowser() {
 
 function needsExternalBrowser() {
   if (!isAndroid()) return false;
-  if (isInAppBrowser() || cameFromInAppReferrer()) return true;
+  if (isInAppBrowser()) return true;
   return !isStandaloneAndroidBrowser();
 }
 
@@ -69,7 +64,6 @@ function openInExternalBrowser(url) {
   const path = target.replace(/^https?:\/\//, '');
   const fallback = encodeURIComponent(target);
 
-  // Opens the system "Open with" chooser — breaks out of in-app browsers.
   window.location.href = `intent://${path}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${fallback};end`;
 }
 
@@ -106,9 +100,13 @@ function hideInAppUi() {
   if (downloadBtn) downloadBtn.hidden = false;
 }
 
-function downloadApkDirect(url) {
-  statusEl.textContent = 'ההורדה מתחילה…';
-  window.location.assign(url);
+function showCtaShell() {
+  downloadBtn.setAttribute('aria-disabled', 'true');
+  if (needsExternalBrowser()) {
+    showInAppUi();
+  } else {
+    hideInAppUi();
+  }
 }
 
 function applyRelease({ version, downloadUrl, apkFileName }) {
@@ -119,14 +117,12 @@ function applyRelease({ version, downloadUrl, apkFileName }) {
   if (downloadBtnVersion) {
     downloadBtnVersion.textContent = `גרסה ${version}`;
   }
-  downloadBtn.removeAttribute('aria-disabled');
 
-  if (isAndroid()) {
-    downloadBtn.href = '#';
-  } else {
-    downloadBtn.href = downloadUrl;
-    downloadBtn.hidden = false;
-  }
+  downloadBtn.href = downloadUrl;
+  downloadBtn.setAttribute('download', releaseApkFileName || `${APK_BASENAME}.apk`);
+  downloadBtn.setAttribute('target', '_blank');
+  downloadBtn.setAttribute('rel', 'noopener noreferrer');
+  downloadBtn.removeAttribute('aria-disabled');
 
   if (needsExternalBrowser()) {
     showInAppUi();
@@ -136,8 +132,18 @@ function applyRelease({ version, downloadUrl, apkFileName }) {
   }
 }
 
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function loadLatestJson() {
-  const res = await fetch('latest.json', { cache: 'no-store' });
+  const res = await fetchWithTimeout('latest.json', { cache: 'no-store' }, LATEST_JSON_TIMEOUT_MS);
   if (!res.ok) throw new Error('latest.json unavailable');
   const data = await res.json();
   if (!data?.downloadUrl || !data?.version) throw new Error('invalid latest.json');
@@ -150,9 +156,11 @@ async function loadLatestJson() {
 
 async function loadFromGithubApi() {
   const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
-  const res = await fetch(url, {
-    headers: { Accept: 'application/vnd.github+json' },
-  });
+  const res = await fetchWithTimeout(
+    url,
+    { headers: { Accept: 'application/vnd.github+json' } },
+    GITHUB_API_TIMEOUT_MS,
+  );
   if (!res.ok) throw new Error('GitHub API failed');
   const release = await res.json();
   const tag = release?.tag_name;
@@ -166,18 +174,28 @@ async function loadFromGithubApi() {
   };
 }
 
-function handleDownloadClick(event) {
-  if (!releaseDownloadUrl) return;
-  if (!isAndroid()) return;
+async function loadRelease() {
+  try {
+    return await loadLatestJson();
+  } catch {
+    return await loadFromGithubApi();
+  }
+}
 
-  event.preventDefault();
+function handleDownloadClick(event) {
+  if (downloadBtn.getAttribute('aria-disabled') === 'true' || !releaseDownloadUrl) {
+    event.preventDefault();
+    return;
+  }
 
   if (needsExternalBrowser()) {
+    event.preventDefault();
     openInExternalBrowser(window.location.href);
     return;
   }
 
-  downloadApkDirect(releaseDownloadUrl);
+  statusEl.textContent =
+    'אם מופיעה אזהרה של הדפדפן, אשרו את ההורדה. הקובץ גדול ויכול לקחת כמה דקות.';
 }
 
 openExternalBtn?.addEventListener('click', () => {
@@ -189,11 +207,12 @@ copyLinkBtn?.addEventListener('click', copyPageLink);
 downloadBtn?.addEventListener('click', handleDownloadClick);
 
 async function init() {
-  downloadBtn.setAttribute('aria-disabled', 'true');
+  showCtaShell();
   try {
-    const release = (await loadFromGithubApi().catch(() => null)) ?? (await loadLatestJson());
+    const release = await loadRelease();
     applyRelease(release);
   } catch {
+    versionLine.hidden = false;
     versionLine.textContent = 'לא הצלחנו לטעון את הגרסה';
     statusEl.textContent = 'נסו שוב מאוחר יותר, או פנו לתמיכה.';
   }

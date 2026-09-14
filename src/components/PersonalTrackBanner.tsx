@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,8 +7,10 @@ import { useTheme } from '../theme';
 import { numberToGematria } from '../data/shas';
 import { formatProgressCount } from '../utils/dafStatus';
 import { usePersonalTrackStats } from '../hooks/usePersonalTrackStats';
+import { useAppStore } from '../store/useAppStore';
 import { createPersonalTrackBannerStyles } from './PersonalTrack/PersonalTrackBanner.styles';
 import PersonalTrackOverviewCard from './PersonalTrack/PersonalTrackOverviewCard';
+import DafMarkMenuModal from './DafMarkMenuModal';
 import type { PersonalTrackRecord } from '../db/database';
 
 interface PersonalTrackBannerProps {
@@ -32,6 +34,9 @@ export default function PersonalTrackBanner({
 }: PersonalTrackBannerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createPersonalTrackBannerStyles(theme), [theme]);
+  const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
+  const setPersonalDafStudyStatus = useAppStore((s) => s.setPersonalDafStudyStatus);
+  const [showMarkModal, setShowMarkModal] = useState(false);
 
   const {
     masechet,
@@ -39,11 +44,16 @@ export default function PersonalTrackBanner({
     totalPages,
     percentage,
     nextDafNum,
+    isNextDafPartial,
+    nextDafAmud,
     animatedProgressStyle,
   } = usePersonalTrackStats(activeMasechetEn, personalTrackRecords);
 
   const totalPersonalLearnedCount = useMemo(() => {
-    return personalTrackRecords.filter((r) => r.status === 'learned').length;
+    return personalTrackRecords.reduce(
+      (sum, r) => sum + (r.status === 'learned' ? 1 : r.status === 'partial' ? 0.5 : 0),
+      0,
+    );
   }, [personalTrackRecords]);
 
   if (!masechet) {
@@ -152,14 +162,54 @@ export default function PersonalTrackBanner({
             <TouchableOpacity
               style={styles.quickMarkBtn}
               onPress={() => onToggleDafLearned(masechet.en, nextDafNum)}
+              onLongPress={() => setShowMarkModal(true)}
               activeOpacity={0.8}
             >
-              <Ionicons name="checkmark-done" size={16} color="#FFF" />
-              <Text style={styles.quickMarkText}>סמן כנלמד</Text>
+              <Ionicons
+                name={isNextDafPartial ? 'checkmark-circle' : 'checkmark-done'}
+                size={16}
+                color="#FFF"
+              />
+              <Text style={styles.quickMarkText}>
+                {isNextDafPartial ? 'סיימתי את הדף!' : 'סמן כנלמד'}
+              </Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
+
+      {nextDafNum && (
+        <DafMarkMenuModal
+          visible={showMarkModal}
+          partialAmud={isNextDafPartial ? nextDafAmud : null}
+          showUnmark={isNextDafPartial}
+          onSelectFull={() => {
+            onToggleDafLearned(masechet.en, nextDafNum);
+            setShowMarkModal(false);
+          }}
+          onSelectHalfA={() => {
+            markPersonalPartialAmud(masechet.en, nextDafNum, 'a');
+            setShowMarkModal(false);
+          }}
+          onSelectHalfB={() => {
+            markPersonalPartialAmud(masechet.en, nextDafNum, 'b');
+            setShowMarkModal(false);
+          }}
+          onUnmark={() => {
+            setPersonalDafStudyStatus(masechet.en, nextDafNum, 'none');
+            setShowMarkModal(false);
+          }}
+          onOpenTzuratHadaf={
+            onOpenTzuratHadaf
+              ? () => {
+                  setShowMarkModal(false);
+                  onOpenTzuratHadaf(masechet.en, nextDafNum);
+                }
+              : undefined
+          }
+          onCancel={() => setShowMarkModal(false)}
+        />
+      )}
     </View>
   );
 }

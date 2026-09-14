@@ -33,6 +33,13 @@ interface AppState {
   clearActivePersonalMasechet: () => void;
   togglePersonalDafLearned: (masechetEn: string, dafNum: number) => void;
   markPersonalDafLearned: (masechetEn: string, dafNum: number) => void;
+  markPersonalPartialAmud: (masechetEn: string, dafNum: number, amud: AmudSide) => void;
+  setPersonalDafStudyStatus: (
+    masechetEn: string,
+    dafNum: number,
+    status: 'learned' | 'partial' | 'none',
+    amud?: AmudSide | null
+  ) => void;
 
   markTodayAsLearned: () => void;
   setDafStudyStatus: (
@@ -187,12 +194,32 @@ export const useAppStore = create<AppState>((set, get) => ({
       (r) => r.masechet === masechetEn && r.daf_num === dafNum
     );
     const newStatus = existing?.status === 'learned' ? 'none' : 'learned';
-    updatePersonalTrackRecord(masechetEn, dafNum, newStatus);
+    updatePersonalTrackRecord(masechetEn, dafNum, newStatus, null);
     get().refreshPersonalTrack();
   },
 
   markPersonalDafLearned: (masechetEn, dafNum) => {
-    updatePersonalTrackRecord(masechetEn, dafNum, 'learned');
+    updatePersonalTrackRecord(masechetEn, dafNum, 'learned', null);
+    get().refreshPersonalTrack();
+  },
+
+  markPersonalPartialAmud: (masechetEn, dafNum, amud) => {
+    const { personalTrackRecords } = get();
+    const existing = personalTrackRecords.find(
+      (r) => r.masechet === masechetEn && r.daf_num === dafNum
+    );
+    const resolved = resolveAmudMark(existing, amud);
+    updatePersonalTrackRecord(
+      masechetEn,
+      dafNum,
+      resolved.status,
+      resolved.amud
+    );
+    get().refreshPersonalTrack();
+  },
+
+  setPersonalDafStudyStatus: (masechetEn, dafNum, status, amud = null) => {
+    updatePersonalTrackRecord(masechetEn, dafNum, status, amud);
     get().refreshPersonalTrack();
   },
 

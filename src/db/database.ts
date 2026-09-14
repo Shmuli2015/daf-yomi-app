@@ -19,6 +19,7 @@ export interface PersonalTrackRecord {
   masechet: string;
   daf_num: number;
   status: 'learned' | 'partial';
+  amud?: 'a' | 'b' | null;
   learnedAt: string;
 }
 
@@ -57,6 +58,15 @@ function migrateDailyDafColumns() {
   }
 }
 
+function migratePersonalTrackColumns() {
+  const personalDafInfo: { name: string }[] = db.getAllSync('PRAGMA table_info(personal_track_daf);');
+  const personalDafColumns = personalDafInfo.map(c => c.name);
+
+  if (!personalDafColumns.includes('amud')) {
+    db.execSync('ALTER TABLE personal_track_daf ADD COLUMN amud TEXT DEFAULT NULL;');
+  }
+}
+
 export function initDB() {
   db.execSync(`
     CREATE TABLE IF NOT EXISTS daily_daf (
@@ -84,6 +94,7 @@ export function initDB() {
   `);
 
   migrateDailyDafColumns();
+  migratePersonalTrackColumns();
 
   const tableInfo: any[] = db.getAllSync('PRAGMA table_info(settings);');
   const columns = tableInfo.map(c => c.name);
@@ -389,16 +400,28 @@ export function getPersonalTrackRecords(masechet?: string): PersonalTrackRecord[
   return db.getAllSync('SELECT * FROM personal_track_daf ORDER BY daf_num ASC') as PersonalTrackRecord[];
 }
 
-export function updatePersonalTrackRecord(masechet: string, dafNum: number, status: 'learned' | 'partial' | 'none') {
+export function updatePersonalTrackRecord(
+  masechet: string,
+  dafNum: number,
+  status: 'learned' | 'partial' | 'none',
+  amud?: 'a' | 'b' | null
+) {
+  migratePersonalTrackColumns();
   const now = new Date().toISOString();
   if (status === 'none') {
     db.runSync('DELETE FROM personal_track_daf WHERE masechet = ? AND daf_num = ?', [masechet, dafNum]);
   } else {
     const existing = db.getFirstSync('SELECT id FROM personal_track_daf WHERE masechet = ? AND daf_num = ?', [masechet, dafNum]);
     if (existing) {
-      db.runSync('UPDATE personal_track_daf SET status = ?, learnedAt = ? WHERE masechet = ? AND daf_num = ?', [status, now, masechet, dafNum]);
+      db.runSync(
+        'UPDATE personal_track_daf SET status = ?, amud = ?, learnedAt = ? WHERE masechet = ? AND daf_num = ?',
+        [status, amud ?? null, now, masechet, dafNum]
+      );
     } else {
-      db.runSync('INSERT INTO personal_track_daf (masechet, daf_num, status, learnedAt) VALUES (?, ?, ?, ?)', [masechet, dafNum, status, now]);
+      db.runSync(
+        'INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt) VALUES (?, ?, ?, ?, ?)',
+        [masechet, dafNum, status, amud ?? null, now]
+      );
     }
   }
 }
@@ -408,19 +431,21 @@ export function setActivePersonalMasechet(masechetEn: string | null) {
 }
 
 export function replaceAllPersonalTrackRecords(records: PersonalTrackRecord[]) {
+  migratePersonalTrackColumns();
   db.withTransactionSync(() => {
     db.runSync('DELETE FROM personal_track_daf');
     const now = new Date().toISOString();
     for (const r of records) {
       db.runSync(
-        'INSERT INTO personal_track_daf (masechet, daf_num, status, learnedAt) VALUES (?, ?, ?, ?)',
-        [r.masechet, r.daf_num, r.status, r.learnedAt || now]
+        'INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt) VALUES (?, ?, ?, ?, ?)',
+        [r.masechet, r.daf_num, r.status, r.amud ?? null, r.learnedAt || now]
       );
     }
   });
 }
 
 export function mergePersonalTrackRecords(records: PersonalTrackRecord[]) {
+  migratePersonalTrackColumns();
   db.withTransactionSync(() => {
     const now = new Date().toISOString();
     for (const r of records) {
@@ -430,8 +455,8 @@ export function mergePersonalTrackRecords(records: PersonalTrackRecord[]) {
       );
       if (!existing) {
         db.runSync(
-          'INSERT INTO personal_track_daf (masechet, daf_num, status, learnedAt) VALUES (?, ?, ?, ?)',
-          [r.masechet, r.daf_num, r.status, r.learnedAt || now]
+          'INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt) VALUES (?, ?, ?, ?, ?)',
+          [r.masechet, r.daf_num, r.status, r.amud ?? null, r.learnedAt || now]
         );
       } else {
         const existingTime = Date.parse(existing.learnedAt);
@@ -441,8 +466,8 @@ export function mergePersonalTrackRecords(records: PersonalTrackRecord[]) {
           (!Number.isFinite(existingTime) || incomingTime >= existingTime);
         if (incomingWins) {
           db.runSync(
-            'UPDATE personal_track_daf SET status = ?, learnedAt = ? WHERE id = ?',
-            [r.status, r.learnedAt || now, existing.id]
+            'UPDATE personal_track_daf SET status = ?, amud = ?, learnedAt = ? WHERE id = ?',
+            [r.status, r.amud ?? null, r.learnedAt || now, existing.id]
           );
         }
       }

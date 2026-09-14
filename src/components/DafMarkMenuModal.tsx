@@ -13,6 +13,7 @@ interface DafMarkMenuModalProps {
   showUnmark?: boolean;
   onUnmark?: () => void;
   partialAmud?: 'a' | 'b' | null;
+  onOpenTzuratHadaf?: () => void;
 }
 
 export default function DafMarkMenuModal({
@@ -24,6 +25,7 @@ export default function DafMarkMenuModal({
   showUnmark = false,
   onUnmark,
   partialAmud = null,
+  onOpenTzuratHadaf,
 }: DafMarkMenuModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -60,6 +62,13 @@ export default function DafMarkMenuModal({
             חצי דף (ב){partialAmud === 'b' ? ' ✓' : ''}
           </Text>
         </TouchableOpacity>
+
+        {onOpenTzuratHadaf && (
+          <TouchableOpacity style={styles.optionButton} onPress={onOpenTzuratHadaf} activeOpacity={0.8}>
+            <Ionicons name="book-outline" size={22} color={theme.colors.accent} />
+            <Text style={styles.optionText}>פתח בצורת הדף</Text>
+          </TouchableOpacity>
+        )}
 
         {showUnmark && onUnmark && (
           <TouchableOpacity style={styles.unmarkButton} onPress={onUnmark} activeOpacity={0.8}>

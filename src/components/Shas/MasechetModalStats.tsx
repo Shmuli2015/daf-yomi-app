@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { formatProgressCount } from '../../utils/dafStatus';
 import { useTheme } from '../../theme';
 
 interface MasechetModalStatsProps {
@@ -27,7 +28,7 @@ export default function MasechetModalStats({
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>
-              {`\u2066${totalLearned} / ${totalPages}\u2069`}
+              {`\u2066${formatProgressCount(totalLearned)} / ${totalPages}\u2069`}
             </Text>
             <Text style={styles.statLabel}>
               {showPersonalTrack ? 'דפים ייחודיים' : 'דפים שנלמדו'}
