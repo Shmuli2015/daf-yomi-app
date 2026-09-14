@@ -3,21 +3,20 @@ import type { DailyRecord } from '../db/database';
 export type DafStudyStatus = 'missed' | 'partial' | 'learned';
 export type AmudSide = 'a' | 'b';
 
-export function getPartialAmud(record: DailyRecord | null | undefined): AmudSide | null {
+export interface StatusRecordLike {
+  status?: string | null;
+  amud?: AmudSide | null;
+}
+
+export function getPartialAmud(record: StatusRecordLike | null | undefined): AmudSide | null {
   if (!record || record.status !== 'partial') return null;
   return record.amud ?? null;
 }
 
 export function resolveAmudMark(
-  existing: DailyRecord | null | undefined,
+  _existing: StatusRecordLike | null | undefined,
   amud: AmudSide
-): Pick<DailyRecord, 'status' | 'percentage' | 'amud'> {
-  if (existing?.status === 'learned') {
-    return { status: 'learned', percentage: 100, amud: null };
-  }
-  if (existing?.status === 'partial' && existing.amud && existing.amud !== amud) {
-    return { status: 'learned', percentage: 100, amud: null };
-  }
+): { status: 'learned' | 'partial'; percentage: number; amud: AmudSide | null } {
   return { status: 'partial', percentage: 50, amud };
 }
 

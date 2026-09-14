@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Pressable, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,6 +6,8 @@ import { useTheme } from '../theme';
 import { SHAS_MASECHTOT, numberToGematria } from '../data/shas';
 import { getMasechetDafim } from '../utils/shas';
 import { formatProgressCount } from '../utils/dafStatus';
+import { useAppStore } from '../store/useAppStore';
+import DafMarkMenuModal from './DafMarkMenuModal';
 import { PersonalTrackRecord } from '../db/database';
 
 interface PersonalMasechetDetailModalProps {
@@ -34,6 +36,9 @@ export default function PersonalMasechetDetailModal({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { width: windowWidth } = useWindowDimensions();
+  const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
+  const setPersonalDafStudyStatus = useAppStore((s) => s.setPersonalDafStudyStatus);
+  const [selectedDafForMenu, setSelectedDafForMenu] = useState<number | null>(null);
 
   const masechet = useMemo(() => {
     if (!masechetEn) return null;
@@ -45,17 +50,36 @@ export default function PersonalMasechetDetailModal({
     return getMasechetDafim(masechet.he);
   }, [masechet]);
 
-  const learnedSet = useMemo(() => {
-    if (!masechet) return new Set<number>();
-    const recs = personalTrackRecords.filter(
-      (r) => r.masechet === masechet.en && r.status === 'learned'
-    );
-    return new Set(recs.map((r) => r.daf_num));
+  const masechetRecords = useMemo(() => {
+    if (!masechet) return [];
+    return personalTrackRecords.filter((r) => r.masechet === masechet.en);
   }, [masechet, personalTrackRecords]);
+
+  const learnedSet = useMemo(() => {
+    return new Set(
+      masechetRecords.filter((r) => r.status === 'learned').map((r) => r.daf_num)
+    );
+  }, [masechetRecords]);
+
+  const partialMap = useMemo(() => {
+    const map = new Map<number, PersonalTrackRecord>();
+    for (const r of masechetRecords) {
+      if (r.status === 'partial') {
+        map.set(r.daf_num, r);
+      }
+    }
+    return map;
+  }, [masechetRecords]);
+
+  const learnedCount = useMemo(() => {
+    return masechetRecords.reduce(
+      (sum, r) => sum + (r.status === 'learned' ? 1 : r.status === 'partial' ? 0.5 : 0),
+      0
+    );
+  }, [masechetRecords]);
 
   if (!masechet) return null;
 
-  const learnedCount = learnedSet.size;
   const totalCount = masechet.pages;
   const pct = totalCount > 0 ? Math.round((learnedCount / totalCount) * 100) : 0;
 
@@ -131,14 +155,29 @@ export default function PersonalMasechetDetailModal({
           </View>
 
           <Text style={styles.hintText}>
-            לחץ על דף כדי לסמן כנלמד בלימוד אישי (הדף יצטרף להספק הש״ס וניתן ללמוד אותו גם בבוא יומו בדף היומי).
+            לחץ על דף כדי לסמן כנלמד. לחיצה ארוכה תפתח אפשרויות לסימון חצי דף או פתיחה בצורת הדף.
           </Text>
 
           <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
             <View style={styles.grid}>
               {dafimArray.map((dafNum) => {
                 const isLearned = learnedSet.has(dafNum);
+                const partialRec = partialMap.get(dafNum);
+                const isPartial = partialRec != null;
                 const dafHe = numberToGematria(dafNum);
+                const amudText = partialRec?.amud === 'a' ? 'א׳' : partialRec?.amud === 'b' ? 'ב׳' : '';
+
+                const cellStyle = isLearned
+                  ? styles.dafCellLearned
+                  : isPartial
+                  ? styles.dafCellPartial
+                  : styles.dafCellDefault;
+
+                const textStyle = isLearned
+                  ? styles.dafTextLearned
+                  : isPartial
+                  ? styles.dafTextPartial
+                  : styles.dafTextDefault;
 
                 return (
                   <TouchableOpacity
@@ -146,18 +185,18 @@ export default function PersonalMasechetDetailModal({
                     style={[
                       styles.dafCell,
                       { width: cellSize, height: cellSize },
-                      isLearned ? styles.dafCellLearned : styles.dafCellDefault,
+                      cellStyle,
                     ]}
                     onPress={() => onToggleDafLearned(masechet.en, dafNum)}
-                    onLongPress={() => onOpenTzuratHadaf?.(masechet.en, dafNum)}
+                    onLongPress={() => setSelectedDafForMenu(dafNum)}
                     activeOpacity={0.7}
                   >
-                    <Text
-                      style={[
-                        styles.dafText,
-                        isLearned ? styles.dafTextLearned : styles.dafTextDefault,
-                      ]}
-                    >
+                    {isPartial && amudText ? (
+                      <View style={styles.dafCornerBadge}>
+                        <Text style={styles.dafCornerBadgeText}>{amudText}</Text>
+                      </View>
+                    ) : null}
+                    <Text style={[styles.dafText, textStyle]}>
                       {dafHe}
                     </Text>
                   </TouchableOpacity>
@@ -167,6 +206,44 @@ export default function PersonalMasechetDetailModal({
           </ScrollView>
         </SafeAreaView>
       </View>
+
+      {selectedDafForMenu !== null && (
+        <DafMarkMenuModal
+          visible={selectedDafForMenu !== null}
+          partialAmud={selectedDafForMenu ? partialMap.get(selectedDafForMenu)?.amud || null : null}
+          showUnmark={
+            selectedDafForMenu
+              ? learnedSet.has(selectedDafForMenu) || partialMap.has(selectedDafForMenu)
+              : false
+          }
+          onSelectFull={() => {
+            onToggleDafLearned(masechet.en, selectedDafForMenu);
+            setSelectedDafForMenu(null);
+          }}
+          onSelectHalfA={() => {
+            markPersonalPartialAmud(masechet.en, selectedDafForMenu, 'a');
+            setSelectedDafForMenu(null);
+          }}
+          onSelectHalfB={() => {
+            markPersonalPartialAmud(masechet.en, selectedDafForMenu, 'b');
+            setSelectedDafForMenu(null);
+          }}
+          onUnmark={() => {
+            setPersonalDafStudyStatus(masechet.en, selectedDafForMenu, 'none');
+            setSelectedDafForMenu(null);
+          }}
+          onOpenTzuratHadaf={
+            onOpenTzuratHadaf
+              ? () => {
+                  const d = selectedDafForMenu;
+                  setSelectedDafForMenu(null);
+                  onOpenTzuratHadaf(masechet.en, d);
+                }
+              : undefined
+          }
+          onCancel={() => setSelectedDafForMenu(null)}
+        />
+      )}
     </Modal>
   );
 }
@@ -315,6 +392,25 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.accentLight,
       borderColor: 'rgba(201,150,60,0.4)',
     },
+    dafCellPartial: {
+      backgroundColor: theme.colors.accent + '25',
+      borderColor: theme.colors.accent + '70',
+      borderStyle: 'dashed',
+    },
+    dafCornerBadge: {
+      position: 'absolute',
+      top: 2,
+      left: 3,
+      paddingHorizontal: 3,
+      paddingVertical: 1,
+      borderRadius: 4,
+      backgroundColor: theme.colors.accent,
+    },
+    dafCornerBadgeText: {
+      fontSize: 8,
+      fontWeight: '900',
+      color: '#FFFFFF',
+    },
     dafText: {
       fontSize: 15,
       fontWeight: '800',
@@ -323,6 +419,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.textSecondary,
     },
     dafTextLearned: {
+      color: theme.colors.accent,
+    },
+    dafTextPartial: {
       color: theme.colors.accent,
     },
   });

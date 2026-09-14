@@ -141,6 +141,7 @@ function validatePersonalTrackRecord(raw: unknown): PersonalTrackRecord | null {
     masechet: r.masechet,
     daf_num: r.daf_num,
     status: r.status,
+    amud: r.amud === 'a' || r.amud === 'b' ? r.amud : null,
     learnedAt: r.learnedAt,
   };
 }

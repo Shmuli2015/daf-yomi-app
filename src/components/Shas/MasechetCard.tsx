@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
 import { SHAS_MASECHTOT } from '../../data/shas';
 import { stripNiqqud } from '../../utils/shas';
+import { formatProgressCount } from '../../utils/dafStatus';
 import { useTheme } from '../../theme';
 
 export interface MasechetData {
@@ -65,7 +66,7 @@ const MasechetCard = React.memo(function MasechetCard({
         <View style={styles.cardBody}>
           <View style={styles.statsRow}>
             <Text style={styles.progressText}>
-              {`\u200E${data.learned} / ${data.total}\u200E`} דפים
+              {`\u200E${formatProgressCount(data.learned)} / ${data.total}\u200E`} דפים
             </Text>
             {data.isCompleted ? (
               <View style={styles.percentPillCompleted}>

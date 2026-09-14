@@ -12,16 +12,40 @@ export function usePersonalTrackStats(
     return SHAS_MASECHTOT.find((m) => m.en === activeMasechetEn) || null;
   }, [activeMasechetEn]);
 
-  const { learnedCount, totalPages, percentage, nextDafNum } = useMemo(() => {
+  const { learnedCount, totalPages, percentage, nextDafNum, isNextDafPartial, nextDafAmud } = useMemo(() => {
     if (!masechet) {
-      return { learnedCount: 0, totalPages: 0, percentage: 0, nextDafNum: null };
+      return {
+        learnedCount: 0,
+        totalPages: 0,
+        percentage: 0,
+        nextDafNum: null,
+        isNextDafPartial: false,
+        nextDafAmud: null,
+      };
     }
 
     const masechetRecords = personalTrackRecords.filter(
-      (r) => r.masechet === masechet.en && r.status === 'learned',
+      (r) => r.masechet === masechet.en,
     );
-    const learnedSet = new Set(masechetRecords.map((r) => r.daf_num));
-    const count = learnedSet.size;
+    const learnedSet = new Set(
+      masechetRecords.filter((r) => r.status === 'learned').map((r) => r.daf_num),
+    );
+    const partialMap = new Map<number, PersonalTrackRecord>();
+    for (const r of masechetRecords) {
+      if (r.status === 'partial') {
+        partialMap.set(r.daf_num, r);
+      }
+    }
+
+    let count = 0;
+    for (const r of masechetRecords) {
+      if (r.status === 'learned') {
+        count += 1;
+      } else if (r.status === 'partial') {
+        count += 0.5;
+      }
+    }
+
     const total = masechet.pages;
     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
 
@@ -33,11 +57,15 @@ export function usePersonalTrackStats(
       }
     }
 
+    const nextRecord = next != null ? partialMap.get(next) : undefined;
+
     return {
       learnedCount: count,
       totalPages: total,
       percentage: pct,
       nextDafNum: next,
+      isNextDafPartial: nextRecord?.status === 'partial',
+      nextDafAmud: nextRecord?.amud || null,
     };
   }, [masechet, personalTrackRecords]);
 
@@ -57,6 +85,8 @@ export function usePersonalTrackStats(
     totalPages,
     percentage,
     nextDafNum,
+    isNextDafPartial,
+    nextDafAmud,
     animatedProgressStyle,
   };
 }

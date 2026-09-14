@@ -11,14 +11,16 @@ import {
   getMasechetDafim,
   stripNiqqud,
 } from '../../utils/shas';
-import { getStudyStatus } from '../../utils/dafStatus';
+import { getStudyStatus, getPartialAmud } from '../../utils/dafStatus';
 import { getMasechetProgressFromCache } from '../../utils/progressCache';
 import { useTheme } from '../../theme';
 import BulkActionConfirmOverlay from './BulkActionConfirmOverlay';
 import FullscreenLoadingOverlay from './FullscreenLoadingOverlay';
 import DafCell from './DafCell';
+import DafMarkMenuModal from '../DafMarkMenuModal';
 import MasechetModalModeToggle, { type MasechetStudyMode } from './MasechetModalModeToggle';
 import MasechetModalStats from './MasechetModalStats';
+import type { PersonalTrackRecord } from '../../db/database';
 
 interface MasechetModalProps {
   masechet: typeof SHAS_MASECHTOT[0];
@@ -39,10 +41,14 @@ export default function MasechetModal({
     progressCache,
     toggleAnyDafLearned,
     setDafStudyStatus,
+    markPartialAmud,
     batchMarkDafim,
     batchUnmarkDafim,
     personalTrackRecords,
     togglePersonalDafLearned,
+    markPersonalDafLearned,
+    markPersonalPartialAmud,
+    setPersonalDafStudyStatus,
     activePersonalMasechet,
     setActivePersonalMasechet,
     clearActivePersonalMasechet,
@@ -53,10 +59,14 @@ export default function MasechetModal({
       progressCache: s.progressCache,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
       setDafStudyStatus: s.setDafStudyStatus,
+      markPartialAmud: s.markPartialAmud,
       batchMarkDafim: s.batchMarkDafim,
       batchUnmarkDafim: s.batchUnmarkDafim,
       personalTrackRecords: s.personalTrackRecords,
       togglePersonalDafLearned: s.togglePersonalDafLearned,
+      markPersonalDafLearned: s.markPersonalDafLearned,
+      markPersonalPartialAmud: s.markPersonalPartialAmud,
+      setPersonalDafStudyStatus: s.setPersonalDafStudyStatus,
       activePersonalMasechet: s.activePersonalMasechet,
       setActivePersonalMasechet: s.setActivePersonalMasechet,
       clearActivePersonalMasechet: s.clearActivePersonalMasechet,
@@ -64,13 +74,28 @@ export default function MasechetModal({
     })),
   );
 
+  const [selectedDafForMenu, setSelectedDafForMenu] = useState<number | null>(null);
+
   const recordByDate = useMemo(() => new Map(history.map((r) => [r.date, r])), [history]);
-  const personalLearnedSet = useMemo(() => {
-    const recs = personalTrackRecords.filter(
-      (r) => r.masechet === masechet.en && r.status === 'learned'
-    );
-    return new Set(recs.map((r) => r.daf_num));
+  const masechetPersonalRecords = useMemo(() => {
+    return personalTrackRecords.filter((r) => r.masechet === masechet.en);
   }, [masechet.en, personalTrackRecords]);
+
+  const personalLearnedSet = useMemo(() => {
+    return new Set(
+      masechetPersonalRecords.filter((r) => r.status === 'learned').map((r) => r.daf_num)
+    );
+  }, [masechetPersonalRecords]);
+
+  const personalPartialMap = useMemo(() => {
+    const map = new Map<number, PersonalTrackRecord>();
+    for (const r of masechetPersonalRecords) {
+      if (r.status === 'partial') {
+        map.set(r.daf_num, r);
+      }
+    }
+    return map;
+  }, [masechetPersonalRecords]);
 
   const [showConfetti, setShowConfetti] = useState(false);
   const [pendingAction, setPendingAction] = useState<'markAll' | 'unmarkAll' | null>(null);
@@ -140,6 +165,17 @@ export default function MasechetModal({
 
   const handleToggleDafStable = useCallback((dafNum: number) => {
     handleToggleDafRef.current(dafNum);
+  }, []);
+
+  const handleLongPressDaf = useCallback((dafNum: number) => {
+    setSelectedDafForMenu(dafNum);
+  }, []);
+
+  const handleLongPressDafRef = useRef(handleLongPressDaf);
+  handleLongPressDafRef.current = handleLongPressDaf;
+
+  const handleLongPressDafStable = useCallback((dafNum: number) => {
+    handleLongPressDafRef.current(dafNum);
   }, []);
 
   const handleMarkAll = useCallback(() => {
@@ -297,19 +333,28 @@ export default function MasechetModal({
 
         <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>
           <View style={styles.dafGrid}>
-            {dafimArray.map(dafNum => {
+            {dafimArray.map((dafNum) => {
               const dateStr = getDafDateStr(masechet.he, dafNum);
-              const studyStatus = dateStr ? getStudyStatus(recordByDate.get(dateStr)) : 'none';
+              const rec = dateStr ? recordByDate.get(dateStr) : undefined;
+              const studyStatus = rec ? getStudyStatus(rec) : 'none';
+              const partialAmud = rec ? getPartialAmud(rec) : null;
               const isPersonal = isPersonalTrackEnabled && personalLearnedSet.has(dafNum);
+              const personalRec = isPersonalTrackEnabled ? personalPartialMap.get(dafNum) : undefined;
+              const isPersonalPartial = personalRec != null;
+              const personalPartialAmud = personalRec?.amud || null;
               return (
                 <DafCell
                   key={dafNum}
                   dafNum={dafNum}
                   isLearned={studyStatus === 'learned'}
                   isPartial={studyStatus === 'partial'}
+                  partialAmud={partialAmud}
                   isPersonalLearned={isPersonal}
+                  isPersonalPartial={isPersonalPartial}
+                  personalPartialAmud={personalPartialAmud}
                   mode={effectiveMode}
                   onPress={handleToggleDafStable}
+                  onLongPress={handleLongPressDafStable}
                   styles={styles}
                 />
               );
@@ -338,6 +383,82 @@ export default function MasechetModal({
         />
 
         <FullscreenLoadingOverlay visible={isLoading} />
+
+        {selectedDafForMenu !== null && (
+          <DafMarkMenuModal
+            visible={selectedDafForMenu !== null}
+            partialAmud={
+              effectiveMode === 'personal'
+                ? personalPartialMap.get(selectedDafForMenu)?.amud || null
+                : (() => {
+                    const dStr = getDafDateStr(masechet.he, selectedDafForMenu);
+                    return dStr ? getPartialAmud(recordByDate.get(dStr)) : null;
+                  })()
+            }
+            showUnmark={
+              effectiveMode === 'personal'
+                ? personalLearnedSet.has(selectedDafForMenu) || personalPartialMap.has(selectedDafForMenu)
+                : (() => {
+                    const dStr = getDafDateStr(masechet.he, selectedDafForMenu);
+                    const st = dStr ? getStudyStatus(recordByDate.get(dStr)) : 'none';
+                    return st === 'learned' || st === 'partial';
+                  })()
+            }
+            onSelectFull={() => {
+              const dafNum = selectedDafForMenu;
+              setSelectedDafForMenu(null);
+              if (effectiveMode === 'personal') {
+                markPersonalDafLearned(masechet.en, dafNum);
+              } else {
+                const dateStr = getDafDateStr(masechet.he, dafNum);
+                if (dateStr) {
+                  const dafHeStr = `דף ${numberToGematria(dafNum)}`;
+                  setDafStudyStatus(dateStr, masechet.he, dafHeStr, 'learned');
+                }
+              }
+            }}
+            onSelectHalfA={() => {
+              const dafNum = selectedDafForMenu;
+              setSelectedDafForMenu(null);
+              if (effectiveMode === 'personal') {
+                markPersonalPartialAmud(masechet.en, dafNum, 'a');
+              } else {
+                const dateStr = getDafDateStr(masechet.he, dafNum);
+                if (dateStr) {
+                  const dafHeStr = `דף ${numberToGematria(dafNum)}`;
+                  markPartialAmud(dateStr, masechet.he, dafHeStr, 'a');
+                }
+              }
+            }}
+            onSelectHalfB={() => {
+              const dafNum = selectedDafForMenu;
+              setSelectedDafForMenu(null);
+              if (effectiveMode === 'personal') {
+                markPersonalPartialAmud(masechet.en, dafNum, 'b');
+              } else {
+                const dateStr = getDafDateStr(masechet.he, dafNum);
+                if (dateStr) {
+                  const dafHeStr = `דף ${numberToGematria(dafNum)}`;
+                  markPartialAmud(dateStr, masechet.he, dafHeStr, 'b');
+                }
+              }
+            }}
+            onUnmark={() => {
+              const dafNum = selectedDafForMenu;
+              setSelectedDafForMenu(null);
+              if (effectiveMode === 'personal') {
+                setPersonalDafStudyStatus(masechet.en, dafNum, 'none');
+              } else {
+                const dateStr = getDafDateStr(masechet.he, dafNum);
+                if (dateStr) {
+                  const dafHeStr = `דף ${numberToGematria(dafNum)}`;
+                  setDafStudyStatus(dateStr, masechet.he, dafHeStr, 'missed');
+                }
+              }
+            }}
+            onCancel={() => setSelectedDafForMenu(null)}
+          />
+        )}
       </SafeAreaView>
     </Modal>
   );
@@ -477,6 +598,20 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       position: 'absolute',
       top: 3,
       left: 3,
+    },
+    dafCornerAmudBadge: {
+      position: 'absolute',
+      top: 2,
+      left: 3,
+      paddingHorizontal: 3,
+      paddingVertical: 1,
+      borderRadius: 4,
+      backgroundColor: theme.colors.accent,
+    },
+    dafCornerAmudBadgeText: {
+      fontSize: 8,
+      fontWeight: '900',
+      color: '#FFFFFF',
     },
     dafText: { fontSize: 15, fontWeight: '800' },
     dafTextDefault: { color: theme.colors.textSecondary },
