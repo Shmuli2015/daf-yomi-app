@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
+import BottomSheetModal from './BottomSheetModal';
 
 interface SuccessModalProps {
   visible: boolean;
@@ -13,58 +14,29 @@ interface SuccessModalProps {
 export default function SuccessModal({ visible, onClose, title, message }: SuccessModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const scale = useRef(new Animated.Value(0.9)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.spring(scale, { toValue: 1, damping: 12, stiffness: 100, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }),
-      ]).start();
-    }
-  }, [visible]);
-
-  if (!visible) return null;
 
   return (
-    <Modal transparent visible={visible} animationType="none">
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.container, { opacity, transform: [{ scale }] }]}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="checkmark-circle" size={36} color={theme.colors.success} />
-          </View>
-          
-          <Text style={styles.title}>{title}</Text>
-          <Text style={styles.message}>{message}</Text>
+    <BottomSheetModal visible={visible} onClose={onClose}>
+      <View style={styles.content}>
+        <View style={styles.iconContainer}>
+          <Ionicons name="checkmark-circle" size={36} color={theme.colors.success} />
+        </View>
 
-          <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8}>
-            <Text style={styles.closeText}>מעולה</Text>
-          </TouchableOpacity>
-        </Animated.View>
+        <Text style={styles.title}>{title}</Text>
+        <Text style={styles.message}>{message}</Text>
+
+        <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8}>
+          <Text style={styles.closeText}>מעולה</Text>
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </BottomSheetModal>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      justifyContent: 'center',
+    content: {
       alignItems: 'center',
-      padding: 24,
-    },
-    container: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 24,
-      padding: 24,
-      width: '100%',
-      maxWidth: 320,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
       direction: 'rtl',
     },
     iconContainer: {

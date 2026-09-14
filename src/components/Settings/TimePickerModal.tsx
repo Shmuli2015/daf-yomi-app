@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../theme';
 import { WheelPicker } from './WheelPicker';
+import BottomSheetModal from '../BottomSheetModal';
 
 interface TimePickerModalProps {
   visible: boolean;
@@ -38,80 +39,47 @@ export const TimePickerModal = ({
   };
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.backdrop}>
-        <TouchableWithoutFeedback onPress={onClose}>
-          <View style={StyleSheet.absoluteFill} />
-        </TouchableWithoutFeedback>
+    <BottomSheetModal visible={visible} onClose={onClose}>
+      <View style={styles.topAccent} />
+      <Text style={styles.title}>בחר שעת התראה</Text>
 
-        <View style={styles.card}>
-          <View style={styles.topAccent} />
-          <Text style={styles.title}>בחר שעת התראה</Text>
-
-          <View style={styles.pickerWrapper}>
-            <View style={styles.wheelRow}>
-              <WheelPicker
-                items={HOURS}
-                selectedIndex={selectedHour}
-                onIndexChange={setSelectedHour}
-              />
-              <Text style={styles.colon}>:</Text>
-              <WheelPicker
-                items={MINUTES}
-                selectedIndex={selectedMinuteIndex}
-                onIndexChange={setSelectedMinuteIndex}
-              />
-            </View>
-          </View>
-
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
-            <Text style={styles.saveBtnText}>שמור</Text>
-          </TouchableOpacity>
+      <View style={styles.pickerWrapper}>
+        <View style={styles.wheelRow}>
+          <WheelPicker
+            items={HOURS}
+            selectedIndex={selectedHour}
+            onIndexChange={setSelectedHour}
+          />
+          <Text style={styles.colon}>:</Text>
+          <WheelPicker
+            items={MINUTES}
+            selectedIndex={selectedMinuteIndex}
+            onIndexChange={setSelectedMinuteIndex}
+          />
         </View>
       </View>
-    </Modal>
+
+      <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
+        <Text style={styles.saveBtnText}>שמור</Text>
+      </TouchableOpacity>
+    </BottomSheetModal>
   );
 };
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      backgroundColor:
-        theme.colors.surface === '#1E1E1E'
-          ? 'rgba(12,12,12,0.85)'
-          : 'rgba(15,23,42,0.45)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 32,
-    },
-    card: {
-      backgroundColor: theme.colors.surface,
-      width: '100%',
-      maxWidth: 340,
-      borderRadius: 32,
-      overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      ...theme.shadow.cardMedium,
-      elevation: 20,
-      direction: 'rtl',
-    },
     topAccent: {
       height: 4,
       backgroundColor: theme.colors.accent,
+      marginHorizontal: -20,
+      marginBottom: 8,
     },
     title: {
       fontSize: 22,
       fontWeight: '900',
       color: theme.colors.textPrimary,
       textAlign: 'center',
-      marginTop: 32,
+      marginTop: 16,
       marginBottom: 8,
     },
     pickerWrapper: {
@@ -134,8 +102,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     saveBtn: {
       backgroundColor: theme.colors.accent,
-      marginHorizontal: 32,
-      marginBottom: 32,
+      marginHorizontal: 12,
+      marginBottom: 16,
       paddingVertical: 18,
       borderRadius: 20,
       alignItems: 'center',

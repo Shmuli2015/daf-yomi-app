@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, Modal, Pressable, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import SelectedDafCard from './SelectedDafCard';
 import { useTheme } from '../../theme';
+import BottomSheetModal from '../BottomSheetModal';
 
 interface DafDetailModalProps {
   visible: boolean;
@@ -38,78 +39,41 @@ const DafDetailModal = ({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-      onRequestClose={onClose}
-    >
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <View style={styles.backdrop} />
-        
-        <View style={styles.container}>
-          <Pressable style={styles.panel} onPress={(e) => e.stopPropagation()}>
-            <TouchableOpacity
-              onPress={onClose}
-              style={styles.closeBtn}
-              activeOpacity={0.7}
-            >
-              <Ionicons name="close" size={18} color={theme.colors.textSecondary} />
-            </TouchableOpacity>
+    <BottomSheetModal visible={visible} onClose={onClose}>
+      <View style={styles.panel}>
+        <TouchableOpacity
+          onPress={onClose}
+          style={styles.closeBtn}
+          activeOpacity={0.7}
+        >
+          <Ionicons name="close" size={18} color={theme.colors.textSecondary} />
+        </TouchableOpacity>
 
-            {selectedDate && dafInfo && (
-              <SelectedDafCard
-                selectedDate={selectedDate}
-                dafInfo={dafInfo}
-                studyStatus={studyStatus}
-                onToggle={onToggle}
-                onLongPressToggle={onLongPressToggle}
-                onOpenTzuratHadaf={onOpenTzuratHadaf}
-              />
-            )}
-          </Pressable>
-        </View>
-      </Pressable>
-    </Modal>
+        {selectedDate && dafInfo && (
+          <SelectedDafCard
+            selectedDate={selectedDate}
+            dafInfo={dafInfo}
+            studyStatus={studyStatus}
+            onToggle={onToggle}
+            onLongPressToggle={onLongPressToggle}
+            onOpenTzuratHadaf={onOpenTzuratHadaf}
+          />
+        )}
+      </View>
+    </BottomSheetModal>
   );
 };
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    backdrop: {
-      ...StyleSheet.absoluteFill,
-      backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    },
-    container: {
-      width: '90%',
-      maxWidth: 360,
-      zIndex: 1,
-    },
     panel: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 32,
-      paddingHorizontal: 20,
-      paddingTop: 52,
-      paddingBottom: 24,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 20 },
-      shadowOpacity: 0.4,
-      shadowRadius: 30,
-      elevation: 24,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      overflow: 'hidden',
+      paddingTop: 40,
       direction: 'rtl',
     },
     closeBtn: {
       position: 'absolute',
-      left: 12,
-      top: 12,
+      left: 0,
+      top: 0,
       zIndex: 10,
       width: 32,
       height: 32,

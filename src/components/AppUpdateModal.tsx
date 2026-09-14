@@ -1,11 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  Animated,
   Linking,
   Platform,
   ActivityIndicator,
@@ -20,6 +18,7 @@ import {
   openUnknownSourcesSettings,
   type DownloadProgress,
 } from '../services/apkInstall';
+import BottomSheetModal from './BottomSheetModal';
 
 export type AppUpdateModalProps = {
   visible: boolean;
@@ -38,8 +37,6 @@ export function AppUpdateModal({
 }: AppUpdateModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const scale = useRef(new Animated.Value(0.92)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
 
   const [phase, setPhase] = useState<ModalPhase>('idle');
   const [progress, setProgress] = useState<DownloadProgress | null>(null);
@@ -47,28 +44,12 @@ export function AppUpdateModal({
   const busy = phase === 'downloading' || phase === 'installing';
 
   useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.spring(scale, {
-          toValue: 1,
-          damping: 14,
-          stiffness: 120,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 220,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      scale.setValue(0.92);
-      opacity.setValue(0);
+    if (!visible) {
       setPhase('idle');
       setProgress(null);
       setErrorMessage(null);
     }
-  }, [visible, opacity, scale]);
+  }, [visible]);
 
   const openDownloadPage = useCallback(async () => {
     try {
@@ -122,7 +103,7 @@ export function AppUpdateModal({
     setProgress(null);
   }, []);
 
-  if (!visible || !offer) return null;
+  if (!offer) return null;
 
   const progressPct =
     progress && progress.progress > 0 ? Math.min(100, Math.round(progress.progress * 100)) : null;
@@ -151,14 +132,8 @@ export function AppUpdateModal({
             : 'גרסה חדשה של מסע דף מוכנה להתקנה. ההורדה תתחיל מיד, ולאחריה ייפתח מסך ההתקנה.';
 
   return (
-    <Modal
-      transparent
-      visible={visible}
-      animationType="none"
-      onRequestClose={busy ? undefined : onDismissLater}
-    >
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.card, { opacity, transform: [{ scale }] }]}>
+    <BottomSheetModal visible={visible} onClose={onDismissLater} dismissible={!busy}>
+      <View style={styles.card}>
           <View style={styles.iconWrap}>
             {busy ? (
               <ActivityIndicator size="large" color={theme.colors.accent} />
@@ -224,31 +199,16 @@ export function AppUpdateModal({
               </TouchableOpacity>
             </>
           )}
-        </Animated.View>
       </View>
-    </Modal>
+    </BottomSheetModal>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.72)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 24,
-    },
     card: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 22,
-      paddingVertical: 22,
-      paddingHorizontal: 20,
       width: '100%',
-      maxWidth: 328,
       alignItems: 'stretch',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
     },
     iconWrap: {
       alignSelf: 'center',

@@ -1,15 +1,8 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Pressable,
-  Modal,
-  Animated,
-} from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
+import BottomSheetModal from './BottomSheetModal';
 
 export type InfoModalIconName = keyof typeof Ionicons.glyphMap;
 
@@ -36,107 +29,59 @@ export default function InfoModal({
 }: InfoModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme, compact), [theme, compact]);
-  const scale = useRef(new Animated.Value(0.9)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.spring(scale, { toValue: 1, damping: 12, stiffness: 100, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }),
-      ]).start();
-    }
-  }, [visible, opacity, scale]);
-
-  if (!visible) return null;
-
-  const card = (
-    <Animated.View style={[styles.container, { opacity, transform: [{ scale }] }]}>
-      {compact ? (
-        <View style={styles.compactCloseRow} pointerEvents="box-none">
-          <TouchableOpacity
-            style={styles.compactCloseBtn}
-            onPress={onClose}
-            activeOpacity={0.7}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            accessibilityRole="button"
-            accessibilityLabel="סגור"
-          >
-            <Ionicons name="close" size={22} color={theme.colors.textMuted} />
-          </TouchableOpacity>
-        </View>
-      ) : null}
-
-      <View style={styles.iconContainer}>
-        <Ionicons name={iconName} size={compact ? 26 : 36} color={theme.colors.accent} />
-      </View>
-
-      <Text style={styles.title}>{title}</Text>
-      <Text style={[styles.message, !emphasis && styles.messageSolo]}>{message}</Text>
-      {emphasis ? (
-        <Text style={styles.emphasis} selectable>
-          {emphasis}
-        </Text>
-      ) : null}
-
-      {!compact ? (
-        <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8}>
-          <Text style={styles.closeText}>{actionLabel}</Text>
-        </TouchableOpacity>
-      ) : null}
-    </Animated.View>
-  );
 
   return (
-    <Modal transparent visible={visible} animationType="none">
-      {compact ? (
-        <View style={styles.overlayCompact}>
-          <Pressable style={styles.backdrop} onPress={onClose} accessibilityRole="button" accessibilityLabel="סגור" />
-          {card}
+    <BottomSheetModal visible={visible} onClose={onClose}>
+      <View style={styles.content}>
+        {compact ? (
+          <View style={styles.compactCloseRow} pointerEvents="box-none">
+            <TouchableOpacity
+              style={styles.compactCloseBtn}
+              onPress={onClose}
+              activeOpacity={0.7}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              accessibilityRole="button"
+              accessibilityLabel="סגור"
+            >
+              <Ionicons name="close" size={22} color={theme.colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+
+        <View style={styles.iconContainer}>
+          <Ionicons name={iconName} size={compact ? 26 : 36} color={theme.colors.accent} />
         </View>
-      ) : (
-        <View style={styles.overlay}>{card}</View>
-      )}
-    </Modal>
+
+        <Text style={styles.title}>{title}</Text>
+        <Text style={[styles.message, !emphasis && styles.messageSolo]}>{message}</Text>
+        {emphasis ? (
+          <Text style={styles.emphasis} selectable>
+            {emphasis}
+          </Text>
+        ) : null}
+
+        {!compact ? (
+          <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8}>
+            <Text style={styles.closeText}>{actionLabel}</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
+    </BottomSheetModal>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>, compact: boolean) =>
   StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      justifyContent: 'center',
+    content: {
       alignItems: 'center',
-      padding: 24,
-    },
-    overlayCompact: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: 20,
-    },
-    backdrop: {
-      ...StyleSheet.absoluteFill,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-    },
-    container: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: compact ? 18 : 24,
-      padding: compact ? 18 : 24,
-      paddingTop: compact ? 36 : 24,
-      width: '100%',
-      maxWidth: compact ? 280 : 320,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      paddingTop: compact ? 12 : 0,
       direction: 'rtl',
     },
     compactCloseRow: {
       position: 'absolute',
-      top: 10,
-      left: 10,
-      right: 10,
+      top: 0,
+      left: 0,
+      right: 0,
       flexDirection: 'row',
       justifyContent: 'flex-end',
       direction: 'ltr',

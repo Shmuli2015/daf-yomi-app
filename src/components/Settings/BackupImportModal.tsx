@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal, Animated } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import type { BackupPreview } from '../../services/backup';
+import BottomSheetModal from '../BottomSheetModal';
 
 type BackupImportModalProps = {
   visible: boolean;
@@ -21,83 +22,51 @@ export default function BackupImportModal({
 }: BackupImportModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const scale = useRef(new Animated.Value(0.9)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
 
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.spring(scale, { toValue: 1, damping: 12, stiffness: 100, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(scale, { toValue: 0.9, duration: 200, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0, duration: 200, useNativeDriver: true }),
-      ]).start();
-    }
-  }, [visible, opacity, scale]);
-
-  if (!visible || !preview) return null;
+  if (!preview) return null;
 
   const lastDateLine = preview.lastLearnedLabel
     ? `תאריך אחרון: ${preview.lastLearnedLabel}`
     : 'אין רשומות לימוד בגיבוי';
 
   return (
-    <Modal transparent visible={visible} animationType="none">
-      <View style={styles.overlay}>
-        <Animated.View style={[styles.container, { opacity, transform: [{ scale }] }]}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="cloud-upload-outline" size={32} color={theme.colors.accent} />
-          </View>
+    <BottomSheetModal visible={visible} onClose={onCancel}>
+      <View style={styles.content}>
+        <View style={styles.iconContainer}>
+          <Ionicons name="cloud-upload-outline" size={32} color={theme.colors.accent} />
+        </View>
 
-          <Text style={styles.title}>ייבוא גיבוי</Text>
-          <Text style={styles.message}>
-            {`${preview.learnedCount} דפים נלמדו · ${preview.totalRecords} רשומות`}
-          </Text>
-          <Text style={styles.detail}>{lastDateLine}</Text>
-          {preview.personalTrackCount != null && preview.personalTrackCount > 0 ? (
-            <Text style={styles.detail}>{`${preview.personalTrackCount} דפים במסלול אישי`}</Text>
-          ) : null}
-          <Text style={styles.detail}>נוצר ב־{preview.exportedAtLabel}</Text>
-          <Text style={styles.hint}>
-            "מזג" ישמור את הרשומה המאוחרת יותר לכל תאריך. "החלף הכל" ימחק את כל הנתונים הקיימים.
-          </Text>
+        <Text style={styles.title}>ייבוא גיבוי</Text>
+        <Text style={styles.message}>
+          {`${preview.learnedCount} דפים נלמדו · ${preview.totalRecords} רשומות`}
+        </Text>
+        <Text style={styles.detail}>{lastDateLine}</Text>
+        {preview.personalTrackCount != null && preview.personalTrackCount > 0 ? (
+          <Text style={styles.detail}>{`${preview.personalTrackCount} דפים במסלול אישי`}</Text>
+        ) : null}
+        <Text style={styles.detail}>נוצר ב־{preview.exportedAtLabel}</Text>
+        <Text style={styles.hint}>
+          "מזג" ישמור את הרשומה המאוחרת יותר לכל תאריך. "החלף הכל" ימחק את כל הנתונים הקיימים.
+        </Text>
 
-          <TouchableOpacity style={styles.mergeButton} onPress={onMerge} activeOpacity={0.8}>
-            <Text style={styles.mergeText}>מזג עם הנתונים הקיימים</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.replaceButton} onPress={onReplace} activeOpacity={0.8}>
-            <Text style={styles.replaceText}>החלף הכל</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={onCancel} activeOpacity={0.7}>
-            <Text style={styles.cancelText}>ביטול</Text>
-          </TouchableOpacity>
-        </Animated.View>
+        <TouchableOpacity style={styles.mergeButton} onPress={onMerge} activeOpacity={0.8}>
+          <Text style={styles.mergeText}>מזג עם הנתונים הקיימים</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.replaceButton} onPress={onReplace} activeOpacity={0.8}>
+          <Text style={styles.replaceText}>החלף הכל</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.cancelButton} onPress={onCancel} activeOpacity={0.7}>
+          <Text style={styles.cancelText}>ביטול</Text>
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </BottomSheetModal>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    overlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      justifyContent: 'center',
+    content: {
       alignItems: 'center',
-      padding: 24,
-    },
-    container: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 24,
-      padding: 24,
-      width: '100%',
-      maxWidth: 340,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
       direction: 'rtl',
     },
     iconContainer: {

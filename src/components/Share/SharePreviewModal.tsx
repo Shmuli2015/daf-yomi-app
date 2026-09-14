@@ -4,9 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Pressable,
-  Modal,
-  Animated,
   ActivityIndicator,
   InteractionManager,
 } from 'react-native';
@@ -14,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import ShareProgressCard from './ShareProgressCard';
 import { CARD_SIZE, captureAndShare, type ShareProgressData } from '../../utils/shareProgressImage';
+import BottomSheetModal from '../BottomSheetModal';
 
 const PREVIEW_WIDTH = 300;
 const PREVIEW_SCALE = PREVIEW_WIDTH / CARD_SIZE;
@@ -28,25 +26,17 @@ export default function SharePreviewModal({ visible, onClose, data }: SharePrevi
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const captureRef = useRef<View>(null);
-  const scale = useRef(new Animated.Value(0.9)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
   const [sharing, setSharing] = useState(false);
   const [captureLaidOut, setCaptureLaidOut] = useState(false);
 
   useEffect(() => {
     if (visible) {
       setCaptureLaidOut(false);
-      Animated.parallel([
-        Animated.spring(scale, { toValue: 1, damping: 12, stiffness: 100, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 250, useNativeDriver: true }),
-      ]).start();
     } else {
-      scale.setValue(0.9);
-      opacity.setValue(0);
       setSharing(false);
       setCaptureLaidOut(false);
     }
-  }, [visible, data, opacity, scale]);
+  }, [visible, data]);
 
   const handleShare = async () => {
     if (!data || sharing) return;
@@ -66,95 +56,69 @@ export default function SharePreviewModal({ visible, onClose, data }: SharePrevi
     }
   };
 
-  if (!visible || !data) return null;
+  if (!data) return null;
 
   return (
-    <Modal transparent visible={visible} animationType="none">
-      <View style={styles.overlay}>
-        <Pressable
-          style={styles.backdrop}
+    <BottomSheetModal visible={visible} onClose={onClose}>
+      <View style={styles.content}>
+        <TouchableOpacity
+          style={styles.closeBtn}
           onPress={onClose}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           accessibilityRole="button"
           accessibilityLabel="סגור"
-        />
+        >
+          <Ionicons name="close" size={22} color={theme.colors.textMuted} />
+        </TouchableOpacity>
 
-        <Animated.View style={[styles.container, { opacity, transform: [{ scale }] }]}>
-          <TouchableOpacity
-            style={styles.closeBtn}
-            onPress={onClose}
-            activeOpacity={0.7}
-            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-            accessibilityRole="button"
-            accessibilityLabel="סגור"
-          >
-            <Ionicons name="close" size={22} color={theme.colors.textMuted} />
-          </TouchableOpacity>
+        <Text style={styles.title}>כך ייראה השיתוף שלך</Text>
 
-          <Text style={styles.title}>כך ייראה השיתוף שלך</Text>
-
-          <View style={styles.previewWrapper}>
-            <View style={styles.previewScaler}>
-              <ShareProgressCard data={data} />
-            </View>
+        <View style={styles.previewWrapper}>
+          <View style={styles.previewScaler}>
+            <ShareProgressCard data={data} />
           </View>
-
-          <TouchableOpacity
-            style={[styles.shareButton, sharing && styles.shareButtonDisabled]}
-            onPress={handleShare}
-            activeOpacity={0.8}
-            disabled={sharing}
-          >
-            {sharing ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <>
-                <Ionicons name="share-outline" size={20} color="#FFFFFF" />
-                <Text style={styles.shareText}>שתף תמונה</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-
-        <View style={styles.captureHost} pointerEvents="none" collapsable={false}>
-          <ShareProgressCard
-            ref={captureRef}
-            data={data}
-            onLayout={() => setCaptureLaidOut(true)}
-          />
         </View>
+
+        <TouchableOpacity
+          style={[styles.shareButton, sharing && styles.shareButtonDisabled]}
+          onPress={handleShare}
+          activeOpacity={0.8}
+          disabled={sharing}
+        >
+          {sharing ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <>
+              <Ionicons name="share-outline" size={20} color="#FFFFFF" />
+              <Text style={styles.shareText}>שתף תמונה</Text>
+            </>
+          )}
+        </TouchableOpacity>
       </View>
-    </Modal>
+
+      <View style={styles.captureHost} pointerEvents="none" collapsable={false}>
+        <ShareProgressCard
+          ref={captureRef}
+          data={data}
+          onLayout={() => setCaptureLaidOut(true)}
+        />
+      </View>
+    </BottomSheetModal>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    overlay: {
-      flex: 1,
-      justifyContent: 'center',
+    content: {
       alignItems: 'center',
-      padding: 20,
-    },
-    backdrop: {
-      ...StyleSheet.absoluteFill,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-    },
-    container: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 24,
-      padding: 24,
-      paddingTop: 36,
-      width: '100%',
-      maxWidth: 340,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      paddingTop: 12,
       direction: 'rtl',
     },
     closeBtn: {
       position: 'absolute',
-      top: 12,
-      left: 12,
+      top: 0,
+      left: 0,
       padding: 4,
       zIndex: 2,
     },

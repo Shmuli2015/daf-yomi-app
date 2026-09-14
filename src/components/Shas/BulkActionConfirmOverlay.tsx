@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
 
 export type BulkConfirmVariant = 'markAll' | 'unmarkAll';
@@ -17,15 +18,16 @@ export default function BulkActionConfirmOverlay({
   onConfirm,
   onCancel,
 }: BulkActionConfirmOverlayProps) {
-  const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme, windowWidth), [theme, windowWidth]);
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   if (!variant) return null;
 
   return (
     <View style={styles.overlay}>
-      <View style={styles.card}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} />
+      <SafeAreaView style={styles.sheet} edges={['bottom']}>
+        <View style={styles.dragHandle} />
         <Text style={styles.title}>
           {variant === 'markAll' ? 'סמן את כל המסכת?' : 'בטל סימון כל המסכת?'}
         </Text>
@@ -42,12 +44,12 @@ export default function BulkActionConfirmOverlay({
             <Text style={styles.confirmBtnText}>אישור</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     </View>
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>, windowWidth: number) =>
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     overlay: {
       position: 'absolute',
@@ -56,19 +58,28 @@ const createStyles = (theme: ReturnType<typeof useTheme>, windowWidth: number) =
       right: 0,
       bottom: 0,
       backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'center',
-      alignItems: 'center',
+      justifyContent: 'flex-end',
       zIndex: 10000,
     },
-    card: {
+    sheet: {
       backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      padding: 24,
-      marginHorizontal: 32,
-      width: windowWidth - 64,
-      maxWidth: 400,
-      borderWidth: 1,
+      borderTopLeftRadius: 28,
+      borderTopRightRadius: 28,
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 16,
+      borderTopWidth: 1,
+      borderLeftWidth: 1,
+      borderRightWidth: 1,
       borderColor: theme.colors.border,
+    },
+    dragHandle: {
+      width: 42,
+      height: 4.5,
+      borderRadius: 2.5,
+      backgroundColor: theme.colors.border,
+      alignSelf: 'center',
+      marginBottom: 16,
     },
     title: {
       fontSize: 20,
@@ -87,7 +98,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>, windowWidth: number) =
     buttons: {
       flexDirection: 'row',
       gap: 12,
-      justifyContent: 'center',
     },
     cancelBtn: {
       flex: 1,
