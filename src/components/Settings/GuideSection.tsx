@@ -1,9 +1,15 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
+import Animated, {
+  FadeInDown,
+  FadeOutUp,
+  LinearTransition,
+} from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import GuideItemText from './GuideItemText';
 import { createGuideModalStyles } from './GuideModal.styles';
+import { useGuideSectionAnimation } from './useGuideSectionAnimation';
 
 interface GuideSectionProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -25,9 +31,10 @@ export default function GuideSection({
   searchQuery = '',
 }: GuideSectionProps) {
   const styles = useMemo(() => createGuideModalStyles(theme), [theme]);
+  const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
 
   return (
-    <View style={styles.sectionCard}>
+    <Animated.View layout={LinearTransition.duration(260)} style={styles.sectionCard}>
       <TouchableOpacity
         onPress={onToggle}
         activeOpacity={0.7}
@@ -40,15 +47,22 @@ export default function GuideSection({
           <Text style={styles.sectionTitle}>{title}</Text>
           <Text style={styles.sectionCountText}>{items.length} נושאים</Text>
         </View>
-        <Ionicons
-          name={isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'}
-          size={20}
-          color={theme.colors.textMuted}
-        />
+        <Animated.View style={animatedChevronStyle}>
+          <Ionicons
+            name="chevron-down-outline"
+            size={20}
+            color={theme.colors.textMuted}
+          />
+        </Animated.View>
       </TouchableOpacity>
 
       {isExpanded && (
-        <View style={styles.itemsList}>
+        <Animated.View
+          entering={FadeInDown.duration(260)}
+          exiting={FadeOutUp.duration(200)}
+          layout={LinearTransition.duration(260)}
+          style={styles.itemsList}
+        >
           {items.map((item, index) => (
             <View key={index} style={styles.item}>
               <View style={styles.bullet} />
@@ -61,8 +75,8 @@ export default function GuideSection({
               />
             </View>
           ))}
-        </View>
+        </Animated.View>
       )}
-    </View>
+    </Animated.View>
   );
 }

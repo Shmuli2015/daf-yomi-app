@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
 import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
 import InfoModal from '../InfoModal';
@@ -291,15 +292,40 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.footer}>
-              <View style={styles.footerDivider} />
-              <GuideItemText
-                text="ניתן לפתוח מדריך זה מחדש בכל עת דרך כפתור [[מדריך שימוש]] במסך ההגדרות. כמו כן, במסך ההגדרות תוכלו לבדוק אם קיימים עדכונים חדשים, להפעיל או לכבות את מתג [[התראות עדכון אוטומטיות]], ולצפות בפרטי זכויות היוצרים ובמספר הגרסה הנוכחית שבתחתית המסך."
-                baseStyle={styles.footerText}
-                boldStyle={styles.footerTextBold}
-                theme={theme}
+            <View style={styles.footerCard}>
+              <LinearGradient
+                colors={[theme.colors.accent + '14', theme.colors.surface]}
+                start={{ x: 0.5, y: 0 }}
+                end={{ x: 0.5, y: 1 }}
+                style={styles.footerGradient}
+                pointerEvents="none"
               />
-              <Text style={styles.footerEmoji}>📚✨</Text>
+
+              <View style={styles.footerIconHalo}>
+                <Ionicons name="sparkles" size={22} color={theme.colors.accent} />
+              </View>
+
+              <Text style={styles.footerCardTitle}>גישה מהירה ומידע נוסף</Text>
+
+              <View style={styles.footerTextContainer}>
+                <GuideItemText
+                  text="ניתן לפתוח מדריך זה מחדש בכל עת דרך כפתור [[מדריך לשימוש באפליקציה]] בתחתית מסך הבית או דרך [[מדריך שימוש]] במסך ההגדרות. כמו כן, במסך ההגדרות תוכלו לבדוק אם קיימים עדכונים חדשים, לנהל קבצים שמורים, ולצפות בפרטי הגרסה שבתחתית המסך."
+                  baseStyle={styles.footerText}
+                  boldStyle={styles.footerTextBold}
+                  theme={theme}
+                />
+              </View>
+
+              <View style={styles.footerDividerRow}>
+                <View style={styles.footerDividerLine} />
+                <Ionicons name="book-outline" size={12} color={theme.colors.accent} />
+                <View style={styles.footerDividerLine} />
+              </View>
+
+              <View style={styles.footerWishBadge}>
+                <Ionicons name="sparkles" size={13} color={theme.colors.accent} />
+                <Text style={styles.footerWishText}>לימוד פורה ומאיר בש״ס!</Text>
+              </View>
             </View>
 
             <View style={{ height: 32 }} />
