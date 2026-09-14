@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" class="lang-he">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>מדיניות פרטיות - מסע דף | Privacy Policy</title>
+    <meta
+      name="description"
+      content="מדיניות הפרטיות של אפליקציית מסע דף (Masa Daf). אפליקציה ללא איסוף מידע אישי, ללא פרסומות ושמירה מקומית במכשיר."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="icon.png" type="image/png" />
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      (function () {
+        var isEn = location.hash === '#en';
+        document.documentElement.lang = isEn ? 'en' : 'he';
+        document.documentElement.dir = isEn ? 'ltr' : 'rtl';
+        document.documentElement.classList.toggle('lang-en', isEn);
+        document.documentElement.classList.toggle('lang-he', !isEn);
+      })();
+    </script>
+    <style>
+      body.privacy-body {
+        display: block;
+        min-height: 100vh;
+        background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201, 150, 60, 0.09), transparent), var(--bg);
+      }
+
+      .privacy-body .credits {
+        border-top: 1px solid var(--border);
+        padding-top: 1.25rem;
+      }
+
+      .privacy-container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+        position: relative;
+        z-index: 1;
+      }
+
+      .privacy-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .privacy-back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-accent);
+        background: var(--accent-soft);
+        transition: background 0.15s ease, transform 0.15s ease;
+      }
+
+      .privacy-back-link:hover {
+        background: rgba(201, 150, 60, 0.2);
+        transform: translateY(-1px);
+      }
+
+      .lang-switch {
+        display: inline-flex;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 3px;
+        gap: 4px;
+      }
+
+      .lang-btn {
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--muted);
+        text-decoration: none;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        transition: color 0.15s ease, background 0.15s ease;
+      }
+
+      .lang-btn.active,
+      .lang-btn:hover {
+        color: var(--text);
+        background: var(--bg-elevated);
+      }
+
+      .privacy-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .privacy-logo {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 1px solid var(--border-accent);
+      }
+
+      .privacy-heading {
+        min-width: 0;
+      }
+
+      .privacy-title {
+        font-size: 1.7rem;
+        font-weight: 800;
+        margin: 0 0 0.15rem;
+        color: var(--text);
+        line-height: 1.2;
+      }
+
+      .privacy-meta {
+        color: var(--muted);
+        font-size: 0.88rem;
+        margin: 0;
+        line-height: 1.45;
+      }
+
+      .privacy-highlights {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .highlight-card {
+        padding: 1.1rem;
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        text-align: center;
+      }
+
+      .highlight-card-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        border: 1px solid var(--border-accent);
+        color: var(--accent);
+        margin-bottom: 0.75rem;
+      }
+
+      .highlight-card-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem;
+        color: var(--text);
+      }
+
+      .highlight-card-desc {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin: 0;
+        line-height: 1.4;
+      }
+
+      .privacy-content {
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 2rem 2rem;
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+      }
+
+      .privacy-section {
+        margin-bottom: 2.25rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .privacy-section:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+      }
+
+      .privacy-section-title {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--text);
+        margin: 0 0 1rem;
+      }
+
+      .section-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        border: 1px solid var(--border-accent);
+        color: var(--accent);
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+
+      .privacy-section p {
+        font-size: 0.95rem;
+        color: #d1cbbd;
+        line-height: 1.7;
+        margin: 0 0 0.85rem;
+      }
+
+      .privacy-section ul {
+        margin: 0 0 1rem;
+        padding-inline-start: 1.25rem;
+        padding-inline-end: 0;
+      }
+
+      .privacy-section li {
+        font-size: 0.93rem;
+        color: #d1cbbd;
+        line-height: 1.65;
+        margin-bottom: 0.5rem;
+      }
+
+      .privacy-section strong {
+        color: var(--text);
+      }
+
+      .info-box {
+        background: var(--accent-soft);
+        border: 1px solid var(--border-accent);
+        border-radius: var(--radius-sm);
+        padding: 0.85rem 1.1rem;
+        margin: 1rem 0;
+        color: var(--text);
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .contact-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 0.25rem 1.1rem;
+        margin-top: 1rem;
+        width: 100%;
+      }
+
+      .contact-item {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.2rem;
+        padding: 0.85rem 0;
+        margin: 0;
+        font-size: 0.92rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .contact-item:last-child {
+        border-bottom: none;
+      }
+
+      .contact-item strong {
+        color: var(--muted);
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .contact-value {
+        display: block;
+        color: var(--text);
+        min-width: 0;
+        width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        text-align: start;
+        unicode-bidi: isolate;
+      }
+
+      .contact-item a {
+        color: var(--accent);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .contact-item a:hover {
+        text-decoration: underline;
+      }
+
+      .privacy-panel-en {
+        display: none;
+      }
+
+      html.lang-en .privacy-panel-en {
+        display: block;
+      }
+
+      html.lang-en .privacy-panel-he,
+      html.lang-en .he-only,
+      html:not(.lang-en) .en-only {
+        display: none;
+      }
+
+      html[dir='ltr'] .privacy-back-link svg {
+        transform: scaleX(-1);
+      }
+
+      @media (max-width: 600px) {
+        .privacy-container {
+          padding: 1.25rem 1rem 3rem;
+        }
+
+        .privacy-title {
+          font-size: 1.4rem;
+        }
+
+        .privacy-logo {
+          width: 44px;
+          height: 44px;
+          border-radius: 12px;
+        }
+
+        .privacy-content {
+          padding: 1.35rem 1.15rem;
+        }
+
+        .privacy-section-title {
+          font-size: 1.1rem;
+        }
+      }
+    </style>
+  </head>
+  <body class="privacy-body">
+    <div class="bg-glow bg-glow--top" aria-hidden="true"></div>
+    <div class="bg-glow bg-glow--bottom" aria-hidden="true"></div>
+
+    <main class="privacy-container">
+      <nav class="privacy-nav">
+        <a href="index.html" class="privacy-back-link">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+          <span class="he-only">חזרה לדף הראשי</span>
+          <span class="en-only">Back to home</span>
+        </a>
+
+        <div class="lang-switch" role="tablist" aria-label="Language">
+          <a href="#he" class="lang-btn active" role="tab" id="tab-he" data-lang="he" aria-selected="true" aria-controls="privacy-he">עברית</a>
+          <a href="#en" class="lang-btn" role="tab" id="tab-en" data-lang="en" aria-selected="false" aria-controls="privacy-en">English</a>
+        </div>
+      </nav>
+
+      <div class="privacy-panel-he" id="privacy-he" role="tabpanel" aria-labelledby="tab-he">
+      <header class="privacy-header">
+        <img
+          class="privacy-logo"
+          src="icon.png"
+          width="52"
+          height="52"
+          alt="מסע דף"
+          decoding="async"
+        />
+        <div class="privacy-heading">
+          <h1 class="privacy-title">מדיניות פרטיות</h1>
+          <p class="privacy-meta">עודכן לאחרונה: 14 בספטמבר 2026</p>
+        </div>
+      </header>
+
+      <div class="privacy-highlights">
+        <div class="highlight-card">
+          <div class="highlight-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div class="highlight-card-title">100% מקומי</div>
+          <p class="highlight-card-desc">כל נתוני הלימוד נשמרים במכשיר שלכם בלבד</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="highlight-card-title">ללא הרשמה</div>
+          <p class="highlight-card-desc">ללא שם, ללא אימייל וללא פרטים מזהים</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+            </svg>
+          </div>
+          <div class="highlight-card-title">ללא פרסומות</div>
+          <p class="highlight-card-desc">חוויית לימוד תורנית ונקייה ממעקבים מסחריים</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <div class="highlight-card-title">שליטה בגיבויים</div>
+          <p class="highlight-card-desc">ייצוא וייבוא קובץ הנתונים לפי בחירתכם</p>
+        </div>
+      </div>
+
+      <article class="privacy-content">
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">1</span>
+            <span>מבוא והתחייבות לפרטיות</span>
+          </h2>
+          <p>
+            ברוכים הבאים לאפליקציית <strong>מסע דף</strong> (להלן: "האפליקציה"), שפותחה על ידי <strong>שמואל רוזנברג</strong> (Shmuel Rosenberg).
+          </p>
+          <p>
+            אנו מייחסים חשיבות עליונה לשמירה על פרטיות המשתמשים. מסמך זה מפרט בשקיפות מלאה את המדיניות שלנו בנוגע לנתונים, להרשאות המכשיר ולשירותי צד שלישי, בהתאם לכללי הפיתוח והפרטיות של Google Play.
+          </p>
+          <div class="info-box">
+            <strong>עיקרון הברזל שלנו:</strong> האפליקציה מתוכננת מראש לפעול במודל מקומי (Local-first). איננו מפעילים שרתי רישום, איננו אוספים מידע אישי מזהה, ואיננו מוכרים או חולקים נתונים עם גורמים מסחריים כלשהם.
+          </div>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">2</span>
+            <span>אי-איסוף מידע אישי מזהה (Zero PII)</span>
+          </h2>
+          <p>
+            האפליקציה אינה דורשת יצירת חשבון, התחברות או מסירת פרטים אישיים כגון שם, כתובת דוא"ל, מספר טלפון או מיקום גיאוגרפי.
+          </p>
+          <p>
+            כל המידע שנוצר במהלך השימוש, לרבות סימוני דפים שנלמדו, רצף ימי לימוד (Streak), מסלול אישי והגדרות תצוגה, נשמר אך ורק על גבי מכשירכם האישי באמצעות מסד נתונים מקומי מאובטח (SQLite) ואחסון פנימי.
+          </p>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">3</span>
+            <span>הרשאות מכשיר ושימושן (Device Permissions)</span>
+          </h2>
+          <p>
+            כדי לאפשר את תכונות הלימוד והתזכורת, האפליקציה משתמשת בהרשאות המערכת הבאות בלבד:
+          </p>
+          <ul>
+            <li>
+              <strong>התראות ושעון מעורר מדויק (SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM):</strong>
+              משמש אך ורק לשם תזמון תזכורת יומית מדויקת ללימוד הדף היומי בשעה שהמשתמש הגדיר במסך ההגדרות, וכן לפעולת "הזכר לי בעוד שעה" (נודניק). האפליקציה אינה משתמשת בהרשאה זו לשום מטרה אחרת.
+            </li>
+            <li>
+              <strong>הצגת התראות (POST_NOTIFICATIONS):</strong>
+              נדרש באנדרואיד 13 ומעלה להצגת הודעות התזכורת היומיות במסך הנעילה ובווילון ההתראות.
+            </li>
+            <li>
+              <strong>גישה לקבצים ושיתוף (Files & Sharing):</strong>
+              שימוש ברכיבי שיתוף ויצירת קבצים מתבצע אך ורק באופן יזום ע״י המשתמש: לצורך יצירת קובץ גיבוי אישי של היסטוריית הלימוד ושחזורו, או לשם הפקת תמונת שיתוף ממותגת (רצף ימים או סיום מסכת) באמצעות תפריט השיתוף המובנה של מערכת ההפעלה.
+            </li>
+          </ul>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">4</span>
+            <span>שירותי צד שלישי וגישה לרשת</span>
+          </h2>
+          <p>
+            האפליקציה פונה לרשת האינטרנט לצורך השירותים התורניים הבאים בלבד:
+          </p>
+          <ul>
+            <li>
+              <strong>מאגר ספריא (Sefaria API):</strong>
+              שליפת טקסט הגמרא המנוקד, פירוש רש״י ותוספות לצורך הצגתם בקורא הטקסט המובנה.
+            </li>
+            <li>
+              <strong>פורטל הדף היומי (daf-yomi.com):</strong>
+              הצגת קובצי PDF של צורת הדף (דפוס וילנא) המקורי.
+            </li>
+            <li>
+              <strong>בדיקת עדכונים:</strong>
+              בדיקת קיומה של גרסה מעודכנת של האפליקציה מול מאגר הקוד הפומבי ב-GitHub.
+            </li>
+          </ul>
+          <p>
+            קריאות רשת אלו אינן כוללות שום מזהה אישי או מידע מהמכשיר מעבר לבקשת HTTP תקנית לצפייה בתוכן הלימוד.
+          </p>
+          <div class="info-box">
+            <strong>ללא פרסומות וללא מעקבים:</strong> האפליקציה אינה מכילה רשתות פרסום (Ad Networks), רכיבי מעקב שיווקיים או כלי אנליטיקס חיצוניים.
+          </div>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">5</span>
+            <span>שמירת נתונים, גיבוי ומחיקה (Data Deletion)</span>
+          </h2>
+          <p>
+            השליטה על המידע שלכם מלאה לחלוטין:
+          </p>
+          <ul>
+            <li>
+              <strong>איפוס מלא:</strong> בכל עת ניתן למחוק את כל נתוני הלימוד וההגדרות דרך תפריט <em>הגדרות</em> ➔ <em>איפוס נתונים</em> באפליקציה.
+            </li>
+            <li>
+              <strong>הסרת האפליקציה:</strong> הסרת האפליקציה מהמכשיר מוחקת לצמיתות ובאופן אוטומטי את מסד הנתונים ואת כל המידע המקומי המשויך אליה.
+            </li>
+            <li>
+              <strong>גיבוי עצמאי:</strong> ניתן לייצא קובץ גיבוי בפורמט JSON ולשמור אותו במיקום שבחרתם (כונן ענן, אחסון מקומי וכו') ללא תלות בשרת חיצוני.
+            </li>
+          </ul>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">6</span>
+            <span>פרטיות ילדים (Children's Privacy)</span>
+          </h2>
+          <p>
+            האפליקציה מתאימה לכלל הגילאים ולציבור שוחרי הלימוד. מאחר שאין איסוף של שום מידע מזהה, האפליקציה עומדת במלואה בדרישות ההגנה על פרטיות ילדים וקטינים ברשת.
+          </p>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">7</span>
+            <span>יצירת קשר ופניות בנושאי פרטיות</span>
+          </h2>
+          <p>
+            לכל שאלה, הבהרה, בקשה או הערה בנוגע למדיניות פרטיות זו או לאפליקציה, ניתן לפנות אלינו ישירות:
+          </p>
+          <div class="contact-card">
+            <div class="contact-item">
+              <strong>מפתח</strong>
+              <span class="contact-value">שמואל רוזנברג (Shmuel Rosenberg)</span>
+            </div>
+            <div class="contact-item">
+              <strong>מזהה אפליקציה</strong>
+              <span class="contact-value">com.shmuli.dafyomi</span>
+            </div>
+            <div class="contact-item">
+              <strong>דוא״ל לתמיכה ופרטיות</strong>
+              <a class="contact-value" href="mailto:support.masa.daf@gmail.com">support.masa.daf@gmail.com</a>
+            </div>
+          </div>
+        </section>
+      </article>
+      </div>
+
+      <div class="privacy-panel-en" id="privacy-en" role="tabpanel" aria-labelledby="tab-en">
+      <header class="privacy-header">
+        <img
+          class="privacy-logo"
+          src="icon.png"
+          width="52"
+          height="52"
+          alt="Masa Daf"
+          decoding="async"
+        />
+        <div class="privacy-heading">
+          <h1 class="privacy-title">Privacy Policy</h1>
+          <p class="privacy-meta">Last updated: September 14, 2026</p>
+        </div>
+      </header>
+
+      <div class="privacy-highlights">
+        <div class="highlight-card">
+          <div class="highlight-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+          </div>
+          <div class="highlight-card-title">100% Local</div>
+          <p class="highlight-card-desc">All study data stays on your device only</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+          </div>
+          <div class="highlight-card-title">No Sign-up</div>
+          <p class="highlight-card-desc">No name, email, or identifying details</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+            </svg>
+          </div>
+          <div class="highlight-card-title">No Ads</div>
+          <p class="highlight-card-desc">A clean Torah study experience with no commercial tracking</p>
+        </div>
+
+        <div class="highlight-card">
+          <div class="highlight-card-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <div class="highlight-card-title">You Control Backups</div>
+          <p class="highlight-card-desc">Export and import your data whenever you choose</p>
+        </div>
+      </div>
+
+      <article class="privacy-content">
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">1</span>
+            <span>Introduction & Scope</span>
+          </h2>
+          <p>
+            This Privacy Policy applies to the mobile application <strong>מסע דף (Masa Daf - Daf Yomi Tracker)</strong>, package name <code>com.shmuli.dafyomi</code>, developed by <strong>Shmuel Rosenberg</strong>.
+          </p>
+          <p>
+            We are dedicated to respecting and protecting your privacy. This application is built with an offline-first architecture and does not collect, sell, or transmit any Personally Identifiable Information (PII).
+          </p>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">2</span>
+            <span>Zero Personal Data Collection</span>
+          </h2>
+          <p>
+            The application operates without user registration or login. We do not collect your name, email address, phone number, location, contacts, or financial details. All study progress, completion records, streaks, personal track goals, and user preferences are stored strictly on your device in a local SQLite database and secure local storage.
+          </p>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">3</span>
+            <span>Device Permissions & Usage</span>
+          </h2>
+          <p>
+            The app requests only the minimum set of permissions necessary to deliver its core features:
+          </p>
+          <ul>
+            <li>
+              <strong>SCHEDULE_EXACT_ALARM &amp; USE_EXACT_ALARM:</strong> Used solely to trigger precise daily Daf Yomi learning reminders at the exact user-specified time and support snooze actions. No alarm time data is ever logged or shared externally.
+            </li>
+            <li>
+              <strong>POST_NOTIFICATIONS:</strong> Required on Android 13+ to display daily reminder notifications on your device.
+            </li>
+            <li>
+              <strong>Storage &amp; File Sharing:</strong> The app invokes system file pickers and sharing sheets only upon explicit user action: to export/import JSON learning backups or share celebration milestone cards.
+            </li>
+          </ul>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">4</span>
+            <span>Third-Party Content &amp; Network Requests</span>
+          </h2>
+          <p>
+            The application makes outbound network requests solely to fetch Torah study content and check for application updates:
+          </p>
+          <ul>
+            <li>
+              <strong>Sefaria API:</strong> To load vocalized Talmudic text and classical commentaries (Rashi, Tosafot).
+            </li>
+            <li>
+              <strong>daf-yomi.com:</strong> To fetch Vilna edition Talmud PDF pages.
+            </li>
+            <li>
+              <strong>GitHub Releases:</strong> To check for public app version updates.
+            </li>
+          </ul>
+          <p>
+            No user identifiers, telemetry, or behavioral tracking parameters are included in these content requests. The app contains no third-party advertisements and no analytical tracking SDKs.
+          </p>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">5</span>
+            <span>Data Retention &amp; Deletion</span>
+          </h2>
+          <p>
+            Since all data resides locally on your device:
+          </p>
+          <ul>
+            <li>You can clear all stored records anytime via <em>Settings &gt; Reset Data</em> within the app.</li>
+            <li>Uninstalling the app permanently removes all associated application data and the local database from your device.</li>
+          </ul>
+        </section>
+
+        <section class="privacy-section">
+          <h2 class="privacy-section-title">
+            <span class="section-num">6</span>
+            <span>Contact Information</span>
+          </h2>
+          <p>
+            For questions or concerns regarding this Privacy Policy, please contact:
+          </p>
+          <div class="contact-card">
+            <div class="contact-item">
+              <strong>Developer</strong>
+              <span class="contact-value">Shmuel Rosenberg</span>
+            </div>
+            <div class="contact-item">
+              <strong>Application ID</strong>
+              <span class="contact-value">com.shmuli.dafyomi</span>
+            </div>
+            <div class="contact-item">
+              <strong>Email</strong>
+              <a class="contact-value" href="mailto:support.masa.daf@gmail.com">support.masa.daf@gmail.com</a>
+            </div>
+          </div>
+        </section>
+      </article>
+      </div>
+
+      <footer class="credits" style="margin-top: 2.5rem;">
+        <span class="he-only">מסע דף • פותח ע״י שמואל רוזנברג</span>
+        <span class="en-only">Masa Daf • Developed by Shmuel Rosenberg</span>
+        <span style="margin: 0 0.5rem;" aria-hidden="true">•</span>
+        <a href="index.html" style="color: var(--accent); text-decoration: none;">
+          <span class="he-only">דף ההורדה הראשי</span>
+          <span class="en-only">Download page</span>
+        </a>
+      </footer>
+    </main>
+
+    <script src="privacy.js"></script>
+  </body>
+</html>

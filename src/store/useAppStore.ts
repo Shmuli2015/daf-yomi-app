@@ -4,6 +4,7 @@ import type { BackupData } from '../services/backup';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from '../utils/progressCache';
 import { resolveAmudMark, type AmudSide } from '../utils/dafStatus';
+import { isPersonalTrackEnabled } from '../utils/personalTrack';
 
 interface AppState {
   currentDate: Date;
@@ -118,8 +119,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     
     const settings = get().settings || getSettings();
     const personalTrackRecords = getPersonalTrackRecords();
-    const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
-    const cache = buildProgressCache(history, isPersonalTrackEnabled ? personalTrackRecords : []);
+    const cache = buildProgressCache(history, isPersonalTrackEnabled(settings) ? personalTrackRecords : []);
     const record = history.find(r => r.date === dateStr) || null;
     const activePersonalMasechet = settings?.active_personal_masechet || null;
 
@@ -145,8 +145,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   refreshHistory: (masechetIdentifier?: string) => {
     const { currentDate, personalTrackRecords, settings, progressCache } = get();
     const history = getAllRecords();
-    const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
-    const personalRecords = isPersonalTrackEnabled ? personalTrackRecords : [];
+    const personalRecords = isPersonalTrackEnabled(settings) ? personalTrackRecords : [];
     const cache = masechetIdentifier && progressCache
       ? updateMasechetProgressInCache(progressCache, masechetIdentifier, history, personalRecords)
       : buildProgressCache(history, personalRecords);
@@ -163,8 +162,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   refreshSettings: () => {
     const settings = getSettings();
-    const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
-    const cache = buildProgressCache(get().history, isPersonalTrackEnabled ? get().personalTrackRecords : []);
+    const cache = buildProgressCache(get().history, isPersonalTrackEnabled(settings) ? get().personalTrackRecords : []);
     set({
       settings,
       activePersonalMasechet: settings?.active_personal_masechet || null,
@@ -174,8 +172,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   refreshPersonalTrack: (masechetIdentifier?: string) => {
     const personalTrackRecords = getPersonalTrackRecords();
-    const isPersonalTrackEnabled = (get().settings?.show_personal_track_banner ?? 1) !== 0;
-    const personalRecords = isPersonalTrackEnabled ? personalTrackRecords : [];
+    const personalRecords = isPersonalTrackEnabled(get().settings) ? personalTrackRecords : [];
     const cache = masechetIdentifier && get().progressCache
       ? updateMasechetProgressInCache(get().progressCache, masechetIdentifier, get().history, personalRecords)
       : buildProgressCache(get().history, personalRecords);
@@ -195,6 +192,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   togglePersonalDafLearned: (masechetEn, dafNum) => {
+    if (!isPersonalTrackEnabled(get().settings)) return;
     const { personalTrackRecords } = get();
     const existing = personalTrackRecords.find(
       (r) => r.masechet === masechetEn && r.daf_num === dafNum
@@ -205,11 +203,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   markPersonalDafLearned: (masechetEn, dafNum) => {
+    if (!isPersonalTrackEnabled(get().settings)) return;
     updatePersonalTrackRecord(masechetEn, dafNum, 'learned', null);
     get().refreshPersonalTrack(masechetEn);
   },
 
   markPersonalPartialAmud: (masechetEn, dafNum, amud) => {
+    if (!isPersonalTrackEnabled(get().settings)) return;
     const { personalTrackRecords } = get();
     const existing = personalTrackRecords.find(
       (r) => r.masechet === masechetEn && r.daf_num === dafNum
@@ -225,6 +225,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setPersonalDafStudyStatus: (masechetEn, dafNum, status, amud = null) => {
+    if (!isPersonalTrackEnabled(get().settings)) return;
     updatePersonalTrackRecord(masechetEn, dafNum, status, amud);
     get().refreshPersonalTrack(masechetEn);
   },
@@ -345,8 +346,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   resetDafYomiState: () => {
     resetDafYomiRecords();
     const { personalTrackRecords, settings } = get();
-    const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
-    const cache = buildProgressCache([], isPersonalTrackEnabled ? personalTrackRecords : []);
+    const cache = buildProgressCache([], isPersonalTrackEnabled(settings) ? personalTrackRecords : []);
     set({
       history: [],
       todayRecord: null,

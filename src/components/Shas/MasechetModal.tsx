@@ -13,6 +13,7 @@ import {
 } from '../../utils/shas';
 import { getStudyStatus, getPartialAmud } from '../../utils/dafStatus';
 import { getMasechetProgressFromCache } from '../../utils/progressCache';
+import { isPersonalTrackEnabled } from '../../utils/personalTrack';
 import { useTheme } from '../../theme';
 import BulkActionConfirmOverlay from './BulkActionConfirmOverlay';
 import FullscreenLoadingOverlay from './FullscreenLoadingOverlay';
@@ -143,8 +144,8 @@ export default function MasechetModal({
     onClose();
   }, [pendingAction, onClose]);
 
-  const isPersonalTrackEnabled = (settings?.show_personal_track_banner ?? 1) !== 0;
-  const effectiveMode = isPersonalTrackEnabled ? mode : 'dafYomi';
+  const isPersonalEnabled = isPersonalTrackEnabled(settings);
+  const effectiveMode = isPersonalEnabled ? mode : 'dafYomi';
 
   const handleToggleDaf = useCallback((dafNum: number) => {
     if (effectiveMode === 'personal') {
@@ -299,7 +300,7 @@ export default function MasechetModal({
               מסכת {stripNiqqud(masechet.he)}
             </Text>
             <View style={styles.headerActions}>
-              {isPersonalTrackEnabled && (
+              {isPersonalEnabled && (
                 <TouchableOpacity
                   onPress={handleToggleHomeActive}
                   style={[styles.homeActionBtn, isHomeActive && styles.homeActionBtnActive]}
@@ -321,7 +322,7 @@ export default function MasechetModal({
             </View>
           </View>
 
-          {isPersonalTrackEnabled && (
+          {isPersonalEnabled && (
             <MasechetModalModeToggle
               mode={effectiveMode}
               onModeChange={setMode}
@@ -334,7 +335,7 @@ export default function MasechetModal({
             totalLearned={masechetStats.learned}
             totalPages={masechetStats.total}
             percentage={pct}
-            showPersonalTrack={isPersonalTrackEnabled}
+            showPersonalTrack={isPersonalEnabled}
           />
 
           <View style={styles.actionButtons}>
@@ -367,8 +368,8 @@ export default function MasechetModal({
             const rec = dateStr ? recordByDate.get(dateStr) : undefined;
             const studyStatus = rec ? getStudyStatus(rec) : 'none';
             const partialAmud = rec ? getPartialAmud(rec) : null;
-            const isPersonal = isPersonalTrackEnabled && personalLearnedSet.has(dafNum);
-            const personalRec = isPersonalTrackEnabled ? personalPartialMap.get(dafNum) : undefined;
+            const isPersonal = isPersonalEnabled && personalLearnedSet.has(dafNum);
+            const personalRec = isPersonalEnabled ? personalPartialMap.get(dafNum) : undefined;
             const isPersonalPartial = personalRec != null;
             const personalPartialAmud = personalRec?.amud || null;
             return (
