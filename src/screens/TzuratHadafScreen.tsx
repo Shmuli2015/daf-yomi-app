@@ -230,12 +230,23 @@ export default function TzuratHadafScreen() {
     }
   }, []);
 
+  const prefetchAdjacentPages = useCallback((loc: DafLocation) => {
+    const nextLoc = getNextAmud(loc);
+    if (nextLoc) {
+      const tref = buildSefariaTref(nextLoc.masechetEn, nextLoc.dafNum, nextLoc.amud);
+      if (!peekCachedPdfUri(tref)) {
+        fetchDafYomiPage(nextLoc.masechetEn, nextLoc.dafNum, nextLoc.amud).catch(() => {});
+      }
+    }
+  }, []);
+
   useEffect(() => {
     loadPdfPage(location);
     if (viewMode === 'text') {
       loadSefariaText(location);
     }
-  }, [location, loadPdfPage, loadSefariaText, viewMode]);
+    prefetchAdjacentPages(location);
+  }, [location, loadPdfPage, loadSefariaText, viewMode, prefetchAdjacentPages]);
 
   const handleToggleViewMode = useCallback((mode: ViewMode) => {
     setViewMode(mode);
