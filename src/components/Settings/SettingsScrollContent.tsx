@@ -61,6 +61,8 @@ export type SettingsScrollContentProps = {
   onCheckAppUpdate?: () => void;
   onProbeGithubRelease?: () => void;
   onShareDownloadLink?: () => void;
+  storageSizeFormatted?: string;
+  onClearCacheOpen?: () => void;
 };
 
 export default function SettingsScrollContent({
@@ -103,6 +105,8 @@ export default function SettingsScrollContent({
   onCheckAppUpdate,
   onProbeGithubRelease,
   onShareDownloadLink,
+  storageSizeFormatted = '0 B',
+  onClearCacheOpen,
 }: SettingsScrollContentProps) {
   const theme = useTheme();
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
@@ -172,7 +176,9 @@ export default function SettingsScrollContent({
     (onShareBackup != null && matchItem('שתף גיבוי', 'שלח את קובץ הגיבוי')) ||
     (onImportBackup != null && matchItem('ייבא גיבוי', 'שחזור נתונים מקובץ גיבוי קודם'));
 
-  const sec7Match = matchItem('איפוס נתונים', 'מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי');
+  const sec7Match =
+    matchItem('איפוס נתונים', 'מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי') ||
+    (onClearCacheOpen != null && matchItem('ניקוי קבצים שמורים', 'מחיקת דפי צורת הדף וטקסטים'));
 
   const visibleSections = [
     sec1Match,
@@ -547,15 +553,26 @@ export default function SettingsScrollContent({
                     isFirst={firstVisibleIndex === 6}
                   />
                   <View style={styles.card}>
-                    <SettingItem
-                      icon="trash-outline"
-                      title="איפוס נתונים"
-                      description="מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי"
-                      isDestructive
-                      onPress={onResetModalOpen}
-                      isLast
-                      highlightText={searchQuery}
-                    />
+                    {onClearCacheOpen && matchItem('ניקוי קבצים שמורים', 'מחיקת דפי צורת הדף וטקסטים') ? (
+                      <SettingItem
+                        icon="folder-open-outline"
+                        title="ניקוי קבצים שמורים"
+                        description={`מחיקת דפי צורת הדף וטקסטים שהורדו (${storageSizeFormatted}). אינו מוחק סימוני לימוד`}
+                        onPress={onClearCacheOpen}
+                        highlightText={searchQuery}
+                      />
+                    ) : null}
+                    {matchItem('איפוס נתונים', 'מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי') && (
+                      <SettingItem
+                        icon="trash-outline"
+                        title="איפוס נתונים"
+                        description="מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי"
+                        isDestructive
+                        onPress={onResetModalOpen}
+                        isLast
+                        highlightText={searchQuery}
+                      />
+                    )}
                   </View>
                 </>
               )}

@@ -8,9 +8,10 @@ import { TimePickerModal } from './TimePickerModal';
 import ResetOptionsModal from './ResetOptionsModal';
 import { ResetOptionType } from './ResetOptionsModal.types';
 import SuccessModal from '../SuccessModal';
-import ConfirmModal from '../ConfirmModal';
+import ResetConfirmModal from './ResetConfirmModal';
 import BackupImportModal from './BackupImportModal';
 import type { BackupPreview } from '../../services/backup';
+import ClearCacheModal from './ClearCacheModal';
 import PulsingBookIcon from './PulsingBookIcon';
 import { createSettingsScreenStyles } from './settingsScreenStyles';
 
@@ -44,6 +45,11 @@ export type SettingsModalsProps = {
   onBackupImportReplace: () => void;
   onBackupImportCancel: () => void;
   isSaving: boolean;
+  showClearCacheModal?: boolean;
+  clearCacheSizeFormatted?: string;
+  isClearingCache?: boolean;
+  onClearCacheConfirm?: () => void;
+  onClearCacheClose?: () => void;
 };
 
 export default function SettingsModals({
@@ -76,6 +82,11 @@ export default function SettingsModals({
   onBackupImportReplace,
   onBackupImportCancel,
   isSaving,
+  showClearCacheModal = false,
+  clearCacheSizeFormatted = '0 B',
+  isClearingCache = false,
+  onClearCacheConfirm,
+  onClearCacheClose,
 }: SettingsModalsProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
@@ -101,12 +112,12 @@ export default function SettingsModals({
         onConfirm={onConfirmReset}
         onClose={onResetModalClose}
       />
-      <ConfirmModal
+      <ResetConfirmModal
         visible={showResetConfirmModal}
         title={resetConfirmTitle}
         message={resetConfirmMessage}
         onConfirm={onExecuteReset}
-        onCancel={onResetConfirmClose}
+        onClose={onResetConfirmClose}
       />
       <SuccessModal
         visible={showSuccessModal}
@@ -120,6 +131,13 @@ export default function SettingsModals({
         onMerge={onBackupImportMerge}
         onReplace={onBackupImportReplace}
         onCancel={onBackupImportCancel}
+      />
+      <ClearCacheModal
+        visible={showClearCacheModal}
+        formattedSize={clearCacheSizeFormatted}
+        isClearing={isClearingCache}
+        onClose={onClearCacheClose || (() => {})}
+        onConfirm={onClearCacheConfirm || (() => {})}
       />
 
       {isSaving && (

@@ -51,6 +51,18 @@ export async function cleanupOldApkDownloads(keepFileName?: string): Promise<voi
   } catch {}
 }
 
+export async function cleanupAllApkDownloads(): Promise<void> {
+  try {
+    await ensureUpdatesDir();
+    const names = await FileSystem.readDirectoryAsync(UPDATES_DIR);
+    await Promise.all(
+      names
+        .filter(name => name.endsWith('.apk'))
+        .map(name => FileSystem.deleteAsync(`${UPDATES_DIR}${name}`, { idempotent: true })),
+    );
+  } catch {}
+}
+
 export async function downloadApk(
   url: string,
   fileName: string,

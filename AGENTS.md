@@ -24,3 +24,11 @@
 - **Liskov Substitution Principle (LSP)**: Ensure that implementations, variants, and interchangeable utilities strictly honor contract types and interfaces without unexpected divergence in behavior.
 - **Interface Segregation Principle (ISP)**: Keep TypeScript types and component props minimal and specific. Do not force components or consumers to depend on broad, unused interfaces.
 - **Dependency Inversion Principle (DIP)**: UI components should depend on abstractions (hooks, services, and shared types) rather than tightly coupled low-level implementations (such as direct file-system, database, or device APIs).
+
+## Hebrew & RTL Layout Guidelines
+
+- **Primary Hebrew RTL App**: The app is fully Right-to-Left (RTL). All screens, modals, bottom sheets, and layouts must strictly respect RTL alignment.
+- **Text Alignment Inversion in React Native**: In React Native Android within RTL contexts (`direction: 'rtl'` or `I18nManager.isRTL`), hardcoding `textAlign: 'right'` inverts text to the left (`Gravity.LEFT`). Always use `textAlign: Platform.OS === 'web' ? 'right' : 'left'` and `writingDirection: 'rtl'` when explicit right-alignment of Hebrew text is required.
+- **Prevent Text Box Collapse**: Ensure multi-line Hebrew texts stretch across the container using `width: '100%'` or `alignSelf: 'stretch'`.
+- **RTL in Modals & Popups**: React Native `<Modal>` roots do not always inherit the parent RTL layout; ensure container views declare `direction: 'rtl'` and row elements place icons and start badges on the right side.
+

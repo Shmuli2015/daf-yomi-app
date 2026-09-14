@@ -43,6 +43,7 @@ module.exports = {
       ],
       'expo-sharing',
       'expo-status-bar',
+      './plugins/withAndroidBuildOptimization.js',
     ],
     extra: {
       eas: {
