@@ -1,14 +1,8 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  Modal,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeMode, useTheme } from '../../theme';
+import BottomSheetModal from '../BottomSheetModal';
 
 type Option = { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap };
 
@@ -30,89 +24,59 @@ export function ThemeModeModal({ visible, value, onClose, onSelect }: ThemeModeM
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
-    <Modal transparent visible={visible} animationType="fade" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <TouchableWithoutFeedback onPress={onClose}>
-          <View style={StyleSheet.absoluteFill} />
-        </TouchableWithoutFeedback>
-
-        <View style={styles.card}>
-          <View style={styles.header}>
-            <View style={styles.headerIconCircle}>
-              <Ionicons name="color-palette-outline" size={20} color={theme.colors.accent} />
-            </View>
-            <Text style={styles.title}>בחירת מצב תצוגה</Text>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
-              <Ionicons name="close" size={18} color={theme.colors.textMuted} />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.optionsList}>
-            {OPTIONS.map((opt) => {
-              const selected = value === opt.mode;
-              return (
-                <TouchableOpacity
-                  key={opt.mode}
-                  style={[styles.row, selected && styles.rowSelected]}
-                  onPress={() => {
-                    onSelect(opt.mode);
-                    onClose();
-                  }}
-                  activeOpacity={0.75}
-                >
-                  <View style={styles.rowLeft}>
-                    <View style={[styles.iconWrap, selected && styles.iconWrapSelected]}>
-                      <Ionicons
-                        name={opt.icon}
-                        size={17}
-                        color={selected ? '#FFFFFF' : theme.colors.accent}
-                      />
-                    </View>
-                    <Text style={[styles.rowLabel, selected && styles.rowLabelSelected]}>{opt.label}</Text>
-                  </View>
-                  {selected && (
-                    <Ionicons name="checkmark-circle" size={20} color={theme.colors.accent} />
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+    <BottomSheetModal visible={visible} onClose={onClose}>
+      <View style={styles.header}>
+        <View style={styles.headerIconCircle}>
+          <Ionicons name="color-palette-outline" size={20} color={theme.colors.accent} />
         </View>
+        <Text style={styles.title}>בחירת מצב תצוגה</Text>
+        <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+          <Ionicons name="close" size={18} color={theme.colors.textMuted} />
+        </TouchableOpacity>
       </View>
-    </Modal>
+
+      <View style={styles.optionsList}>
+        {OPTIONS.map((opt) => {
+          const selected = value === opt.mode;
+          return (
+            <TouchableOpacity
+              key={opt.mode}
+              style={[styles.row, selected && styles.rowSelected]}
+              onPress={() => {
+                onSelect(opt.mode);
+                onClose();
+              }}
+              activeOpacity={0.75}
+            >
+              <View style={styles.rowLeft}>
+                <View style={[styles.iconWrap, selected && styles.iconWrapSelected]}>
+                  <Ionicons
+                    name={opt.icon}
+                    size={17}
+                    color={selected ? '#FFFFFF' : theme.colors.accent}
+                  />
+                </View>
+                <Text style={[styles.rowLabel, selected && styles.rowLabelSelected]}>{opt.label}</Text>
+              </View>
+              {selected && (
+                <Ionicons name="checkmark-circle" size={20} color={theme.colors.accent} />
+              )}
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+    </BottomSheetModal>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
-    backdrop: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.65)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingHorizontal: 28,
-    },
-    card: {
-      backgroundColor: theme.colors.surface,
-      width: '100%',
-      maxWidth: 320,
-      borderRadius: 24,
-      overflow: 'hidden',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      padding: 18,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.25,
-      shadowRadius: 20,
-      elevation: 10,
-      direction: 'rtl',
-    },
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: 16,
       gap: 12,
+      direction: 'rtl',
     },
     headerIconCircle: {
       width: 36,
