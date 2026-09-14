@@ -18,6 +18,7 @@ import { isUpdateCheckConfigured } from '../services/appUpdate';
 import { getDownloadPageUrl } from '../services/apkInstall';
 import { useSettingsNotifications } from '../hooks/useSettingsNotifications';
 import { useSettingsBackup } from '../hooks/useSettingsBackup';
+import { useStorageCache } from '../hooks/useStorageCache';
 import type { BackupData } from '../services/backup';
 import type { ResetOptionType } from '../components/Settings/ResetOptionsModal.types';
 
@@ -70,6 +71,14 @@ export default function SettingsScreen() {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [scheduledCount, setScheduledCount] = useState(0);
+
+  const {
+    storageSizeFormatted,
+    isClearing: isClearingStorage,
+    executeClearCache,
+  } = useStorageCache();
+
+  const [showClearCacheModal, setShowClearCacheModal] = useState(false);
 
   const [updateFeedback, setUpdateFeedback] = useState<{
     title: string;
@@ -200,6 +209,17 @@ export default function SettingsScreen() {
     setPendingResetType(null);
     setShowSuccessModal(true);
   }, [pendingResetType, resetDafYomiState, resetPersonalTrackState, resetAllState]);
+
+  const handleClearCacheConfirm = useCallback(async () => {
+    await executeClearCache();
+    setShowClearCacheModal(false);
+    setUpdateFeedback({
+      title: 'הקבצים השמורים נוקו',
+      message: 'כל קובצי התמונות והדפים הזמניים נמחקו בהצלחה. סימוני הלימוד וההגדרות שלך נשמרו.',
+      iconName: 'checkmark-circle',
+      compact: true,
+    });
+  }, [executeClearCache]);
 
   const resetConfirmTexts = useMemo(() => {
     switch (pendingResetType) {
@@ -432,6 +452,8 @@ export default function SettingsScreen() {
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
             onProbeGithubRelease={__DEV__ ? updateCtl.probeGithubRelease : undefined}
             onShareDownloadLink={handleShareDownloadLink}
+            storageSizeFormatted={storageSizeFormatted}
+            onClearCacheOpen={() => setShowClearCacheModal(true)}
           />
         </View>
 
@@ -465,6 +487,11 @@ export default function SettingsScreen() {
           onBackupImportReplace={handleBackupImportReplace}
           onBackupImportCancel={clearBackupImportState}
           isSaving={isSaving}
+          showClearCacheModal={showClearCacheModal}
+          clearCacheSizeFormatted={storageSizeFormatted}
+          isClearingCache={isClearingStorage}
+          onClearCacheConfirm={handleClearCacheConfirm}
+          onClearCacheClose={() => setShowClearCacheModal(false)}
         />
 
         <InfoModal
