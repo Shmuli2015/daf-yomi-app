@@ -12,7 +12,10 @@
 ## File Structure & Component Architecture
 
 - **Concise & Focused Files**: Avoid overly long or bloated files. Keep files modular, clean, and reasonably sized.
-- **One Component Per File**: Each React component file must contain and export only one component. Sub-components, modal dialogs, cards, and distinct UI sections must be extracted into their own dedicated files.
+- **One Component Per File**: Each React component file must define and export exactly one component. Never declare inner components (modal dialogs, cards, distinct UI sections, list items, render helpers returning JSX) inside another component file. A file that only composes imported components is acceptable as long as it still exports a single component.
+- **Thin Screens**: A `*Screen.tsx` file only composes hooks and renders JSX. Feature flows, modal state machines, and static text tables must not live in a screen.
+- **Extract When A Screen Has Multiple Concerns**: When a screen manages several domains (notifications, backup, reset, updates), give each domain its own `useXxx.ts` hook, and move calculations, formatting, and static copy into `utils/` or helper modules.
+- **Orchestrate, Don't Own Logic**: Screens wire together the store, hooks, and presentational components; business logic does not live in the screen itself.
 - **Extract Custom Hooks**: Extract business logic, complex state, listeners, and animation logic into dedicated custom hooks (`useXxx.ts`) rather than inlining them in UI components.
 - **Extract Helpers & Utilities**: Move data transformations, calculations, formatters, and pure helper functions into separate helper or utility files (`utils/` or dedicated module helpers).
 - **Styles & Types Separation**: When styles, types, or static data tables grow large, extract them into adjacent companion files (such as `*.styles.ts`, `*.types.ts`, `*.constants.ts`).

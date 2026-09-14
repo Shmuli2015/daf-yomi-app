@@ -1,6 +1,9 @@
 import { useState, useCallback, useEffect } from 'react';
+import { AppState, Platform } from 'react-native';
 import {
   scheduleNotifications,
+  sendTestNotification,
+  getScheduledNotifications,
   DEFAULT_SCHEDULES,
 } from '../utils/notifications';
 import {
@@ -11,9 +14,11 @@ import {
 } from '../utils/exactAlarm';
 import { parseDaySchedulesJson } from '../utils/settingsScreen';
 import type { DaySchedule } from '../components/Settings/DayScheduleList';
+import type { SettingsRecord } from '../db/database';
+import type { SettingsFeedback } from './useSettingsFeedback';
 
 interface UseSettingsNotificationsParams {
-  settings: any;
+  settings: SettingsRecord | null;
   updateNotificationSettings: (
     hour: number,
     minute: number,
@@ -25,6 +30,7 @@ interface UseSettingsNotificationsParams {
   ) => void;
   showSecularDate: boolean;
   showConfettiPref: boolean;
+  onFeedback: (feedback: SettingsFeedback) => void;
 }
 
 export function useSettingsNotifications({
@@ -32,6 +38,7 @@ export function useSettingsNotifications({
   updateNotificationSettings,
   showSecularDate,
   showConfettiPref,
+  onFeedback,
 }: UseSettingsNotificationsParams) {
   const [hour, setHour] = useState(7);
   const [minute, setMinute] = useState(30);
@@ -42,6 +49,7 @@ export function useSettingsNotifications({
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [exactAlarmStatus, setExactAlarmStatus] = useState<ExactAlarmStatus>('not_required');
   const [isSaving, setIsSaving] = useState(false);
+  const [scheduledCount, setScheduledCount] = useState(0);
 
   useEffect(() => {
     if (settings) {
@@ -205,6 +213,52 @@ export function useSettingsNotifications({
     setEditingDay(null);
   }, []);
 
+  const handleTestNotification = useCallback(async () => {
+    await sendTestNotification();
+    onFeedback({
+      title: 'התראת בדיקה',
+      message: 'התראת בדיקה תגיע בעוד 5 שניות',
+      iconName: 'notifications-outline',
+      compact: true,
+      autoCloseMs: 3000,
+    });
+  }, [onFeedback]);
+
+  const handleCheckScheduled = useCallback(async () => {
+    const notifications = await getScheduledNotifications();
+    setScheduledCount(notifications.length);
+    onFeedback({
+      title: 'התראות מתוזמנות',
+      message: `יש ${notifications.length} התראות מתוזמנות במערכת`,
+      iconName: 'list-outline',
+      compact: true,
+    });
+  }, [onFeedback]);
+
+  useEffect(() => {
+    async function refreshScheduledCount() {
+      const notifications = await getScheduledNotifications();
+      setScheduledCount(notifications.length);
+    }
+    refreshScheduledCount();
+  }, [notificationsEnabled, hour, minute, notifMode, daySchedules]);
+
+  useEffect(() => {
+    void refreshExactAlarmStatus();
+  }, [refreshExactAlarmStatus]);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+
+    const subscription = AppState.addEventListener('change', nextState => {
+      if (nextState === 'active') {
+        void refreshExactAlarmStatus();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [refreshExactAlarmStatus]);
+
   return {
     hour,
     minute,
@@ -215,6 +269,7 @@ export function useSettingsNotifications({
     showTimePicker,
     exactAlarmStatus,
     isSaving,
+    scheduledCount,
     refreshExactAlarmStatus,
     saveAndSchedule,
     handleModeChange,
@@ -225,5 +280,7 @@ export function useSettingsNotifications({
     handleExactAlarmSettingsPress,
     handleTimePickerOpen,
     handleTimePickerClose,
+    handleTestNotification,
+    handleCheckScheduled,
   };
 }

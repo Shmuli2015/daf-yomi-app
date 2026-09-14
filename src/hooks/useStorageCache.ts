@@ -4,6 +4,11 @@ import {
   clearStorageCache,
   StorageUsageSummary,
 } from '../services/storageManager';
+import type { SettingsFeedback } from './useSettingsFeedback';
+
+interface UseStorageCacheParams {
+  onFeedback?: (feedback: SettingsFeedback) => void;
+}
 
 export interface UseStorageCacheReturn {
   storageSummary: StorageUsageSummary | null;
@@ -11,14 +16,19 @@ export interface UseStorageCacheReturn {
   storageSizeBytes: number;
   isCalculating: boolean;
   isClearing: boolean;
+  showClearCacheModal: boolean;
+  openClearCacheModal: () => void;
+  closeClearCacheModal: () => void;
+  handleClearCacheConfirm: () => Promise<void>;
   refreshStorageSize: () => Promise<void>;
   executeClearCache: () => Promise<void>;
 }
 
-export function useStorageCache(): UseStorageCacheReturn {
+export function useStorageCache({ onFeedback }: UseStorageCacheParams = {}): UseStorageCacheReturn {
   const [storageSummary, setStorageSummary] = useState<StorageUsageSummary | null>(null);
   const [isCalculating, setIsCalculating] = useState<boolean>(false);
   const [isClearing, setIsClearing] = useState<boolean>(false);
+  const [showClearCacheModal, setShowClearCacheModal] = useState(false);
 
   const refreshStorageSize = useCallback(async () => {
     setIsCalculating(true);
@@ -48,6 +58,20 @@ export function useStorageCache(): UseStorageCacheReturn {
     }
   }, [refreshStorageSize]);
 
+  const openClearCacheModal = useCallback(() => setShowClearCacheModal(true), []);
+  const closeClearCacheModal = useCallback(() => setShowClearCacheModal(false), []);
+
+  const handleClearCacheConfirm = useCallback(async () => {
+    await executeClearCache();
+    setShowClearCacheModal(false);
+    onFeedback?.({
+      title: 'הקבצים השמורים נוקו',
+      message: 'כל קובצי התמונות והדפים הזמניים נמחקו בהצלחה. סימוני הלימוד וההגדרות שלך נשמרו.',
+      iconName: 'checkmark-circle',
+      compact: true,
+    });
+  }, [executeClearCache, onFeedback]);
+
   useEffect(() => {
     void refreshStorageSize();
   }, [refreshStorageSize]);
@@ -58,6 +82,10 @@ export function useStorageCache(): UseStorageCacheReturn {
     storageSizeBytes: storageSummary?.totalBytes ?? 0,
     isCalculating,
     isClearing,
+    showClearCacheModal,
+    openClearCacheModal,
+    closeClearCacheModal,
+    handleClearCacheConfirm,
     refreshStorageSize,
     executeClearCache,
   };
