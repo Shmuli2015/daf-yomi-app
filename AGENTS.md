@@ -35,3 +35,25 @@
 - **Prevent Text Box Collapse**: Ensure multi-line Hebrew texts stretch across the container using `width: '100%'` or `alignSelf: 'stretch'`.
 - **RTL in Modals & Popups**: React Native `<Modal>` roots do not always inherit the parent RTL layout; ensure container views declare `direction: 'rtl'` and row elements place icons and start badges on the right side.
 
+## Theming & Style Guidelines
+
+- **Style Factory Pattern**: Always export a factory function `createXxxStyles(theme: Theme)` from companion `*.styles.ts` files to ensure full theme reactivity (dark and light modes).
+- **Zero Hardcoded Colors**: Never hardcode hex color strings (`#...`) in components or styles. Reference `theme.colors.*`, `theme.radius.*`, and `...theme.shadow.*` from `src/theme.ts`.
+- **StyleSheet Safety**: Always use `StyleSheet.absoluteFill` instead of `StyleSheet.absoluteFillObject`.
+- **Safe Area Insets**: Use `SafeAreaView` from `react-native-safe-area-context` or `useSafeAreaInsets()`. Never import `SafeAreaView` from standard `react-native`.
+
+## State Management & Store Rules
+
+- **Atomic Selectors**: Always extract store state using selective pickers (e.g., `useAppStore(state => state.someValue)`) to avoid unnecessary component re-renders.
+- **Async Persistence in Store/Services**: Keep database (SQLite), file system, and backup logic encapsulated inside store actions or dedicated service modules, never directly inside UI component event handlers.
+
+## Performance & Virtualization
+
+- **Long Lists**: For large datasets (masechtot, dapim, study history), always use `FlatList` with stable `keyExtractor` and `getItemLayout` when item heights are uniform. Never render hundreds of items using `.map()` inside a plain `ScrollView`.
+
+## Quality & Verification
+
+- **Type Check Verification**: Run `npm run typecheck` after modifying TypeScript files to ensure zero type errors before completing tasks.
+- **Graceful Error Handling**: Wrap async flows (storage, backup, database queries) with proper `try/catch` blocks and clear, user-facing Hebrew feedback; never fail silently.
+
+
