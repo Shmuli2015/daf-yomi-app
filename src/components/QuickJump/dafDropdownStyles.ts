@@ -9,7 +9,7 @@ export function createDafDropdownStyles(theme: Theme) {
       right: 20,
       width: 210,
       maxWidth: '65%',
-      height: 200,
+      height: 220,
       borderWidth: 1,
       borderColor: theme.colors.border,
       borderRadius: theme.radius.md,

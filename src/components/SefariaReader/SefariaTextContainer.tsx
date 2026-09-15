@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,10 +9,22 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { SefariaPageData, SefariaSegment } from '../../services/sefariaTextApi';
+import type { SefariaCommentaryItem, SefariaPageData, SefariaSegment } from '../../services/sefariaTextApi';
+import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
+import CommentaryBodyText from './CommentaryBodyText';
 import CommentaryBottomSheet from './CommentaryBottomSheet';
+import ReaderAttribution from './ReaderAttribution';
+import {
+  MISHNAH_ATTRIBUTION_SHORT,
+  READER_ATTRIBUTION_SHORT,
+  SEFARIA_INDEPENDENCE_NOTE,
+} from '../../data/contentLicenses';
+import ContentLicensesModal from '../Settings/ContentLicensesModal';
 import type { ReaderTheme } from './ReaderToolbar';
 import { useTheme } from '../../theme';
+import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
+import { findAdjacentCommentedSegmentIndex } from '../../utils/commentarySegments';
+import { classicCommentatorKeysForTref, filterCommentaries } from '../../utils/sefariaCommentators';
 
 interface SefariaTextContainerProps {
   data: SefariaPageData | null;
@@ -22,9 +34,10 @@ interface SefariaTextContainerProps {
   fontSize: number;
   readerTheme?: ReaderTheme;
   accentColor: string;
+  classicTabLabel?: string;
 }
 
-function getCommentaryLabel(commList: any[]): string {
+function getCommentaryLabel(commList: SefariaCommentaryItem[]): string {
   if (!commList || commList.length === 0) return '';
   const commentators = Array.from(new Set(commList.map((c) => c.titleHe))).filter(Boolean);
   if (commentators.length === 1) {
@@ -41,9 +54,26 @@ export default function SefariaTextContainer({
   fontSize,
   readerTheme,
   accentColor,
+  classicTabLabel = 'גמרא',
 }: SefariaTextContainerProps) {
   const theme = useTheme();
   const [selectedSegment, setSelectedSegment] = useState<SefariaSegment | null>(null);
+  const [licensesVisible, setLicensesVisible] = useState(false);
+  const classicCommentaries = useMemo(
+    () =>
+      data
+        ? filterCommentaries(data.commentaries, classicCommentatorKeysForTref(data.tref))
+        : {},
+    [data],
+  );
+  const blocks = useMemo(
+    () =>
+      insertChapterBoundaries(
+        (data?.segments ?? []).map((segment) => ({ index: segment.index, item: segment })),
+        data?.chapterEvents ?? [],
+      ),
+    [data?.segments, data?.chapterEvents],
+  );
 
   const isDark = readerTheme ? readerTheme === 'dark' : theme.colors.background === '#121212';
   const isSepia = readerTheme === 'sepia';
@@ -76,7 +106,9 @@ export default function SefariaTextContainer({
     return (
       <View style={[styles.centerContainer, { backgroundColor: bgColor }]}>
         <ActivityIndicator size="large" color={accentColor} />
-        <Text style={[styles.loadingText, { color: subTextColor }]}>טוען טקסט מנוקד מספריא...</Text>
+        <Text style={[styles.loadingText, { color: subTextColor }]}>
+          {`טוען את ה${classicTabLabel}...`}
+        </Text>
       </View>
     );
   }
@@ -85,8 +117,10 @@ export default function SefariaTextContainer({
     return (
       <View style={[styles.centerContainer, { backgroundColor: bgColor }]}>
         <Ionicons name="cloud-offline-outline" size={48} color={subTextColor} />
-        <Text style={[styles.errorTitle, { color: textColor }]}>לא ניתן לטון את הטקסט</Text>
-        <Text style={[styles.errorSub, { color: subTextColor }]}>{error || 'שגיאה בהתחברות לספריא'}</Text>
+        <Text style={[styles.errorTitle, { color: textColor }]}>לא ניתן לטעון את הטקסט</Text>
+        <Text style={[styles.errorSub, { color: subTextColor }]}>
+          {error || 'שגיאה בטעינת הטקסט'}
+        </Text>
         <TouchableOpacity
           style={[styles.retryBtn, { backgroundColor: accentColor }]}
           onPress={onRetry}
@@ -97,6 +131,35 @@ export default function SefariaTextContainer({
       </View>
     );
   }
+
+  if (data.segments.length === 0) {
+    return (
+      <View style={[styles.centerContainer, { backgroundColor: bgColor }]}>
+        <Ionicons name="book-outline" size={48} color={subTextColor} />
+        <Text style={[styles.errorTitle, { color: textColor }]}>לא נמצא טקסט גמרא לדף זה</Text>
+        <Text style={[styles.errorSub, { color: subTextColor }]}>
+          ניתן לנסות טאב אחר, או דף אחר במסכת.
+        </Text>
+      </View>
+    );
+  }
+
+  const prevCommentedIndex = selectedSegment
+    ? findAdjacentCommentedSegmentIndex(
+        data.segments.length,
+        classicCommentaries,
+        selectedSegment.index,
+        -1,
+      )
+    : null;
+  const nextCommentedIndex = selectedSegment
+    ? findAdjacentCommentedSegmentIndex(
+        data.segments.length,
+        classicCommentaries,
+        selectedSegment.index,
+        1,
+      )
+    : null;
 
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
@@ -109,13 +172,36 @@ export default function SefariaTextContainer({
           <Text style={[styles.titleHe, { color: accentColor }]}>{data.titleHe}</Text>
         </View>
 
-        {data.segments.map((segment) => {
-          const commList = data.commentaries[segment.index] || [];
+        {blocks.map((block, index) => {
+          if (block.kind === 'chapterStart') {
+            return (
+              <ChapterBoundaryMarker
+                key={`chapter-start-${index}`}
+                kind="start"
+                titleHe={block.titleHe}
+                chapterNumber={block.chapterNumber}
+              />
+            );
+          }
+          if (block.kind === 'chapterEnd') {
+            return (
+              <ChapterBoundaryMarker
+                key={`chapter-end-${index}`}
+                kind="end"
+                titleHe={block.titleHe}
+                isMasechetEnd={block.isMasechetEnd}
+                masechetHe={block.masechetHe}
+              />
+            );
+          }
+
+          const segment = block.item;
+          const commList = classicCommentaries[segment.index] || [];
           const hasCommentary = commList.length > 0;
 
           return (
             <TouchableOpacity
-              key={segment.index}
+              key={`${segment.index}-${index}`}
               style={[
                 styles.segmentCard,
                 { backgroundColor: cardBg, borderColor },
@@ -128,8 +214,14 @@ export default function SefariaTextContainer({
               }}
               activeOpacity={hasCommentary ? 0.7 : 1}
             >
-              <Text
-                style={[
+              {segment.mishnahLabel ? (
+                <Text style={[styles.mishnahLabel, { color: accentColor }]}>
+                  {`\u200F${segment.mishnahLabel}`}
+                </Text>
+              ) : null}
+              <CommentaryBodyText
+                text={segment.he}
+                baseStyle={[
                   styles.segmentText,
                   {
                     color: textColor,
@@ -137,9 +229,8 @@ export default function SefariaTextContainer({
                     lineHeight: Math.round(fontSize * 1.6),
                   },
                 ]}
-              >
-                {`\u200F${segment.he}`}
-              </Text>
+                accentColor={accentColor}
+              />
 
               {hasCommentary && (
                 <View style={styles.commentaryBadgeRow}>
@@ -155,15 +246,51 @@ export default function SefariaTextContainer({
             </TouchableOpacity>
           );
         })}
+
+        <ReaderAttribution
+          lines={[
+            data.tref.includes('Mishnah_Kinnim') || data.tref.includes('Mishnah_Middot')
+              ? MISHNAH_ATTRIBUTION_SHORT
+              : READER_ATTRIBUTION_SHORT,
+            SEFARIA_INDEPENDENCE_NOTE,
+          ]}
+          textColor={subTextColor}
+          borderColor={borderColor}
+          accentColor={accentColor}
+          onPress={() => setLicensesVisible(true)}
+        />
       </ScrollView>
+
+      <ContentLicensesModal
+        visible={licensesVisible}
+        onClose={() => setLicensesVisible(false)}
+      />
 
       {selectedSegment && (
         <CommentaryBottomSheet
           visible={selectedSegment !== null}
           onClose={() => setSelectedSegment(null)}
-          segmentTitle={`${data.titleHe} (פיסקה ${selectedSegment.index + 1})`}
+          segmentTitle={
+            selectedSegment.mishnahLabel
+              ? `${data.titleHe} (${selectedSegment.mishnahLabel})`
+              : `${data.titleHe} (פיסקה ${selectedSegment.index + 1})`
+          }
           segmentText={selectedSegment.he}
-          commentaries={data.commentaries[selectedSegment.index] || []}
+          segmentNumber={selectedSegment.index + 1}
+          totalSegments={data.segments.length}
+          commentaries={classicCommentaries[selectedSegment.index] || []}
+          hasPrevSegment={prevCommentedIndex !== null}
+          hasNextSegment={nextCommentedIndex !== null}
+          onPrevSegment={() => {
+            if (prevCommentedIndex !== null) {
+              setSelectedSegment(data.segments[prevCommentedIndex]);
+            }
+          }}
+          onNextSegment={() => {
+            if (nextCommentedIndex !== null) {
+              setSelectedSegment(data.segments[nextCommentedIndex]);
+            }
+          }}
           themeMode={isSepia ? 'sepia' : isDark ? 'dark' : 'light'}
           accentColor={accentColor}
         />
@@ -239,6 +366,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: 8,
     alignItems: 'stretch',
+  },
+  mishnahLabel: {
+    fontSize: 15,
+    fontWeight: '800',
+    textAlign: Platform.OS === 'web' ? 'right' : 'left',
+    writingDirection: 'rtl',
+    alignSelf: 'stretch',
+    width: '100%',
   },
   segmentText: {
     textAlign: Platform.OS === 'web' ? 'right' : 'left',

@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { getDafByDate } from './dafYomi';
+import { dafYomiDisplayMasechetHe } from './mishnahOnlySefaria';
 import { hasExactAlarmPermission, promptForExactAlarmPermission } from './exactAlarm';
 
 export type DaySchedule = { enabled: boolean; hour: number; minute: number };
@@ -33,7 +34,7 @@ export async function scheduleNotifications(
     const hasExactAlarm = await hasExactAlarmPermission();
     if (!hasExactAlarm) {
       console.log(
-        'Exact alarm permission not granted — reminders will be scheduled with approximate timing',
+        'Exact alarm permission not granted - reminders will be scheduled with approximate timing',
       );
     }
 
@@ -57,7 +58,7 @@ export async function scheduleNotifications(
         
         const content: Notifications.NotificationContentInput = {
           title: '📖 זמן הלימוד היומי הגיע',
-          body: `הדף היומי מחכה לך: ${dafInfo.masechet} ${dafInfo.daf}. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️`,
+          body: `הדף היומי מחכה לך: ${dafYomiDisplayMasechetHe(dafInfo.masechet, dafInfo.dafNum)} ${dafInfo.daf}. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️`,
           sound: true,
           priority: Notifications.AndroidNotificationPriority.MAX,
           categoryIdentifier: 'study-reminder',
@@ -101,7 +102,7 @@ export async function scheduleNotifications(
         
         const content: Notifications.NotificationContentInput = {
           title: '📖 זמן הלימוד היומי הגיע',
-          body: `הדף היומי מחכה לך: ${dafInfo.masechet} ${dafInfo.daf}. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️`,
+          body: `הדף היומי מחכה לך: ${dafYomiDisplayMasechetHe(dafInfo.masechet, dafInfo.dafNum)} ${dafInfo.daf}. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️`,
           sound: true,
           priority: Notifications.AndroidNotificationPriority.MAX,
           categoryIdentifier: 'study-reminder',
@@ -162,7 +163,7 @@ export async function sendTestNotification() {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '🧪 התראת בדיקה',
-        body: `הדף היומי: ${dafInfo.masechet} ${dafInfo.daf}`,
+        body: `הדף היומי: ${dafYomiDisplayMasechetHe(dafInfo.masechet, dafInfo.dafNum)} ${dafInfo.daf}`,
         sound: true,
         priority: Notifications.AndroidNotificationPriority.MAX,
         categoryIdentifier: 'study-reminder',

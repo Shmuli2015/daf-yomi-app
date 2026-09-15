@@ -1,9 +1,14 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import { LIGHT_THEME, useTheme } from '../../theme';
+import { useModeSwitcherIndicator } from '../../hooks/useModeSwitcherIndicator';
+import { READER_FONT_SIZE_MAX, READER_FONT_SIZE_MIN } from '../../utils/readerFontSize';
+import { createReaderToolbarStyles } from './ReaderToolbar.styles';
 
 export type ReaderTheme = 'light' | 'dark' | 'sepia';
-export type ViewMode = 'pdf' | 'text';
+export type ViewMode = 'classic' | 'steinsaltz' | 'chavruta';
 
 interface ReaderToolbarProps {
   viewMode: ViewMode;
@@ -14,7 +19,18 @@ interface ReaderToolbarProps {
   readerTheme?: ReaderTheme;
   onChangeReaderTheme?: (theme: ReaderTheme) => void;
   accentColor: string;
+  showNotes?: boolean;
+  onToggleNotes?: () => void;
+  chavrutaAvailable?: boolean;
+  steinsaltzAvailable?: boolean;
+  classicTabLabel?: string;
 }
+
+const MODES: Array<{ id: ViewMode; label: string; icon: keyof typeof Ionicons.glyphMap }> = [
+  { id: 'classic', label: 'גמרא', icon: 'book-outline' },
+  { id: 'steinsaltz', label: 'שטיינזלץ', icon: 'reader-outline' },
+  { id: 'chavruta', label: 'חברותא', icon: 'people-outline' },
+];
 
 export default function ReaderToolbar({
   viewMode,
@@ -23,189 +39,115 @@ export default function ReaderToolbar({
   onIncreaseFontSize,
   onDecreaseFontSize,
   accentColor,
+  showNotes = false,
+  onToggleNotes,
+  chavrutaAvailable = true,
+  steinsaltzAvailable = true,
+  classicTabLabel = 'גמרא',
 }: ReaderToolbarProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createReaderToolbarStyles(theme), [theme]);
+  const onAccent = LIGHT_THEME.colors.surface;
+  const showNotesToggle = viewMode === 'chavruta' && onToggleNotes != null;
+  const visibleModes = useMemo(
+    () =>
+      MODES.filter((mode) => {
+        if (mode.id === 'chavruta') return chavrutaAvailable;
+        if (mode.id === 'steinsaltz') return steinsaltzAvailable;
+        return true;
+      }),
+    [chavrutaAvailable, steinsaltzAvailable],
+  );
+  const modeIds = useMemo(() => visibleModes.map((mode) => mode.id), [visibleModes]);
+  const { onSwitcherLayout, indicatorStyle, isReady } = useModeSwitcherIndicator(viewMode, modeIds);
+
   return (
     <View style={styles.container}>
-      <View style={styles.modeSwitcher}>
-        <TouchableOpacity
-          style={[
-            styles.modeButton,
-            viewMode === 'pdf' && { backgroundColor: accentColor },
-          ]}
-          onPress={() => onToggleViewMode('pdf')}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="document-text-outline"
-            size={14}
-            color={viewMode === 'pdf' ? '#FFFFFF' : '#8E8E93'}
-          />
-          <Text
-            style={[
-              styles.modeText,
-              viewMode === 'pdf' ? styles.modeTextActive : styles.modeTextInactive,
-            ]}
-          >
-            צורת הדף
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.modeButton,
-            viewMode === 'text' && { backgroundColor: accentColor },
-          ]}
-          onPress={() => onToggleViewMode('text')}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="book-outline"
-            size={14}
-            color={viewMode === 'text' ? '#FFFFFF' : '#8E8E93'}
-          />
-          <Text
-            style={[
-              styles.modeText,
-              viewMode === 'text' ? styles.modeTextActive : styles.modeTextInactive,
-            ]}
-          >
-            טקסט ספריא
-          </Text>
-        </TouchableOpacity>
+      <View style={styles.modeSwitcher} onLayout={onSwitcherLayout}>
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.modeIndicator, { backgroundColor: accentColor }, indicatorStyle]}
+        />
+        {visibleModes.map((mode) => {
+          const isActive = viewMode === mode.id;
+          const label = mode.id === 'classic' ? classicTabLabel : mode.label;
+          return (
+            <TouchableOpacity
+              key={mode.id}
+              style={[
+                styles.modeButton,
+                isActive && !isReady && { backgroundColor: accentColor },
+              ]}
+              onPress={() => onToggleViewMode(mode.id)}
+              activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={label}
+              accessibilityState={{ selected: isActive }}
+            >
+              <Ionicons
+                name={mode.icon}
+                size={14}
+                color={isActive ? onAccent : theme.colors.textMuted}
+              />
+              <Text
+                numberOfLines={1}
+                style={[
+                  styles.modeText,
+                  isActive ? styles.modeTextActive : styles.modeTextInactive,
+                ]}
+              >
+                {label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
-      {viewMode === 'text' && (
-        <View style={styles.rightControls}>
-          <View style={styles.fontControls}>
-            <TouchableOpacity
-              style={styles.fontBtn}
-              onPress={onDecreaseFontSize}
-              disabled={fontSize <= 14}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.fontBtnText, fontSize <= 14 && styles.btnDisabled]}>A-</Text>
-            </TouchableOpacity>
-            <Text style={styles.fontSizeLabel}>{fontSize}</Text>
-            <TouchableOpacity
-              style={styles.fontBtn}
-              onPress={onIncreaseFontSize}
-              disabled={fontSize >= 30}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.fontBtnText, fontSize >= 30 && styles.btnDisabled]}>A+</Text>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.controlsRow}>
+        {showNotesToggle ? (
+          <TouchableOpacity
+            style={[styles.notesBtn, showNotes && styles.notesBtnActive]}
+            onPress={onToggleNotes}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="הצגת הערות"
+            accessibilityState={{ selected: showNotes }}
+          >
+            <Ionicons
+              name="document-text-outline"
+              size={14}
+              color={showNotes ? onAccent : theme.colors.textMuted}
+            />
+            <Text style={[styles.notesBtnText, showNotes && styles.notesBtnTextActive]}>
+              הערות
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.controlsSpacer} />
+        )}
+
+        <View style={styles.fontControls}>
+          <TouchableOpacity
+            style={styles.fontBtn}
+            onPress={onDecreaseFontSize}
+            disabled={fontSize <= READER_FONT_SIZE_MIN}
+            activeOpacity={0.7}
+            accessibilityLabel="הקטן גופן"
+          >
+            <Text style={[styles.fontBtnText, fontSize <= READER_FONT_SIZE_MIN && styles.btnDisabled]}>A-</Text>
+          </TouchableOpacity>
+          <Text style={styles.fontSizeLabel}>{fontSize}</Text>
+          <TouchableOpacity
+            style={styles.fontBtn}
+            onPress={onIncreaseFontSize}
+            disabled={fontSize >= READER_FONT_SIZE_MAX}
+            activeOpacity={0.7}
+            accessibilityLabel="הגדל גופן"
+          >
+            <Text style={[styles.fontBtnText, fontSize >= READER_FONT_SIZE_MAX && styles.btnDisabled]}>A+</Text>
+          </TouchableOpacity>
         </View>
-      )}
+      </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(150, 150, 150, 0.2)',
-    backgroundColor: 'rgba(0, 0, 0, 0.03)',
-  },
-  modeSwitcher: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(150, 150, 150, 0.15)',
-    borderRadius: 8,
-    padding: 2,
-  },
-  modeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
-    gap: 4,
-  },
-  modeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  modeTextActive: {
-    color: '#FFFFFF',
-  },
-  modeTextInactive: {
-    color: '#8E8E93',
-  },
-  rightControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  fontControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(150, 150, 150, 0.15)',
-    borderRadius: 8,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-  },
-  fontBtn: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  fontBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#3A3A3C',
-  },
-  fontSizeLabel: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#8E8E93',
-    paddingHorizontal: 4,
-  },
-  btnDisabled: {
-    opacity: 0.3,
-  },
-  themeSelector: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  themeChip: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  themeChipActive: {
-    borderColor: '#D4AF37',
-    borderWidth: 2,
-  },
-  themeLight: {
-    backgroundColor: '#FFFFFF',
-  },
-  themeChipTextLight: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#000000',
-  },
-  themeSepia: {
-    backgroundColor: '#FBF0D9',
-  },
-  themeChipTextSepia: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#2C221E',
-  },
-  themeDark: {
-    backgroundColor: '#1C1C1E',
-  },
-  themeChipTextDark: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-});

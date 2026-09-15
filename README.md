@@ -6,7 +6,7 @@
 
 **Version:** See the `version` field in [`package.json`](./package.json). Expo picks it up in [`app.config.js`](./app.config.js), and the app shows it in Settings (via `expo-constants`), so one source of truth stays in sync.
 
-**App updates (APK sideload):** The app compares the installed build against the latest published APK using the public GitHub Releases API (see [`src/services/appUpdate.ts`](./src/services/appUpdate.ts)). When a newer version is available, **Download & install** (<span dir="rtl" lang="he">הורד והתקן</span>) downloads the APK in-app and opens Android’s install screen (see [`src/services/apkInstall.ts`](./src/services/apkInstall.ts)). **First install / share link:** [Download page](https://shmuli2015.github.io/daf-yomi-app/) (`docs/` on GitHub Pages) — one Hebrew button, no GitHub UI. Configure the repository in `expo.extra` inside [`app.config.js`](./app.config.js) (`githubOwner`, `githubRepo`, `releaseApkBasename`, `downloadPageUrl`, `updateCheckEnabled`). **Automatic update notifications** (<span dir="rtl" lang="he">התראות עדכון אוטומטיות</span>) are optional and **off** by default.
+**App updates (APK sideload):** The app compares the installed build against the latest published APK using the public GitHub Releases API (see [`src/services/appUpdate.ts`](./src/services/appUpdate.ts)). When a newer version is available, **Download & install** (<span dir="rtl" lang="he">הורד והתקן</span>) downloads the APK in-app and opens Android’s install screen (see [`src/services/apkInstall.ts`](./src/services/apkInstall.ts)). **First install / share link:** [Download page](https://shmuli2015.github.io/daf-yomi-app/) (`docs/` on GitHub Pages): one Hebrew button, no GitHub UI. Configure the repository in `expo.extra` inside [`app.config.js`](./app.config.js) (`githubOwner`, `githubRepo`, `releaseApkBasename`, `downloadPageUrl`, `updateCheckEnabled`). **Automatic update notifications** (<span dir="rtl" lang="he">התראות עדכון אוטומטיות</span>) are optional and **off** by default.
 
 ---
 
@@ -14,18 +14,18 @@
 
 ### 🏠 Home Dashboard
 - **Day Navigation**: Prev/next arrows on the dashboard move between calendar days for that day's Daf; tap the dates to jump back to today, or use **Return to today** (<span dir="rtl" lang="he">חזור להיום</span>) when you have moved away from the real calendar date
-- **Quick Jump to Daf** (<span dir="rtl" lang="he">קפיצה מהירה</span>): Header shortcut to jump directly to any tractate and page in Shas. Search by selecting a tractate and page from a searchable dropdown, or type the page number using numerals or Hebrew gematria (e.g. "סד", "קכ", "12"). Direct one-tap jump to either Tzurat Hadaf or Sefaria
+- **Quick Jump to Daf** (<span dir="rtl" lang="he">קפיצה מהירה</span>): Header shortcut to jump directly to any tractate and page in Shas. Search by selecting a tractate and page from a searchable dropdown, or type the page number using numerals or Hebrew gematria (e.g. "סד", "קכ", "12"). Direct one-tap jump to the in-app reader or Sefaria
 - **Today's Daf Display**: Shows the Daf Yomi for the selected day (tractate and page) with both Hebrew and Gregorian dates (Gregorian respects the visibility toggle)
 - **Learning Tracker**: Tap **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) for a full page; **long press** opens a menu for **full page**, **half page (amud א)**, or **half page (amud ב)**. When half-done, the control shows **I finished the page!** (<span dir="rtl" lang="he">סיימתי את הדף!</span>); tap to upgrade to full. When fully learned, it shows **Learned** (<span dir="rtl" lang="he">אשריך! הדף נלמד</span>) and asks for confirmation before unsetting
 - **Partial progress**: Half pages count as **0.5** toward tractate progress (fractional counts such as 3.5 of 10 are possible)
 - **Siyum Masechet Celebration & Share** (<span dir="rtl" lang="he">סיום מסכת ושיתוף</span>): Marking the final page of a tractate triggers a festive celebration modal featuring the traditional "Hadran Alach" (<span dir="rtl" lang="he">הדרן עלך</span>) blessing, animated confetti, and an exclusive branded Siyum share card for social media and messaging
 - **Masechet Progress Bar**: Visual indicator showing your progress in the current tractate
 - **Sefaria Integration**: Opens the Daf in Sefaria in your **external browser** (unchanged behavior)
-- **Tzurat Hadaf & Sefaria Text Reader** (<span dir="rtl" lang="he">צורת הדף וקורא טקסט מובנה</span>): In-app **Vilna page PDFs** from [daf-yomi.com](https://daf-yomi.com) with pinch-to-zoom and landscape rotation, plus a built-in **Sefaria Text Reader** with vocalized text (nikud), interactive **commentary bottom sheet** (Rashi, Tosafot, etc.), font size controls (`+`/`-`), and reading theme options (Light, Dark, Sepia). Includes amud/daf navigation, **fullscreen mode**, **swipe gestures**, **mark as learned** header control, and local caching
-- **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **Tzurat Hadaf only**, or **both** on Home and Calendar
+- **In-app Daf Reader** (<span dir="rtl" lang="he">לימוד הדף</span>): Three tabs: vocalized **Gemara** from Sefaria with **Rashi** and **Tosafot** in a bottom sheet, a continuous **Steinsaltz** commentary that weaves the Gemara into the biur, and **Chavruta**. Includes amud/daf navigation, **fullscreen mode**, **swipe gestures**, **mark as learned** header control, font size controls (`+`/`-`), and local text caching
+- **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **the in-app reader only**, or **both** on Home and Calendar
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum; half pages **do not break** the streak but **do not add** a day either
 - **7-Day Progress Overview**: In-app mini chart of the last seven days: tall bar = full page, medium bar = half page, short bar = not learned
-- **Share progress as an image** (<span dir="rtl" lang="he">שיתוף תמונה</span>): On the streak card, tap the **share** (<span dir="rtl" lang="he">שתף</span>) control to open a preview, then **Share image** (<span dir="rtl" lang="he">שתף תמונה</span>) — exports a square graphic (streak, Hebrew date, app branding) for WhatsApp Status, Instagram Stories, etc. (requires a **development or production build**, not Expo Go; see Tech Stack)
+- **Share progress as an image** (<span dir="rtl" lang="he">שיתוף תמונה</span>): On the streak card, tap the **share** (<span dir="rtl" lang="he">שתף</span>) control to open a preview, then **Share image** (<span dir="rtl" lang="he">שתף תמונה</span>) to export a square graphic (streak, Hebrew date, app branding) for WhatsApp Status, Instagram Stories, etc. (requires a **development or production build**, not Expo Go; see Tech Stack)
 - **Personal Track Banner & Quick Overview Card** (<span dir="rtl" lang="he">מסלול אישי</span>): Track self-paced tractate study separate from the Daf Yomi cycle. Set an active tractate, view an overview card with real-time statistics (pages completed, progress percentage, next page), mark the next page directly with one tap, or open the full tractate daf grid
 - **Shas Progress Banner**: Overall progress across Shas; **tap the banner** to open the History screen for full tractate details
 - **Confetti Celebration**: Optional festive animation when marking a Daf as learned
@@ -37,7 +37,7 @@
 - **Masechet-by-Masechet Progress**: Individual progress bars for each tractate showing pages learned (including half pages)
 - **Accurate Tractate Boundaries**: 12 tractates ending on amud א' (such as Berakhot 64a, Moed Katan, Chagigah, Niddah) are strictly bounded; amud ב' is omitted and navigation continues directly to the next tractate
 - **Completion Statistics**: Track total pages learned and completed tractates
-- **Interactive Masechet Details**: Tap any tractate to see a daf grid; use **Mark all** (<span dir="rtl" lang="he">סמן הכל</span>) or **Clear all** (<span dir="rtl" lang="he">בטל הכל</span>) for bulk updates (with confirmation), or tap individual daf numbers to toggle. Partial daf cells use a distinct style; tapping a half page **upgrades** it to full learned (half page marking is available from Home, Calendar, and Tzurat Hadaf only)
+- **Interactive Masechet Details**: Tap any tractate to see a daf grid; use **Mark all** (<span dir="rtl" lang="he">סמן הכל</span>) or **Clear all** (<span dir="rtl" lang="he">בטל הכל</span>) for bulk updates (with confirmation), or tap individual daf numbers to toggle. Partial daf cells use a distinct style; tapping a half page **upgrades** it to full learned (half page marking is available from Home, Calendar, and the in-app reader)
 - **Daf Yomi vs. Personal Track Mode Toggle**: Within any tractate modal, switch between **Daf Yomi** (<span dir="rtl" lang="he">דף יומי</span>) and **Personal Track** (<span dir="rtl" lang="he">מסכת אישית</span>). Study and track individual tractates independently without affecting the global Daf Yomi calendar history
 - **Visual Progress Hero**: Large progress ring displaying overall Shas completion percentage
 - **Share Shas progress as an image**: On the History screen, use the **share** control on the hero card (same flow: preview → **Share image**) to export a branded square graphic with ring %, pages learned, and completed tractates count
@@ -48,7 +48,7 @@
 - **Navigation**: Month arrows, **swipe left/right** to change months, and a **Return to today** (<span dir="rtl" lang="he">חזרה להיום</span>) shortcut when you are viewing another month
 - **Learned days**: Full pages use solid accent highlight; **half pages** use a lighter/semi-transparent accent; **today** uses a lighter accent ring
 - **Calendar legend**: At the bottom of the calendar: full page learned, half page, today's Daf, not yet learned
-- **Day detail**: Tap a date to open a card with that day's Daf, study buttons (Sefaria and/or Tzurat Hadaf per Settings), and learn/unlearn (with confirmation when clearing). **Long press** the mark control for the half page menu
+- **Day detail**: Tap a date to open a card with that day's Daf, study buttons (Sefaria and/or the in-app reader per Settings), and learn/unlearn (with confirmation when clearing). **Long press** the mark control for the half page menu
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
@@ -59,10 +59,9 @@
 - **In-App User Guide**: Open **User guide** (<span dir="rtl" lang="he">מדריך שימוש</span>) for a Hebrew walkthrough of every major screen and feature; the guide includes the support email for feedback and questions
 - **Contact & support**: **Contact** (<span dir="rtl" lang="he">יצירת קשר</span>) in Settings opens your mail app, or write to **[support.masa.daf@gmail.com](mailto:support.masa.daf@gmail.com)** for feedback, technical support, and suggestions
 - **Interactive Notification Actions** (Hebrew in the app):  
-  - <span dir="rtl" lang="he">✅ סיימתי את הדף!</span> — mark the current cycle page as learned from the notification  
-  - <span dir="rtl" lang="he">⏰ הזכר לי עוד שעה</span> — snooze for one hour
+  - <span dir="rtl" lang="he">✅ סיימתי את הדף!</span>: mark the current cycle page as learned from the notification  
+  - <span dir="rtl" lang="he">⏰ הזכר לי עוד שעה</span>: snooze for one hour
 - **Theme Selection**: Choose between Light, Dark, or System-based theme modes
-- **Study Link Mode** (<span dir="rtl" lang="he">כפתורי לימוד</span>): Show **Sefaria**, **Tzurat Hadaf**, or **both** on the Home dashboard and Calendar day card
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
 - **Calendar Daf Labels**: Toggle whether each calendar cell shows that day's Daf number (<span dir="rtl" lang="he">הצג דף בלוח שנה</span>)
 - **Personal Track Banner Toggle**: Toggle visibility of the Personal Track banner on the Home dashboard (<span dir="rtl" lang="he">באנר מסלול אישי בבית</span>)
@@ -88,8 +87,8 @@
 - **Hebrew Gematria Parser**: Automatic resolution of Hebrew letter numbering (e.g. "סד", "קכ") or Arabic numerals for rapid page lookup
 - **Smooth Animations**: Powered by React Native Reanimated for fluid transitions
 - **Splash Screen**: Elegant branded loading screen on app launch with a random inspirational quote about Torah learning
-- **Tab Navigation**: Intuitive bottom tab bar with Home, Calendar, History, and Settings; Tzurat Hadaf opens as a full-screen modal over the tabs
-- **Offline-First (progress tracking)**: Mark learned, calendar, history, and settings work without internet; **Tzurat Hadaf** needs network on first load per page, then serves from on-device cache
+- **Tab Navigation**: Intuitive bottom tab bar with Home, Calendar, History, and Settings; the Daf reader opens as a full-screen modal over the tabs
+- **Offline-First (progress tracking)**: Mark learned, calendar, history, and settings work without internet; the reader needs network on first load per page, then serves from on-device cache
 - **Platform Support**: Runs on iOS, Android, and Web
 - **Dark Mode**: Sophisticated dark theme with gold accents for premium "Seforim" aesthetic
 - **Light Mode**: Clean, bright interface for daytime use
@@ -112,10 +111,10 @@
 - **Styling**: [NativeWind](https://www.nativewind.dev/) (Tailwind CSS) & Vanilla CSS for custom animations.
 - **State Management**: [Zustand](https://github.com/pmndrs/zustand) for reactive UI states.
 - **Database**: [Expo SQLite](https://docs.expo.dev/versions/latest/sdk/sqlite/) for lightning-fast local persistence.
-- **Study / Tzurat Hadaf**: [daf-yomi.com](https://daf-yomi.com) Vilna page PDFs, [Sefaria Manuscripts API](https://developers.sefaria.org/reference/get-manuscripts) (fallback), [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) (page cache), [react-native-webview](https://docs.expo.dev/versions/latest/sdk/webview/) (PDF/image viewer).
+- **Study texts**: [Sefaria API](https://www.sefaria.org) (vocalized Gemara, Rashi, Tosafot, Steinsaltz), Torat Emet (Chavruta), [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) (text cache).
 - **Calendar Logic**: [@hebcal/core](https://www.npmjs.com/package/@hebcal/core) & `@hebcal/learning`.
 - **Animations**: [React Native Reanimated](https://docs.expo.dev/versions/latest/sdk/reanimated/) & [react-native-confetti-cannon](https://www.npmjs.com/package/react-native-confetti-cannon).
-- **Share card capture**: [react-native-view-shot](https://github.com/gre/react-native-view-shot) (`captureRef`) and [expo-sharing](https://docs.expo.dev/versions/latest/sdk/sharing/) plus [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) — native modules; use a **development build** or release APK, not Expo Go.
+- **Share card capture**: [react-native-view-shot](https://github.com/gre/react-native-view-shot) (`captureRef`) and [expo-sharing](https://docs.expo.dev/versions/latest/sdk/sharing/) plus [expo-file-system](https://docs.expo.dev/versions/latest/sdk/filesystem/) (native modules; use a **development build** or release APK, not Expo Go).
 
 
 ---
@@ -183,7 +182,7 @@ Three GitHub Actions workflows:
 
 **APK build** (`build-android.yml`): runs the same quality checks, then a local EAS Android preview APK (`eas build … --profile preview --local`); requires `EXPO_TOKEN` in repository secrets. On `release/**` pushes only: the APK is renamed to `{releaseApkBasename}-{version}.apk` (see `expo.extra.releaseApkBasename` in [`app.config.js`](./app.config.js), default `masa-daf`), published as GitHub Release `vX.Y.Z`, and older releases are removed. Every run uploads `*.apk` as a short-lived workflow artifact.
 
-**Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page and in-app updater point at the current APK. Deploys automatically after a successful release-branch APK build (does not run on `master` push — branch protection and merge timing make that unreliable). Use **Run workflow** manually if you change `docs/` without a new APK.
+**Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page and in-app updater point at the current APK. Deploys automatically after a successful release-branch APK build (does not run on `master` push because branch protection and merge timing make that unreliable). Use **Run workflow** manually if you change `docs/` without a new APK.
 
 **Maintainer checklist for a release**
 

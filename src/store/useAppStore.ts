@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateStudyLinkMode, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setDismissedHalfDafTip as persistDismissedHalfDafTip, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
+import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setDismissedHalfDafTip as persistDismissedHalfDafTip, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from '../utils/progressCache';
@@ -14,7 +14,6 @@ interface AppState {
   todayDafText: string;
   todayMasechet: string;
   todayDafNum: string;
-  todaySefariaUrl: string;
   todayMasechetEn: string;
   todayDafNumValue: number;
   todayAmud: 'a' | 'b';
@@ -69,7 +68,7 @@ interface AppState {
   ) => void;
 
   updateThemeMode: (themeMode: string) => void;
-  updateStudyLinkMode: (mode: string) => void;
+  updateReaderFontSize: (size: number) => void;
   setUpdateAutoPromptEnabled: (enabled: boolean) => void;
   setShowCalendarDafEnabled: (enabled: boolean) => void;
   setShowPersonalTrackBannerEnabled: (enabled: boolean) => void;
@@ -90,7 +89,6 @@ export const useAppStore = create<AppState>((set, get) => ({
   todayDafText: '',
   todayMasechet: '',
   todayDafNum: '',
-  todaySefariaUrl: '',
   todayMasechetEn: '',
   todayDafNumValue: 2,
   todayAmud: 'a',
@@ -117,7 +115,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       history = getAllRecords();
     }
     
-    const settings = get().settings || getSettings();
+    const settings = getSettings();
     const personalTrackRecords = getPersonalTrackRecords();
     const cache = buildProgressCache(history, isPersonalTrackEnabled(settings) ? personalTrackRecords : []);
     const record = history.find(r => r.date === dateStr) || null;
@@ -133,7 +131,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       todayDafText: dafInfo.fullText,
       todayMasechet: dafInfo.masechet,
       todayDafNum: dafInfo.daf,
-      todaySefariaUrl: dafInfo.sefariaUrl,
       todayMasechetEn: dafInfo.masechetEn,
       todayDafNumValue: dafInfo.dafNum,
       todayAmud: dafInfo.amud,
@@ -300,8 +297,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().refreshSettings();
   },
 
-  updateStudyLinkMode: (mode: string) => {
-    updateStudyLinkMode(mode);
+  updateReaderFontSize: (size: number) => {
+    persistReaderFontSize(size);
+    const current = get().settings;
+    if (current) {
+      set({ settings: { ...current, reader_font_size: size } });
+    }
     get().refreshSettings();
   },
 
@@ -382,7 +383,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       todayDafText: dafInfo.fullText,
       todayMasechet: dafInfo.masechet,
       todayDafNum: dafInfo.daf,
-      todaySefariaUrl: dafInfo.sefariaUrl,
       todayMasechetEn: dafInfo.masechetEn,
       todayDafNumValue: dafInfo.dafNum,
       todayAmud: dafInfo.amud,

@@ -66,7 +66,7 @@ export default function DafMarkMenuModal({
         {onOpenTzuratHadaf && (
           <TouchableOpacity style={styles.optionButton} onPress={onOpenTzuratHadaf} activeOpacity={0.8}>
             <Ionicons name="book-outline" size={22} color={theme.colors.accent} />
-            <Text style={styles.optionText}>פתח בצורת הדף</Text>
+            <Text style={styles.optionText}>פתח בקורא</Text>
           </TouchableOpacity>
         )}
 

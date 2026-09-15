@@ -28,7 +28,6 @@ describe('dafYomi utils', () => {
       expect(res).toBeDefined();
       expect(res.masechet).toBeTruthy();
       expect(res.daf).toContain('דף');
-      expect(res.sefariaUrl).toContain('sefaria.org');
       expect(res.dateString).toBe('2024-01-01');
     });
   });

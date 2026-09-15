@@ -15,6 +15,7 @@ import {
   type PersonalTrackRecord,
 } from '../db/database';
 import { toFileSharingUrl } from '../utils/shareProgressImage';
+import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
 
 export const CURRENT_BACKUP_VERSION = 2;
 
@@ -126,6 +127,7 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     dismissed_half_daf_tip: num('dismissed_half_daf_tip', 0),
     active_personal_masechet: nullableStr('active_personal_masechet'),
     show_personal_track_banner: num('show_personal_track_banner', 1),
+    reader_font_size: clampReaderFontSize(num('reader_font_size', READER_FONT_SIZE_DEFAULT)),
   };
 }
 

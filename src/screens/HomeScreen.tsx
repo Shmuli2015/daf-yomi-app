@@ -28,6 +28,7 @@ import QuickJumpModal from "../components/QuickJump/QuickJumpModal";
 import SiyumModal from "../components/Siyum/SiyumModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import { getDateStr } from "../utils/dafYomi";
+import { dafYomiDisplayMasechetHe } from "../utils/mishnahOnlySefaria";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { getMasechetDafim } from "../utils/shas";
 import { getStudyStatus, formatProgressCount, getPartialAmud } from "../utils/dafStatus";
@@ -36,7 +37,6 @@ import { isPersonalTrackEnabled } from "../utils/personalTrack";
 import { triggerImpact, triggerSelection } from "../utils/haptics";
 import { useTheme } from "../theme";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
-import { parseStudyLinkMode, shouldShowSefariaLink, shouldShowTzuratLink } from "../utils/studyLinkMode";
 import { GuideModal } from "../components/Settings/GuideModal";
 import { HALF_DAF_TIP_VERSION } from "../constants/halfDafTip";
 
@@ -63,7 +63,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     todayRecord,
     todayMasechet,
     todayDafNum,
-    todaySefariaUrl,
     todayMasechetEn,
     todayDafNumValue,
     todayAmud,
@@ -89,7 +88,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       todayRecord: s.todayRecord,
       todayMasechet: s.todayMasechet,
       todayDafNum: s.todayDafNum,
-      todaySefariaUrl: s.todaySefariaUrl,
       todayMasechetEn: s.todayMasechetEn,
       todayDafNumValue: s.todayDafNumValue,
       todayAmud: s.todayAmud,
@@ -128,6 +126,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     const pct = total > 0 ? Math.round((progress.learned / total) * 100) : 0;
     return { pct, learned: progress.learned, total };
   }, [todayMasechet, progressCache]);
+
+  const displayMasechetHe = useMemo(
+    () => dafYomiDisplayMasechetHe(todayMasechet, todayDafNumValue),
+    [todayMasechet, todayDafNumValue],
+  );
 
   const handleToggle = useCallback(() => {
     void triggerImpact("medium");
@@ -223,10 +226,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     });
   }, [history, currentDate]);
 
-  const studyLinkMode = parseStudyLinkMode(settings?.study_link_mode);
-  const showSefariaLink = shouldShowSefariaLink(studyLinkMode);
-  const showTzuratLink = shouldShowTzuratLink(studyLinkMode);
-
   const handleOpenTzuratHadaf = useCallback(() => {
     rootNavigation.navigate('TzuratHadaf', {
       masechetEn: todayMasechetEn,
@@ -269,11 +268,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         <HomeHeader
           gregorianDateStr={gregorianDateStr}
           hebrewDateStr={hebrewDateStr}
-          todayMasechet={todayMasechet}
+          todayMasechet={displayMasechetHe}
           todayDafNum={todayDafNum}
-          sefariaUrl={todaySefariaUrl}
-          showSefariaLink={showSefariaLink}
-          showTzuratLink={showTzuratLink}
           onOpenTzuratHadaf={handleOpenTzuratHadaf}
           onPressMasechet={handleOpenMasechet}
           onOpenQuickJump={() => setShowQuickJumpModal(true)}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Linking, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -14,9 +14,6 @@ interface HomeHeaderProps {
   hebrewDateStr: string;
   todayMasechet: string;
   todayDafNum: string;
-  sefariaUrl: string;
-  showSefariaLink?: boolean;
-  showTzuratLink?: boolean;
   onOpenTzuratHadaf?: () => void;
   onPressMasechet?: () => void;
   onOpenQuickJump?: () => void;
@@ -45,9 +42,6 @@ const HomeHeader = React.memo(function HomeHeader({
   hebrewDateStr,
   todayMasechet,
   todayDafNum,
-  sefariaUrl,
-  showSefariaLink = true,
-  showTzuratLink = true,
   onOpenTzuratHadaf,
   onPressMasechet,
   onOpenQuickJump,
@@ -282,27 +276,14 @@ const HomeHeader = React.memo(function HomeHeader({
                 </View>
               )}
 
-              {showSefariaLink && (
-                <TouchableOpacity
-                  onPress={() => Linking.openURL(sefariaUrl)}
-                  style={styles.secondaryButton}
-                  activeOpacity={0.75}
-                >
-                  <Ionicons name="book-outline" size={18} color={theme.colors.textPrimary} />
-                  <Text style={styles.secondaryButtonText}>ספריא</Text>
-                </TouchableOpacity>
-              )}
-
-              {showTzuratLink && (
-                <TouchableOpacity
-                  onPress={onOpenTzuratHadaf}
-                  style={styles.tzuratButton}
-                  activeOpacity={0.75}
-                >
-                  <Ionicons name="reader-outline" size={18} color={theme.colors.accent} />
-                  <Text style={styles.tzuratButtonText}>צורת הדף (PDF) וטקסט</Text>
-                </TouchableOpacity>
-              )}
+              <TouchableOpacity
+                onPress={onOpenTzuratHadaf}
+                style={styles.tzuratButton}
+                activeOpacity={0.75}
+              >
+                <Ionicons name="reader-outline" size={18} color={theme.colors.accent} />
+                <Text style={styles.tzuratButtonText}>לימוד הדף</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Animated.View>

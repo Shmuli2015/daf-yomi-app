@@ -1,5 +1,11 @@
 import { SHAS_MASECHTOT, numberToGematria } from '../data/shas';
-import { getMasechetDafim, doesMasechetEndOnAmudA } from './shas';
+import { getMasechetDafim, doesMasechetEndOnAmudA, isAmudAvailable } from './shas';
+import {
+  isTamidMasechet,
+  isTamidStartAmud,
+  isTamidStartDaf,
+  TAMID_START_DAF,
+} from './mishnahOnlySefaria';
 
 export type Amud = 'a' | 'b';
 
@@ -59,12 +65,12 @@ function sefariaRefName(masechetEn: string): string {
   return sefariaName.replace(/ /g, '_');
 }
 
-export function buildSefariaTref(masechetEn: string, dafNum: number, amud: Amud): string {
-  return `${sefariaRefName(masechetEn)}.${dafNum}${amud}`;
+export function getSefariaBookTitle(masechetEn: string): string {
+  return sefariaRefName(masechetEn);
 }
 
-export function buildSefariaTextUrl(masechetEn: string, dafNum: number, amud: Amud): string {
-  return `https://www.sefaria.org/${buildSefariaTref(masechetEn, dafNum, amud)}?lang=he`;
+export function buildSefariaTref(masechetEn: string, dafNum: number, amud: Amud): string {
+  return `${sefariaRefName(masechetEn)}.${dafNum}${amud}`;
 }
 
 function findMasechetIndex(masechetEn: string): number {
@@ -104,6 +110,11 @@ export function formatDafLabel(dafNum: number, amud: Amud): string {
 
 export function getNextAmud(loc: DafLocation): DafLocation | null {
   const masechetEn = normalizeMasechetEn(loc.masechetEn);
+
+  if (isTamidStartAmud(masechetEn, loc.dafNum, loc.amud)) {
+    return { masechetEn, dafNum: loc.dafNum + 1, amud: 'a' };
+  }
+
   const lastDaf = lastDafNum(masechetEn);
 
   if (loc.amud === 'a') {
@@ -126,9 +137,23 @@ export function getNextAmud(loc: DafLocation): DafLocation | null {
 
 export function getPrevAmud(loc: DafLocation): DafLocation | null {
   const masechetEn = normalizeMasechetEn(loc.masechetEn);
+
+  if (isTamidStartAmud(masechetEn, loc.dafNum, loc.amud)) {
+    return { masechetEn: 'Kinnim', dafNum: TAMID_START_DAF, amud: 'a' };
+  }
+
+  if (isTamidMasechet(masechetEn) && loc.dafNum === TAMID_START_DAF + 1 && loc.amud === 'a') {
+    return { masechetEn, dafNum: TAMID_START_DAF, amud: 'b' };
+  }
+
   const firstDaf = firstDafNum(masechetEn);
 
   if (loc.amud === 'b') {
+    if (!isAmudAvailable(masechetEn, loc.dafNum, 'a')) {
+      const idx = findMasechetIndex(masechetEn);
+      if (idx <= 0) return null;
+      return lastLocationForMasechet(SHAS_MASECHTOT[idx - 1].en);
+    }
     return { masechetEn, dafNum: loc.dafNum, amud: 'a' };
   }
 
@@ -145,6 +170,10 @@ export function getNextDaf(loc: DafLocation): DafLocation | null {
   const masechetEn = normalizeMasechetEn(loc.masechetEn);
   const lastDaf = lastDafNum(masechetEn);
 
+  if (isTamidStartDaf(masechetEn, loc.dafNum)) {
+    return { masechetEn, dafNum: loc.dafNum + 1, amud: 'a' };
+  }
+
   if (loc.dafNum < lastDaf) {
     return { masechetEn, dafNum: loc.dafNum + 1, amud: 'a' };
   }
@@ -157,6 +186,14 @@ export function getNextDaf(loc: DafLocation): DafLocation | null {
 export function getPrevDaf(loc: DafLocation): DafLocation | null {
   const masechetEn = normalizeMasechetEn(loc.masechetEn);
   const firstDaf = firstDafNum(masechetEn);
+
+  if (isTamidStartDaf(masechetEn, loc.dafNum)) {
+    return { masechetEn: 'Kinnim', dafNum: TAMID_START_DAF, amud: 'a' };
+  }
+
+  if (isTamidMasechet(masechetEn) && loc.dafNum === firstDaf) {
+    return { masechetEn, dafNum: TAMID_START_DAF, amud: 'b' };
+  }
 
   if (loc.dafNum > firstDaf) {
     return { masechetEn, dafNum: loc.dafNum - 1, amud: 'a' };

@@ -28,7 +28,7 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
     }
 
     // Android resolves ./TopicSubscriptionModule -> TopicSubscriptionModule.android,
-    // which requireNativeModule('ExpoTopicSubscriptionModule') — missing in Expo Go.
+    // which requireNativeModule('ExpoTopicSubscriptionModule') (missing in Expo Go).
     if (
       platform === 'android' &&
       (moduleName === './TopicSubscriptionModule' ||

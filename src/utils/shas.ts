@@ -2,6 +2,7 @@ import { DailyRecord } from '../db/database';
 import dafDates from '../data/dafDates.json';
 import { SHAS_MASECHTOT, SEDARIM, Seder, numberToGematria } from '../data/shas';
 import { getRecordProgress } from './dafStatus';
+import { isTamidMasechet, isTamidStartDaf, TAMID_START_DAF } from './mishnahOnlySefaria';
 
 export function stripNiqqud(str: string) {
   return str.replace(/[\u0591-\u05C7]/g, '');
@@ -68,6 +69,9 @@ export function doesMasechetEndOnAmudA(masechetName: string): boolean {
 }
 
 export function isAmudAvailable(masechetName: string, dafNum: number, amud: 'a' | 'b'): boolean {
+  if (isTamidStartDaf(masechetName, dafNum)) {
+    return amud === 'b';
+  }
   if (amud === 'a') return true;
   const dafim = getMasechetDafim(masechetName);
   const lastDaf = dafim.length > 0 ? dafim[dafim.length - 1] : 2;
@@ -114,8 +118,23 @@ export function getMasechetDafim(masechetName: string): number[] {
   return dafim;
 }
 
+export function getReaderDafim(masechetName: string): number[] {
+  const dafim = getMasechetDafim(masechetName);
+  if (!isTamidMasechet(masechetName) && masechetName !== 'תמיד') {
+    return dafim;
+  }
+  if (dafim.includes(TAMID_START_DAF)) return dafim;
+  return [TAMID_START_DAF, ...dafim];
+}
+
 export function getDafDateStr(masechetHe: string, dafNum: number): string | null {
   const masechetNameSafe = stripNiqqud(masechetHe);
+  if (
+    dafNum === TAMID_START_DAF &&
+    (masechetNameSafe === 'תמיד' || isTamidMasechet(masechetHe))
+  ) {
+    return normalizedDafDates.get(`קינים_${TAMID_START_DAF}`) ?? null;
+  }
   const key = `${masechetNameSafe}_${dafNum}`;
   return normalizedDafDates.get(key) ?? null;
 }

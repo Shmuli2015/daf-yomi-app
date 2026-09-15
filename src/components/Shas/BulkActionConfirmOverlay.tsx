@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Pressable, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../../theme';
+import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
+import SheetDragHandle from '../SheetDragHandle';
 
 export type BulkConfirmVariant = 'markAll' | 'unmarkAll';
 
@@ -20,31 +22,43 @@ export default function BulkActionConfirmOverlay({
 }: BulkActionConfirmOverlayProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle } = useSheetDismissGesture({
+    visible: variant !== null,
+    onClose: onCancel,
+  });
 
   if (!variant) return null;
 
   return (
     <View style={styles.overlay}>
+      <Animated.View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, styles.overlayDim, overlayAnimatedStyle]}
+      />
       <Pressable style={StyleSheet.absoluteFill} onPress={onCancel} />
-      <SafeAreaView style={styles.sheet} edges={['bottom']}>
-        <View style={styles.dragHandle} />
-        <Text style={styles.title}>
-          {variant === 'markAll' ? 'סמן את כל המסכת?' : 'בטל סימון כל המסכת?'}
-        </Text>
-        <Text style={styles.message}>
-          {variant === 'markAll'
-            ? `פעולה זו תסמן את כל ${dafCount} הדפים במסכת זו כנלמדו`
-            : `פעולה זו תבטל את הסימון של כל ${dafCount} הדפים במסכת זו`}
-        </Text>
-        <View style={styles.buttons}>
-          <TouchableOpacity onPress={onCancel} style={styles.cancelBtn} activeOpacity={0.7}>
-            <Text style={styles.cancelBtnText}>ביטול</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onConfirm} style={styles.confirmBtn} activeOpacity={0.7}>
-            <Text style={styles.confirmBtnText}>אישור</Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <View style={styles.sheetLayer} pointerEvents="box-none">
+      <Animated.View pointerEvents="auto" style={[styles.sheet, sheetAnimatedStyle]}>
+        <SafeAreaView edges={['bottom']}>
+          <SheetDragHandle panHandlers={panHandlers} />
+          <Text style={styles.title}>
+            {variant === 'markAll' ? 'סמן את כל המסכת?' : 'בטל סימון כל המסכת?'}
+          </Text>
+          <Text style={styles.message}>
+            {variant === 'markAll'
+              ? `פעולה זו תסמן את כל ${dafCount} הדפים במסכת זו כנלמדו`
+              : `פעולה זו תבטל את הסימון של כל ${dafCount} הדפים במסכת זו`}
+          </Text>
+          <View style={styles.buttons}>
+            <TouchableOpacity onPress={onCancel} style={styles.cancelBtn} activeOpacity={0.7}>
+              <Text style={styles.cancelBtnText}>ביטול</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={onConfirm} style={styles.confirmBtn} activeOpacity={0.7}>
+              <Text style={styles.confirmBtnText}>אישור</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </Animated.View>
+      </View>
     </View>
   );
 }
@@ -57,29 +71,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'flex-end',
       zIndex: 10000,
+    },
+    overlayDim: {
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    sheetLayer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      justifyContent: 'flex-end',
     },
     sheet: {
       backgroundColor: theme.colors.surface,
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
       paddingHorizontal: 20,
-      paddingTop: 12,
       paddingBottom: 16,
       borderTopWidth: 1,
       borderLeftWidth: 1,
       borderRightWidth: 1,
       borderColor: theme.colors.border,
-    },
-    dragHandle: {
-      width: 42,
-      height: 4.5,
-      borderRadius: 2.5,
-      backgroundColor: theme.colors.border,
-      alignSelf: 'center',
-      marginBottom: 16,
     },
     title: {
       fontSize: 20,

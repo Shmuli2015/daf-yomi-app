@@ -9,11 +9,10 @@ import { NotifModeToggle } from './NotifModeToggle';
 import { DayScheduleList } from './DayScheduleList';
 import type { DaySchedule } from './DayScheduleList';
 import { SettingsFooter } from './SettingsFooter';
-import StudyLinkModeToggle from './StudyLinkModeToggle';
 import { SettingsSearchBar } from './SettingsSearchBar';
 import type { SettingsScreenStyles } from './settingsScreenStyles';
-import type { StudyLinkMode } from '../../utils/studyLinkMode';
 import InfoModal from '../InfoModal';
+import ContentLicensesModal from './ContentLicensesModal';
 import {
   formatNotificationTime,
   getThemeModeSettingDisplay,
@@ -46,8 +45,6 @@ export type SettingsScrollContentProps = {
   onPersonalTrackBannerToggle?: (v: boolean) => void;
   showConfettiPref: boolean;
   onConfettiToggle: (v: boolean) => void;
-  studyLinkMode: StudyLinkMode;
-  onStudyLinkModeChange: (mode: StudyLinkMode) => void;
   showDevSection: boolean;
   scheduledCount: number;
   onTestNotification: () => void;
@@ -90,8 +87,6 @@ export default function SettingsScrollContent({
   onPersonalTrackBannerToggle,
   showConfettiPref,
   onConfettiToggle,
-  studyLinkMode,
-  onStudyLinkModeChange,
   showDevSection,
   scheduledCount,
   onTestNotification,
@@ -111,6 +106,7 @@ export default function SettingsScrollContent({
   const theme = useTheme();
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
   const [mailHintVisible, setMailHintVisible] = useState(false);
+  const [licensesVisible, setLicensesVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const matchItem = useCallback(
@@ -155,10 +151,12 @@ export default function SettingsScrollContent({
     matchItem('מדריך שימוש', 'למד כיצד להשתמש בכל התכונות והאפשרויות') ||
     matchItem('הצג תאריך לועזי', 'הצגת התאריך הלועזי לצד העברי') ||
     matchItem('הצג דף בלוח שנה', 'הצגת מספר הדף היומי בכל תא בלוח השנה') ||
-    matchItem('אפקטים חגיגיים', 'הצגת קונפטי בסיום לימוד דף') ||
-    matchItem('כפתורי לימוד במסך הבית ובלוח');
+    matchItem('אפקטים חגיגיים', 'הצגת קונפטי בסיום לימוד דף');
 
-  const sec3Match = matchItem('תמיכה ויצירת קשר', 'משוב והצעות לשיפור');
+  const supportItemMatch = matchItem('תמיכה ויצירת קשר', 'משוב והצעות לשיפור');
+  const licensesItemMatch = matchItem('מקורות ורישיונות', 'טקסטים מספריא, שטיינזלץ, דיקטה וחברותא');
+
+  const sec3Match = supportItemMatch || licensesItemMatch;
 
   const sec4Match =
     (updateAutoPromptEnabled != null && matchItem('התראות עדכון אוטומטיות', 'בדיקת עדכונים אוטומטית בפתיחת האפליקציה')) ||
@@ -178,7 +176,7 @@ export default function SettingsScrollContent({
 
   const sec7Match =
     matchItem('איפוס נתונים', 'מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי') ||
-    (onClearCacheOpen != null && matchItem('ניקוי קבצים שמורים', 'מחיקת דפי צורת הדף וטקסטים'));
+    (onClearCacheOpen != null && matchItem('ניקוי קבצים שמורים', 'מחיקת טקסטים שמורים'));
 
   const visibleSections = [
     sec1Match,
@@ -372,9 +370,6 @@ export default function SettingsScrollContent({
                         highlightText={searchQuery}
                       />
                     )}
-                    {(!searchQuery.trim() || matchItem('כפתורי לימוד במסך הבית ובלוח')) && (
-                      <StudyLinkModeToggle mode={studyLinkMode} onChange={onStudyLinkModeChange} />
-                    )}
                   </View>
                 </>
               )}
@@ -387,14 +382,26 @@ export default function SettingsScrollContent({
                     isFirst={firstVisibleIndex === 2}
                   />
                   <View style={styles.card}>
-                    <SettingItem
-                      icon="mail-outline"
-                      title="תמיכה ויצירת קשר"
-                      description="משוב והצעות לשיפור"
-                      onPress={openSupportEmail}
-                      isLast
-                      highlightText={searchQuery}
-                    />
+                    {supportItemMatch && (
+                      <SettingItem
+                        icon="mail-outline"
+                        title="תמיכה ויצירת קשר"
+                        description="משוב והצעות לשיפור"
+                        onPress={openSupportEmail}
+                        isLast={!licensesItemMatch}
+                        highlightText={searchQuery}
+                      />
+                    )}
+                    {licensesItemMatch && (
+                      <SettingItem
+                        icon="ribbon-outline"
+                        title="מקורות ורישיונות"
+                        description="טקסטים מספריא, שטיינזלץ, דיקטה וחברותא"
+                        onPress={() => setLicensesVisible(true)}
+                        isLast
+                        highlightText={searchQuery}
+                      />
+                    )}
                   </View>
                 </>
               )}
@@ -553,11 +560,11 @@ export default function SettingsScrollContent({
                     isFirst={firstVisibleIndex === 6}
                   />
                   <View style={styles.card}>
-                    {onClearCacheOpen && matchItem('ניקוי קבצים שמורים', 'מחיקת דפי צורת הדף וטקסטים') ? (
+                    {onClearCacheOpen && matchItem('ניקוי קבצים שמורים', 'מחיקת טקסטים שמורים') ? (
                       <SettingItem
                         icon="folder-open-outline"
                         title="ניקוי קבצים שמורים"
-                        description={`מחיקת דפי צורת הדף וטקסטים שהורדו (${storageSizeFormatted}). אינו מוחק סימוני לימוד`}
+                        description={`מחיקת טקסטים שהורדו (${storageSizeFormatted}). אינו מוחק סימוני לימוד`}
                         onPress={onClearCacheOpen}
                         highlightText={searchQuery}
                       />
@@ -593,6 +600,11 @@ export default function SettingsScrollContent({
         title="לא נפתחה אפליקציית המייל"
         message="לפעמים המכשיר לא מפנה לאפליקציית דוא״ל. ניתן להעתיק את הכתובת ולכתוב אלינו מכל אפליקציה."
         emphasis={SUPPORT_EMAIL}
+      />
+
+      <ContentLicensesModal
+        visible={licensesVisible}
+        onClose={() => setLicensesVisible(false)}
       />
     </>
   );

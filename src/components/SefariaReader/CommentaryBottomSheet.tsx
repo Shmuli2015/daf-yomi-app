@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   View,
@@ -6,34 +6,90 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  TouchableWithoutFeedback,
   Platform,
+  Animated,
+  Pressable,
+  useWindowDimensions,
 } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import type { SefariaCommentaryItem } from '../../services/sefariaTextApi';
+import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
+import CommentaryBodyText from './CommentaryBodyText';
+import CommentarySegmentNav from './CommentarySegmentNav';
+import SheetDragHandle from '../SheetDragHandle';
+import {
+  CLASSIC_COMMENTATOR_KEYS,
+  COMMENTATOR_TITLE_HE,
+  MISHNAH_COMMENTATOR_KEYS,
+  SHEKALIM_COMMENTATOR_KEYS,
+  TAMID_COMMENTATOR_KEYS,
+  type SefariaCommentatorKey,
+} from '../../utils/sefariaCommentators';
 
 interface CommentaryBottomSheetProps {
   visible: boolean;
   onClose: () => void;
   segmentTitle: string;
   segmentText: string;
+  segmentNumber: number;
+  totalSegments: number;
   commentaries: SefariaCommentaryItem[];
+  hasPrevSegment: boolean;
+  hasNextSegment: boolean;
+  onPrevSegment: () => void;
+  onNextSegment: () => void;
   themeMode: 'light' | 'dark' | 'sepia';
   accentColor: string;
 }
 
-type FilterTab = 'all' | 'rashi' | 'steinsaltz';
+type FilterTab = 'all' | SefariaCommentatorKey;
+
+function commentaryFilterTabs(
+  commentaries: SefariaCommentaryItem[],
+): Array<{ id: FilterTab; label: string }> {
+  const present = new Set(commentaries.map((item) => item.commentator));
+  const ordered = [
+    ...CLASSIC_COMMENTATOR_KEYS,
+    ...SHEKALIM_COMMENTATOR_KEYS,
+    ...MISHNAH_COMMENTATOR_KEYS,
+    ...TAMID_COMMENTATOR_KEYS,
+  ].filter((key) => present.has(key));
+  return [
+    { id: 'all', label: `הכל (${commentaries.length})` },
+    ...ordered.map((key) => ({ id: key, label: COMMENTATOR_TITLE_HE[key] })),
+  ];
+}
 
 export default function CommentaryBottomSheet({
   visible,
   onClose,
   segmentTitle,
   segmentText,
+  segmentNumber,
+  totalSegments,
   commentaries,
+  hasPrevSegment,
+  hasNextSegment,
+  onPrevSegment,
+  onNextSegment,
   themeMode,
   accentColor,
 }: CommentaryBottomSheetProps) {
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [chromeHeight, setChromeHeight] = useState(220);
+  const { height: windowHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+  const sheetMaxHeight = windowHeight * 0.85;
+  const contentMaxHeight = Math.max(96, sheetMaxHeight - chromeHeight - insets.bottom - 8);
+
+  useEffect(() => {
+    setActiveTab((current) => {
+      if (current === 'all') return current;
+      const hasTab = commentaries.some((item) => item.commentator === current);
+      return hasTab ? current : 'all';
+    });
+  }, [segmentNumber, commentaries]);
 
   const filtered = commentaries.filter((c) => {
     if (activeTab === 'all') return true;
@@ -48,21 +104,40 @@ export default function CommentaryBottomSheet({
   const subTextColor = isDark ? '#A1A1AA' : isSepia ? '#786254' : '#71717A';
   const borderColor = isDark ? '#2C2C2E' : isSepia ? '#E6D5B8' : '#E5E7EB';
   const quoteBg = isDark ? '#2C2C2E' : isSepia ? '#F4E9D5' : '#F3F4F6';
+  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType } =
+    useSheetDismissGesture({ visible, onClose });
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType={animationType}
+      onRequestClose={onClose}
+      statusBarTranslucent={Platform.OS === 'android'}
+    >
       <View style={styles.overlay}>
-        <TouchableOpacity
-          style={StyleSheet.absoluteFill}
-          activeOpacity={1}
-          onPress={onClose}
+        <Animated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, styles.overlayDim, overlayAnimatedStyle]}
         />
-
-        <View style={[styles.sheetContainer, { backgroundColor: bgColor, borderColor }]}>
-          <View style={styles.handleBar}>
-            <View style={[styles.handle, { backgroundColor: subTextColor }]} />
-          </View>
-
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        <View style={styles.sheetLayer} pointerEvents="box-none">
+        <Animated.View
+          pointerEvents="auto"
+          style={[
+            styles.sheetContainer,
+            { backgroundColor: bgColor, borderColor, maxHeight: sheetMaxHeight },
+            sheetAnimatedStyle,
+          ]}
+        >
+          <SafeAreaView edges={['bottom']} style={styles.sheetInner}>
+          <View
+            onLayout={(event) => {
+              const nextHeight = Math.round(event.nativeEvent.layout.height);
+              setChromeHeight((current) => (current === nextHeight ? current : nextHeight));
+            }}
+          >
+          <SheetDragHandle panHandlers={panHandlers} color={subTextColor} />
           <View style={[styles.header, { borderBottomColor: borderColor }]}>
             <View style={styles.headerTitleGroup}>
               <Text style={[styles.headerTitle, { color: textColor }]}>פירושים וביאורים</Text>
@@ -73,24 +148,32 @@ export default function CommentaryBottomSheet({
             </TouchableOpacity>
           </View>
 
+          <CommentarySegmentNav
+            segmentNumber={segmentNumber}
+            totalSegments={totalSegments}
+            hasPrev={hasPrevSegment}
+            hasNext={hasNextSegment}
+            onPrev={onPrevSegment}
+            onNext={onNextSegment}
+            textColor={textColor}
+            subTextColor={subTextColor}
+            borderColor={borderColor}
+            accentColor={accentColor}
+          />
+
           <View style={[styles.segmentQuote, { backgroundColor: quoteBg, borderStartColor: accentColor }]}>
             <ScrollView style={{ maxHeight: 120 }} nestedScrollEnabled showsVerticalScrollIndicator={true}>
-              <Text style={[styles.segmentQuoteText, { color: textColor }]}>
-                {`\u200F${segmentText}`}
-              </Text>
+              <CommentaryBodyText
+                text={segmentText}
+                baseStyle={[styles.segmentQuoteText, { color: textColor }]}
+                accentColor={accentColor}
+              />
             </ScrollView>
           </View>
 
           <View style={styles.tabsContainer}>
-            {[
-              { id: 'all', label: `הכל (${commentaries.length})` },
-              { id: 'rashi', label: 'רש״י' },
-              { id: 'steinsaltz', label: 'שטיינזלץ' },
-            ].map((tab) => {
+            {commentaryFilterTabs(commentaries).map((tab) => {
               const isActive = activeTab === tab.id;
-              const count = commentaries.filter(c => tab.id === 'all' || c.commentator === tab.id).length;
-              if (tab.id !== 'all' && count === 0) return null;
-
               return (
                 <TouchableOpacity
                   key={tab.id}
@@ -99,7 +182,7 @@ export default function CommentaryBottomSheet({
                     { borderColor },
                     isActive && { backgroundColor: accentColor, borderColor: accentColor },
                   ]}
-                  onPress={() => setActiveTab(tab.id as FilterTab)}
+                  onPress={() => setActiveTab(tab.id)}
                   activeOpacity={0.8}
                 >
                   <Text
@@ -115,9 +198,11 @@ export default function CommentaryBottomSheet({
               );
             })}
           </View>
+          </View>
 
           <ScrollView
-            style={styles.contentScroll}
+            key={segmentNumber}
+            style={[styles.contentScroll, { maxHeight: contentMaxHeight }]}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={true}
             nestedScrollEnabled={true}
@@ -137,11 +222,18 @@ export default function CommentaryBottomSheet({
                       <Text style={styles.badgeText}>{`\u200F${item.titleHe}`}</Text>
                     </View>
                   </View>
-                  <Text style={[styles.commText, { color: textColor }]}>{`\u200F${item.he}`}</Text>
+                  <CommentaryBodyText
+                    text={item.he}
+                    commentator={item.commentator}
+                    baseStyle={[styles.commText, { color: textColor }]}
+                    accentColor={accentColor}
+                  />
                 </View>
               ))
             )}
           </ScrollView>
+          </SafeAreaView>
+        </Animated.View>
         </View>
       </View>
     </Modal>
@@ -151,28 +243,31 @@ export default function CommentaryBottomSheet({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
+  },
+  overlayDim: {
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  sheetLayer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    height: '75%',
-    maxHeight: '85%',
+    width: '100%',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     borderWidth: 1,
     borderBottomWidth: 0,
-    paddingBottom: 16,
     overflow: 'hidden',
+    direction: 'rtl',
   },
-  handleBar: {
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  handle: {
-    width: 36,
-    height: 4,
-    borderRadius: 2,
-    opacity: 0.4,
+  sheetInner: {
+    flexGrow: 0,
+    flexShrink: 1,
+    minHeight: 0,
   },
   header: {
     flexDirection: 'row',
@@ -215,6 +310,7 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     paddingHorizontal: 16,
     marginTop: 12,
     gap: 8,
@@ -234,12 +330,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   contentScroll: {
-    flex: 1,
+    flexGrow: 0,
+    flexShrink: 1,
+    minHeight: 0,
     marginTop: 12,
     paddingHorizontal: 16,
   },
   scrollContent: {
-    paddingBottom: 30,
+    flexGrow: 0,
+    paddingBottom: 24,
     gap: 12,
   },
   emptyContainer: {

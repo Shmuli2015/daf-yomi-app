@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { SettingsRecord } from '../db/database';
 import { ThemeMode } from '../theme';
-import { parseStudyLinkMode, type StudyLinkMode } from '../utils/studyLinkMode';
 import { parseDaySchedulesJson } from '../utils/settingsScreen';
 
 interface UseSettingsDisplayPrefsParams {
@@ -16,7 +15,6 @@ interface UseSettingsDisplayPrefsParams {
     daySchedules?: string | null,
   ) => void;
   updateThemeMode: (mode: string) => void;
-  updateStudyLinkMode: (mode: string) => void;
   setShowCalendarDafEnabled: (enabled: boolean) => void;
   setShowPersonalTrackBannerEnabled: (enabled: boolean) => void;
 }
@@ -25,7 +23,6 @@ export function useSettingsDisplayPrefs({
   settings,
   updateNotificationSettings,
   updateThemeMode,
-  updateStudyLinkMode,
   setShowCalendarDafEnabled,
   setShowPersonalTrackBannerEnabled,
 }: UseSettingsDisplayPrefsParams) {
@@ -34,7 +31,6 @@ export function useSettingsDisplayPrefs({
   const [showPersonalTrackBannerPref, setShowPersonalTrackBannerPref] = useState(true);
   const [showConfettiPref, setShowConfettiPref] = useState(true);
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
-  const [studyLinkMode, setStudyLinkMode] = useState<StudyLinkMode>('both');
 
   useEffect(() => {
     if (settings) {
@@ -43,7 +39,6 @@ export function useSettingsDisplayPrefs({
       setShowPersonalTrackBannerPref(settings.show_personal_track_banner !== 0);
       setShowConfettiPref(settings.show_confetti === 1);
       setThemeMode((settings.theme_mode as ThemeMode) || 'system');
-      setStudyLinkMode(parseStudyLinkMode(settings.study_link_mode));
     }
   }, [settings]);
 
@@ -103,26 +98,16 @@ export function useSettingsDisplayPrefs({
     [updateThemeMode],
   );
 
-  const handleStudyLinkModeChange = useCallback(
-    (mode: StudyLinkMode) => {
-      setStudyLinkMode(mode);
-      updateStudyLinkMode(mode);
-    },
-    [updateStudyLinkMode],
-  );
-
   return {
     showSecularDate,
     showCalendarDaf,
     showPersonalTrackBannerPref,
     showConfettiPref,
     themeMode,
-    studyLinkMode,
     handleSecularDateToggle,
     handleConfettiToggle,
     handleCalendarDafToggle,
     handlePersonalTrackBannerToggle,
     handleThemeModeSelect,
-    handleStudyLinkModeChange,
   };
 }

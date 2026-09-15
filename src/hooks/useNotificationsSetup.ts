@@ -6,6 +6,7 @@ import { getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
 import { useAppStore } from '../store/useAppStore';
 import { getDafByDate } from '../utils/dafYomi';
+import { dafYomiDisplayMasechetHe } from '../utils/mishnahOnlySefaria';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
@@ -88,7 +89,7 @@ export function useNotificationsSetup() {
               identifier: 'later-reminder',
               content: {
                 title: '⏰ תזכורת נוספת',
-                body: `${dafInfo.masechet} ${dafInfo.daf}, ביקשת שנזכיר לך שוב... ✨`,
+                body: `${dafYomiDisplayMasechetHe(dafInfo.masechet, dafInfo.dafNum)} ${dafInfo.daf}, ביקשת שנזכיר לך שוב... ✨`,
                 sound: true,
                 categoryIdentifier: 'study-reminder',
               },
