@@ -56,22 +56,11 @@ const SelectedDafCard = ({
 
   const isLearned = studyStatus === 'learned';
   const isPartial = studyStatus === 'partial';
-  const isMarked = isLearned || isPartial;
-  const toggleBg = isLearned
-    ? theme.colors.successLight
-    : isPartial
-      ? theme.colors.accentLight
-      : theme.colors.accentLight;
-  const toggleBorder = isLearned ? '#BBF7D0' : isPartial ? theme.colors.accent + '50' : 'rgba(201,150,60,0.3)';
-  const toggleIconColor = isLearned ? theme.colors.success : theme.colors.accent;
-  const toggleTextColor = isLearned ? '#16A34A' : theme.colors.accent;
   const toggleIconName = isLearned
-    ? 'checkmark-done'
+    ? 'checkmark-circle'
     : isPartial
       ? 'ellipse'
-      : isFuture
-        ? 'calendar-outline'
-        : 'book-outline';
+      : 'checkmark-circle-outline';
   const toggleLabel = isLearned
     ? 'אשריך! סיימת'
     : isPartial
@@ -79,6 +68,7 @@ const SelectedDafCard = ({
       : isFuture
         ? 'למדתי מראש'
         : 'סמן כנלמד';
+  const toggleIconColor = isPartial ? theme.colors.accent : '#FFFFFF';
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale }], opacity }]}>
@@ -108,12 +98,22 @@ const SelectedDafCard = ({
           onLongPress={!isLearned ? onLongPressToggle : undefined}
           delayLongPress={400}
           activeOpacity={0.85}
-          style={[styles.toggleBtn, { backgroundColor: toggleBg, borderColor: toggleBorder }]}
+          style={[
+            styles.toggleBtn,
+            isLearned ? styles.toggleBtnLearned : isPartial ? styles.toggleBtnPartial : styles.toggleBtnPending,
+          ]}
         >
           <View style={styles.toggleIconWrapper}>
             <Ionicons name={toggleIconName} size={18} color={toggleIconColor} />
           </View>
-          <Text style={[styles.toggleText, { color: toggleTextColor }]}>{toggleLabel}</Text>
+          <Text
+            style={[
+              styles.toggleText,
+              isPartial ? styles.toggleTextPartial : styles.toggleTextFilled,
+            ]}
+          >
+            {toggleLabel}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -122,7 +122,7 @@ const SelectedDafCard = ({
           style={styles.tzuratBtn}
         >
           <View style={styles.tzuratIconWrapper}>
-            <Ionicons name="reader-outline" size={16} color={theme.colors.accent} />
+            <Ionicons name="reader-outline" size={18} color={theme.colors.textPrimary} />
           </View>
           <Text style={styles.tzuratText}>לימוד הדף</Text>
         </TouchableOpacity>
@@ -195,10 +195,22 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 12,
+      height: 58,
       borderRadius: 16,
       borderWidth: 1.5,
       gap: 8,
+    },
+    toggleBtnPending: {
+      backgroundColor: theme.colors.accent,
+      borderColor: theme.colors.accent,
+    },
+    toggleBtnPartial: {
+      backgroundColor: theme.colors.accentLight,
+      borderColor: theme.colors.accent + '80',
+    },
+    toggleBtnLearned: {
+      backgroundColor: theme.colors.success,
+      borderColor: theme.colors.success,
     },
     toggleIconWrapper: {
       width: 28,
@@ -208,6 +220,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: 'center',
     },
     toggleText: { fontSize: 15, fontWeight: '900', letterSpacing: -0.1 },
+    toggleTextFilled: { color: '#FFFFFF' },
+    toggleTextPartial: { color: theme.colors.accent },
     tzuratIconWrapper: {
       width: 26,
       height: 26,
@@ -219,14 +233,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: 10,
-      backgroundColor: theme.colors.accentLight,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: theme.colors.accent + '30',
-      gap: 6,
+      height: 58,
+      backgroundColor: theme.colors.background,
+      borderRadius: 16,
+      borderWidth: 1.5,
+      borderColor: theme.colors.accent,
+      gap: 8,
+      marginBottom: 12,
     },
-    tzuratText: { color: theme.colors.accent, fontWeight: '800', fontSize: 13 },
+    tzuratText: { color: theme.colors.textPrimary, fontWeight: '800', fontSize: 15 },
   });
 
 export default SelectedDafCard;
