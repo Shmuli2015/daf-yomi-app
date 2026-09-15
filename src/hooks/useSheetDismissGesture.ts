@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import {
   Animated,
+  Easing,
+  Keyboard,
   PanResponder,
   useWindowDimensions,
   type GestureResponderHandlers,
@@ -10,6 +12,9 @@ const DISMISS_DISTANCE = 48;
 const DISMISS_VELOCITY = 0.45;
 const MIN_FLICK_DISTANCE = 12;
 const MOVE_ACTIVATE_DISTANCE = 3;
+const ENTER_DURATION = 280;
+const EXIT_DURATION = 180;
+const EXIT_FALLBACK_MS = 220;
 
 interface UseSheetDismissGestureParams {
   visible: boolean;
@@ -22,6 +27,7 @@ interface UseSheetDismissGestureResult {
   sheetAnimatedStyle: { transform: { translateY: Animated.Value }[] };
   overlayAnimatedStyle: { opacity: Animated.Value };
   animationType: 'none' | 'slide';
+  dismiss: () => void;
 }
 
 export function useSheetDismissGesture({
@@ -30,27 +36,53 @@ export function useSheetDismissGesture({
   onClose,
 }: UseSheetDismissGestureParams): UseSheetDismissGestureResult {
   const { height: windowHeight } = useWindowDimensions();
-  const translateY = useRef(new Animated.Value(0)).current;
-  const overlayOpacity = useRef(new Animated.Value(1)).current;
-  const [skipExitAnimation, setSkipExitAnimation] = useState(false);
+  const translateY = useRef(new Animated.Value(windowHeight)).current;
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
   const closingRef = useRef(false);
   const closeOnceRef = useRef(false);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasVisibleRef = useRef(visible);
+  const enterAnimRef = useRef<Animated.CompositeAnimation | null>(null);
 
   const paramsRef = useRef({ enabled, onClose, windowHeight });
   paramsRef.current = { enabled, onClose, windowHeight };
 
-  useEffect(() => {
-    if (!visible) return;
-    closeOnceRef.current = false;
+  if (visible && !wasVisibleRef.current) {
     closingRef.current = false;
-    setSkipExitAnimation(false);
-    translateY.setValue(0);
-    overlayOpacity.setValue(1);
+    closeOnceRef.current = false;
+    translateY.setValue(Math.max(windowHeight, 1));
+    overlayOpacity.setValue(0);
     if (closeTimeoutRef.current) {
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
+  }
+  wasVisibleRef.current = visible;
+
+  useLayoutEffect(() => {
+    if (!visible) {
+      return;
+    }
+    enterAnimRef.current?.stop();
+    const enter = Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: ENTER_DURATION,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      Animated.timing(overlayOpacity, {
+        toValue: 1,
+        duration: ENTER_DURATION,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+    ]);
+    enterAnimRef.current = enter;
+    enter.start();
+    return () => {
+      enter.stop();
+    };
   }, [overlayOpacity, translateY, visible]);
 
   useEffect(() => {
@@ -61,7 +93,7 @@ export function useSheetDismissGesture({
     };
   }, []);
 
-  const closeFromGesture = useCallback(() => {
+  const finishClose = useCallback(() => {
     if (closeOnceRef.current) return;
     closeOnceRef.current = true;
     closingRef.current = true;
@@ -69,9 +101,44 @@ export function useSheetDismissGesture({
       clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = null;
     }
-    setSkipExitAnimation(true);
     paramsRef.current.onClose();
   }, []);
+
+  const runExitAnimation = useCallback(
+    (onDone: () => void) => {
+      Keyboard.dismiss();
+      enterAnimRef.current?.stop();
+      Animated.parallel([
+        Animated.timing(translateY, {
+          toValue: paramsRef.current.windowHeight,
+          duration: EXIT_DURATION,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: false,
+        }),
+        Animated.timing(overlayOpacity, {
+          toValue: 0,
+          duration: EXIT_DURATION,
+          easing: Easing.in(Easing.cubic),
+          useNativeDriver: false,
+        }),
+      ]).start(() => {
+        onDone();
+      });
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+      closeTimeoutRef.current = setTimeout(() => {
+        onDone();
+      }, EXIT_FALLBACK_MS);
+    },
+    [overlayOpacity, translateY],
+  );
+
+  const dismiss = useCallback(() => {
+    if (closingRef.current || closeOnceRef.current) return;
+    closingRef.current = true;
+    runExitAnimation(finishClose);
+  }, [finishClose, runExitAnimation]);
 
   const panResponder = useMemo(
     () =>
@@ -104,30 +171,14 @@ export function useSheetDismissGesture({
               }),
               Animated.timing(overlayOpacity, {
                 toValue: 1,
-                duration: 180,
+                duration: EXIT_DURATION,
                 useNativeDriver: false,
               }),
             ]).start();
             return;
           }
           closingRef.current = true;
-          Animated.parallel([
-            Animated.timing(translateY, {
-              toValue: paramsRef.current.windowHeight,
-              duration: 180,
-              useNativeDriver: false,
-            }),
-            Animated.timing(overlayOpacity, {
-              toValue: 0,
-              duration: 180,
-              useNativeDriver: false,
-            }),
-          ]).start(() => {
-            closeFromGesture();
-          });
-          closeTimeoutRef.current = setTimeout(() => {
-            closeFromGesture();
-          }, 220);
+          runExitAnimation(finishClose);
         },
         onPanResponderTerminate: () => {
           if (closingRef.current) return;
@@ -140,19 +191,20 @@ export function useSheetDismissGesture({
             }),
             Animated.timing(overlayOpacity, {
               toValue: 1,
-              duration: 180,
+              duration: EXIT_DURATION,
               useNativeDriver: false,
             }),
           ]).start();
         },
       }),
-    [closeFromGesture, overlayOpacity, translateY],
+    [finishClose, overlayOpacity, runExitAnimation, translateY],
   );
 
   return {
     panHandlers: enabled ? panResponder.panHandlers : {},
     sheetAnimatedStyle: { transform: [{ translateY }] },
     overlayAnimatedStyle: { opacity: overlayOpacity },
-    animationType: skipExitAnimation ? 'none' : 'slide',
+    animationType: 'none',
+    dismiss,
   };
 }

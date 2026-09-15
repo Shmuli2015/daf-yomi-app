@@ -45,10 +45,15 @@
 
 ### 📅 Hebrew Calendar View
 - **Monthly Hebrew Calendar**: Hebrew dates (gematria) with gregorian day numbers per cell; optionally show each day's **Daf number** in the cell (<span dir="rtl" lang="he">הצג דף בלוח שנה</span> in Settings)
-- **Navigation**: Month arrows, **swipe left/right** to change months, and a **Return to today** (<span dir="rtl" lang="he">חזרה להיום</span>) shortcut when you are viewing another month
-- **Learned days**: Full pages use solid accent highlight; **half pages** use a lighter/semi-transparent accent; **today** uses a lighter accent ring
-- **Calendar legend**: At the bottom of the calendar: full page learned, half page, today's Daf, not yet learned
-- **Day detail**: Tap a date to open a card with that day's Daf, study buttons (Sefaria and/or the in-app reader per Settings), and learn/unlearn (with confirmation when clearing). **Long press** the mark control for the half page menu
+- **Month & Year Quick Picker** (<span dir="rtl" lang="he">בורר חודש ושנה</span>): Tap the Hebrew month header to open a fast picker modal for jumping directly to any Hebrew month and year (with full leap year support for Adar I and Adar II)
+- **Month Tractate Banner** (<span dir="rtl" lang="he">באנר מסכתות החודש</span>): Shows the tractate(s) being studied in the currently viewed month at the top of the calendar
+- **Jewish Holidays & Events** (<span dir="rtl" lang="he">חגים, מועדים וראשי חודשים</span>): Built-in Hebrew calendar event engine recognizes Rosh Chodesh, major and minor holidays, fasts, and special days, marking them with an event indicator dot and displaying their name in the day details card
+- **Monthly Progress Card** (<span dir="rtl" lang="he">כרטיס התקדמות חודשית</span>): Displays monthly statistics including pages completed out of total month days, pages remaining, percentage completion, and a visual progress bar
+- **Catch-up Mode** (<span dir="rtl" lang="he">השלמת פערים</span>): Tap the Catch-up button on the monthly progress card to open a modal listing all unlearned dapim up to today in the current month, with individual selection and a bulk mark action (<span dir="rtl" lang="he">סמן X דפים כנלמדו</span>)
+- **Navigation**: Month arrows, **swipe left/right** to change months, and a dedicated **Return to today** (<span dir="rtl" lang="he">היום</span>) button to jump back to the current date from any month or year
+- **Learned days**: Full pages use solid accent highlight; **half pages** use a lighter/semi-transparent accent with dashed border; **today** uses a highlighted accent border
+- **Compact Calendar Legend**: Bottom legend clearly indicates full page, half page, today, and not yet learned
+- **Selected Day Card**: Tap any date to view full Hebrew/Gregorian dates, holiday/event badge (if applicable), tractate and daf, learning status badge, direct **Study Daf** (<span dir="rtl" lang="he">לימוד הדף</span>) button into the in-app reader, and quick mark / unmark. **Long press** the mark control for the half page menu (Amud A / Amud B)
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization

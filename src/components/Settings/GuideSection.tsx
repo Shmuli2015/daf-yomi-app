@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Animated, {
   FadeInDown,
@@ -32,6 +32,11 @@ export default function GuideSection({
 }: GuideSectionProps) {
   const styles = useMemo(() => createGuideModalStyles(theme), [theme]);
   const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
+  const skipEnteringRef = useRef(true);
+
+  useEffect(() => {
+    skipEnteringRef.current = false;
+  }, []);
 
   return (
     <Animated.View layout={LinearTransition.duration(260)} style={styles.sectionCard}>
@@ -58,7 +63,7 @@ export default function GuideSection({
 
       {isExpanded && (
         <Animated.View
-          entering={FadeInDown.duration(260)}
+          entering={skipEnteringRef.current ? undefined : FadeInDown.duration(260)}
           exiting={FadeOutUp.duration(200)}
           layout={LinearTransition.duration(260)}
           style={styles.itemsList}

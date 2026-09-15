@@ -1,0 +1,138 @@
+import { StyleSheet } from 'react-native';
+import { Theme } from '../../theme';
+
+export const createMonthYearPickerModalStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      paddingHorizontal: 0,
+      paddingTop: 4,
+      paddingBottom: 20,
+      direction: 'rtl',
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 14,
+    },
+    headerRight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: theme.colors.textPrimary,
+    },
+    currentMonthBtn: {
+      paddingHorizontal: 12,
+      paddingVertical: 5,
+      borderRadius: 14,
+      backgroundColor: theme.colors.accentLight,
+      borderWidth: 1,
+      borderColor: theme.colors.accent,
+    },
+    currentMonthBtnText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: theme.colors.accent,
+    },
+    closeBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: theme.colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    yearSwitcher: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: theme.colors.surface,
+      borderRadius: 16,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginBottom: 14,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    yearArrowBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 12,
+      backgroundColor: theme.colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    yearInfoContainer: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    yearText: {
+      fontSize: 21,
+      fontWeight: '800',
+      color: theme.colors.textPrimary,
+      letterSpacing: 0.5,
+    },
+    yearMetaText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: theme.colors.textMuted,
+      marginTop: 2,
+    },
+    monthsGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 8,
+      justifyContent: 'flex-start',
+    },
+    monthCard: {
+      width: '31.6%',
+      minHeight: 62,
+      paddingVertical: 10,
+      paddingHorizontal: 4,
+      borderRadius: 14,
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    monthCardActive: {
+      backgroundColor: theme.colors.accent,
+      borderColor: theme.colors.accent,
+    },
+    monthCardToday: {
+      borderWidth: 1.5,
+      borderColor: theme.colors.accent,
+    },
+    monthName: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: theme.colors.textPrimary,
+      textAlign: 'center',
+    },
+    monthNameActive: {
+      color: theme.colors.surface,
+      fontWeight: '800',
+    },
+    monthTractate: {
+      fontSize: 9.5,
+      fontWeight: '600',
+      color: theme.colors.textMuted,
+      marginTop: 3,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+    },
+    monthTractateActive: {
+      color: theme.colors.surface,
+      opacity: 0.9,
+      fontWeight: '700',
+    },
+  });

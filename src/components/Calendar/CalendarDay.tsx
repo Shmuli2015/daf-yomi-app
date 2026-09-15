@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, Easing } from 'react-native-reanimated';
 import { HDate } from '@hebcal/core';
 import { useTheme } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
+import { createCalendarDayStyles } from './CalendarDay.styles';
 
 interface CalendarDayProps {
   hdate: HDate;
@@ -13,13 +14,14 @@ interface CalendarDayProps {
   isToday: boolean;
   isSelected: boolean;
   dafLabel?: string;
+  hasSpecialEvent?: boolean;
   onPress: (hdate: HDate) => void;
 }
 
 const CalendarDay = React.memo(
-  ({ hdate, isCurrentMonth, learned, partial = false, isToday, isSelected, dafLabel, onPress }: CalendarDayProps) => {
+  ({ hdate, isCurrentMonth, learned, partial = false, isToday, isSelected, dafLabel, hasSpecialEvent, onPress }: CalendarDayProps) => {
     const theme = useTheme();
-    const styles = useMemo(() => createStyles(theme), [theme]);
+    const styles = useMemo(() => createCalendarDayStyles(theme), [theme]);
     const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
 
     const gematriya = hdate.renderGematriya().split(' ')[0];
@@ -66,16 +68,35 @@ const CalendarDay = React.memo(
       opacity: pulseOpacity.value,
     }));
 
+    const isSpecial = hasSpecialEvent && !learned && isCurrentMonth;
+
     const bg = learned
       ? theme.colors.accent
+      : isToday
+        ? theme.colors.accentLight
+        : 'transparent';
+
+    const textColor = learned
+      ? theme.colors.white
+      : isToday
+        ? theme.colors.accent
+        : theme.colors.textPrimary;
+
+    const subColor = learned
+      ? theme.colors.white
+      : isToday
+        ? theme.colors.accent
+        : theme.colors.textMuted;
+
+    const borderColor = isSelected
+      ? theme.colors.accent
       : partial
-        ? theme.colors.accent + '55'
-        : isToday
-          ? theme.colors.accentLight
+        ? theme.colors.accent
+        : isSpecial
+          ? theme.colors.accentBorder
           : 'transparent';
-    const textColor = learned || partial ? '#FFFFFF' : isToday ? theme.colors.accent : theme.colors.textPrimary;
-    const subColor = learned || partial ? 'rgba(255,255,255,0.95)' : isToday ? theme.colors.accent : theme.colors.textMuted;
-    const borderColor = isSelected ? theme.colors.accent : 'transparent';
+
+    const borderWidth = isSelected ? 1.5 : partial ? 1.5 : isSpecial ? 1 : 0;
 
     return (
       <TouchableOpacity onPress={handlePress} activeOpacity={1} style={styles.cell}>
@@ -84,8 +105,18 @@ const CalendarDay = React.memo(
             <Animated.View style={[styles.pulseRing, animatedPulseStyle]} />
           )}
           <Animated.View
-            style={[styles.circle, { backgroundColor: bg, borderColor, borderWidth: isSelected ? 1.5 : 0 }]}
+            style={[
+              styles.circle,
+              {
+                backgroundColor: bg,
+                borderColor,
+                borderWidth,
+              },
+            ]}
           >
+            {partial && !learned && (
+              <View style={styles.halfFill} />
+            )}
             <Animated.Text style={[styles.dayText, { color: textColor }]}>{gematriya}</Animated.Text>
             {showSecularDate && (
               <Animated.Text style={[styles.gregText, { color: subColor }]}>{gregDay}</Animated.Text>
@@ -106,6 +137,7 @@ const CalendarDay = React.memo(
       prevProps.isToday === nextProps.isToday &&
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.dafLabel === nextProps.dafLabel &&
+      prevProps.hasSpecialEvent === nextProps.hasSpecialEvent &&
       prevProps.onPress === nextProps.onPress &&
       prevProps.hdate.getFullYear() === nextProps.hdate.getFullYear() &&
       prevProps.hdate.getMonth() === nextProps.hdate.getMonth() &&
@@ -113,57 +145,6 @@ const CalendarDay = React.memo(
     );
   }
 );
-
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
-  StyleSheet.create({
-    cell: {
-      width: '14.28%',
-      minHeight: 50,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginVertical: 1,
-    },
-    circle: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      justifyContent: 'center',
-      alignItems: 'center',
-      paddingVertical: 2,
-    },
-    pulseRing: {
-      position: 'absolute',
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      borderWidth: 2,
-      borderColor: theme.colors.accent,
-      backgroundColor: 'transparent',
-      left: -2,
-      top: -2,
-      zIndex: -1,
-    },
-    dayText: {
-      fontSize: 13,
-      fontWeight: '800',
-      lineHeight: 15,
-      textAlign: 'center',
-    },
-    gregText: {
-      fontSize: 8.5,
-      fontWeight: '600',
-      lineHeight: 10,
-      marginTop: 1,
-      textAlign: 'center',
-    },
-    dafText: {
-      fontSize: 7.5,
-      fontWeight: '700',
-      lineHeight: 9,
-      marginTop: 1,
-      textAlign: 'center',
-    },
-  });
 
 export default CalendarDay;
 

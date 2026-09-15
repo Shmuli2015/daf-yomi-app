@@ -138,7 +138,7 @@ export function initDB() {
     db.execSync('ALTER TABLE settings ADD COLUMN dismissed_update_version TEXT DEFAULT NULL;');
   }
   if (!columns.includes('update_auto_prompt_enabled')) {
-    db.execSync('ALTER TABLE settings ADD COLUMN update_auto_prompt_enabled INTEGER DEFAULT 0;');
+    db.execSync('ALTER TABLE settings ADD COLUMN update_auto_prompt_enabled INTEGER DEFAULT 1;');
   }
   if (!columns.includes('study_link_mode')) {
     db.execSync("ALTER TABLE settings ADD COLUMN study_link_mode TEXT DEFAULT 'both';");
@@ -163,6 +163,16 @@ export function initDB() {
     INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)
     VALUES (1, 7, 30);
   `);
+
+  enableAutoUpdatePromptByDefault();
+}
+
+function enableAutoUpdatePromptByDefault() {
+  const pragma = db.getFirstSync('PRAGMA user_version') as { user_version?: number } | number | null;
+  const version = typeof pragma === 'number' ? pragma : pragma?.user_version ?? 0;
+  if (version >= 1) return;
+  db.execSync('UPDATE settings SET update_auto_prompt_enabled = 1 WHERE id = 1');
+  db.execSync('PRAGMA user_version = 1');
 }
 
 export function getDailyRecord(dateStr: string): DailyRecord | null {
@@ -252,7 +262,7 @@ export function getSettings(): SettingsRecord {
       theme_mode: 'system',
       last_update_check_at: null,
       dismissed_update_version: null,
-      update_auto_prompt_enabled: 0,
+      update_auto_prompt_enabled: 1,
       study_link_mode: 'both',
       show_calendar_daf: 0,
       dismissed_half_daf_tip: 0,

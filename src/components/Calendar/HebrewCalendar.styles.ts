@@ -1,0 +1,96 @@
+import { StyleSheet } from 'react-native';
+import { Theme } from '../../theme';
+
+export const createHebrewCalendarStyles = (theme: Theme) =>
+  StyleSheet.create({
+    container: {
+      width: '100%',
+    },
+    card: {
+      minHeight: 460,
+      backgroundColor: theme.colors.surface,
+      borderRadius: 28,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      shadowColor: theme.colors.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 16,
+      elevation: 5,
+      direction: 'rtl',
+      justifyContent: 'space-between',
+    },
+    navRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 14,
+    },
+    navBtn: {
+      width: 38,
+      height: 38,
+      borderRadius: 13,
+      backgroundColor: theme.colors.background,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    monthCenter: { alignItems: 'center' },
+    monthTitleBtn: {
+      alignItems: 'center',
+      paddingVertical: 2,
+      paddingHorizontal: 8,
+    },
+    monthTitleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+    },
+    monthName: {
+      fontSize: 21,
+      fontWeight: '900',
+      color: theme.colors.primary,
+      letterSpacing: -0.3,
+    },
+    yearName: {
+      fontSize: 11,
+      color: theme.colors.accent,
+      fontWeight: '700',
+      letterSpacing: 1,
+      textTransform: 'uppercase',
+      marginTop: 1,
+    },
+    weekLabels: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: 6,
+    },
+    weekLabel: {
+      width: '14.28%',
+      textAlign: 'center',
+      fontSize: 11,
+      fontWeight: '900',
+      color: theme.colors.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+    },
+    grid: {
+      flex: 1,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      alignContent: 'space-around',
+    },
+    confettiContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000,
+      justifyContent: 'center',
+      alignItems: 'center',
+      direction: 'ltr',
+    },
+  });

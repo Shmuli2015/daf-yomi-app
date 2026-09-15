@@ -34,7 +34,11 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createGuideModalStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
-  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType } =
+  const heldTopInsetRef = useRef(insets.top);
+  if (insets.top > 0) {
+    heldTopInsetRef.current = insets.top;
+  }
+  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType, dismiss } =
     useSheetDismissGesture({ visible, onClose });
   const chipsScrollRef = useRef<ScrollView>(null);
   const [mailHintVisible, setMailHintVisible] = useState(false);
@@ -131,7 +135,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
         visible={visible}
         transparent
         animationType={animationType}
-        onRequestClose={onClose}
+        onRequestClose={dismiss}
         statusBarTranslucent={Platform.OS === 'android'}
       >
         <View style={styles.overlayRoot}>
@@ -139,8 +143,8 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
             pointerEvents="none"
             style={[StyleSheet.absoluteFill, styles.overlayDim, overlayAnimatedStyle]}
           />
-          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-          <View style={[styles.sheetLayer, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
+          <Pressable style={StyleSheet.absoluteFill} onPress={dismiss} />
+          <View style={[styles.sheetLayer, { paddingTop: heldTopInsetRef.current + 8 }]} pointerEvents="box-none">
           <Animated.View
             pointerEvents="auto"
             style={[styles.sheetFill, sheetAnimatedStyle]}
@@ -153,7 +157,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
               <Text style={styles.modalSubtitle}>כל התכונות והאפשרויות במקום אחד</Text>
             </View>
             <TouchableOpacity
-              onPress={onClose}
+              onPress={dismiss}
               style={styles.closeBtn}
               activeOpacity={0.7}
             >

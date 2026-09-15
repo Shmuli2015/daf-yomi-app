@@ -22,9 +22,13 @@ interface DafDetailModalProps {
   onToggle: () => void;
   onLongPressToggle?: () => void;
   onOpenTzuratHadaf?: () => void;
+  onPrevDay?: () => void;
+  onNextDay?: () => void;
+  onCatchUp?: () => void;
+  missedCount?: number;
 }
 
-const DafDetailModal = ({
+export default function DafDetailModal({
   visible,
   onClose,
   selectedDate,
@@ -33,7 +37,11 @@ const DafDetailModal = ({
   onToggle,
   onLongPressToggle,
   onOpenTzuratHadaf,
-}: DafDetailModalProps) => {
+  onPrevDay,
+  onNextDay,
+  onCatchUp,
+  missedCount = 0,
+}: DafDetailModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -44,6 +52,8 @@ const DafDetailModal = ({
           onPress={onClose}
           style={styles.closeBtn}
           activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="סגור חלון"
         >
           <Ionicons name="close" size={18} color={theme.colors.textSecondary} />
         </TouchableOpacity>
@@ -56,17 +66,21 @@ const DafDetailModal = ({
             onToggle={onToggle}
             onLongPressToggle={onLongPressToggle}
             onOpenTzuratHadaf={onOpenTzuratHadaf}
+            onPrevDay={onPrevDay}
+            onNextDay={onNextDay}
+            onCatchUp={onCatchUp}
+            missedCount={missedCount}
           />
         )}
       </View>
     </BottomSheetModal>
   );
-};
+}
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     panel: {
-      paddingTop: 40,
+      paddingTop: 36,
       direction: 'rtl',
     },
     closeBtn: {
@@ -84,5 +98,3 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       borderColor: theme.colors.border,
     },
   });
-
-export default DafDetailModal;
