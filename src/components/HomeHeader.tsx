@@ -281,7 +281,7 @@ const HomeHeader = React.memo(function HomeHeader({
                 style={styles.tzuratButton}
                 activeOpacity={0.75}
               >
-                <Ionicons name="reader-outline" size={18} color={theme.colors.accent} />
+                <Ionicons name="reader-outline" size={18} color={theme.colors.textPrimary} />
                 <Text style={styles.tzuratButtonText}>לימוד הדף</Text>
               </TouchableOpacity>
             </View>
