@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Animated } from 'react-native';
 import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
+import { createSelectedDafCardStyles } from './SelectedDafCard.styles';
 import { kinnimTamidCalendarDisplay } from '../../utils/mishnahOnlySefaria';
+import { getHebrewDayEventInfo } from '../../utils/hebrewCalendarEvents';
 
 interface SelectedDafCardProps {
   selectedDate: HDate;
@@ -20,39 +22,54 @@ interface SelectedDafCardProps {
   onToggle?: () => void;
   onLongPressToggle?: () => void;
   onOpenTzuratHadaf?: () => void;
+  onPrevDay?: () => void;
+  onNextDay?: () => void;
+  onCatchUp?: () => void;
+  missedCount?: number;
 }
 
-const SelectedDafCard = ({
+export default function SelectedDafCard({
   selectedDate,
   dafInfo,
   studyStatus = 'none',
   onToggle,
   onLongPressToggle,
   onOpenTzuratHadaf,
-}: SelectedDafCardProps) => {
+  onPrevDay,
+  onNextDay,
+  onCatchUp,
+  missedCount = 0,
+}: SelectedDafCardProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createSelectedDafCardStyles(theme), [theme]);
   const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
   const isFuture = dafInfo.dateString > new Date().toISOString().split('T')[0];
 
-  const scale = useRef(new Animated.Value(0.9)).current;
+  const scale = useRef(new Animated.Value(0.92)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    scale.setValue(0.92);
+    opacity.setValue(0);
     Animated.parallel([
-      Animated.spring(scale, { toValue: 1, damping: 14, stiffness: 100, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 280, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, damping: 14, stiffness: 120, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 220, useNativeDriver: true }),
     ]).start();
-  }, []);
+  }, [selectedDate]);
 
   const cleanHebDate = selectedDate.renderGematriya().replace(/[\u0591-\u05C7]/g, '');
   const gregObj = selectedDate.greg();
   const gregDateStr = new Date(
-    gregObj.getFullYear(), gregObj.getMonth(), gregObj.getDate()
+    gregObj.getFullYear(),
+    gregObj.getMonth(),
+    gregObj.getDate()
   ).toLocaleDateString('he-IL', {
-    day: 'numeric', month: 'long', year: 'numeric',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
   const sharedDay = kinnimTamidCalendarDisplay(dafInfo.masechet, dafInfo.dafNum);
+  const eventInfo = useMemo(() => getHebrewDayEventInfo(selectedDate), [selectedDate]);
 
   const isLearned = studyStatus === 'learned';
   const isPartial = studyStatus === 'partial';
@@ -68,18 +85,42 @@ const SelectedDafCard = ({
       : isFuture
         ? 'למדתי מראש'
         : 'סמן כנלמד';
-  const toggleIconColor = isPartial ? theme.colors.accent : '#FFFFFF';
+  const toggleIconColor = isPartial ? theme.colors.accent : theme.colors.white;
 
   return (
     <Animated.View style={[styles.container, { transform: [{ scale }], opacity }]}>
-      <View style={styles.dateRow}>
-        <View style={styles.dateInfo}>
+      <View style={styles.navHeaderRow}>
+        <TouchableOpacity
+          onPress={onPrevDay}
+          style={styles.dayNavBtn}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="יום קודם"
+        >
+          <Ionicons name="chevron-forward" size={16} color={theme.colors.accent} />
+          <Text style={styles.dayNavBtnText}>יום קודם</Text>
+        </TouchableOpacity>
+
+        <View style={styles.dateCenter}>
           <Text style={styles.hebDate}>{cleanHebDate}</Text>
           {showSecularDate && <Text style={styles.gregDate}>{gregDateStr}</Text>}
+          {eventInfo.eventName ? (
+            <View style={styles.eventBadge}>
+              <Text style={styles.eventBadgeText}>{eventInfo.eventName}</Text>
+            </View>
+          ) : null}
         </View>
-        <View style={styles.dateBadge}>
-          <Text style={styles.dateBadgeText}>סדר הלימוד</Text>
-        </View>
+
+        <TouchableOpacity
+          onPress={onNextDay}
+          style={styles.dayNavBtn}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="יום הבא"
+        >
+          <Text style={styles.dayNavBtnText}>יום הבא</Text>
+          <Ionicons name="chevron-back" size={16} color={theme.colors.accent} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.dafInfoCard}>
@@ -116,6 +157,33 @@ const SelectedDafCard = ({
           </Text>
         </TouchableOpacity>
 
+        {missedCount > 0 && onCatchUp ? (
+          <TouchableOpacity
+            onPress={onCatchUp}
+            activeOpacity={0.85}
+            style={styles.catchUpCard}
+          >
+            <View style={styles.catchUpRight}>
+              <View style={styles.catchUpIconWrapper}>
+                <Ionicons name="flash" size={16} color={theme.colors.accent} />
+              </View>
+              <View style={styles.catchUpTextCol}>
+                <Text style={styles.catchUpTitle}>
+                  ישנם {missedCount} דפים להשלמה
+                </Text>
+                <Text style={styles.catchUpSubtitle}>
+                  דפים קודמים שטרם סומנו
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.catchUpActionBadge}>
+              <Text style={styles.catchUpActionText}>השלם כעת</Text>
+              <Ionicons name="chevron-back" size={14} color={theme.colors.accent} />
+            </View>
+          </TouchableOpacity>
+        ) : null}
+
         <TouchableOpacity
           onPress={onOpenTzuratHadaf}
           activeOpacity={0.7}
@@ -129,119 +197,4 @@ const SelectedDafCard = ({
       </View>
     </Animated.View>
   );
-};
-
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
-  StyleSheet.create({
-    container: { paddingTop: 0 },
-    dateRow: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: 12,
-    },
-    dateBadge: {
-      backgroundColor: theme.colors.accentLight,
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: 'rgba(201,150,60,0.15)',
-    },
-    dateBadgeText: {
-      color: theme.colors.accent,
-      fontSize: 9,
-      fontWeight: '900',
-      letterSpacing: 0.8,
-      textTransform: 'uppercase',
-    },
-    dateInfo: { alignItems: 'flex-start' },
-    hebDate: { fontSize: 14, fontWeight: '900', color: theme.colors.primary },
-    gregDate: { fontSize: 9, fontWeight: '600', color: theme.colors.textMuted, marginTop: 1 },
-    dafInfoCard: {
-      backgroundColor: theme.colors.background,
-      borderRadius: 20,
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      alignItems: 'center',
-      marginBottom: 12,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    masechetName: {
-      fontSize: 28,
-      fontWeight: '900',
-      color: theme.colors.primary,
-      letterSpacing: -0.4,
-      marginBottom: 4,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
-    dafRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    dafDivider: { width: 20, height: 1.2, backgroundColor: 'rgba(201,150,60,0.3)', borderRadius: 1 },
-    dafText: { fontSize: 18, fontWeight: '800', color: theme.colors.accent },
-    sharedNote: {
-      marginTop: 8,
-      fontSize: 14,
-      fontWeight: '700',
-      color: theme.colors.textSecondary,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-      alignSelf: 'stretch',
-      width: '100%',
-    },
-    actions: { gap: 8 },
-    toggleBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: 58,
-      borderRadius: 16,
-      borderWidth: 1.5,
-      gap: 8,
-    },
-    toggleBtnPending: {
-      backgroundColor: theme.colors.accent,
-      borderColor: theme.colors.accent,
-    },
-    toggleBtnPartial: {
-      backgroundColor: theme.colors.accentLight,
-      borderColor: theme.colors.accent + '80',
-    },
-    toggleBtnLearned: {
-      backgroundColor: theme.colors.success,
-      borderColor: theme.colors.success,
-    },
-    toggleIconWrapper: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    toggleText: { fontSize: 15, fontWeight: '900', letterSpacing: -0.1 },
-    toggleTextFilled: { color: '#FFFFFF' },
-    toggleTextPartial: { color: theme.colors.accent },
-    tzuratIconWrapper: {
-      width: 26,
-      height: 26,
-      borderRadius: 13,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    tzuratBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: 58,
-      backgroundColor: theme.colors.background,
-      borderRadius: 16,
-      borderWidth: 1.5,
-      borderColor: theme.colors.accent,
-      gap: 8,
-      marginBottom: 12,
-    },
-    tzuratText: { color: theme.colors.textPrimary, fontWeight: '800', fontSize: 15 },
-  });
-
-export default SelectedDafCard;
+}

@@ -121,7 +121,7 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     theme_mode: str('theme_mode', 'system'),
     last_update_check_at: nullableStr('last_update_check_at'),
     dismissed_update_version: nullableStr('dismissed_update_version'),
-    update_auto_prompt_enabled: num('update_auto_prompt_enabled', 0),
+    update_auto_prompt_enabled: num('update_auto_prompt_enabled', 1),
     study_link_mode: str('study_link_mode', 'both'),
     show_calendar_daf: num('show_calendar_daf', 0),
     dismissed_half_daf_tip: num('dismissed_half_daf_tip', 0),

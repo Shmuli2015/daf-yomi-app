@@ -48,7 +48,7 @@ export function useAppUpdateCheck() {
 
       const row = getSettings();
 
-      if (!force && (row.update_auto_prompt_enabled ?? 0) !== 1) {
+      if (!force && (row.update_auto_prompt_enabled ?? 1) !== 1) {
         return 'none';
       }
 
@@ -71,7 +71,7 @@ export function useAppUpdateCheck() {
 
   const kickAutoRemoteCheck = useCallback(() => {
     if (!isAppReady || !isUpdateCheckConfigured()) return;
-    if ((getSettings().update_auto_prompt_enabled ?? 0) !== 1) return;
+    if ((getSettings().update_auto_prompt_enabled ?? 1) !== 1) return;
     const now = Date.now();
     if (now - lastAutoRunAtRef.current < AUTO_CHECK_MIN_GAP_MS) return;
     lastAutoRunAtRef.current = now;

@@ -23,6 +23,8 @@ export type Theme = {
     border: string;
     progressTrack: string;
     tabBar: string;
+    white: string;
+    gold: string;
   };
   radius: {
     sm: number;
@@ -60,6 +62,8 @@ export const DARK_THEME: Theme = {
     border: '#27272A',
     progressTrack: '#3F3F46',
     tabBar: '#18181B',
+    white: '#FFFFFF',
+    gold: '#FFD700',
   },
   radius: {
     sm: 12,

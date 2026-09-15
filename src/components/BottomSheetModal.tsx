@@ -23,13 +23,13 @@ export default function BottomSheetModal({
 }: BottomSheetModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createBottomSheetModalStyles(theme), [theme]);
-  const handleClose = dismissible ? onClose : undefined;
-  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType } =
+  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType, dismiss } =
     useSheetDismissGesture({
       visible,
       enabled: dismissible && showHandle,
       onClose,
     });
+  const handleClose = dismissible ? dismiss : undefined;
 
   return (
     <Modal
