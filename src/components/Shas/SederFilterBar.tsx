@@ -1,23 +1,17 @@
 import React, { useMemo } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { createSederFilterBarStyles } from './sederFilterBarStyles';
-import { SEDARIM, type Seder } from '../../data/shas';
+import type { Seder } from '../../data/shas';
 import { triggerSelection } from '../../utils/haptics';
 import QuickJumpButton from '../QuickJump/QuickJumpButton';
 
 export type StatusFilter = 'all' | 'completed' | 'in_progress' | 'not_started';
 
 interface SederFilterBarProps {
-  selectedSeder: Seder | null;
-  onSelectSeder: (seder: Seder | null) => void;
+  selectedSeder?: Seder | null;
+  onSelectSeder?: (seder: Seder | null) => void;
   selectedStatus: StatusFilter;
   onSelectStatus: (status: StatusFilter) => void;
   searchQuery: string;
@@ -48,21 +42,32 @@ export default function SederFilterBar({
   const theme = useTheme();
   const styles = useMemo(() => createSederFilterBarStyles(theme), [theme]);
 
-  const handleSederPress = (sederId: Seder | null) => {
-    void triggerSelection();
-    onSelectSeder(sederId);
-  };
+  const isFilteringActive = searchQuery.trim().length > 0 || selectedStatus !== 'all';
 
   const handleStatusPress = (status: StatusFilter) => {
     void triggerSelection();
     onSelectStatus(status);
   };
 
+  const handleClearAll = () => {
+    void triggerSelection();
+    onSearchChange('');
+    onSelectStatus('all');
+    if (onSelectSeder) {
+      onSelectSeder(null);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.topRow}>
         <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={18} color={theme.colors.textMuted} style={styles.searchIcon} />
+          <Ionicons
+            name="search-outline"
+            size={18}
+            color={theme.colors.textMuted}
+            style={styles.searchIcon}
+          />
           <TextInput
             style={styles.searchInput}
             placeholder="חיפוש מסכת בש״ס..."
@@ -76,74 +81,33 @@ export default function SederFilterBar({
               style={styles.clearButton}
               onPress={() => onSearchChange('')}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="נקה חיפוש"
             >
               <Ionicons name="close-circle" size={16} color={theme.colors.textMuted} />
             </TouchableOpacity>
           )}
         </View>
 
-        {onOpenQuickJump && (
-          <QuickJumpButton onPress={onOpenQuickJump} />
-        )}
+        {onOpenQuickJump && <QuickJumpButton onPress={onOpenQuickJump} />}
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.horizontalScroll}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <TouchableOpacity
-          style={[styles.chip, selectedSeder === null && styles.chipActive]}
-          onPress={() => handleSederPress(null)}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.chipText,
-              selectedSeder === null && styles.chipTextActive,
-            ]}
-          >
-            כל הש״ס
-          </Text>
-        </TouchableOpacity>
-
-        {SEDARIM.map((seder) => {
-          const isActive = selectedSeder === seder.id;
-          return (
-            <TouchableOpacity
-              key={seder.id}
-              style={[styles.chip, isActive && styles.chipActive]}
-              onPress={() => handleSederPress(seder.id)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                סדר {seder.he}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.horizontalScroll}
-        contentContainerStyle={styles.statusScrollContent}
-      >
+      <View style={styles.segmentedControl}>
         {STATUS_OPTIONS.map((opt) => {
           const isActive = selectedStatus === opt.id;
           return (
             <TouchableOpacity
               key={opt.id}
-              style={[styles.statusChip, isActive && styles.statusChipActive]}
+              style={[styles.segment, isActive && styles.segmentActive]}
               onPress={() => handleStatusPress(opt.id)}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityLabel={opt.label}
             >
               <Text
                 style={[
-                  styles.statusChipText,
-                  isActive && styles.statusChipTextActive,
+                  styles.segmentText,
+                  isActive && styles.segmentTextActive,
                 ]}
               >
                 {opt.label}
@@ -151,11 +115,24 @@ export default function SederFilterBar({
             </TouchableOpacity>
           );
         })}
-      </ScrollView>
+      </View>
 
-      <Text style={styles.resultsBadge}>
-        מציג {matchedCount} מתוך {totalCount} מסכתות
-      </Text>
+      {isFilteringActive && (
+        <View style={styles.resultsRow}>
+          <Text style={styles.resultsBadge}>
+            נמצאו {matchedCount} מתוך {totalCount} מסכתות
+          </Text>
+          <TouchableOpacity
+            style={styles.clearAllButton}
+            onPress={handleClearAll}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="איפוס סינון"
+          >
+            <Text style={styles.clearAllText}>איפוס</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }

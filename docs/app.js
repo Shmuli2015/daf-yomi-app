@@ -8,9 +8,6 @@ const versionLine = document.getElementById('version-line');
 const downloadBtn = document.getElementById('download-btn');
 const downloadBtnVersion = document.getElementById('download-btn-version');
 const statusEl = document.getElementById('status');
-const inAppBanner = document.getElementById('in-app-banner');
-const openExternalBtn = document.getElementById('open-external-btn');
-const copyLinkBtn = document.getElementById('copy-link-btn');
 
 let releaseDownloadUrl = '';
 let releaseApkFileName = '';
@@ -33,82 +30,6 @@ function buildDownloadUrl(tag, fileName) {
   return `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/releases/download/${encodeURIComponent(tag)}/${encodeURIComponent(fileName)}`;
 }
 
-function isAndroid() {
-  return /Android/i.test(navigator.userAgent || '');
-}
-
-function isInAppBrowser() {
-  const ua = navigator.userAgent || '';
-  return (
-    /Instagram|WhatsApp|FBAN|FBAV|FB_IAB|FB4A|Line\/|Twitter|LinkedInApp|Snapchat|TikTok|Telegram|Messenger|MicroMessenger/i.test(
-      ua
-    ) || (isAndroid() && (/\bwv\b|WebView|; wv\)/.test(ua)))
-  );
-}
-
-function isStandaloneAndroidBrowser() {
-  const ua = navigator.userAgent || '';
-  if (!isAndroid() || isInAppBrowser()) return false;
-  if (/\bwv\b|WebView|; wv\)/.test(ua)) return false;
-  return /Chrome\/|Firefox\/|SamsungBrowser\/|EdgA\//.test(ua);
-}
-
-function needsExternalBrowser() {
-  if (!isAndroid()) return false;
-  if (isInAppBrowser()) return true;
-  return !isStandaloneAndroidBrowser();
-}
-
-function openInExternalBrowser(url) {
-  const target = url || window.location.href;
-  const path = target.replace(/^https?:\/\//, '');
-  const fallback = encodeURIComponent(target);
-
-  window.location.href = `intent://${path}#Intent;scheme=https;action=android.intent.action.VIEW;S.browser_fallback_url=${fallback};end`;
-}
-
-async function copyPageLink() {
-  const url = window.location.href;
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url);
-    } else {
-      const input = document.createElement('textarea');
-      input.value = url;
-      input.setAttribute('readonly', '');
-      input.style.position = 'fixed';
-      input.style.opacity = '0';
-      document.body.appendChild(input);
-      input.select();
-      document.execCommand('copy');
-      input.remove();
-    }
-    statusEl.textContent = 'הקישור הועתק בהצלחה. ניתן להדביק אותו בדפדפן המכשיר.';
-  } catch {
-    statusEl.textContent = 'לא הצלחנו להעתיק את הקישור. נסו דרך תפריט הדפדפן: ⋮ ➔ פתיחה בדפדפן.';
-  }
-}
-
-function showInAppUi() {
-  if (inAppBanner) inAppBanner.hidden = false;
-  if (downloadBtn) downloadBtn.hidden = true;
-  statusEl.textContent = '';
-}
-
-function hideInAppUi() {
-  if (inAppBanner) inAppBanner.hidden = true;
-  if (downloadBtn) downloadBtn.hidden = false;
-}
-
-function showCtaShell() {
-  downloadBtn.setAttribute('aria-disabled', 'true');
-  if (needsExternalBrowser()) {
-    showInAppUi();
-  } else {
-    hideInAppUi();
-  }
-}
-
 function applyRelease({ version, downloadUrl, apkFileName }) {
   releaseDownloadUrl = downloadUrl;
   releaseApkFileName = apkFileName || '';
@@ -119,17 +40,11 @@ function applyRelease({ version, downloadUrl, apkFileName }) {
   }
 
   downloadBtn.href = downloadUrl;
+  downloadBtn.removeAttribute('target');
   downloadBtn.setAttribute('download', releaseApkFileName || `${APK_BASENAME}.apk`);
-  downloadBtn.setAttribute('target', '_blank');
   downloadBtn.setAttribute('rel', 'noopener noreferrer');
   downloadBtn.removeAttribute('aria-disabled');
-
-  if (needsExternalBrowser()) {
-    showInAppUi();
-  } else {
-    hideInAppUi();
-    statusEl.textContent = '';
-  }
+  statusEl.textContent = '';
 }
 
 async function fetchWithTimeout(url, options, timeoutMs) {
@@ -188,26 +103,14 @@ function handleDownloadClick(event) {
     return;
   }
 
-  if (needsExternalBrowser()) {
-    event.preventDefault();
-    openInExternalBrowser(window.location.href);
-    return;
-  }
-
   statusEl.textContent =
-    'אם מופיעה אזהרה של הדפדפן, אשרו את ההורדה. הקובץ גדול ויכול לקחת כמה דקות.';
+    'ההורדה החלה. אם מופיעה הודעה שהקובץ עלול להזיק, לחצו על "הורדה בכל זאת".';
 }
-
-openExternalBtn?.addEventListener('click', () => {
-  openInExternalBrowser(window.location.href);
-});
-
-copyLinkBtn?.addEventListener('click', copyPageLink);
 
 downloadBtn?.addEventListener('click', handleDownloadClick);
 
 async function init() {
-  showCtaShell();
+  downloadBtn.setAttribute('aria-disabled', 'true');
   try {
     const release = await loadRelease();
     applyRelease(release);

@@ -5,12 +5,12 @@ export function createSederFilterBarStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       marginBottom: 16,
-      gap: 12,
+      gap: 10,
     },
     topRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 10,
+      gap: 8,
     },
     searchContainer: {
       flex: 1,
@@ -39,58 +39,43 @@ export function createSederFilterBarStyles(theme: Theme) {
       padding: 4,
       marginStart: 4,
     },
-    horizontalScroll: {
+    segmentedControl: {
       flexDirection: 'row',
-    },
-    scrollContent: {
-      gap: 8,
-      paddingHorizontal: 2,
-    },
-    chip: {
-      paddingHorizontal: 14,
-      paddingVertical: 7,
-      borderRadius: theme.radius.full,
       backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.md,
+      padding: 3,
       borderWidth: 1,
       borderColor: theme.colors.border,
+      gap: 3,
+      ...theme.shadow.card,
     },
-    chipActive: {
-      backgroundColor: theme.colors.accent,
-      borderColor: theme.colors.accent,
+    segment: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 8,
+      borderRadius: theme.radius.sm,
     },
-    chipText: {
-      fontSize: 13,
+    segmentActive: {
+      backgroundColor: theme.colors.accentLight,
+      borderWidth: 1,
+      borderColor: theme.colors.accentBorder,
+    },
+    segmentText: {
+      fontSize: 12,
       fontWeight: '600',
       color: theme.colors.textSecondary,
     },
-    chipTextActive: {
-      color: theme.colors.surface,
-      fontWeight: '700',
-    },
-    statusScrollContent: {
-      gap: 6,
-      paddingHorizontal: 2,
-    },
-    statusChip: {
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: theme.radius.sm,
-      backgroundColor: theme.colors.background,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    statusChipActive: {
-      backgroundColor: theme.colors.accentLight,
-      borderColor: theme.colors.accentBorder,
-    },
-    statusChipText: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: theme.colors.textMuted,
-    },
-    statusChipTextActive: {
+    segmentTextActive: {
       color: theme.colors.accent,
-      fontWeight: '700',
+      fontWeight: '800',
+    },
+    resultsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 4,
+      paddingTop: 2,
     },
     resultsBadge: {
       fontSize: 12,
@@ -98,7 +83,15 @@ export function createSederFilterBarStyles(theme: Theme) {
       color: theme.colors.textMuted,
       textAlign: Platform.OS === 'web' ? 'right' : 'left',
       writingDirection: 'rtl',
+    },
+    clearAllButton: {
       paddingHorizontal: 4,
+      paddingVertical: 2,
+    },
+    clearAllText: {
+      fontSize: 11,
+      fontWeight: '600',
+      color: theme.colors.textMuted,
     },
   });
 }

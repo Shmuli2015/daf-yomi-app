@@ -28,6 +28,7 @@ import QuickJumpModal from "../components/QuickJump/QuickJumpModal";
 import SiyumModal from "../components/Siyum/SiyumModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import { getDateStr } from "../utils/dafYomi";
+import { buildLast7Days } from "../utils/last7Days";
 import { dafYomiDisplayMasechetHe } from "../utils/mishnahOnlySefaria";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { getMasechetDafim } from "../utils/shas";
@@ -196,35 +197,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     return progressCache?.totalShasProgress || { learnedCount: 0, totalPages: 2711, percentage: 0 };
   }, [progressCache]);
 
-  const last7Days = useMemo(() => {
-    const daysHe = ["א", "ב", "ג", "ד", "ה", "ו", "ש"];
-    const historyMap = new Map<string, (typeof history)[0]>();
-    const targetDates = new Set<string>();
-    const days = Array.from({ length: 7 }).map((_, i) => {
-      const d = subDays(currentDate, 6 - i);
-      const dateStr = getDateStr(d);
-      targetDates.add(dateStr);
-      return { d, dateStr };
-    });
-
-    for (const r of history) {
-      if (targetDates.has(r.date)) {
-        historyMap.set(r.date, r);
-        if (historyMap.size === targetDates.size) break;
-      }
-    }
-
-    return days.map(({ d, dateStr }) => {
-      const record = historyMap.get(dateStr);
-      return {
-        date: d,
-        dateStr,
-        status: record?.status || "missed",
-        dayName: format(d, "EEEEEE"),
-        dayNameHe: daysHe[d.getDay()],
-      };
-    });
-  }, [history, currentDate]);
+  const todayDateStr = getDateStr(new Date());
+  const last7Days = useMemo(
+    () => buildLast7Days(history, new Date()),
+    [history, todayDateStr],
+  );
 
   const handleOpenTzuratHadaf = useCallback(() => {
     rootNavigation.navigate('TzuratHadaf', {

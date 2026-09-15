@@ -9,18 +9,11 @@ import SharePreviewModal from './Share/SharePreviewModal';
 import StreakDayBar from './Home/StreakDayBar';
 import { createHomeContentStyles } from './Home/HomeContent.styles';
 import type { StreakShareData } from '../utils/shareProgressImage';
-
-interface DayRecord {
-  date: Date;
-  dateStr: string;
-  status: string;
-  dayName: string;
-  dayNameHe: string;
-}
+import type { Last7DayRecord } from '../utils/last7Days';
 
 interface HomeContentProps {
   streak: number;
-  last7Days: DayRecord[];
+  last7Days: Last7DayRecord[];
   hebrewDateStr: string;
 }
 
@@ -80,8 +73,8 @@ const HomeContent = React.memo(function HomeContent({
         <View style={styles.chartWrapper}>
           <Text style={styles.chartTitle}>7 הימים האחרונים</Text>
           <View style={styles.chartContainer}>
-            {[...last7Days].map((day, index) => {
-              const isToday = index === 6;
+            {last7Days.map((day) => {
+              const isToday = day.isToday;
               const isLearned = day.status === 'learned';
               const isPartial = day.status === 'partial';
               let barHeight = 12;
