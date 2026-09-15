@@ -256,23 +256,6 @@ export const createHomeHeaderStyles = (theme: ReturnType<typeof useTheme>) =>
     buttonTextPartial: {
       color: theme.colors.accent,
     },
-    secondaryButton: {
-      alignSelf: 'stretch',
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 14,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.background,
-    },
-    secondaryButtonText: {
-      color: theme.colors.textPrimary,
-      fontSize: 15,
-      fontWeight: '700',
-    },
     tzuratButton: {
       alignSelf: 'stretch',
       flexDirection: 'row',

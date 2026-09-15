@@ -39,8 +39,8 @@ export function useStorageCache({ onFeedback }: UseStorageCacheParams = {}): Use
       setStorageSummary({
         totalBytes: 0,
         formattedSize: '0 B',
-        tzuratHadafBytes: 0,
         sefariaTextBytes: 0,
+        chavrutaBytes: 0,
         updatesBytes: 0,
       });
     } finally {
@@ -66,7 +66,7 @@ export function useStorageCache({ onFeedback }: UseStorageCacheParams = {}): Use
     setShowClearCacheModal(false);
     onFeedback?.({
       title: 'הקבצים השמורים נוקו',
-      message: 'כל קובצי התמונות והדפים הזמניים נמחקו בהצלחה. סימוני הלימוד וההגדרות שלך נשמרו.',
+      message: 'כל הטקסטים השמורים נמחקו בהצלחה. סימוני הלימוד וההגדרות שלך נשמרו.',
       iconName: 'checkmark-circle',
       compact: true,
     });

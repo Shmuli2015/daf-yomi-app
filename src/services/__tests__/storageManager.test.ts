@@ -48,9 +48,6 @@ describe('storageManager', () => {
       const mockReadDir = FileSystem.readDirectoryAsync as jest.Mock;
 
       mockGetInfo.mockImplementation(async (path: string) => {
-        if (path.endsWith('.pdf')) {
-          return { exists: true, size: 500000 };
-        }
         if (path.endsWith('.json')) {
           return { exists: true, size: 50000 };
         }
@@ -61,11 +58,11 @@ describe('storageManager', () => {
       });
 
       mockReadDir.mockImplementation(async (path: string) => {
-        if (path === 'file:///data/user/0/com.shmuli.dafyomi/files/tzurat-hadaf/') {
-          return ['berakhot_2.pdf'];
-        }
         if (path === 'file:///data/user/0/com.shmuli.dafyomi/files/sefaria-text/') {
           return ['berakhot_2.json'];
+        }
+        if (path === 'file:///data/user/0/com.shmuli.dafyomi/files/chavruta/') {
+          return ['Berachot.json'];
         }
         if (path === 'file:///data/user/0/com.shmuli.dafyomi/cache/updates/') {
           return ['update.apk'];
@@ -75,8 +72,8 @@ describe('storageManager', () => {
 
       const summary = await getStorageUsageSummary();
       expect(summary.totalBytes).toBeGreaterThan(0);
-      expect(summary.tzuratHadafBytes).toBe(500000);
       expect(summary.sefariaTextBytes).toBe(50000);
+      expect(summary.chavrutaBytes).toBe(50000);
       expect(summary.updatesBytes).toBe(10000000);
       expect(summary.formattedSize).toContain('MB');
     });

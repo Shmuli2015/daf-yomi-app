@@ -90,8 +90,7 @@ export default function GuideItemText({
             badgeContent.includes('נלמד') ||
             badgeContent.includes('אשריך');
           const isPrimary =
-            badgeContent.includes('ספריא') ||
-            badgeContent.includes('צורת הדף') ||
+            badgeContent.includes('לימוד הדף') ||
             badgeContent.includes('גיבוי');
 
           const isMatchedByQuery =

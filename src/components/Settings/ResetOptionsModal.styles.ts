@@ -3,37 +3,6 @@ import { Theme } from '../../theme';
 
 export function createResetOptionsModalStyles(theme: Theme) {
   return StyleSheet.create({
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.65)',
-      justifyContent: 'flex-end',
-    },
-    container: {
-      backgroundColor: theme.colors.surface,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
-      paddingHorizontal: 20,
-      paddingTop: 12,
-      paddingBottom: 24,
-      borderTopWidth: 1,
-      borderLeftWidth: 1,
-      borderRightWidth: 1,
-      borderColor: theme.colors.border,
-      maxHeight: '90%',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: -4 },
-      shadowOpacity: 0.25,
-      shadowRadius: 16,
-      elevation: 20,
-    },
-    dragHandle: {
-      width: 42,
-      height: 4.5,
-      borderRadius: 2.5,
-      backgroundColor: theme.colors.border,
-      alignSelf: 'center',
-      marginBottom: 16,
-    },
     headerRow: {
       flexDirection: 'row',
       alignItems: 'center',

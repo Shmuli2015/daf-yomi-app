@@ -3,6 +3,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../store/useAppStore';
 import { getPartialAmud, getStudyStatus } from '../utils/dafStatus';
 import { getDafDateStr } from '../utils/shas';
+import { isTamidStartDaf } from '../utils/mishnahOnlySefaria';
 import { getMasechetProgressFromCache } from '../utils/progressCache';
 import { isPersonalTrackEnabled, type StudyTrackMode } from '../utils/personalTrack';
 import { SHAS_MASECHTOT, numberToGematria } from '../data/shas';
@@ -58,9 +59,11 @@ export function useTzuratLearnedMark({
     [masechetHe],
   );
 
+  const dafYomiMasechetHe = isTamidStartDaf(masechetEn, dafNum) ? 'קינים' : masechetHe;
+
   const dateStr = useMemo(
-    () => (masechetHe ? getDafDateStr(masechetHe, dafNum) : null),
-    [masechetHe, dafNum],
+    () => (dafYomiMasechetHe ? getDafDateStr(dafYomiMasechetHe, dafNum) : null),
+    [dafYomiMasechetHe, dafNum],
   );
 
   const dafHeStr = useMemo(
@@ -98,7 +101,7 @@ export function useTzuratLearnedMark({
     [personalRecord],
   );
 
-  const canMarkDafYomi = dateStr != null && masechetHe != null;
+  const canMarkDafYomi = dateStr != null && dafYomiMasechetHe != null;
   const canMarkPersonal = personalEnabled && Boolean(masechetEn);
   const canMarkLearned = canMarkDafYomi || canMarkPersonal;
 
@@ -132,13 +135,21 @@ export function useTzuratLearnedMark({
         ).length;
         return learnedCount + 1 === masechetTotalPages;
       }
+      if (isTamidStartDaf(masechetEn, dafNum)) {
+        const kinnimPages = SHAS_MASECHTOT.find((m) => m.en === 'Kinnim')?.pages ?? 0;
+        if (kinnimPages <= 0) return false;
+        const learnedBefore = progressCache
+          ? getMasechetProgressFromCache(progressCache, 'קינים').learned
+          : 0;
+        return learnedBefore + 1 === kinnimPages;
+      }
       if (!masechetHe) return false;
       const learnedBefore = progressCache
         ? getMasechetProgressFromCache(progressCache, masechetHe).learned
         : 0;
       return learnedBefore + 1 === masechetTotalPages;
     },
-    [masechetTotalPages, personalTrackRecords, masechetEn, masechetHe, progressCache],
+    [masechetTotalPages, personalTrackRecords, masechetEn, masechetHe, progressCache, dafNum],
   );
 
   const markFullOnTrack = useCallback(
@@ -152,9 +163,9 @@ export function useTzuratLearnedMark({
         return;
       }
 
-      if (!dateStr || !masechetHe) return;
+      if (!dateStr || !dafYomiMasechetHe) return;
       celebrateIfNeeded(isCompleting);
-      setDafStudyStatus(dateStr, masechetHe, dafHeStr, 'learned');
+      setDafStudyStatus(dateStr, dafYomiMasechetHe, dafHeStr, 'learned');
     },
     [
       isCompletingMasechet,
@@ -162,7 +173,7 @@ export function useTzuratLearnedMark({
       masechetEn,
       dafNum,
       dateStr,
-      masechetHe,
+      dafYomiMasechetHe,
       dafHeStr,
       markPersonalDafLearned,
       setDafStudyStatus,
@@ -191,8 +202,8 @@ export function useTzuratLearnedMark({
     void triggerImpact('medium');
     const isCompleting = isCompletingMasechet('dafYomi');
     celebrateIfNeeded(isCompleting);
-    if (dateStr && masechetHe) {
-      toggleAnyDafLearned(dateStr, masechetHe, dafHeStr);
+    if (dateStr && dafYomiMasechetHe) {
+      toggleAnyDafLearned(dateStr, dafYomiMasechetHe, dafHeStr);
     }
   }, [
     canMarkLearned,
@@ -202,7 +213,7 @@ export function useTzuratLearnedMark({
     isCompletingMasechet,
     celebrateIfNeeded,
     dateStr,
-    masechetHe,
+    dafYomiMasechetHe,
     dafHeStr,
     toggleAnyDafLearned,
   ]);
@@ -236,15 +247,15 @@ export function useTzuratLearnedMark({
       markPersonalPartialAmud(masechetEn, dafNum, 'a');
       return;
     }
-    if (dateStr && masechetHe) {
-      markPartialAmud(dateStr, masechetHe, dafHeStr, 'a');
+    if (dateStr && dafYomiMasechetHe) {
+      markPartialAmud(dateStr, dafYomiMasechetHe, dafHeStr, 'a');
     }
   }, [
     pendingTrack,
     masechetEn,
     dafNum,
     dateStr,
-    masechetHe,
+    dafYomiMasechetHe,
     dafHeStr,
     markPersonalPartialAmud,
     markPartialAmud,
@@ -256,15 +267,15 @@ export function useTzuratLearnedMark({
       markPersonalPartialAmud(masechetEn, dafNum, 'b');
       return;
     }
-    if (dateStr && masechetHe) {
-      markPartialAmud(dateStr, masechetHe, dafHeStr, 'b');
+    if (dateStr && dafYomiMasechetHe) {
+      markPartialAmud(dateStr, dafYomiMasechetHe, dafHeStr, 'b');
     }
   }, [
     pendingTrack,
     masechetEn,
     dafNum,
     dateStr,
-    masechetHe,
+    dafYomiMasechetHe,
     dafHeStr,
     markPersonalPartialAmud,
     markPartialAmud,
@@ -277,15 +288,15 @@ export function useTzuratLearnedMark({
       setPersonalDafStudyStatus(masechetEn, dafNum, 'none');
       return;
     }
-    if (dateStr && masechetHe) {
-      toggleAnyDafLearned(dateStr, masechetHe, dafHeStr);
+    if (dateStr && dafYomiMasechetHe) {
+      toggleAnyDafLearned(dateStr, dafYomiMasechetHe, dafHeStr);
     }
   }, [
     pendingTrack,
     masechetEn,
     dafNum,
     dateStr,
-    masechetHe,
+    dafYomiMasechetHe,
     dafHeStr,
     setPersonalDafStudyStatus,
     toggleAnyDafLearned,

@@ -5,13 +5,22 @@ export function createQuickJumpStyles(theme: Theme) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
+    },
+    backdropDim: {
       backgroundColor: 'rgba(0,0,0,0.65)',
+    },
+    sheetLayer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       justifyContent: 'flex-end',
     },
     modalContainer: {
       width: '100%',
-      height: 520,
-      maxHeight: '90%',
+      height: 600,
+      maxHeight: '75%',
       backgroundColor: theme.colors.surface,
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
@@ -23,14 +32,8 @@ export function createQuickJumpStyles(theme: Theme) {
       direction: 'rtl',
       ...theme.shadow.cardMedium,
     },
-    dragHandle: {
-      width: 42,
-      height: 4.5,
-      borderRadius: 2.5,
-      backgroundColor: theme.colors.border,
-      alignSelf: 'center',
-      marginTop: 10,
-      marginBottom: 2,
+    sheetInner: {
+      flex: 1,
     },
     header: {
       flexDirection: 'row',
@@ -66,8 +69,7 @@ export function createQuickJumpStyles(theme: Theme) {
       flex: 1,
       paddingHorizontal: 20,
       paddingTop: 14,
-      paddingBottom: 20,
-      justifyContent: 'space-between',
+      paddingBottom: 12,
     },
     label: {
       fontSize: 14,
@@ -102,41 +104,6 @@ export function createQuickJumpStyles(theme: Theme) {
     clearSearchButton: {
       padding: 4,
       marginStart: 4,
-    },
-    masechetList: {
-      height: 120,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      borderRadius: theme.radius.md,
-      backgroundColor: theme.colors.background,
-      marginBottom: 14,
-    },
-    masechetItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 14,
-      paddingVertical: 10,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.colors.border,
-    },
-    masechetItemSelected: {
-      backgroundColor: theme.colors.accentLight,
-    },
-    masechetItemText: {
-      fontSize: 15,
-      color: theme.colors.textPrimary,
-      fontWeight: '600',
-      textAlign: Platform.OS === 'web' ? 'right' : 'left',
-      writingDirection: 'rtl',
-    },
-    masechetItemTextSelected: {
-      color: theme.colors.accent,
-      fontWeight: '700',
-    },
-    masechetBadge: {
-      fontSize: 12,
-      color: theme.colors.textMuted,
     },
     rowFields: {
       flexDirection: 'row',

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, Linking, StyleSheet, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
-import { parseStudyLinkMode, shouldShowSefariaLink, shouldShowTzuratLink } from '../../utils/studyLinkMode';
+import { kinnimTamidCalendarDisplay } from '../../utils/mishnahOnlySefaria';
 
 interface SelectedDafCardProps {
   selectedDate: HDate;
@@ -12,7 +12,6 @@ interface SelectedDafCardProps {
     masechet: string;
     daf: string;
     dateString: string;
-    sefariaUrl: string;
     masechetEn: string;
     dafNum: number;
     amud: 'a' | 'b';
@@ -34,9 +33,6 @@ const SelectedDafCard = ({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
-  const studyLinkMode = parseStudyLinkMode(useAppStore((s) => s.settings?.study_link_mode));
-  const showSefaria = shouldShowSefariaLink(studyLinkMode);
-  const showTzurat = shouldShowTzuratLink(studyLinkMode);
   const isFuture = dafInfo.dateString > new Date().toISOString().split('T')[0];
 
   const scale = useRef(new Animated.Value(0.9)).current;
@@ -56,6 +52,7 @@ const SelectedDafCard = ({
   ).toLocaleDateString('he-IL', {
     day: 'numeric', month: 'long', year: 'numeric',
   });
+  const sharedDay = kinnimTamidCalendarDisplay(dafInfo.masechet, dafInfo.dafNum);
 
   const isLearned = studyStatus === 'learned';
   const isPartial = studyStatus === 'partial';
@@ -96,12 +93,13 @@ const SelectedDafCard = ({
       </View>
 
       <View style={styles.dafInfoCard}>
-        <Text style={styles.masechetName}>{dafInfo.masechet}</Text>
+        <Text style={styles.masechetName}>{sharedDay?.masechetHe ?? dafInfo.masechet}</Text>
         <View style={styles.dafRow}>
           <View style={styles.dafDivider} />
           <Text style={styles.dafText}>{dafInfo.daf}</Text>
           <View style={styles.dafDivider} />
         </View>
+        {sharedDay ? <Text style={styles.sharedNote}>{sharedDay.subtitleHe}</Text> : null}
       </View>
 
       <View style={styles.actions}>
@@ -118,31 +116,16 @@ const SelectedDafCard = ({
           <Text style={[styles.toggleText, { color: toggleTextColor }]}>{toggleLabel}</Text>
         </TouchableOpacity>
 
-        {showSefaria && (
-        <TouchableOpacity
-          onPress={() => Linking.openURL(dafInfo.sefariaUrl)}
-          activeOpacity={0.7}
-          style={styles.sefariaBtn}
-        >
-          <View style={styles.sefariaIconWrapper}>
-            <Ionicons name="open-outline" size={16} color={theme.colors.textSecondary} />
-          </View>
-          <Text style={styles.sefariaText}>פתח בספריא (Sefaria)</Text>
-        </TouchableOpacity>
-        )}
-
-        {showTzurat && (
         <TouchableOpacity
           onPress={onOpenTzuratHadaf}
           activeOpacity={0.7}
           style={styles.tzuratBtn}
         >
-          <View style={styles.sefariaIconWrapper}>
+          <View style={styles.tzuratIconWrapper}>
             <Ionicons name="reader-outline" size={16} color={theme.colors.accent} />
           </View>
-          <Text style={styles.tzuratText}>קריאת הדף</Text>
+          <Text style={styles.tzuratText}>לימוד הדף</Text>
         </TouchableOpacity>
-        )}
       </View>
     </Animated.View>
   );
@@ -191,10 +174,22 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.primary,
       letterSpacing: -0.4,
       marginBottom: 4,
+      textAlign: 'center',
+      writingDirection: 'rtl',
     },
     dafRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
     dafDivider: { width: 20, height: 1.2, backgroundColor: 'rgba(201,150,60,0.3)', borderRadius: 1 },
     dafText: { fontSize: 18, fontWeight: '800', color: theme.colors.accent },
+    sharedNote: {
+      marginTop: 8,
+      fontSize: 14,
+      fontWeight: '700',
+      color: theme.colors.textSecondary,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      alignSelf: 'stretch',
+      width: '100%',
+    },
     actions: { gap: 8 },
     toggleBtn: {
       flexDirection: 'row',
@@ -213,25 +208,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       justifyContent: 'center',
     },
     toggleText: { fontSize: 15, fontWeight: '900', letterSpacing: -0.1 },
-    sefariaBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 10,
-      backgroundColor: theme.colors.background,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      gap: 6,
-    },
-    sefariaIconWrapper: {
+    tzuratIconWrapper: {
       width: 26,
       height: 26,
       borderRadius: 13,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    sefariaText: { color: theme.colors.textSecondary, fontWeight: '700', fontSize: 13 },
     tzuratBtn: {
       flexDirection: 'row',
       alignItems: 'center',

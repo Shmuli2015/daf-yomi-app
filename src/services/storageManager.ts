@@ -1,26 +1,37 @@
 import * as FileSystem from 'expo-file-system/legacy';
 
+import { invalidateChavrutaMemoryCache } from './chavrutaApi';
+import { invalidateSefariaChaptersMemoryCache } from './sefariaChapters';
+
 export interface StorageUsageSummary {
   totalBytes: number;
   formattedSize: string;
-  tzuratHadafBytes: number;
   sefariaTextBytes: number;
+  chavrutaBytes: number;
   updatesBytes: number;
+}
+
+function getLegacyTzuratDirectories(): string[] {
+  const documentBase = FileSystem.documentDirectory ?? '';
+  const cacheBase = FileSystem.cacheDirectory ?? '';
+  const dirs: string[] = [];
+  if (documentBase) dirs.push(`${documentBase}tzurat-hadaf/`);
+  if (cacheBase && cacheBase !== documentBase) dirs.push(`${cacheBase}tzurat-hadaf/`);
+  return dirs;
 }
 
 function getCacheDirectories(): string[] {
   const documentBase = FileSystem.documentDirectory ?? '';
   const cacheBase = FileSystem.cacheDirectory ?? '';
-
-  const dirs = new Set<string>();
+  const dirs = new Set<string>(getLegacyTzuratDirectories());
 
   if (documentBase) {
-    dirs.add(`${documentBase}tzurat-hadaf/`);
     dirs.add(`${documentBase}sefaria-text/`);
+    dirs.add(`${documentBase}chavruta/`);
   }
   if (cacheBase) {
-    dirs.add(`${cacheBase}tzurat-hadaf/`);
     dirs.add(`${cacheBase}sefaria-text/`);
+    dirs.add(`${cacheBase}chavruta/`);
     dirs.add(`${cacheBase}updates/`);
   }
 
@@ -64,52 +75,70 @@ async function calculateDirectoryBytes(dirPath: string): Promise<number> {
   }
 }
 
+async function deleteDirectories(dirs: string[]): Promise<void> {
+  await Promise.all(
+    dirs.map(async (dirPath) => {
+      try {
+        const info = await FileSystem.getInfoAsync(dirPath);
+        if (info.exists) {
+          await FileSystem.deleteAsync(dirPath, { idempotent: true });
+        }
+      } catch {
+      }
+    }),
+  );
+}
+
+export async function deleteLegacyTzuratHadafCache(): Promise<void> {
+  await deleteDirectories(getLegacyTzuratDirectories());
+  const accessIndexPath = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? ''}tzurat-hadaf-access.json`;
+  try {
+    const info = await FileSystem.getInfoAsync(accessIndexPath);
+    if (info.exists) {
+      await FileSystem.deleteAsync(accessIndexPath, { idempotent: true });
+    }
+  } catch {
+  }
+}
+
 export async function getStorageUsageSummary(): Promise<StorageUsageSummary> {
   const documentBase = FileSystem.documentDirectory ?? '';
   const cacheBase = FileSystem.cacheDirectory ?? '';
-
-  const tzuratDirs = [
-    ...(documentBase ? [`${documentBase}tzurat-hadaf/`] : []),
-    ...(cacheBase && cacheBase !== documentBase ? [`${cacheBase}tzurat-hadaf/`] : []),
-  ];
 
   const sefariaDirs = [
     ...(documentBase ? [`${documentBase}sefaria-text/`] : []),
     ...(cacheBase && cacheBase !== documentBase ? [`${cacheBase}sefaria-text/`] : []),
   ];
 
+  const chavrutaDirs = [
+    ...(documentBase ? [`${documentBase}chavruta/`] : []),
+    ...(cacheBase && cacheBase !== documentBase ? [`${cacheBase}chavruta/`] : []),
+  ];
+
   const updateDirs = cacheBase ? [`${cacheBase}updates/`] : [];
 
-  const [tzuratSizes, sefariaSizes, updateSizes] = await Promise.all([
-    Promise.all(tzuratDirs.map(calculateDirectoryBytes)),
+  const [sefariaSizes, chavrutaSizes, updateSizes] = await Promise.all([
     Promise.all(sefariaDirs.map(calculateDirectoryBytes)),
+    Promise.all(chavrutaDirs.map(calculateDirectoryBytes)),
     Promise.all(updateDirs.map(calculateDirectoryBytes)),
   ]);
 
-  const tzuratHadafBytes = tzuratSizes.reduce((acc, curr) => acc + curr, 0);
   const sefariaTextBytes = sefariaSizes.reduce((acc, curr) => acc + curr, 0);
+  const chavrutaBytes = chavrutaSizes.reduce((acc, curr) => acc + curr, 0);
   const updatesBytes = updateSizes.reduce((acc, curr) => acc + curr, 0);
-  const totalBytes = tzuratHadafBytes + sefariaTextBytes + updatesBytes;
+  const totalBytes = sefariaTextBytes + chavrutaBytes + updatesBytes;
 
   return {
     totalBytes,
     formattedSize: formatStorageBytes(totalBytes),
-    tzuratHadafBytes,
     sefariaTextBytes,
+    chavrutaBytes,
     updatesBytes,
   };
 }
 
 export async function clearStorageCache(): Promise<void> {
-  const dirs = getCacheDirectories();
-  const deletePromises = dirs.map(async (dirPath) => {
-    try {
-      const info = await FileSystem.getInfoAsync(dirPath);
-      if (info.exists) {
-        await FileSystem.deleteAsync(dirPath, { idempotent: true });
-      }
-    } catch {}
-  });
-
-  await Promise.all(deletePromises);
+  invalidateChavrutaMemoryCache();
+  invalidateSefariaChaptersMemoryCache();
+  await deleteDirectories(getCacheDirectories());
 }

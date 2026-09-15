@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,8 +7,12 @@ import {
   TouchableOpacity,
   TextInput,
   Linking,
+  Pressable,
+  StyleSheet,
+  Animated,
+  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
@@ -18,6 +22,8 @@ import GuideSection from './GuideSection';
 import GuideItemText from './GuideItemText';
 import { GUIDE_SECTIONS, FAQ_CHIPS } from './guideData';
 import { createGuideModalStyles } from './GuideModal.styles';
+import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
+import SheetDragHandle from '../SheetDragHandle';
 
 interface GuideModalProps {
   visible: boolean;
@@ -27,9 +33,25 @@ interface GuideModalProps {
 export function GuideModal({ visible, onClose }: GuideModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createGuideModalStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType } =
+    useSheetDismissGesture({ visible, onClose });
+  const chipsScrollRef = useRef<ScrollView>(null);
   const [mailHintVisible, setMailHintVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeChipId, setActiveChipId] = useState<string | null>(null);
+
+  const scrollChipsToStart = useCallback(() => {
+    requestAnimationFrame(() => {
+      chipsScrollRef.current?.scrollToEnd({ animated: false });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (visible) {
+      scrollChipsToStart();
+    }
+  }, [visible, scrollChipsToStart]);
 
   const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>(() =>
     GUIDE_SECTIONS.reduce((acc, sec) => {
@@ -107,13 +129,24 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
     <>
       <Modal
         visible={visible}
-        animationType="slide"
-        presentationStyle="pageSheet"
+        transparent
+        animationType={animationType}
         onRequestClose={onClose}
+        statusBarTranslucent={Platform.OS === 'android'}
       >
-        <SafeAreaView style={styles.modalSafe} edges={['bottom']}>
-          <View style={styles.modalHandle} />
-
+        <View style={styles.overlayRoot}>
+          <Animated.View
+            pointerEvents="none"
+            style={[StyleSheet.absoluteFill, styles.overlayDim, overlayAnimatedStyle]}
+          />
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+          <View style={[styles.sheetLayer, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
+          <Animated.View
+            pointerEvents="auto"
+            style={[styles.sheetFill, sheetAnimatedStyle]}
+          >
+            <SafeAreaView style={styles.modalSafe} edges={['bottom']}>
+              <SheetDragHandle panHandlers={panHandlers} style={styles.handleSpacing} />
           <View style={styles.modalHeader}>
             <View>
               <Text style={styles.modalTitle}>מדריך לשימוש באפליקציה</Text>
@@ -168,10 +201,13 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
             </View>
 
             <ScrollView
+              ref={chipsScrollRef}
               horizontal
+              nestedScrollEnabled
               showsHorizontalScrollIndicator={false}
               style={styles.chipsScrollView}
               contentContainerStyle={styles.chipsContainer}
+              onContentSizeChange={scrollChipsToStart}
             >
               {FAQ_CHIPS.map((chip) => {
                 const isSelected = activeChipId === chip.id;
@@ -185,11 +221,13 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
                     ]}
                     activeOpacity={0.7}
                   >
+                    <Text style={styles.faqChipEmoji}>{chip.emoji}</Text>
                     <Text
                       style={[
                         styles.faqChipText,
                         isSelected && styles.faqChipTextSelected,
                       ]}
+                      numberOfLines={1}
                     >
                       {chip.label}
                     </Text>
@@ -330,7 +368,10 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
 
             <View style={{ height: 32 }} />
           </ScrollView>
-        </SafeAreaView>
+            </SafeAreaView>
+          </Animated.View>
+          </View>
+        </View>
       </Modal>
 
       <InfoModal

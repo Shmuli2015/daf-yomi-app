@@ -14,7 +14,6 @@ interface DafDetailModalProps {
     masechet: string;
     daf: string;
     dateString: string;
-    sefariaUrl: string;
     masechetEn: string;
     dafNum: number;
     amud: 'a' | 'b';

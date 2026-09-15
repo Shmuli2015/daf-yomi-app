@@ -56,4 +56,7 @@
 - **Type Check Verification**: Run `npm run typecheck` after modifying TypeScript files to ensure zero type errors before completing tasks.
 - **Graceful Error Handling**: Wrap async flows (storage, backup, database queries) with proper `try/catch` blocks and clear, user-facing Hebrew feedback; never fail silently.
 
+## Typography & Text Formatting Guidelines
+
+- **No Em Dash**: Never use the em dash character (`—`, U+2014, or `--` used as an em dash) anywhere in text. This applies to UI text, Hebrew copy, translations, documentation, markdown files, commit messages, code strings, and agent responses. Use standard punctuation instead (such as a standard hyphen `-`, comma `,`, colon `:`, parentheses `()`, or a period `.`), or rephrase the sentence.
 

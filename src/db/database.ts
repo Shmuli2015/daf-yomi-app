@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { HALF_DAF_TIP_VERSION } from '../constants/halfDafTip';
+import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
 
 const db = SQLite.openDatabaseSync('dafYomi.db');
 
@@ -41,6 +42,7 @@ export interface SettingsRecord {
   dismissed_half_daf_tip: number;
   active_personal_masechet: string | null;
   show_personal_track_banner: number;
+  reader_font_size: number;
 }
 
 function migrateDailyDafColumns() {
@@ -64,6 +66,17 @@ function migratePersonalTrackColumns() {
 
   if (!personalDafColumns.includes('amud')) {
     db.execSync('ALTER TABLE personal_track_daf ADD COLUMN amud TEXT DEFAULT NULL;');
+  }
+}
+
+function getSettingsColumnNames(): string[] {
+  const tableInfo: { name: string }[] = db.getAllSync('PRAGMA table_info(settings);');
+  return tableInfo.map((column) => column.name);
+}
+
+function ensureReaderFontSizeColumn() {
+  if (!getSettingsColumnNames().includes('reader_font_size')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN reader_font_size INTEGER DEFAULT 18;');
   }
 }
 
@@ -98,8 +111,7 @@ export function initDB() {
   migrateDailyDafColumns();
   migratePersonalTrackColumns();
 
-  const tableInfo: any[] = db.getAllSync('PRAGMA table_info(settings);');
-  const columns = tableInfo.map(c => c.name);
+  const columns = getSettingsColumnNames();
   
   if (!columns.includes('show_secular_date')) {
     db.execSync('ALTER TABLE settings ADD COLUMN show_secular_date INTEGER DEFAULT 1;');
@@ -142,6 +154,9 @@ export function initDB() {
   }
   if (!columns.includes('show_personal_track_banner')) {
     db.execSync('ALTER TABLE settings ADD COLUMN show_personal_track_banner INTEGER DEFAULT 1;');
+  }
+  if (!columns.includes('reader_font_size')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN reader_font_size INTEGER DEFAULT 18;');
   }
 
   db.execSync(`
@@ -215,7 +230,41 @@ export function getAllRecords(): DailyRecord[] {
 }
 
 export function getSettings(): SettingsRecord {
-  return db.getFirstSync('SELECT * FROM settings WHERE id = 1') as SettingsRecord;
+  ensureReaderFontSizeColumn();
+  let row = db.getFirstSync('SELECT * FROM settings WHERE id = 1') as SettingsRecord | null;
+  if (!row) {
+    db.runSync(
+      'INSERT INTO settings (id, notification_hour, notification_minute, reader_font_size) VALUES (1, 7, 30, ?)',
+      [READER_FONT_SIZE_DEFAULT],
+    );
+    row = db.getFirstSync('SELECT * FROM settings WHERE id = 1') as SettingsRecord | null;
+  }
+  if (!row) {
+    return {
+      id: 1,
+      notification_hour: 7,
+      notification_minute: 30,
+      show_secular_date: 1,
+      show_confetti: 1,
+      notifications_enabled: 1,
+      notif_mode: 'daily',
+      day_schedules: null,
+      theme_mode: 'system',
+      last_update_check_at: null,
+      dismissed_update_version: null,
+      update_auto_prompt_enabled: 0,
+      study_link_mode: 'both',
+      show_calendar_daf: 0,
+      dismissed_half_daf_tip: 0,
+      active_personal_masechet: null,
+      show_personal_track_banner: 1,
+      reader_font_size: READER_FONT_SIZE_DEFAULT,
+    };
+  }
+  return {
+    ...row,
+    reader_font_size: clampReaderFontSize(Number(row.reader_font_size)),
+  };
 }
 
 export function updateSettings(
@@ -237,8 +286,16 @@ export function updateThemeMode(themeMode: string) {
   db.runSync('UPDATE settings SET theme_mode = ? WHERE id = 1', [themeMode]);
 }
 
-export function updateStudyLinkMode(mode: string) {
-  db.runSync('UPDATE settings SET study_link_mode = ? WHERE id = 1', [mode]);
+export function updateReaderFontSize(size: number) {
+  const next = clampReaderFontSize(size);
+  ensureReaderFontSizeColumn();
+  const result = db.runSync('UPDATE settings SET reader_font_size = ? WHERE id = 1', [next]);
+  if (result.changes === 0) {
+    db.runSync(
+      'INSERT INTO settings (id, notification_hour, notification_minute, reader_font_size) VALUES (1, 7, 30, ?)',
+      [next],
+    );
+  }
 }
 
 export function touchLastUpdateCheckAt() {
@@ -372,7 +429,8 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       show_calendar_daf = ?,
       dismissed_half_daf_tip = ?,
       active_personal_masechet = ?,
-      show_personal_track_banner = ?
+      show_personal_track_banner = ?,
+      reader_font_size = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -391,6 +449,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.dismissed_half_daf_tip,
       settings.active_personal_masechet,
       settings.show_personal_track_banner,
+      clampReaderFontSize(settings.reader_font_size),
     ]
   );
 }

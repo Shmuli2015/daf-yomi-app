@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { initDB } from '../db/database';
 import { useAppStore } from '../store/useAppStore';
 import { cleanupAllApkDownloads } from '../services/apkInstall';
-import { enforceTzuratHadafCacheLimit } from '../services/tzuratHadafCacheEviction';
+import { deleteLegacyTzuratHadafCache } from '../services/storageManager';
 
 const MIN_SPLASH_MS = 1800;
 const SPLASH_HARD_MAX_MS = 6000;
@@ -18,7 +18,7 @@ export function useAppInitialization() {
       initDB();
       loadInitialData();
       void cleanupAllApkDownloads();
-      void enforceTzuratHadafCacheLimit();
+      void deleteLegacyTzuratHadafCache();
     } catch (e) {
       console.warn('DB init error:', e);
     }

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, useWindowDimensions, Pressable, Animated, Platform } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { Ionicons } from '@expo/vector-icons';
 import { useShallow } from 'zustand/react/shallow';
@@ -15,6 +15,7 @@ import { getStudyStatus, getPartialAmud } from '../../utils/dafStatus';
 import { getMasechetProgressFromCache } from '../../utils/progressCache';
 import { isPersonalTrackEnabled } from '../../utils/personalTrack';
 import { useTheme } from '../../theme';
+import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
 import BulkActionConfirmOverlay from './BulkActionConfirmOverlay';
 import FullscreenLoadingOverlay from './FullscreenLoadingOverlay';
 import DafCell from './DafCell';
@@ -22,6 +23,7 @@ import DafMarkMenuModal from '../DafMarkMenuModal';
 import MasechetModalModeToggle, { type MasechetStudyMode } from './MasechetModalModeToggle';
 import MasechetModalStats from './MasechetModalStats';
 import SiyumModal from '../Siyum/SiyumModal';
+import SheetDragHandle from '../SheetDragHandle';
 import { triggerImpact } from '../../utils/haptics';
 import type { DailyRecord, PersonalTrackRecord } from '../../db/database';
 
@@ -35,6 +37,7 @@ export default function MasechetModal({
   onClose,
 }: MasechetModalProps) {
   const { width: windowWidth } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [mode, setMode] = useState<MasechetStudyMode>('dafYomi');
@@ -143,6 +146,12 @@ export default function MasechetModal({
     }
     onClose();
   }, [pendingAction, onClose]);
+
+  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType } =
+    useSheetDismissGesture({
+      visible: true,
+      onClose: handleRequestClose,
+    });
 
   const isPersonalEnabled = isPersonalTrackEnabled(settings);
   const effectiveMode = isPersonalEnabled ? mode : 'dafYomi';
@@ -287,14 +296,25 @@ export default function MasechetModal({
   return (
     <Modal
       visible
-      animationType="slide"
-      presentationStyle="pageSheet"
+      transparent
+      animationType={animationType}
       onRequestClose={handleRequestClose}
+      statusBarTranslucent={Platform.OS === 'android'}
     >
-      <SafeAreaView style={styles.modalSafe} edges={['bottom']}>
-        <View style={styles.modalHandle} />
-
+      <View style={styles.overlayRoot}>
+        <Animated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, styles.overlayDim, overlayAnimatedStyle]}
+        />
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleRequestClose} />
+        <View style={[styles.sheetLayer, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
+        <Animated.View
+          pointerEvents="auto"
+          style={[styles.sheetFill, sheetAnimatedStyle]}
+        >
+          <SafeAreaView style={styles.modalSafe} edges={['bottom']}>
         <View style={styles.modalHeaderContainer}>
+            <SheetDragHandle panHandlers={panHandlers} style={styles.handleSpacing} />
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle} numberOfLines={1}>
               מסכת {stripNiqqud(masechet.he)}
@@ -494,22 +514,41 @@ export default function MasechetModal({
           totalPages={masechet.pages}
           onClose={() => setShowSiyum(false)}
         />
-      </SafeAreaView>
+          </SafeAreaView>
+        </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
+    overlayRoot: {
+      flex: 1,
+    },
+    overlayDim: {
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    },
+    sheetLayer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    },
+    sheetFill: {
+      flex: 1,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      overflow: 'hidden',
+      backgroundColor: theme.colors.background,
+    },
     modalSafe: { flex: 1, backgroundColor: theme.colors.background },
-    modalHandle: {
-      width: 40,
-      height: 4,
-      backgroundColor: theme.colors.border,
-      borderRadius: 2,
-      alignSelf: 'center',
-      marginTop: 12,
-      marginBottom: 4,
+    handleSpacing: {
+      paddingTop: 8,
+      paddingBottom: 4,
+      backgroundColor: theme.colors.surface,
     },
     modalHeaderContainer: {
       borderBottomWidth: 1,

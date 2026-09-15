@@ -155,7 +155,7 @@ export default function PersonalMasechetDetailModal({
           </View>
 
           <Text style={styles.hintText}>
-            לחץ על דף כדי לסמן כנלמד. לחיצה ארוכה תפתח אפשרויות לסימון חצי דף או פתיחה בצורת הדף.
+            לחץ על דף כדי לסמן כנלמד. לחיצה ארוכה תפתח אפשרויות לסימון חצי דף או פתיחה בקורא.
           </Text>
 
           <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>

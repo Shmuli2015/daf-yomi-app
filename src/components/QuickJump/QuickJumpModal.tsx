@@ -5,17 +5,21 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   Pressable,
   StyleSheet,
+  Animated,
+  Platform,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { numberToGematria } from '../../data/shas';
 import { createQuickJumpStyles } from './quickJumpModalStyles';
 import { useQuickJump } from './useQuickJump';
+import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
 import DafDropdown from './DafDropdown';
+import MasechetSelectList from './MasechetSelectList';
+import SheetDragHandle from '../SheetDragHandle';
 
 interface QuickJumpModalProps {
   visible: boolean;
@@ -37,6 +41,8 @@ export default function QuickJumpModal({
 }: QuickJumpModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createQuickJumpStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const sheetBottomInset = Math.max(insets.bottom, 12);
 
   const {
     selectedMasechet,
@@ -44,6 +50,7 @@ export default function QuickJumpModal({
     setSearchQuery,
     selectedDaf,
     dafList,
+    isAmudAAvailable,
     isAmudBAvailable,
     isDafDropdownOpen,
     toggleDafDropdown,
@@ -53,7 +60,10 @@ export default function QuickJumpModal({
     handleSelectMasechet,
     handleSelectAmud,
     handleSubmit,
-  } = useQuickJump({ initialMasechetEn, onNavigate, onClose });
+  } = useQuickJump({ visible, initialMasechetEn, onNavigate, onClose });
+
+  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType } =
+    useSheetDismissGesture({ visible, onClose });
 
   if (!visible) return null;
 
@@ -61,15 +71,21 @@ export default function QuickJumpModal({
     <Modal
       visible={visible}
       transparent
-      animationType="slide"
+      animationType={animationType}
       onRequestClose={onClose}
+      statusBarTranslucent={Platform.OS === 'android'}
     >
       <View style={styles.backdrop}>
+        <Animated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, styles.backdropDim, overlayAnimatedStyle]}
+        />
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
-        <SafeAreaView style={styles.modalContainer} edges={['bottom']}>
-          <View style={styles.dragHandle} />
-
-          <View style={styles.header}>
+        <View style={styles.sheetLayer} pointerEvents="box-none">
+          <Animated.View pointerEvents="auto" style={[styles.modalContainer, sheetAnimatedStyle]}>
+          <View style={[styles.sheetInner, { paddingBottom: sheetBottomInset }]}>
+            <SheetDragHandle panHandlers={panHandlers} />
+            <View style={styles.header}>
             <View style={styles.titleGroup}>
               <Text style={styles.title}>קפיצה מהירה לדף</Text>
               <Text style={styles.subtitle}>בחירת מסכת, דף ועמוד מכל הש״ס</Text>
@@ -102,29 +118,11 @@ export default function QuickJumpModal({
               )}
             </View>
 
-            <ScrollView style={styles.masechetList} showsVerticalScrollIndicator>
-              {filteredMasechtot.map((m) => {
-                const isSelected = m.en === selectedMasechet.en;
-                return (
-                  <TouchableOpacity
-                    key={m.en}
-                    style={[styles.masechetItem, isSelected && styles.masechetItemSelected]}
-                    onPress={() => handleSelectMasechet(m)}
-                    activeOpacity={0.7}
-                  >
-                    <Text
-                      style={[
-                        styles.masechetItemText,
-                        isSelected && styles.masechetItemTextSelected,
-                      ]}
-                    >
-                      {m.he}
-                    </Text>
-                    <Text style={styles.masechetBadge}>{m.pages} דפים</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            <MasechetSelectList
+              masechtot={filteredMasechtot}
+              selectedEn={selectedMasechet.en}
+              onSelect={handleSelectMasechet}
+            />
 
             <View style={styles.rowFields}>
               <View style={styles.dafField}>
@@ -149,14 +147,20 @@ export default function QuickJumpModal({
                 <Text style={styles.label}>עמוד:</Text>
                 <View style={styles.amudToggleContainer}>
                   <TouchableOpacity
-                    style={[styles.amudButton, amud === 'a' && styles.amudButtonActive]}
+                    style={[
+                      styles.amudButton,
+                      amud === 'a' && styles.amudButtonActive,
+                      !isAmudAAvailable && styles.amudButtonDisabled,
+                    ]}
                     onPress={() => handleSelectAmud('a')}
+                    disabled={!isAmudAAvailable}
                     activeOpacity={0.7}
                   >
                     <Text
                       style={[
                         styles.amudButtonText,
                         amud === 'a' && styles.amudButtonTextActive,
+                        !isAmudAAvailable && styles.amudButtonTextDisabled,
                       ]}
                     >
                       עמוד א׳
@@ -206,7 +210,9 @@ export default function QuickJumpModal({
               onClose={toggleDafDropdown}
             />
           </View>
-        </SafeAreaView>
+          </View>
+        </Animated.View>
+        </View>
       </View>
     </Modal>
   );

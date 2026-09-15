@@ -13,19 +13,35 @@ export const guideBadgeStyles = StyleSheet.create({
 
 export const createGuideModalStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
+    overlayRoot: {
+      flex: 1,
+    },
+    overlayDim: {
+      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    },
+    sheetLayer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+    },
+    sheetFill: {
+      flex: 1,
+      borderTopLeftRadius: 16,
+      borderTopRightRadius: 16,
+      overflow: 'hidden',
+      backgroundColor: theme.colors.background,
+    },
     modalSafe: {
       flex: 1,
       backgroundColor: theme.colors.background,
       direction: 'rtl',
     },
-    modalHandle: {
-      width: 40,
-      height: 4,
-      backgroundColor: theme.colors.border,
-      borderRadius: 2,
-      alignSelf: 'center',
-      marginTop: 12,
-      marginBottom: 4,
+    handleSpacing: {
+      paddingTop: 8,
+      paddingBottom: 4,
+      backgroundColor: theme.colors.surface,
     },
     modalHeader: {
       flexDirection: 'row',
@@ -87,12 +103,19 @@ export const createGuideModalStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     chipsScrollView: {
       marginBottom: 14,
+      direction: 'ltr',
     },
     chipsContainer: {
+      flexDirection: 'row-reverse',
       gap: 8,
-      paddingHorizontal: 2,
+      paddingHorizontal: 4,
     },
     faqChip: {
+      flexDirection: 'row',
+      direction: 'rtl',
+      alignItems: 'center',
+      gap: 6,
+      flexShrink: 0,
       backgroundColor: theme.colors.surface,
       borderRadius: 20,
       paddingHorizontal: 14,
@@ -104,10 +127,14 @@ export const createGuideModalStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.accentLight,
       borderColor: theme.colors.accent,
     },
+    faqChipEmoji: {
+      fontSize: 13,
+    },
     faqChipText: {
       fontSize: 13,
       fontWeight: '600',
       color: theme.colors.textSecondary,
+      writingDirection: 'rtl',
     },
     faqChipTextSelected: {
       color: theme.colors.accent,

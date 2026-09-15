@@ -26,7 +26,6 @@ export default function SettingsScreen() {
     settings,
     updateNotificationSettings,
     updateThemeMode,
-    updateStudyLinkMode,
     setUpdateAutoPromptEnabled,
     setShowCalendarDafEnabled,
     setShowPersonalTrackBannerEnabled,
@@ -39,7 +38,6 @@ export default function SettingsScreen() {
       settings: s.settings,
       updateNotificationSettings: s.updateNotificationSettings,
       updateThemeMode: s.updateThemeMode,
-      updateStudyLinkMode: s.updateStudyLinkMode,
       setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,
       setShowCalendarDafEnabled: s.setShowCalendarDafEnabled,
       setShowPersonalTrackBannerEnabled: s.setShowPersonalTrackBannerEnabled,
@@ -61,18 +59,15 @@ export default function SettingsScreen() {
     showPersonalTrackBannerPref,
     showConfettiPref,
     themeMode,
-    studyLinkMode,
     handleSecularDateToggle,
     handleConfettiToggle,
     handleCalendarDafToggle,
     handlePersonalTrackBannerToggle,
     handleThemeModeSelect,
-    handleStudyLinkModeChange,
   } = useSettingsDisplayPrefs({
     settings,
     updateNotificationSettings,
     updateThemeMode,
-    updateStudyLinkMode,
     setShowCalendarDafEnabled,
     setShowPersonalTrackBannerEnabled,
   });
@@ -194,8 +189,6 @@ export default function SettingsScreen() {
             onPersonalTrackBannerToggle={handlePersonalTrackBannerToggle}
             showConfettiPref={showConfettiPref}
             onConfettiToggle={handleConfettiToggle}
-            studyLinkMode={studyLinkMode}
-            onStudyLinkModeChange={handleStudyLinkModeChange}
             showDevSection={__DEV__}
             scheduledCount={scheduledCount}
             onTestNotification={handleTestNotification}
