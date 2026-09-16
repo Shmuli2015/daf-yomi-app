@@ -1,6 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import { useTheme } from '../../theme';
+
+const visualRightEdge = Platform.OS === 'web' ? { right: 0 } : { left: 0 };
+const visualLeftEdge = Platform.OS === 'web' ? { left: 0 } : { right: 0 };
 
 const SWATCH_SIZE = 16;
 
@@ -16,8 +19,19 @@ export default function CompactCalendarLegend() {
       </View>
 
       <View style={styles.legendItem}>
-        <View style={[styles.swatch, styles.halfSwatch]}>
-          <View style={styles.halfFill} />
+        <View style={styles.halfGroup}>
+          <View style={styles.halfPair}>
+            <View style={[styles.swatch, styles.halfSwatch]}>
+              <View style={styles.halfFillRight} />
+            </View>
+            <Text style={styles.amudLabel}>א׳</Text>
+          </View>
+          <View style={styles.halfPair}>
+            <View style={[styles.swatch, styles.halfSwatch]}>
+              <View style={styles.halfFillLeft} />
+            </View>
+            <Text style={styles.amudLabel}>ב׳</Text>
+          </View>
         </View>
         <Text style={styles.label} numberOfLines={1}>חצי דף</Text>
       </View>
@@ -73,12 +87,36 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: 'transparent',
       borderColor: theme.colors.accent,
     },
-    halfFill: {
+    halfGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    halfPair: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 3,
+    },
+    amudLabel: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: theme.colors.textSecondary,
+    },
+    halfFillRight: {
       position: 'absolute',
       top: 0,
       bottom: 0,
-      right: 0,
       width: '50%',
+      ...visualRightEdge,
+      backgroundColor: theme.colors.accent,
+      opacity: 0.65,
+    },
+    halfFillLeft: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      width: '50%',
+      ...visualLeftEdge,
       backgroundColor: theme.colors.accent,
       opacity: 0.65,
     },

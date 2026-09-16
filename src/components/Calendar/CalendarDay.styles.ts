@@ -1,5 +1,8 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { Theme } from '../../theme';
+
+const visualRightEdge = Platform.OS === 'web' ? { right: 0 } : { left: 0 };
+const visualLeftEdge = Platform.OS === 'web' ? { left: 0 } : { right: 0 };
 
 export const createCalendarDayStyles = (theme: Theme) =>
   StyleSheet.create({
@@ -19,12 +22,21 @@ export const createCalendarDayStyles = (theme: Theme) =>
       paddingVertical: 2,
       overflow: 'hidden',
     },
-    halfFill: {
+    halfFillRight: {
       position: 'absolute',
       top: 0,
       bottom: 0,
-      right: 0,
       width: '50%',
+      ...visualRightEdge,
+      backgroundColor: theme.colors.accent,
+      opacity: 0.65,
+    },
+    halfFillLeft: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      width: '50%',
+      ...visualLeftEdge,
       backgroundColor: theme.colors.accent,
       opacity: 0.65,
     },
