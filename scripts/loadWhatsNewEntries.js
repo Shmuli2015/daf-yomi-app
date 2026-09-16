@@ -37,11 +37,35 @@ function hasWhatsNewEntry(version) {
   return entries.some(entry => entry && entry.version === normalized);
 }
 
-function formatWhatsNewReleaseBody(version) {
-  const normalized = String(version).trim().replace(/^v/i, '');
+function formatWhatsNewReleaseBody(_version) {
   const entries = loadWhatsNewEntries();
-  const entry = entries.find(item => item && item.version === normalized);
-  const highlights = (entry?.highlights ?? []).map(item => String(item).trim()).filter(Boolean);
+  const sorted = [...entries].sort((left, right) => {
+    const parse = raw => {
+      const core = String(raw).trim().replace(/^v/i, '').split('-')[0] ?? '';
+      const parts = core.split('.').map(part => parseInt(part, 10));
+      return [
+        Number.isFinite(parts[0]) ? parts[0] : 0,
+        Number.isFinite(parts[1]) ? parts[1] : 0,
+        Number.isFinite(parts[2]) ? parts[2] : 0,
+      ];
+    };
+    const [a1, a2, a3] = parse(right.version);
+    const [b1, b2, b3] = parse(left.version);
+    if (a1 !== b1) return a1 - b1;
+    if (a2 !== b2) return a2 - b2;
+    return a3 - b3;
+  });
+  const highlights = [];
+  const seen = new Set();
+  for (const entry of sorted) {
+    for (const item of (entry?.highlights ?? []).map(text => String(text).trim()).filter(Boolean)) {
+      if (seen.has(item)) continue;
+      seen.add(item);
+      highlights.push(item);
+      if (highlights.length >= 8) break;
+    }
+    if (highlights.length >= 8) break;
+  }
   if (!highlights.length) {
     return `${MARKER}\n`;
   }

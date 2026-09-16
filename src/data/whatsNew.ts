@@ -29,6 +29,73 @@ export function getHighlightsFromEntries(entries: WhatsNewEntry[], version: stri
   return entry.highlights.map(item => item.trim()).filter(Boolean).slice(0, MAX_WHATS_NEW_HIGHLIGHTS);
 }
 
+function compareWhatsNewVersions(a: string, b: string): number {
+  const parse = (raw: string): [number, number, number] => {
+    const core = normalizeWhatsNewVersion(raw).split('-')[0] ?? '';
+    const parts = core.split('.').map(part => parseInt(part, 10));
+    return [
+      Number.isFinite(parts[0]) ? parts[0] : 0,
+      Number.isFinite(parts[1]) ? parts[1] : 0,
+      Number.isFinite(parts[2]) ? parts[2] : 0,
+    ];
+  };
+  const [a1, a2, a3] = parse(a);
+  const [b1, b2, b3] = parse(b);
+  if (a1 !== b1) return a1 - b1;
+  if (a2 !== b2) return a2 - b2;
+  return a3 - b3;
+}
+
+function collectUniqueHighlights(entries: WhatsNewEntry[]): string[] {
+  const sorted = [...entries].sort((left, right) =>
+    compareWhatsNewVersions(right.version, left.version),
+  );
+  const items: string[] = [];
+  const seen = new Set<string>();
+  for (const entry of sorted) {
+    for (const highlight of entry.highlights.map(item => item.trim()).filter(Boolean)) {
+      if (seen.has(highlight)) continue;
+      seen.add(highlight);
+      items.push(highlight);
+      if (items.length >= MAX_WHATS_NEW_HIGHLIGHTS) return items;
+    }
+  }
+  return items;
+}
+
+export function getHighlightsSinceFromEntries(
+  entries: WhatsNewEntry[],
+  seenVersion: string | null | undefined,
+  installedVersion: string,
+): string[] {
+  if (
+    seenVersion &&
+    normalizeWhatsNewVersion(seenVersion) === normalizeWhatsNewVersion(installedVersion)
+  ) {
+    return [];
+  }
+  if (!seenVersion) {
+    return getHighlightsFromEntries(entries, installedVersion);
+  }
+  const inRange = entries.filter(entry => {
+    const afterSeen = compareWhatsNewVersions(entry.version, seenVersion) > 0;
+    const upToInstalled = compareWhatsNewVersions(entry.version, installedVersion) <= 0;
+    return afterSeen && upToInstalled;
+  });
+  return collectUniqueHighlights(inRange);
+}
+
+export function getHighlightsSince(
+  seenVersion: string | null | undefined,
+  installedVersion: string,
+): string[] {
+  return getHighlightsSinceFromEntries(WHATS_NEW, seenVersion, installedVersion);
+}
+
+export function getAllReleaseHighlightsFromEntries(entries: WhatsNewEntry[]): string[] {
+  return collectUniqueHighlights(entries);
+}
+
 export function getHighlightsForVersion(version: string): string[] {
   return getHighlightsFromEntries(WHATS_NEW, version);
 }
@@ -42,11 +109,13 @@ export function shouldShowWhatsNewOnLaunch(
   installedVersion: string,
   entries: WhatsNewEntry[] = WHATS_NEW,
 ): boolean {
-  if (!seenVersion) return false;
-  if (normalizeWhatsNewVersion(seenVersion) === normalizeWhatsNewVersion(installedVersion)) {
+  if (
+    seenVersion &&
+    normalizeWhatsNewVersion(seenVersion) === normalizeWhatsNewVersion(installedVersion)
+  ) {
     return false;
   }
-  return getHighlightsFromEntries(entries, installedVersion).length > 0;
+  return getHighlightsSinceFromEntries(entries, seenVersion, installedVersion).length > 0;
 }
 
 export function formatWhatsNewReleaseBodyFrom(highlights: string[]): string {
@@ -58,8 +127,8 @@ export function formatWhatsNewReleaseBodyFrom(highlights: string[]): string {
   return `## מה חדש\n${bullets}\n\n${APP_NOTES_END_MARKER}\n`;
 }
 
-export function formatWhatsNewReleaseBody(version: string): string {
-  return formatWhatsNewReleaseBodyFrom(getHighlightsForVersion(version));
+export function formatWhatsNewReleaseBody(_version?: string): string {
+  return formatWhatsNewReleaseBodyFrom(getAllReleaseHighlightsFromEntries(WHATS_NEW));
 }
 
 function stripInlineMarkdown(text: string): string {
