@@ -1,6 +1,7 @@
 import * as SQLite from 'expo-sqlite';
 import { HALF_DAF_TIP_VERSION } from '../constants/halfDafTip';
 import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
+import { clampReaderViewMode, READER_VIEW_MODE_DEFAULT } from '../utils/readerViewMode';
 
 const db = SQLite.openDatabaseSync('dafYomi.db');
 
@@ -44,6 +45,11 @@ export interface SettingsRecord {
   show_personal_track_banner: number;
   reader_font_size: number;
   seen_app_version: string | null;
+  reader_view_mode: string;
+  show_chavruta_notes: number;
+  haptics_enabled: number;
+  last_backup_at: string | null;
+  notification_sound_enabled: number;
 }
 
 function migrateDailyDafColumns() {
@@ -162,6 +168,21 @@ export function initDB() {
   if (!columns.includes('seen_app_version')) {
     db.execSync('ALTER TABLE settings ADD COLUMN seen_app_version TEXT DEFAULT NULL;');
   }
+  if (!columns.includes('reader_view_mode')) {
+    db.execSync(`ALTER TABLE settings ADD COLUMN reader_view_mode TEXT DEFAULT '${READER_VIEW_MODE_DEFAULT}';`);
+  }
+  if (!columns.includes('show_chavruta_notes')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN show_chavruta_notes INTEGER DEFAULT 1;');
+  }
+  if (!columns.includes('haptics_enabled')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN haptics_enabled INTEGER DEFAULT 1;');
+  }
+  if (!columns.includes('last_backup_at')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN last_backup_at TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('notification_sound_enabled')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN notification_sound_enabled INTEGER DEFAULT 1;');
+  }
 
   db.execSync(`
     INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)
@@ -254,31 +275,49 @@ export function getSettings(): SettingsRecord {
     row = db.getFirstSync('SELECT * FROM settings WHERE id = 1') as SettingsRecord | null;
   }
   if (!row) {
-    return {
-      id: 1,
-      notification_hour: 7,
-      notification_minute: 30,
-      show_secular_date: 1,
-      show_confetti: 1,
-      notifications_enabled: 1,
-      notif_mode: 'daily',
-      day_schedules: null,
-      theme_mode: 'system',
-      last_update_check_at: null,
-      dismissed_update_version: null,
-      update_auto_prompt_enabled: 1,
-      study_link_mode: 'both',
-      show_calendar_daf: 0,
-      dismissed_half_daf_tip: 0,
-      active_personal_masechet: null,
-      show_personal_track_banner: 1,
-      reader_font_size: READER_FONT_SIZE_DEFAULT,
-      seen_app_version: null,
-    };
+    return createDefaultSettingsRecord();
   }
+  return normalizeSettingsRecord(row);
+}
+
+function createDefaultSettingsRecord(): SettingsRecord {
   return {
+    id: 1,
+    notification_hour: 7,
+    notification_minute: 30,
+    show_secular_date: 1,
+    show_confetti: 1,
+    notifications_enabled: 1,
+    notif_mode: 'daily',
+    day_schedules: null,
+    theme_mode: 'system',
+    last_update_check_at: null,
+    dismissed_update_version: null,
+    update_auto_prompt_enabled: 1,
+    study_link_mode: 'both',
+    show_calendar_daf: 0,
+    dismissed_half_daf_tip: 0,
+    active_personal_masechet: null,
+    show_personal_track_banner: 1,
+    reader_font_size: READER_FONT_SIZE_DEFAULT,
+    seen_app_version: null,
+    reader_view_mode: READER_VIEW_MODE_DEFAULT,
+    show_chavruta_notes: 1,
+    haptics_enabled: 1,
+    last_backup_at: null,
+    notification_sound_enabled: 1,
+  };
+}
+
+function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
+  return {
+    ...createDefaultSettingsRecord(),
     ...row,
     reader_font_size: clampReaderFontSize(Number(row.reader_font_size)),
+    reader_view_mode: clampReaderViewMode(row.reader_view_mode),
+    show_chavruta_notes: row.show_chavruta_notes === 0 ? 0 : 1,
+    haptics_enabled: row.haptics_enabled === 0 ? 0 : 1,
+    notification_sound_enabled: row.notification_sound_enabled === 0 ? 0 : 1,
   };
 }
 
@@ -335,6 +374,34 @@ export function setUpdateAutoPromptEnabled(enabled: boolean) {
 
 export function setShowCalendarDaf(enabled: boolean) {
   db.runSync('UPDATE settings SET show_calendar_daf = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
+export function setShowSecularDate(enabled: boolean) {
+  db.runSync('UPDATE settings SET show_secular_date = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
+export function setShowConfetti(enabled: boolean) {
+  db.runSync('UPDATE settings SET show_confetti = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
+export function setReaderViewMode(mode: string) {
+  db.runSync('UPDATE settings SET reader_view_mode = ? WHERE id = 1', [clampReaderViewMode(mode)]);
+}
+
+export function setShowChavrutaNotes(enabled: boolean) {
+  db.runSync('UPDATE settings SET show_chavruta_notes = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
+export function setHapticsEnabled(enabled: boolean) {
+  db.runSync('UPDATE settings SET haptics_enabled = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
+export function setLastBackupAt(iso: string) {
+  db.runSync('UPDATE settings SET last_backup_at = ? WHERE id = 1', [iso]);
+}
+
+export function setNotificationSoundEnabled(enabled: boolean) {
+  db.runSync('UPDATE settings SET notification_sound_enabled = ? WHERE id = 1', [enabled ? 1 : 0]);
 }
 
 export function setDismissedHalfDafTip(version: number = HALF_DAF_TIP_VERSION) {
@@ -450,7 +517,11 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       active_personal_masechet = ?,
       show_personal_track_banner = ?,
       reader_font_size = ?,
-      seen_app_version = ?
+      seen_app_version = ?,
+      reader_view_mode = ?,
+      show_chavruta_notes = ?,
+      haptics_enabled = ?,
+      notification_sound_enabled = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -471,6 +542,10 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.show_personal_track_banner,
       clampReaderFontSize(settings.reader_font_size),
       settings.seen_app_version,
+      clampReaderViewMode(settings.reader_view_mode),
+      settings.show_chavruta_notes === 0 ? 0 : 1,
+      settings.haptics_enabled === 0 ? 0 : 1,
+      settings.notification_sound_enabled === 0 ? 0 : 1,
     ]
   );
 }

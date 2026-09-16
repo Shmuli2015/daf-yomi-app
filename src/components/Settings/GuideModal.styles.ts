@@ -276,7 +276,7 @@ export const createGuideModalStyles = (theme: ReturnType<typeof useTheme>) =>
       marginTop: 8,
       marginBottom: 12,
       borderWidth: 1,
-      borderColor: 'rgba(201,150,60,0.3)',
+      borderColor: theme.colors.accentBorder,
     },
     contactHeader: {
       flexDirection: 'row',

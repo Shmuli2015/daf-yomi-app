@@ -48,11 +48,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingVertical: Platform.OS === 'ios' ? 12 : 8,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 6,
-      elevation: 1,
+      ...theme.shadow.card,
     },
     searchIcon: {
       marginStart: 2,

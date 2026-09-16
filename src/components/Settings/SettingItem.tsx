@@ -11,6 +11,7 @@ export interface SettingItemProps {
   description?: string;
   value?: string | boolean;
   onPress?: (value?: any) => void;
+  onLongPress?: () => void;
   type?: 'switch' | 'arrow' | 'none';
   isDestructive?: boolean;
   isLast?: boolean;
@@ -23,6 +24,7 @@ export const SettingItem = React.memo(function SettingItem({
   description,
   value,
   onPress,
+  onLongPress,
   type = 'arrow',
   isDestructive = false,
   isLast = false,
@@ -34,13 +36,25 @@ export const SettingItem = React.memo(function SettingItem({
   const iconBg = isDestructive ? theme.colors.dangerLight : theme.colors.accentLight;
   const iconColor = isDestructive ? theme.colors.danger : theme.colors.accent;
   const titleColor = isDestructive ? theme.colors.danger : theme.colors.textPrimary;
+  const accessibilityLabel = description ? `${title}. ${description}` : title;
+  const isSwitch = type === 'switch';
+  const switchValue = Boolean(value);
 
   return (
     <TouchableOpacity
-      onPress={type === 'switch' ? undefined : onPress}
-      disabled={type === 'switch'}
+      onPress={
+        isSwitch
+          ? () => onPress?.(!switchValue)
+          : onPress
+      }
+      onLongPress={onLongPress}
+      delayLongPress={350}
+      disabled={!onPress && !onLongPress}
       activeOpacity={0.7}
       style={[styles.row, isLast && styles.rowLast]}
+      accessibilityRole={isSwitch ? 'switch' : 'button'}
+      accessibilityLabel={accessibilityLabel}
+      accessibilityState={isSwitch ? { checked: switchValue } : undefined}
     >
       <View style={styles.left}>
         <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
@@ -65,12 +79,13 @@ export const SettingItem = React.memo(function SettingItem({
       </View>
 
       <View style={styles.right}>
-        {type === 'switch' ? (
+        {isSwitch ? (
           <Switch
-            value={value as boolean}
-            onValueChange={onPress as any}
+            value={switchValue}
+            onValueChange={onPress as (next: boolean) => void}
+            pointerEvents="none"
             trackColor={{ false: theme.colors.border, true: theme.colors.accentLight }}
-            thumbColor={value ? theme.colors.accent : '#FFFFFF'}
+            thumbColor={switchValue ? theme.colors.accent : theme.colors.white}
             ios_backgroundColor={theme.colors.border}
           />
         ) : type === 'arrow' ? (

@@ -1,8 +1,10 @@
-import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { WheelPicker } from './WheelPicker';
 import BottomSheetModal from '../BottomSheetModal';
+import { createTimePickerModalStyles } from './TimePickerModal.styles';
 
 interface TimePickerModalProps {
   visible: boolean;
@@ -10,6 +12,9 @@ interface TimePickerModalProps {
   hour: number;
   minute: number;
   onSave: (h: number, m: number) => void;
+  title?: string;
+  onDisable?: () => void;
+  onApplyToActiveDays?: (h: number, m: number) => void;
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
@@ -21,13 +26,16 @@ export const TimePickerModal = ({
   hour,
   minute,
   onSave,
+  title = 'בחר שעת התראה',
+  onDisable,
+  onApplyToActiveDays,
 }: TimePickerModalProps) => {
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
-  const [selectedHour, setSelectedHour] = React.useState(hour);
-  const [selectedMinuteIndex, setSelectedMinuteIndex] = React.useState(Math.round(minute / 5) % 12);
+  const styles = useMemo(() => createTimePickerModalStyles(theme), [theme]);
+  const [selectedHour, setSelectedHour] = useState(hour);
+  const [selectedMinuteIndex, setSelectedMinuteIndex] = useState(Math.round(minute / 5) % 12);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (visible) {
       setSelectedHour(hour);
       setSelectedMinuteIndex(Math.round(minute / 5) % 12);
@@ -40,79 +48,63 @@ export const TimePickerModal = ({
 
   return (
     <BottomSheetModal visible={visible} onClose={onClose}>
-      <View style={styles.topAccent} />
-      <Text style={styles.title}>בחר שעת התראה</Text>
+      <View style={styles.header}>
+        <View style={styles.headerIconCircle}>
+          <Ionicons name="time-outline" size={20} color={theme.colors.accent} />
+        </View>
+        <Text style={styles.title}>{title}</Text>
+        <TouchableOpacity
+          style={styles.closeBtn}
+          onPress={onClose}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="סגור"
+        >
+          <Ionicons name="close" size={18} color={theme.colors.textMuted} />
+        </TouchableOpacity>
+      </View>
 
-      <View style={styles.pickerWrapper}>
+      <View style={styles.pickerBox}>
         <View style={styles.wheelRow}>
-          <WheelPicker
-            items={HOURS}
-            selectedIndex={selectedHour}
-            onIndexChange={setSelectedHour}
-          />
+          <View style={styles.wheelColumn}>
+            <Text style={styles.wheelLabel}>שעה</Text>
+            <WheelPicker
+              items={HOURS}
+              selectedIndex={selectedHour}
+              onIndexChange={setSelectedHour}
+            />
+          </View>
           <Text style={styles.colon}>:</Text>
-          <WheelPicker
-            items={MINUTES}
-            selectedIndex={selectedMinuteIndex}
-            onIndexChange={setSelectedMinuteIndex}
-          />
+          <View style={styles.wheelColumn}>
+            <Text style={styles.wheelLabel}>דקות</Text>
+            <WheelPicker
+              items={MINUTES}
+              selectedIndex={selectedMinuteIndex}
+              onIndexChange={setSelectedMinuteIndex}
+            />
+          </View>
         </View>
       </View>
 
-      <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
-        <Text style={styles.saveBtnText}>שמור</Text>
-      </TouchableOpacity>
+      <View style={styles.actions}>
+        <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.85}>
+          <Text style={styles.saveBtnText}>שמור</Text>
+        </TouchableOpacity>
+        {onApplyToActiveDays ? (
+          <TouchableOpacity
+            style={styles.secondaryBtn}
+            onPress={() => onApplyToActiveDays(selectedHour, selectedMinuteIndex * 5)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.secondaryBtnText}>החל על כל הימים הפעילים</Text>
+          </TouchableOpacity>
+        ) : null}
+        {onDisable ? (
+          <TouchableOpacity style={styles.secondaryBtn} onPress={onDisable} activeOpacity={0.8}>
+            <Text style={styles.disableBtnText}>כבה יום זה</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </BottomSheetModal>
   );
 };
-
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
-  StyleSheet.create({
-    topAccent: {
-      height: 4,
-      backgroundColor: theme.colors.accent,
-      marginHorizontal: -20,
-      marginBottom: 8,
-    },
-    title: {
-      fontSize: 22,
-      fontWeight: '900',
-      color: theme.colors.textPrimary,
-      textAlign: 'center',
-      marginTop: 16,
-      marginBottom: 8,
-    },
-    pickerWrapper: {
-      height: 240,
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginVertical: 16,
-    },
-    wheelRow: {
-      flexDirection: 'row-reverse',
-      alignItems: 'center',
-      gap: 12,
-    },
-    colon: {
-      fontSize: 32,
-      fontWeight: '900',
-      color: theme.colors.accent,
-      opacity: 0.5,
-      marginTop: -4,
-    },
-    saveBtn: {
-      backgroundColor: theme.colors.accent,
-      marginHorizontal: 12,
-      marginBottom: 16,
-      paddingVertical: 18,
-      borderRadius: 20,
-      alignItems: 'center',
-      ...theme.shadow.gold,
-    },
-    saveBtnText: {
-      color: '#FFFFFF',
-      fontSize: 18,
-      fontWeight: '900',
-      letterSpacing: 0.5,
-    },
-  });

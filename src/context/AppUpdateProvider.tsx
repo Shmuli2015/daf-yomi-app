@@ -1,6 +1,6 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import InfoModal, { type InfoModalIconName } from '../components/InfoModal';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { AppUpdateModal } from '../components/AppUpdateModal';
+import Toast, { type ToastIconName } from '../components/Toast';
 import WhatsNewModal from '../components/WhatsNewModal';
 import { useAppUpdateCheck } from '../hooks/useAppUpdateCheck';
 import { useWhatsNewOnLaunch } from '../hooks/useWhatsNewOnLaunch';
@@ -14,6 +14,8 @@ export type AppUpdateContextValue = {
 };
 
 const AppUpdateContext = createContext<AppUpdateContextValue | null>(null);
+const GITHUB_PROBE_TOAST_MS = 5000;
+const GITHUB_PROBE_TOAST_EXTRA_BOTTOM = 64;
 
 export function useAppUpdateControls(): AppUpdateContextValue {
   const ctx = useContext(AppUpdateContext);
@@ -23,10 +25,10 @@ export function useAppUpdateControls(): AppUpdateContextValue {
   return ctx;
 }
 
-type GithubProbeModalPayload = {
+type GithubProbeToastPayload = {
   title: string;
   message: string;
-  iconName?: InfoModalIconName;
+  iconName?: ToastIconName;
 };
 
 export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
@@ -47,12 +49,12 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
     checkManualAsync,
   } = useAppUpdateCheck({ pauseAutoCheck: whatsNewVisible });
 
-  const [githubProbeModal, setGithubProbeModal] = useState<GithubProbeModalPayload | null>(null);
+  const [githubProbeToast, setGithubProbeToast] = useState<GithubProbeToastPayload | null>(null);
 
   const probeGithubRelease = useCallback(async () => {
     const r = await probeLatestReleaseForDev();
     if (!r.ok) {
-      setGithubProbeModal({
+      setGithubProbeToast({
         title: 'GitHub',
         message: r.detail ?? 'שגיאה',
         iconName: 'cloud-offline-outline',
@@ -64,12 +66,18 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
       r.apkAsset ? `APK: ${r.apkAsset}` : null,
       r.detail,
     ].filter(Boolean) as string[];
-    setGithubProbeModal({
+    setGithubProbeToast({
       title: 'תגובת GitHub האחרונה',
       message: lines.join('\n'),
       iconName: 'logo-github',
     });
   }, []);
+
+  useEffect(() => {
+    if (!githubProbeToast) return;
+    const timeoutId = setTimeout(() => setGithubProbeToast(null), GITHUB_PROBE_TOAST_MS);
+    return () => clearTimeout(timeoutId);
+  }, [githubProbeToast]);
 
   const value = useMemo(
     () => ({
@@ -96,13 +104,13 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
         installedVersion={installedVersion}
         onDismissLater={onDismissLater}
       />
-      <InfoModal
-        compact
-        visible={githubProbeModal !== null}
-        onClose={() => setGithubProbeModal(null)}
-        title={githubProbeModal?.title ?? ''}
-        message={githubProbeModal?.message ?? ''}
-        iconName={githubProbeModal?.iconName}
+      <Toast
+        visible={githubProbeToast !== null}
+        onClose={() => setGithubProbeToast(null)}
+        title={githubProbeToast?.title ?? ''}
+        message={githubProbeToast?.message ?? ''}
+        iconName={githubProbeToast?.iconName}
+        extraBottom={GITHUB_PROBE_TOAST_EXTRA_BOTTOM}
       />
     </AppUpdateContext.Provider>
   );

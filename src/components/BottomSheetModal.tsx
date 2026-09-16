@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, View, Animated } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { useSheetDismissGesture } from '../hooks/useSheetDismissGesture';
 import { createBottomSheetModalStyles } from './BottomSheetModal.styles';
@@ -14,6 +14,9 @@ interface BottomSheetModalProps {
   dismissible?: boolean;
 }
 
+const SHEET_MIN_BOTTOM_INSET = 12;
+const SHEET_CONTENT_BOTTOM_GAP = 24;
+
 export default function BottomSheetModal({
   visible,
   onClose,
@@ -22,7 +25,9 @@ export default function BottomSheetModal({
   dismissible = true,
 }: BottomSheetModalProps) {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const styles = useMemo(() => createBottomSheetModalStyles(theme), [theme]);
+  const sheetBottomPadding = Math.max(insets.bottom, SHEET_MIN_BOTTOM_INSET) + SHEET_CONTENT_BOTTOM_GAP;
   const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType, dismiss } =
     useSheetDismissGesture({
       visible,
@@ -46,11 +51,12 @@ export default function BottomSheetModal({
         />
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         <View style={styles.sheetLayer} pointerEvents="box-none">
-          <Animated.View pointerEvents="auto" style={[styles.sheet, sheetAnimatedStyle]}>
-            <SafeAreaView edges={['bottom']}>
-              {showHandle ? <SheetDragHandle panHandlers={panHandlers} /> : null}
-              {children}
-            </SafeAreaView>
+          <Animated.View
+            pointerEvents="auto"
+            style={[styles.sheet, sheetAnimatedStyle, { paddingBottom: sheetBottomPadding }]}
+          >
+            {showHandle ? <SheetDragHandle panHandlers={panHandlers} /> : null}
+            {children}
           </Animated.View>
         </View>
       </View>

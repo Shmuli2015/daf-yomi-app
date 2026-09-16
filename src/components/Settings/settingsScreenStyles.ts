@@ -59,6 +59,14 @@ export function createSettingsScreenStyles(theme: Theme) {
       lineHeight: 18,
       opacity: 0.85,
     },
+    backupHint: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      textAlign: 'center',
+      marginTop: 10,
+      marginHorizontal: 28,
+      lineHeight: 18,
+    },
     noResultsContainer: {
       alignItems: 'center',
       justifyContent: 'center',
@@ -75,7 +83,7 @@ export function createSettingsScreenStyles(theme: Theme) {
       justifyContent: 'center',
       marginBottom: 6,
       borderWidth: 1,
-      borderColor: 'rgba(201,150,60,0.2)',
+      borderColor: theme.colors.accentBorder,
     },
     noResultsTitle: {
       fontSize: 16,
@@ -95,7 +103,7 @@ export function createSettingsScreenStyles(theme: Theme) {
       paddingVertical: 8,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: 'rgba(201,150,60,0.3)',
+      borderColor: theme.colors.accentBorder,
     },
     clearSearchBtnText: {
       fontSize: 13,
@@ -111,31 +119,6 @@ export function createSettingsScreenStyles(theme: Theme) {
     loadingText: {
       fontSize: 16,
       fontWeight: '600',
-    },
-    overlay: {
-      ...StyleSheet.absoluteFill,
-      backgroundColor: 'rgba(0,0,0,0.4)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 9999,
-    },
-    loaderCard: {
-      backgroundColor: theme.colors.surface,
-      padding: 30,
-      borderRadius: 24,
-      alignItems: 'center',
-      gap: 16,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 10 },
-      shadowOpacity: 0.2,
-      shadowRadius: 20,
-      elevation: 10,
-      minWidth: 180,
-    },
-    loaderText: {
-      color: theme.colors.textPrimary,
-      fontWeight: '700',
-      fontSize: 16,
     },
   });
 }

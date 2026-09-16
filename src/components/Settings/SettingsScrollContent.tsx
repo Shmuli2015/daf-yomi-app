@@ -2,23 +2,31 @@ import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, Linking, TouchableOpacity } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { ThemeMode, useTheme } from '../../theme';
-import { SettingItem } from './SettingItem';
-import { SectionHeader } from './SectionHeader';
-import { NotifModeToggle } from './NotifModeToggle';
-import { DayScheduleList } from './DayScheduleList';
-import type { DaySchedule } from './DayScheduleList';
-import { SettingsFooter } from './SettingsFooter';
+import type { ViewMode } from '../SefariaReader/ReaderToolbar';
 import { SettingsSearchBar } from './SettingsSearchBar';
-import type { SettingsScreenStyles } from './settingsScreenStyles';
+import { SettingsFooter } from './SettingsFooter';
+import SettingsNotificationsSection, {
+  NOTIFICATIONS_SEARCH_ITEMS,
+} from './SettingsNotificationsSection';
+import SettingsDisplaySection, { DISPLAY_SEARCH_ITEMS } from './SettingsDisplaySection';
+import SettingsReaderSection, { READER_SEARCH_ITEMS } from './SettingsReaderSection';
+import SettingsPersonalTrackSection, {
+  PERSONAL_TRACK_SEARCH_ITEMS,
+} from './SettingsPersonalTrackSection';
+import SettingsBackupSection, { BACKUP_SEARCH_ITEMS } from './SettingsBackupSection';
+import SettingsDataSection, { DATA_SEARCH_ITEMS } from './SettingsDataSection';
+import SettingsAboutSection, { ABOUT_SEARCH_ITEMS } from './SettingsAboutSection';
+import SettingsDevSection, { DEV_SEARCH_ITEMS } from './SettingsDevSection';
 import InfoModal from '../InfoModal';
 import ContentLicensesModal from './ContentLicensesModal';
-import {
-  formatNotificationTime,
-  getThemeModeSettingDisplay,
-} from '../../utils/settingsScreen';
-import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
+import type { SettingsScreenStyles } from './settingsScreenStyles';
+import type { DaySchedule } from './DayScheduleList';
 import type { ExactAlarmStatus } from '../../utils/exactAlarm';
+import type { NotificationPermissionStatus } from '../../utils/notificationPermission';
+import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
+import { matchesAnySetting } from '../../utils/settingsSearch';
 
 export type SettingsScrollContentProps = {
   styles: SettingsScreenStyles;
@@ -26,6 +34,8 @@ export type SettingsScrollContentProps = {
   onNotificationsToggle: (v: boolean) => void;
   exactAlarmStatus?: ExactAlarmStatus;
   onExactAlarmSettingsPress?: () => void;
+  permissionStatus: NotificationPermissionStatus;
+  onNotificationPermissionPress: () => void;
   notifMode: 'daily' | 'custom';
   onNotifModeChange: (mode: 'daily' | 'custom') => void;
   hour: number;
@@ -34,8 +44,19 @@ export type SettingsScrollContentProps = {
   onDailyTimePress: () => void;
   onToggleDay: (index: number) => void;
   onEditDayTime: (index: number) => void;
+  soundEnabled: boolean;
+  onSoundToggle: (enabled: boolean) => void;
   themeMode: ThemeMode;
   onThemeModalOpen: () => void;
+  readerViewMode: ViewMode;
+  onReaderViewModePress: () => void;
+  showChavrutaNotes: boolean;
+  onChavrutaNotesToggle: (enabled: boolean) => void;
+  hapticsEnabled: boolean;
+  onHapticsToggle: (enabled: boolean) => void;
+  fontSize: number;
+  onIncreaseFontSize: () => void;
+  onDecreaseFontSize: () => void;
   onGuideModalOpen: () => void;
   showSecularDate: boolean;
   onSecularDateToggle: (v: boolean) => void;
@@ -50,17 +71,19 @@ export type SettingsScrollContentProps = {
   onTestNotification: () => void;
   onCheckScheduled: () => void;
   onResetModalOpen: () => void;
+  lastBackupAt: string | null;
   onSaveBackupToFile?: () => void;
   onShareBackup?: () => void;
   onImportBackup?: () => void;
   updateAutoPromptEnabled?: boolean;
   onUpdateAutoPromptToggle?: (enabled: boolean) => void;
   onCheckAppUpdate?: () => void;
-  onShowWhatsNew?: () => void;
   onProbeGithubRelease?: () => void;
   onShareDownloadLink?: () => void;
+  onShowWhatsNew?: () => void;
   storageSizeFormatted?: string;
   onClearCacheOpen?: () => void;
+  onEmailCopied: () => void;
 };
 
 export default function SettingsScrollContent({
@@ -69,6 +92,8 @@ export default function SettingsScrollContent({
   onNotificationsToggle,
   exactAlarmStatus = 'not_required',
   onExactAlarmSettingsPress,
+  permissionStatus,
+  onNotificationPermissionPress,
   notifMode,
   onNotifModeChange,
   hour,
@@ -77,8 +102,19 @@ export default function SettingsScrollContent({
   onDailyTimePress,
   onToggleDay,
   onEditDayTime,
+  soundEnabled,
+  onSoundToggle,
   themeMode,
   onThemeModalOpen,
+  readerViewMode,
+  onReaderViewModePress,
+  showChavrutaNotes,
+  onChavrutaNotesToggle,
+  hapticsEnabled,
+  onHapticsToggle,
+  fontSize,
+  onIncreaseFontSize,
+  onDecreaseFontSize,
   onGuideModalOpen,
   showSecularDate,
   onSecularDateToggle,
@@ -93,46 +129,33 @@ export default function SettingsScrollContent({
   onTestNotification,
   onCheckScheduled,
   onResetModalOpen,
+  lastBackupAt,
   onSaveBackupToFile,
   onShareBackup,
   onImportBackup,
   updateAutoPromptEnabled,
   onUpdateAutoPromptToggle,
   onCheckAppUpdate,
-  onShowWhatsNew,
   onProbeGithubRelease,
   onShareDownloadLink,
+  onShowWhatsNew,
   storageSizeFormatted = '0 B',
   onClearCacheOpen,
+  onEmailCopied,
 }: SettingsScrollContentProps) {
   const theme = useTheme();
-  const themeDisplay = getThemeModeSettingDisplay(themeMode);
   const [mailHintVisible, setMailHintVisible] = useState(false);
   const [licensesVisible, setLicensesVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const matchItem = useCallback(
-    (title: string, description?: string) => {
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.trim().toLowerCase();
-      return (
-        title.toLowerCase().includes(q) ||
-        (description != null && description.toLowerCase().includes(q))
-      );
-    },
-    [searchQuery],
-  );
-
-  const showExactAlarmRow =
-    notificationsEnabled &&
-    exactAlarmStatus !== 'not_required' &&
-    onExactAlarmSettingsPress != null;
-  const exactAlarmLabel =
-    exactAlarmStatus === 'granted'
-      ? 'פעיל'
-      : exactAlarmStatus === 'denied'
-        ? 'דורש הרשאה'
-        : 'לא זמין ב-Expo Go';
+  const copySupportEmail = useCallback(async () => {
+    try {
+      await Clipboard.setStringAsync(SUPPORT_EMAIL);
+      onEmailCopied();
+    } catch {
+      setMailHintVisible(true);
+    }
+  }, [onEmailCopied]);
 
   const openSupportEmail = useCallback(async () => {
     try {
@@ -142,58 +165,17 @@ export default function SettingsScrollContent({
     }
   }, []);
 
-  const sec1Match =
-    matchItem('תזכורת יומית', 'קבל התראה בשעה היעודה') ||
-    (notificationsEnabled &&
-      (matchItem('זמן ההתראה', 'מתי תרצה ללמוד כל יום?') ||
-        matchItem('תזכורות מדויקות', exactAlarmStatus === 'denied' ? 'לחץ כדי לאשר תזמון מדויק בהגדרות המכשיר' : 'התזכורת תצלצל בדיוק בשעה שבחרת')));
-
-  const sec2Match =
-    matchItem('מצב תצוגה', 'בחר מצב בהיר/כהה או לפי המערכת') ||
-    matchItem('מדריך שימוש', 'למד כיצד להשתמש בכל התכונות והאפשרויות') ||
-    matchItem('הצג תאריך לועזי', 'הצגת התאריך הלועזי לצד העברי') ||
-    matchItem('הצג דף בלוח שנה', 'הצגת מספר הדף היומי בכל תא בלוח השנה') ||
-    matchItem('אפקטים חגיגיים', 'הצגת קונפטי בסיום לימוד דף');
-
-  const supportItemMatch = matchItem('תמיכה ויצירת קשר', 'משוב והצעות לשיפור');
-  const licensesItemMatch = matchItem('מקורות ורישיונות', 'טקסטים מספריא, שטיינזלץ, דיקטה וחברותא');
-
-  const sec3Match = supportItemMatch || licensesItemMatch;
-
-  const sec4Match =
-    (updateAutoPromptEnabled != null && matchItem('התראות עדכון אוטומטיות', 'בדיקת עדכונים אוטומטית בפתיחת האפליקציה')) ||
-    (onCheckAppUpdate != null && matchItem('בדוק עדכונים', 'מוודא אם יש גרסה חדשה לאפליקציה')) ||
-    (onShowWhatsNew != null && matchItem('מה חדש בגרסה זו', 'רשימת השינויים בגרסה המותקנת')) ||
-    (onShareDownloadLink != null && matchItem('שתף קישור להורדה', 'שלח לחברים קישור להתקנת מסע דף'));
-
-  const sec5Match =
-    showDevSection &&
-    (matchItem('שלח התראת בדיקה', 'בדוק שההתראות עובדות') ||
-      matchItem('בדוק התראות מתוזמנות', `${scheduledCount} התראות מתוזמנות`) ||
-      (onProbeGithubRelease != null && matchItem('בדוק תגובת GitHub', 'מציג טאג ושם APK')));
-
-  const sec6Match =
-    (onSaveBackupToFile != null && matchItem('שמור גיבוי לקובץ', 'שמור קובץ JSON במכשיר')) ||
-    (onShareBackup != null && matchItem('שתף גיבוי', 'שלח את קובץ הגיבוי')) ||
-    (onImportBackup != null && matchItem('ייבא גיבוי', 'שחזור נתונים מקובץ גיבוי קודם'));
-
-  const sec7Match =
-    matchItem('איפוס נתונים', 'מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי') ||
-    (onClearCacheOpen != null && matchItem('ניקוי קבצים שמורים', 'מחיקת טקסטים שמורים'));
-
-  const visibleSections = [
-    sec1Match,
-    sec2Match,
-    sec3Match,
-    sec4Match,
-    sec5Match,
-    sec6Match,
-    sec7Match,
+  const searchItems = [
+    ...NOTIFICATIONS_SEARCH_ITEMS,
+    ...DISPLAY_SEARCH_ITEMS,
+    ...READER_SEARCH_ITEMS,
+    ...PERSONAL_TRACK_SEARCH_ITEMS,
+    ...BACKUP_SEARCH_ITEMS,
+    ...DATA_SEARCH_ITEMS,
+    ...ABOUT_SEARCH_ITEMS,
+    ...(showDevSection ? DEV_SEARCH_ITEMS : []),
   ];
-  const firstVisibleIndex = visibleSections.findIndex(Boolean);
-
-  const hasAnyMatch =
-    sec1Match || sec2Match || sec3Match || sec4Match || sec5Match || sec6Match || sec7Match;
+  const hasAnyMatch = matchesAnySetting(searchQuery, searchItems);
 
   return (
     <>
@@ -211,13 +193,11 @@ export default function SettingsScrollContent({
             <Text style={styles.pageSubtitle}>התראות, תצוגה וניהול נתונים</Text>
           </Animated.View>
 
-          <View>
-            <SettingsSearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onClear={() => setSearchQuery('')}
-            />
-          </View>
+          <SettingsSearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+          />
 
           {!hasAnyMatch && searchQuery.trim().length > 0 ? (
             <View style={styles.noResultsContainer}>
@@ -238,364 +218,105 @@ export default function SettingsScrollContent({
             </View>
           ) : (
             <>
-              {sec1Match && (
-                <>
-                  <SectionHeader
-                    title="התראות ותזכורות"
-                    icon="notifications-outline"
-                    isFirst={firstVisibleIndex === 0}
-                  />
-                  <View style={styles.card}>
-                    {matchItem('תזכורת יומית', 'קבל התראה בשעה היעודה') && (
-                      <SettingItem
-                        icon="notifications-outline"
-                        title="תזכורת יומית"
-                        description="קבל התראה בשעה היעודה"
-                        type="switch"
-                        value={notificationsEnabled}
-                        onPress={onNotificationsToggle}
-                        isLast={!notificationsEnabled}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {notificationsEnabled && (
-                      <>
-                        {!searchQuery.trim() && (
-                          <NotifModeToggle mode={notifMode} onChange={onNotifModeChange} />
-                        )}
-                        {notifMode === 'daily' && matchItem('זמן ההתראה', 'מתי תרצה ללמוד כל יום?') && (
-                          <SettingItem
-                            icon="time-outline"
-                            title="זמן ההתראה"
-                            description="מתי תרצה ללמוד כל יום?"
-                            value={formatNotificationTime(hour, minute)}
-                            onPress={onDailyTimePress}
-                            isLast={!showExactAlarmRow}
-                            highlightText={searchQuery}
-                          />
-                        )}
-                        {notifMode === 'custom' && !searchQuery.trim() && (
-                          <DayScheduleList
-                            schedules={daySchedules}
-                            onToggleDay={onToggleDay}
-                            onEditTime={onEditDayTime}
-                          />
-                        )}
-                        {showExactAlarmRow && matchItem('תזכורות מדויקות') && (
-                          <SettingItem
-                            icon="alarm-outline"
-                            title="תזכורות מדויקות"
-                            description={
-                              exactAlarmStatus === 'denied'
-                                ? 'לחץ כדי לאשר תזמון מדויק בהגדרות המכשיר'
-                                : 'התזכורת תצלצל בדיוק בשעה שבחרת'
-                            }
-                            value={exactAlarmLabel}
-                            onPress={onExactAlarmSettingsPress}
-                            isLast
-                            highlightText={searchQuery}
-                          />
-                        )}
-                      </>
-                    )}
-                  </View>
-                </>
-              )}
-
-              {sec2Match && (
-                <>
-                  <SectionHeader
-                    title="תצוגה והעדפות"
-                    icon="color-palette-outline"
-                    isFirst={firstVisibleIndex === 1}
-                  />
-                  <View style={styles.card}>
-                    {matchItem('מצב תצוגה', 'בחר מצב בהיר/כהה או לפי המערכת') && (
-                      <SettingItem
-                        icon={themeDisplay.icon}
-                        title="מצב תצוגה"
-                        description="בחר מצב בהיר/כהה או לפי המערכת"
-                        value={themeDisplay.label}
-                        onPress={onThemeModalOpen}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {matchItem('מדריך שימוש', 'למד כיצד להשתמש בכל התכונות והאפשרויות') && (
-                      <SettingItem
-                        icon="help-circle-outline"
-                        title="מדריך שימוש"
-                        description="למד כיצד להשתמש בכל התכונות והאפשרויות"
-                        onPress={onGuideModalOpen}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {matchItem('הצג תאריך לועזי', 'הצגת התאריך הלועזי לצד העברי') && (
-                      <SettingItem
-                        icon="calendar-outline"
-                        title="הצג תאריך לועזי"
-                        description="הצגת התאריך הלועזי לצד העברי"
-                        type="switch"
-                        value={showSecularDate}
-                        onPress={onSecularDateToggle}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {matchItem('הצג דף בלוח שנה', 'הצגת מספר הדף היומי בכל תא בלוח השנה') && (
-                      <SettingItem
-                        icon="book-outline"
-                        title="הצג דף בלוח שנה"
-                        description="הצגת מספר הדף היומי בכל תא בלוח השנה"
-                        type="switch"
-                        value={showCalendarDaf}
-                        onPress={onCalendarDafToggle}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {onPersonalTrackBannerToggle != null && showPersonalTrackBannerPref != null && matchItem('לימוד אישי', 'מעקב עצמאי אחר מסכתות והצגת לימוד אישי במסך הבית ובש״ס') && (
-                      <SettingItem
-                        icon="bookmark-outline"
-                        title="לימוד אישי"
-                        description="מעקב עצמאי אחר מסכתות והצגת לימוד אישי במסך הבית ובש״ס"
-                        type="switch"
-                        value={showPersonalTrackBannerPref}
-                        onPress={onPersonalTrackBannerToggle}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {matchItem('אפקטים חגיגיים', 'הצגת קונפטי בסיום לימוד דף') && (
-                      <SettingItem
-                        icon="sparkles-outline"
-                        title="אפקטים חגיגיים"
-                        description="הצגת קונפטי בסיום לימוד דף"
-                        type="switch"
-                        value={showConfettiPref}
-                        onPress={onConfettiToggle}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                  </View>
-                </>
-              )}
-
-              {sec3Match && (
-                <>
-                  <SectionHeader
-                    title="יצירת קשר"
-                    icon="chatbubble-ellipses-outline"
-                    isFirst={firstVisibleIndex === 2}
-                  />
-                  <View style={styles.card}>
-                    {supportItemMatch && (
-                      <SettingItem
-                        icon="mail-outline"
-                        title="תמיכה ויצירת קשר"
-                        description="משוב והצעות לשיפור"
-                        onPress={openSupportEmail}
-                        isLast={!licensesItemMatch}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {licensesItemMatch && (
-                      <SettingItem
-                        icon="ribbon-outline"
-                        title="מקורות ורישיונות"
-                        description="טקסטים מספריא, שטיינזלץ, דיקטה וחברותא"
-                        onPress={() => setLicensesVisible(true)}
-                        isLast
-                        highlightText={searchQuery}
-                      />
-                    )}
-                  </View>
-                </>
-              )}
-
-              {sec4Match && (
-                <>
-                  {onCheckAppUpdate ? (
-                    <>
-                      <SectionHeader
-                        title="עדכוני אפליקציה"
-                        icon="download-outline"
-                        isFirst={firstVisibleIndex === 3}
-                      />
-                      <View style={styles.card}>
-                        {onUpdateAutoPromptToggle != null && updateAutoPromptEnabled != null && matchItem('התראות עדכון אוטומטיות') ? (
-                          <SettingItem
-                            icon="alert-circle-outline"
-                            title="התראות עדכון אוטומטיות"
-                            description="בדיקת עדכונים אוטומטית בפתיחת האפליקציה או בחזרה מהרקע, והתראה עם הורד והתקן כשמתפרסם עדכון"
-                            type="switch"
-                            value={updateAutoPromptEnabled}
-                            onPress={onUpdateAutoPromptToggle}
-                            highlightText={searchQuery}
-                          />
-                        ) : null}
-                        {matchItem('בדוק עדכונים', 'מוודא אם יש גרסה חדשה לאפליקציה') && (
-                          <SettingItem
-                            icon="download-outline"
-                            title="בדוק עדכונים"
-                            description="מוודא אם יש גרסה חדשה לאפליקציה (כדאי מדי פעם)"
-                            onPress={onCheckAppUpdate}
-                            isLast={!onShowWhatsNew && !onShareDownloadLink}
-                            highlightText={searchQuery}
-                          />
-                        )}
-                        {onShowWhatsNew && matchItem('מה חדש בגרסה זו', 'רשימת השינויים בגרסה המותקנת') ? (
-                          <SettingItem
-                            icon="sparkles-outline"
-                            title="מה חדש בגרסה זו"
-                            description="רשימת השינויים בגרסה המותקנת"
-                            onPress={onShowWhatsNew}
-                            isLast={!onShareDownloadLink}
-                            highlightText={searchQuery}
-                          />
-                        ) : null}
-                        {onShareDownloadLink && matchItem('שתף קישור להורדה') ? (
-                          <SettingItem
-                            icon="share-social-outline"
-                            title="שתף קישור להורדה"
-                            description="שלח לחברים קישור להתקנת מסע דף"
-                            onPress={onShareDownloadLink}
-                            isLast
-                            highlightText={searchQuery}
-                          />
-                        ) : null}
-                      </View>
-                    </>
-                  ) : onShareDownloadLink ? (
-                    <>
-                      <SectionHeader
-                        title="שיתוף האפליקציה"
-                        icon="share-social-outline"
-                        isFirst={firstVisibleIndex === 3}
-                      />
-                      <View style={styles.card}>
-                        <SettingItem
-                          icon="share-social-outline"
-                          title="שתף קישור להורדה"
-                          description="שלח לחברים קישור להתקנת מסע דף"
-                          onPress={onShareDownloadLink}
-                          isLast
-                          highlightText={searchQuery}
-                        />
-                      </View>
-                    </>
-                  ) : null}
-                </>
-              )}
-
-              {sec5Match && (
-                <>
-                  <SectionHeader
-                    title="דיבאג והתראות"
-                    icon="code-working-outline"
-                    isFirst={firstVisibleIndex === 4}
-                  />
-                  <View style={styles.card}>
-                    {matchItem('שלח התראת בדיקה') && (
-                      <SettingItem
-                        icon="notifications-outline"
-                        title="שלח התראת בדיקה"
-                        description="בדוק שההתראות עובדות (תגיע בעוד 5 שניות)"
-                        onPress={onTestNotification}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {matchItem('בדוק התראות מתוזמנות') && (
-                      <SettingItem
-                        icon="list-outline"
-                        title="בדוק התראות מתוזמנות"
-                        description={`${scheduledCount} התראות מתוזמנות`}
-                        onPress={onCheckScheduled}
-                        isLast={!onProbeGithubRelease}
-                        highlightText={searchQuery}
-                      />
-                    )}
-                    {onProbeGithubRelease && matchItem('בדוק תגובת GitHub') ? (
-                      <SettingItem
-                        icon="cloud-outline"
-                        title="בדוק תגובת GitHub"
-                        description="מציג טאג ושם APK מהפרסום האחרון"
-                        onPress={onProbeGithubRelease}
-                        isLast
-                        highlightText={searchQuery}
-                      />
-                    ) : null}
-                  </View>
-                </>
-              )}
-
-              {sec6Match && (
-                <>
-                  <SectionHeader
-                    title="גיבוי ושחזור"
-                    icon="cloud-upload-outline"
-                    isFirst={firstVisibleIndex === 5}
-                  />
-                  <View style={styles.card}>
-                    {onSaveBackupToFile && matchItem('שמור גיבוי לקובץ') ? (
-                      <SettingItem
-                        icon="save-outline"
-                        title="שמור גיבוי לקובץ"
-                        description="בחר תיקייה (למשל הורדות) ושמור קובץ JSON במכשיר"
-                        onPress={onSaveBackupToFile}
-                        highlightText={searchQuery}
-                      />
-                    ) : null}
-                    {onShareBackup && matchItem('שתף גיבוי') ? (
-                      <SettingItem
-                        icon="share-outline"
-                        title="שתף גיבוי"
-                        description="שלח את קובץ הגיבוי בוואטסאפ, דרייב או אפליקציה אחרת"
-                        onPress={onShareBackup}
-                        highlightText={searchQuery}
-                      />
-                    ) : null}
-                    {onImportBackup && matchItem('ייבא גיבוי') ? (
-                      <SettingItem
-                        icon="cloud-upload-outline"
-                        title="ייבא גיבוי"
-                        description="שחזור נתונים מקובץ גיבוי קודם"
-                        onPress={onImportBackup}
-                        isLast
-                        highlightText={searchQuery}
-                      />
-                    ) : null}
-                  </View>
-                </>
-              )}
-
-              {sec7Match && (
-                <>
-                  <SectionHeader
-                    title="נתונים ופרטיות"
-                    icon="shield-checkmark-outline"
-                    isFirst={firstVisibleIndex === 6}
-                  />
-                  <View style={styles.card}>
-                    {onClearCacheOpen && matchItem('ניקוי קבצים שמורים', 'מחיקת טקסטים שמורים') ? (
-                      <SettingItem
-                        icon="folder-open-outline"
-                        title="ניקוי קבצים שמורים"
-                        description={`מחיקת טקסטים שהורדו (${storageSizeFormatted}). אינו מוחק סימוני לימוד`}
-                        onPress={onClearCacheOpen}
-                        highlightText={searchQuery}
-                      />
-                    ) : null}
-                    {matchItem('איפוס נתונים', 'מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי') && (
-                      <SettingItem
-                        icon="trash-outline"
-                        title="איפוס נתונים"
-                        description="מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי"
-                        isDestructive
-                        onPress={onResetModalOpen}
-                        isLast
-                        highlightText={searchQuery}
-                      />
-                    )}
-                  </View>
-                </>
-              )}
+              <SettingsNotificationsSection
+                styles={styles}
+                searchQuery={searchQuery}
+                isFirst
+                notificationsEnabled={notificationsEnabled}
+                onNotificationsToggle={onNotificationsToggle}
+                notifMode={notifMode}
+                onNotifModeChange={onNotifModeChange}
+                hour={hour}
+                minute={minute}
+                daySchedules={daySchedules}
+                onDailyTimePress={onDailyTimePress}
+                onToggleDay={onToggleDay}
+                onEditDayTime={onEditDayTime}
+                exactAlarmStatus={exactAlarmStatus}
+                onExactAlarmSettingsPress={onExactAlarmSettingsPress}
+                permissionStatus={permissionStatus}
+                onNotificationPermissionPress={onNotificationPermissionPress}
+                soundEnabled={soundEnabled}
+                onSoundToggle={onSoundToggle}
+              />
+              <SettingsDisplaySection
+                styles={styles}
+                searchQuery={searchQuery}
+                isFirst={false}
+                themeMode={themeMode}
+                onThemeModalOpen={onThemeModalOpen}
+                showSecularDate={showSecularDate}
+                onSecularDateToggle={onSecularDateToggle}
+                showCalendarDaf={showCalendarDaf}
+                onCalendarDafToggle={onCalendarDafToggle}
+                showConfettiPref={showConfettiPref}
+                onConfettiToggle={onConfettiToggle}
+              />
+              <SettingsReaderSection
+                styles={styles}
+                searchQuery={searchQuery}
+                isFirst={false}
+                readerViewMode={readerViewMode}
+                onReaderViewModePress={onReaderViewModePress}
+                showChavrutaNotes={showChavrutaNotes}
+                onChavrutaNotesToggle={onChavrutaNotesToggle}
+                hapticsEnabled={hapticsEnabled}
+                onHapticsToggle={onHapticsToggle}
+                fontSize={fontSize}
+                onIncreaseFontSize={onIncreaseFontSize}
+                onDecreaseFontSize={onDecreaseFontSize}
+              />
+              {onPersonalTrackBannerToggle != null && showPersonalTrackBannerPref != null ? (
+                <SettingsPersonalTrackSection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst={false}
+                  showPersonalTrackBannerPref={showPersonalTrackBannerPref}
+                  onPersonalTrackBannerToggle={onPersonalTrackBannerToggle}
+                />
+              ) : null}
+              <SettingsBackupSection
+                styles={styles}
+                searchQuery={searchQuery}
+                isFirst={false}
+                lastBackupAt={lastBackupAt}
+                onSaveBackupToFile={onSaveBackupToFile}
+                onShareBackup={onShareBackup}
+                onImportBackup={onImportBackup}
+              />
+              <SettingsDataSection
+                styles={styles}
+                searchQuery={searchQuery}
+                isFirst={false}
+                storageSizeFormatted={storageSizeFormatted}
+                onClearCacheOpen={onClearCacheOpen}
+                onResetModalOpen={onResetModalOpen}
+              />
+              <SettingsAboutSection
+                styles={styles}
+                searchQuery={searchQuery}
+                isFirst={false}
+                onGuideModalOpen={onGuideModalOpen}
+                onSupportPress={openSupportEmail}
+                onSupportLongPress={copySupportEmail}
+                onLicensesPress={() => setLicensesVisible(true)}
+                updateAutoPromptEnabled={updateAutoPromptEnabled}
+                onUpdateAutoPromptToggle={onUpdateAutoPromptToggle}
+                onCheckAppUpdate={onCheckAppUpdate}
+                onShowWhatsNew={onShowWhatsNew}
+                onShareDownloadLink={onShareDownloadLink}
+              />
+              {showDevSection ? (
+                <SettingsDevSection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst={false}
+                  scheduledCount={scheduledCount}
+                  onTestNotification={onTestNotification}
+                  onCheckScheduled={onCheckScheduled}
+                  onProbeGithubRelease={onProbeGithubRelease}
+                />
+              ) : null}
             </>
           )}
 
@@ -613,6 +334,11 @@ export default function SettingsScrollContent({
         title="לא נפתחה אפליקציית המייל"
         message="לפעמים המכשיר לא מפנה לאפליקציית דוא״ל. ניתן להעתיק את הכתובת ולכתוב אלינו מכל אפליקציה."
         emphasis={SUPPORT_EMAIL}
+        secondaryLabel="העתק כתובת"
+        onSecondary={() => {
+          void copySupportEmail();
+          setMailHintVisible(false);
+        }}
       />
 
       <ContentLicensesModal

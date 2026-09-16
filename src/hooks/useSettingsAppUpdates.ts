@@ -1,9 +1,10 @@
 import { useCallback } from 'react';
-import { Share } from 'react-native';
+import { Platform, Share } from 'react-native';
 import Constants from 'expo-constants';
 import { useAppUpdateControls } from '../context/AppUpdateProvider';
 import { isUpdateCheckConfigured } from '../services/appUpdate';
 import { getDownloadPageUrl } from '../services/apkInstall';
+import { buildDownloadShareContent } from '../utils/shareDownloadLink';
 import type { SettingsFeedback } from './useSettingsFeedback';
 
 interface UseSettingsAppUpdatesParams {
@@ -57,13 +58,8 @@ export function useSettingsAppUpdates({
   }, [updateCtl, onFeedback]);
 
   const handleShareDownloadLink = useCallback(async () => {
-    const url = getDownloadPageUrl();
     try {
-      await Share.share({
-        title: 'מסע דף',
-        message: `מסע דף: מעקב דף יומי בעברית\n${url}`,
-        url,
-      });
+      await Share.share(buildDownloadShareContent(getDownloadPageUrl(), Platform.OS));
     } catch {}
   }, []);
 

@@ -1,30 +1,23 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { SettingsRecord } from '../db/database';
 import { ThemeMode } from '../theme';
-import { parseDaySchedulesJson } from '../utils/settingsScreen';
 
 interface UseSettingsDisplayPrefsParams {
   settings: SettingsRecord | null;
-  updateNotificationSettings: (
-    hour: number,
-    minute: number,
-    showSecular: boolean,
-    showConfetti: boolean,
-    notificationsEnabled: boolean,
-    notifMode?: string,
-    daySchedules?: string | null,
-  ) => void;
   updateThemeMode: (mode: string) => void;
   setShowCalendarDafEnabled: (enabled: boolean) => void;
   setShowPersonalTrackBannerEnabled: (enabled: boolean) => void;
+  setShowSecularDateEnabled: (enabled: boolean) => void;
+  setShowConfettiEnabled: (enabled: boolean) => void;
 }
 
 export function useSettingsDisplayPrefs({
   settings,
-  updateNotificationSettings,
   updateThemeMode,
   setShowCalendarDafEnabled,
   setShowPersonalTrackBannerEnabled,
+  setShowSecularDateEnabled,
+  setShowConfettiEnabled,
 }: UseSettingsDisplayPrefsParams) {
   const [showSecularDate, setShowSecularDate] = useState(true);
   const [showCalendarDaf, setShowCalendarDaf] = useState(false);
@@ -42,36 +35,20 @@ export function useSettingsDisplayPrefs({
     }
   }, [settings]);
 
-  const persistDisplayFlags = useCallback(
-    (secular: boolean, confetti: boolean) => {
-      if (!settings) return;
-      updateNotificationSettings(
-        settings.notification_hour,
-        settings.notification_minute,
-        secular,
-        confetti,
-        settings.notifications_enabled === 1,
-        settings.notif_mode || 'daily',
-        JSON.stringify(parseDaySchedulesJson(settings.day_schedules)),
-      );
-    },
-    [settings, updateNotificationSettings],
-  );
-
   const handleSecularDateToggle = useCallback(
     (val: boolean) => {
       setShowSecularDate(val);
-      persistDisplayFlags(val, showConfettiPref);
+      setShowSecularDateEnabled(val);
     },
-    [showConfettiPref, persistDisplayFlags],
+    [setShowSecularDateEnabled],
   );
 
   const handleConfettiToggle = useCallback(
     (val: boolean) => {
       setShowConfettiPref(val);
-      persistDisplayFlags(showSecularDate, val);
+      setShowConfettiEnabled(val);
     },
-    [showSecularDate, persistDisplayFlags],
+    [setShowConfettiEnabled],
   );
 
   const handleCalendarDafToggle = useCallback(

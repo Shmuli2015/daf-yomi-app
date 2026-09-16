@@ -164,7 +164,7 @@ export function createResetOptionsModalStyles(theme: Theme) {
       justifyContent: 'center',
     },
     confirmButtonText: {
-      color: '#FFFFFF',
+      color: theme.colors.white,
       fontSize: 15,
       fontWeight: '800',
     },

@@ -26,3 +26,9 @@ export function parseDaySchedulesJson(json: string | null | undefined): DaySched
     return DEFAULT_SCHEDULES;
   }
 }
+
+export function schedulesUseDefaultTimes(schedules: DaySchedule[]): boolean {
+  const defaultHour = DEFAULT_SCHEDULES[0].hour;
+  const defaultMinute = DEFAULT_SCHEDULES[0].minute;
+  return schedules.every(schedule => schedule.hour === defaultHour && schedule.minute === defaultMinute);
+}

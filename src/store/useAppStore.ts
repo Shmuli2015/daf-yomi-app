@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setDismissedHalfDafTip as persistDismissedHalfDafTip, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
+import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setHapticsEnabled as persistHapticsEnabled, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from '../utils/progressCache';
@@ -71,7 +71,14 @@ interface AppState {
   updateReaderFontSize: (size: number) => void;
   setUpdateAutoPromptEnabled: (enabled: boolean) => void;
   setShowCalendarDafEnabled: (enabled: boolean) => void;
+  setShowSecularDateEnabled: (enabled: boolean) => void;
+  setShowConfettiEnabled: (enabled: boolean) => void;
   setShowPersonalTrackBannerEnabled: (enabled: boolean) => void;
+  setReaderViewMode: (mode: string) => void;
+  setShowChavrutaNotesEnabled: (enabled: boolean) => void;
+  setHapticsEnabled: (enabled: boolean) => void;
+  setNotificationSoundEnabled: (enabled: boolean) => void;
+  markBackupExported: () => void;
   dismissHalfDafTip: () => void;
   setCurrentDate: (date: Date) => void;
   importBackup: (data: BackupData, mode: 'merge' | 'replace') => void;
@@ -316,8 +323,43 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().refreshSettings();
   },
 
+  setShowSecularDateEnabled: (enabled: boolean) => {
+    persistShowSecularDate(enabled);
+    get().refreshSettings();
+  },
+
+  setShowConfettiEnabled: (enabled: boolean) => {
+    persistShowConfetti(enabled);
+    get().refreshSettings();
+  },
+
   setShowPersonalTrackBannerEnabled: (enabled: boolean) => {
     persistShowPersonalTrackBanner(enabled);
+    get().refreshSettings();
+  },
+
+  setReaderViewMode: (mode: string) => {
+    persistReaderViewMode(mode);
+    get().refreshSettings();
+  },
+
+  setShowChavrutaNotesEnabled: (enabled: boolean) => {
+    persistShowChavrutaNotes(enabled);
+    get().refreshSettings();
+  },
+
+  setHapticsEnabled: (enabled: boolean) => {
+    persistHapticsEnabled(enabled);
+    get().refreshSettings();
+  },
+
+  setNotificationSoundEnabled: (enabled: boolean) => {
+    persistNotificationSoundEnabled(enabled);
+    get().refreshSettings();
+  },
+
+  markBackupExported: () => {
+    persistLastBackupAt(new Date().toISOString());
     get().refreshSettings();
   },
 

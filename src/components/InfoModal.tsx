@@ -13,6 +13,8 @@ interface InfoModalProps {
   message: string;
   emphasis?: string;
   actionLabel?: string;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   iconName?: InfoModalIconName;
   compact?: boolean;
 }
@@ -24,6 +26,8 @@ export default function InfoModal({
   message,
   emphasis,
   actionLabel = 'הבנתי',
+  secondaryLabel,
+  onSecondary,
   iconName = 'information-circle',
   compact = false,
 }: InfoModalProps) {
@@ -61,9 +65,16 @@ export default function InfoModal({
         ) : null}
 
         {!compact ? (
-          <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8}>
-            <Text style={styles.closeText}>{actionLabel}</Text>
-          </TouchableOpacity>
+          <>
+            {secondaryLabel && onSecondary ? (
+              <TouchableOpacity style={styles.secondaryButton} onPress={onSecondary} activeOpacity={0.8}>
+                <Text style={styles.secondaryText}>{secondaryLabel}</Text>
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.8}>
+              <Text style={styles.closeText}>{actionLabel}</Text>
+            </TouchableOpacity>
+          </>
         ) : null}
       </View>
     </BottomSheetModal>
@@ -133,8 +144,22 @@ const createStyles = (theme: ReturnType<typeof useTheme>, compact: boolean) =>
       alignItems: 'center',
     },
     closeText: {
-      color: '#FFFFFF',
+      color: theme.colors.white,
       fontSize: compact ? 15 : 16,
       fontWeight: '800',
+    },
+    secondaryButton: {
+      width: '100%',
+      paddingVertical: compact ? 11 : 14,
+      borderRadius: compact ? 12 : 14,
+      alignItems: 'center',
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    secondaryText: {
+      color: theme.colors.textPrimary,
+      fontSize: compact ? 15 : 16,
+      fontWeight: '700',
     },
   });

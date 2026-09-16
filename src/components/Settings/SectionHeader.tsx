@@ -45,7 +45,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>, isFirst?: boolean) =>
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(201,150,60,0.2)',
+      borderColor: theme.colors.accentBorder,
     },
     accentBar: {
       width: 4,

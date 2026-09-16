@@ -166,7 +166,7 @@ export function createContentLicensesModalStyles(theme: Theme) {
     closeActionText: {
       fontSize: 15,
       fontWeight: '700',
-      color: '#FFFFFF',
+      color: theme.colors.white,
     },
   });
 }
