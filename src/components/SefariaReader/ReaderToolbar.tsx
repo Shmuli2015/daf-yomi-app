@@ -27,9 +27,9 @@ interface ReaderToolbarProps {
 }
 
 const MODES: Array<{ id: ViewMode; label: string; icon: keyof typeof Ionicons.glyphMap }> = [
-  { id: 'classic', label: 'גמרא', icon: 'book-outline' },
-  { id: 'steinsaltz', label: 'שטיינזלץ', icon: 'reader-outline' },
   { id: 'chavruta', label: 'חברותא', icon: 'people-outline' },
+  { id: 'steinsaltz', label: 'שטיינזלץ', icon: 'reader-outline' },
+  { id: 'classic', label: 'גמרא', icon: 'book-outline' },
 ];
 
 export default function ReaderToolbar({

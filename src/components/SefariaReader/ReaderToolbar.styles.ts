@@ -21,6 +21,7 @@ export function createReaderToolbarStyles(theme: Theme) {
       borderRadius: theme.radius.sm,
       padding: 3,
       overflow: 'hidden',
+      direction: 'ltr',
     },
     modeIndicator: {
       position: 'absolute',
@@ -31,7 +32,7 @@ export function createReaderToolbarStyles(theme: Theme) {
     modeButton: {
       flex: 1,
       minWidth: 0,
-      flexDirection: 'row',
+      flexDirection: 'row-reverse',
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 4,
