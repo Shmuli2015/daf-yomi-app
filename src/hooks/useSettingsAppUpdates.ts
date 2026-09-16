@@ -73,5 +73,6 @@ export function useSettingsAppUpdates({
     handleUpdateAutoPromptToggle,
     handleCheckAppUpdates,
     handleShareDownloadLink,
+    handleShowWhatsNew: updateCtl.hasWhatsNew ? updateCtl.openWhatsNew : undefined,
   };
 }

@@ -139,6 +139,7 @@ export default function SettingsScreen() {
     handleUpdateAutoPromptToggle,
     handleCheckAppUpdates,
     handleShareDownloadLink,
+    handleShowWhatsNew,
   } = useSettingsAppUpdates({
     onFeedback: showFeedback,
     setUpdateAutoPromptEnabled,
@@ -200,6 +201,7 @@ export default function SettingsScreen() {
             updateAutoPromptEnabled={updatesConfigured ? settings.update_auto_prompt_enabled === 1 : undefined}
             onUpdateAutoPromptToggle={updatesConfigured ? handleUpdateAutoPromptToggle : undefined}
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
+            onShowWhatsNew={handleShowWhatsNew}
             onProbeGithubRelease={__DEV__ ? probeGithubRelease : undefined}
             onShareDownloadLink={handleShareDownloadLink}
             storageSizeFormatted={storageSizeFormatted}

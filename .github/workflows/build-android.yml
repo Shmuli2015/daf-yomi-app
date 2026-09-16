@@ -109,6 +109,10 @@ jobs:
           mv "$SRC" "$DEST"
           echo "filename=$DEST" >> "$GITHUB_OUTPUT"
 
+      - name: Write Whats New release body
+        if: steps.check_release.outputs.should_build == 'true'
+        run: node scripts/writeWhatsNewReleaseBody.js
+
       - name: Publish GitHub Release
         if: steps.check_release.outputs.should_build == 'true'
         uses: softprops/action-gh-release@v3
@@ -116,6 +120,7 @@ jobs:
           tag_name: ${{ steps.check_release.outputs.tag }}
           target_commitish: ${{ github.sha }}
           files: ${{ steps.release_apk.outputs.filename }}
+          body_path: whats-new-release-body.md
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

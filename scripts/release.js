@@ -1,5 +1,6 @@
 const { execSync } = require('child_process');
 const path = require('path');
+const { hasWhatsNewEntry } = require('./loadWhatsNewEntries');
 
 const rootDir = path.join(__dirname, '..');
 
@@ -17,6 +18,17 @@ function readVersion() {
   return require('../package.json').version;
 }
 
+function nextSemver(version, releaseType) {
+  const core = String(version).trim().replace(/^v/i, '').split('-')[0] ?? '0.0.0';
+  const parts = core.split('.').map(part => parseInt(part, 10));
+  const major = Number.isFinite(parts[0]) ? parts[0] : 0;
+  const minor = Number.isFinite(parts[1]) ? parts[1] : 0;
+  const patch = Number.isFinite(parts[2]) ? parts[2] : 0;
+  if (releaseType === 'major') return `${major + 1}.0.0`;
+  if (releaseType === 'minor') return `${major}.${minor + 1}.0`;
+  return `${major}.${minor}.${patch + 1}`;
+}
+
 console.log('\x1b[1m🚀 Starting release preparation...\x1b[0m\n');
 
 const status = runQuiet('git status --porcelain');
@@ -30,10 +42,19 @@ if (currentBranch !== 'master') {
   console.warn(`\x1b[33m⚠️  Warning: Currently on branch '${currentBranch}'. Releases are recommended from 'master'.\x1b[0m`);
 }
 
+const releaseType = process.argv[2] || 'patch';
+const currentVersion = readVersion();
+const nextVersion = nextSemver(currentVersion, releaseType);
+if (!hasWhatsNewEntry(nextVersion)) {
+  console.error(
+    `\x1b[31m❌ Error: Add a WHATS_NEW entry for ${nextVersion} in src/data/whatsNew.ts before releasing.\x1b[0m`,
+  );
+  process.exit(1);
+}
+
 console.log('\n\x1b[1m🔍 Running CI checks (typecheck, tests, expo-doctor)...\x1b[0m');
 run('npm run ci');
 
-const releaseType = process.argv[2] || 'patch';
 console.log(`\n\x1b[1m📦 Bumping version (${releaseType})...\x1b[0m`);
 run(`npm version ${releaseType} --no-git-tag-version`);
 

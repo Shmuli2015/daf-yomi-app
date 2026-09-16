@@ -1,12 +1,16 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import InfoModal, { type InfoModalIconName } from '../components/InfoModal';
 import { AppUpdateModal } from '../components/AppUpdateModal';
+import WhatsNewModal from '../components/WhatsNewModal';
 import { useAppUpdateCheck } from '../hooks/useAppUpdateCheck';
+import { useWhatsNewOnLaunch } from '../hooks/useWhatsNewOnLaunch';
 import { probeLatestReleaseForDev } from '../services/appUpdate';
 
 export type AppUpdateContextValue = {
   checkManualAsync: () => Promise<'opened' | 'none' | 'dismissed'>;
   probeGithubRelease: () => Promise<void>;
+  openWhatsNew: () => boolean;
+  hasWhatsNew: boolean;
 };
 
 const AppUpdateContext = createContext<AppUpdateContextValue | null>(null);
@@ -27,12 +31,21 @@ type GithubProbeModalPayload = {
 
 export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
   const {
+    visible: whatsNewVisible,
+    highlights: whatsNewHighlights,
+    version: whatsNewVersion,
+    hasHighlights,
+    onDismiss: onDismissWhatsNew,
+    openFromSettings,
+  } = useWhatsNewOnLaunch();
+
+  const {
     visible,
     offer,
     installedVersion,
     onDismissLater,
     checkManualAsync,
-  } = useAppUpdateCheck();
+  } = useAppUpdateCheck({ pauseAutoCheck: whatsNewVisible });
 
   const [githubProbeModal, setGithubProbeModal] = useState<GithubProbeModalPayload | null>(null);
 
@@ -62,13 +75,21 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
     () => ({
       checkManualAsync,
       probeGithubRelease,
+      openWhatsNew: openFromSettings,
+      hasWhatsNew: hasHighlights,
     }),
-    [checkManualAsync, probeGithubRelease],
+    [checkManualAsync, probeGithubRelease, openFromSettings, hasHighlights],
   );
 
   return (
     <AppUpdateContext.Provider value={value}>
       {children}
+      <WhatsNewModal
+        visible={whatsNewVisible}
+        version={whatsNewVersion}
+        highlights={whatsNewHighlights}
+        onClose={onDismissWhatsNew}
+      />
       <AppUpdateModal
         visible={visible}
         offer={offer}

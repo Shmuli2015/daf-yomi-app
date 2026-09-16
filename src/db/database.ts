@@ -43,6 +43,7 @@ export interface SettingsRecord {
   active_personal_masechet: string | null;
   show_personal_track_banner: number;
   reader_font_size: number;
+  seen_app_version: string | null;
 }
 
 function migrateDailyDafColumns() {
@@ -158,6 +159,9 @@ export function initDB() {
   if (!columns.includes('reader_font_size')) {
     db.execSync('ALTER TABLE settings ADD COLUMN reader_font_size INTEGER DEFAULT 18;');
   }
+  if (!columns.includes('seen_app_version')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN seen_app_version TEXT DEFAULT NULL;');
+  }
 
   db.execSync(`
     INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)
@@ -269,6 +273,7 @@ export function getSettings(): SettingsRecord {
       active_personal_masechet: null,
       show_personal_track_banner: 1,
       reader_font_size: READER_FONT_SIZE_DEFAULT,
+      seen_app_version: null,
     };
   }
   return {
@@ -316,6 +321,10 @@ export function touchLastUpdateCheckAt() {
 
 export function setDismissedUpdateVersion(version: string | null) {
   db.runSync('UPDATE settings SET dismissed_update_version = ? WHERE id = 1', [version]);
+}
+
+export function setSeenAppVersion(version: string) {
+  db.runSync('UPDATE settings SET seen_app_version = ? WHERE id = 1', [version]);
 }
 
 export function setUpdateAutoPromptEnabled(enabled: boolean) {
@@ -440,7 +449,8 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       dismissed_half_daf_tip = ?,
       active_personal_masechet = ?,
       show_personal_track_banner = ?,
-      reader_font_size = ?
+      reader_font_size = ?,
+      seen_app_version = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -460,6 +470,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.active_personal_masechet,
       settings.show_personal_track_banner,
       clampReaderFontSize(settings.reader_font_size),
+      settings.seen_app_version,
     ]
   );
 }
