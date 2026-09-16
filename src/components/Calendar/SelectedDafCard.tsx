@@ -7,6 +7,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { createSelectedDafCardStyles } from './SelectedDafCard.styles';
 import { kinnimTamidCalendarDisplay } from '../../utils/mishnahOnlySefaria';
 import { getHebrewDayEventInfo } from '../../utils/hebrewCalendarEvents';
+import { formatPartialAmudLabel } from '../../utils/dafStatus';
 
 interface SelectedDafCardProps {
   selectedDate: HDate;
@@ -19,6 +20,7 @@ interface SelectedDafCardProps {
     amud: 'a' | 'b';
   };
   studyStatus?: 'none' | 'partial' | 'learned';
+  partialAmud?: 'a' | 'b' | null;
   onToggle?: () => void;
   onLongPressToggle?: () => void;
   onOpenTzuratHadaf?: () => void;
@@ -32,6 +34,7 @@ export default function SelectedDafCard({
   selectedDate,
   dafInfo,
   studyStatus = 'none',
+  partialAmud = null,
   onToggle,
   onLongPressToggle,
   onOpenTzuratHadaf,
@@ -134,6 +137,9 @@ export default function SelectedDafCard({
       </View>
 
       <View style={styles.actions}>
+        {isPartial && (
+          <Text style={styles.partialStatusText}>{formatPartialAmudLabel(partialAmud)}</Text>
+        )}
         <TouchableOpacity
           onPress={onToggle}
           onLongPress={!isLearned ? onLongPressToggle : undefined}

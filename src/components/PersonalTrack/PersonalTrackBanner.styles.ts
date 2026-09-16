@@ -55,7 +55,7 @@ export const createPersonalTrackBannerStyles = (theme: ReturnType<typeof useThem
       gap: 8,
     },
     addBtnText: {
-      color: '#FFF',
+      color: theme.colors.white,
       fontSize: 14,
       fontWeight: '800',
     },
@@ -78,6 +78,7 @@ export const createPersonalTrackBannerStyles = (theme: ReturnType<typeof useThem
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
+      flex: 1,
     },
     iconContainer: {
       width: 36,
@@ -93,49 +94,20 @@ export const createPersonalTrackBannerStyles = (theme: ReturnType<typeof useThem
       color: theme.colors.accent,
       textTransform: 'uppercase',
     },
-    titleWithChevron: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
     masechetTitle: {
       fontSize: 17,
       fontWeight: '900',
       color: theme.colors.textPrimary,
     },
-    actionButtonsGroup: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    changeMasechetBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingVertical: 5,
-      paddingHorizontal: 9,
-      backgroundColor: theme.colors.accentLight + '35',
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: theme.colors.accentBorder,
-    },
-    changeMasechetText: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: theme.colors.accent,
-    },
-    clearMasechetBtn: {
-      padding: 6,
-      backgroundColor: theme.colors.background,
-      borderRadius: 10,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+    collapseBtn: {
+      width: 32,
+      height: 32,
       alignItems: 'center',
       justifyContent: 'center',
     },
     progressSection: {
       gap: 6,
-      marginBottom: 14,
+      marginBottom: 12,
     },
     statsRow: {
       flexDirection: 'row',
@@ -144,9 +116,9 @@ export const createPersonalTrackBannerStyles = (theme: ReturnType<typeof useThem
     },
     percentageText: {
       color: theme.colors.accent,
-      fontSize: 22,
-      fontWeight: '900',
-      lineHeight: 26,
+      fontSize: 16,
+      fontWeight: '800',
+      lineHeight: 20,
     },
     countText: {
       color: theme.colors.textSecondary,
@@ -207,9 +179,27 @@ export const createPersonalTrackBannerStyles = (theme: ReturnType<typeof useThem
       gap: 6,
     },
     quickMarkText: {
-      color: '#FFF',
+      color: theme.colors.white,
       fontSize: 13,
       fontWeight: '700',
+    },
+    compactRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    compactCopy: {
+      flex: 1,
+    },
+    compactMeta: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: theme.colors.textSecondary,
+      marginTop: 2,
+    },
+    expandedBody: {
+      width: '100%',
+      paddingTop: 12,
     },
   });
 

@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
+import { InteractionManager } from 'react-native';
 import { SHAS_MASECHTOT, type Masechet } from '../../data/shas';
 import { getReaderDafim, isAmudAvailable } from '../../utils/shas';
 import { triggerSelection } from '../../utils/haptics';
@@ -6,6 +7,8 @@ import { triggerSelection } from '../../utils/haptics';
 interface UseQuickJumpParams {
   visible: boolean;
   initialMasechetEn?: string;
+  initialDafNum?: number;
+  initialAmud?: 'a' | 'b';
   onNavigate: (params: {
     masechetEn: string;
     masechetHe: string;
@@ -15,7 +18,30 @@ interface UseQuickJumpParams {
   onClose: () => void;
 }
 
-export function useQuickJump({ visible, initialMasechetEn, onNavigate, onClose }: UseQuickJumpParams) {
+function resolveSelection(
+  masechet: Masechet,
+  dafNum?: number,
+  amud?: 'a' | 'b',
+) {
+  const dafim = getReaderDafim(masechet.he);
+  const nextDaf = dafNum != null && dafim.includes(dafNum) ? dafNum : (dafim[0] ?? 2);
+  const nextAmud =
+    amud && isAmudAvailable(masechet.en, nextDaf, amud)
+      ? amud
+      : isAmudAvailable(masechet.en, nextDaf, 'a')
+        ? 'a'
+        : 'b';
+  return { nextDaf, nextAmud };
+}
+
+export function useQuickJump({
+  visible,
+  initialMasechetEn,
+  initialDafNum,
+  initialAmud,
+  onNavigate,
+  onClose,
+}: UseQuickJumpParams) {
   const defaultMasechet = useMemo(() => {
     if (initialMasechetEn) {
       const match = SHAS_MASECHTOT.find((m) => m.en === initialMasechetEn);
@@ -27,29 +53,30 @@ export function useQuickJump({ visible, initialMasechetEn, onNavigate, onClose }
   const [selectedMasechet, setSelectedMasechet] = useState<Masechet>(defaultMasechet);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDaf, setSelectedDaf] = useState(() => {
-    const dafim = getReaderDafim(defaultMasechet.he);
-    return dafim[0] ?? 2;
+    return resolveSelection(defaultMasechet, initialDafNum, initialAmud).nextDaf;
   });
   const [isDafDropdownOpen, setIsDafDropdownOpen] = useState(false);
-  const [amud, setAmud] = useState<'a' | 'b'>(() =>
-    isAmudAvailable(defaultMasechet.en, getReaderDafim(defaultMasechet.he)[0] ?? 2, 'a')
-      ? 'a'
-      : 'b',
+  const [amud, setAmud] = useState<'a' | 'b'>(
+    () => resolveSelection(defaultMasechet, initialDafNum, initialAmud).nextAmud,
   );
-  const hasUserSelectedMasechet = useRef(false);
+  const wasVisibleRef = useRef(visible);
 
-  useEffect(() => {
-    if (visible) return;
-    setSearchQuery('');
-    setIsDafDropdownOpen(false);
-  }, [visible]);
-
-  useEffect(() => {
-    if (hasUserSelectedMasechet.current) return;
-    if (!initialMasechetEn) return;
-    const match = SHAS_MASECHTOT.find((m) => m.en === initialMasechetEn);
-    if (match) setSelectedMasechet(match);
-  }, [initialMasechetEn]);
+  if (visible !== wasVisibleRef.current) {
+    wasVisibleRef.current = visible;
+    if (visible) {
+      const match = initialMasechetEn
+        ? SHAS_MASECHTOT.find((m) => m.en === initialMasechetEn)
+        : undefined;
+      const nextMasechet = match ?? defaultMasechet;
+      const { nextDaf, nextAmud } = resolveSelection(nextMasechet, initialDafNum, initialAmud);
+      setSelectedMasechet(nextMasechet);
+      setSelectedDaf(nextDaf);
+      setAmud(nextAmud);
+    } else {
+      setSearchQuery('');
+      setIsDafDropdownOpen(false);
+    }
+  }
 
   const dafList = useMemo(() => {
     return getReaderDafim(selectedMasechet.he);
@@ -74,11 +101,10 @@ export function useQuickJump({ visible, initialMasechetEn, onNavigate, onClose }
   }, [searchQuery]);
 
   const handleSelectMasechet = useCallback((masechet: Masechet) => {
-    hasUserSelectedMasechet.current = true;
     setSelectedMasechet(masechet);
-    const firstDaf = getReaderDafim(masechet.he)[0] ?? 2;
-    setSelectedDaf(firstDaf);
-    setAmud(isAmudAvailable(masechet.en, firstDaf, 'a') ? 'a' : 'b');
+    const { nextDaf, nextAmud } = resolveSelection(masechet);
+    setSelectedDaf(nextDaf);
+    setAmud(nextAmud);
     setIsDafDropdownOpen(false);
     void triggerSelection();
   }, []);
@@ -87,10 +113,9 @@ export function useQuickJump({ visible, initialMasechetEn, onNavigate, onClose }
     (daf: number) => {
       setSelectedDaf(daf);
       setIsDafDropdownOpen(false);
-      const nextDaf = daf;
-      if (!isAmudAvailable(selectedMasechet.en, nextDaf, 'a')) {
+      if (!isAmudAvailable(selectedMasechet.en, daf, 'a')) {
         setAmud('b');
-      } else if (!isAmudAvailable(selectedMasechet.en, nextDaf, 'b')) {
+      } else if (!isAmudAvailable(selectedMasechet.en, daf, 'b')) {
         setAmud('a');
       }
       void triggerSelection();
@@ -130,7 +155,9 @@ export function useQuickJump({ visible, initialMasechetEn, onNavigate, onClose }
       dafNum: selectedDaf,
       amud: finalAmud,
     });
-    onClose();
+    InteractionManager.runAfterInteractions(() => {
+      onClose();
+    });
   }, [selectedMasechet, selectedDaf, amud, isAmudAAvailable, onNavigate, onClose]);
 
   return {

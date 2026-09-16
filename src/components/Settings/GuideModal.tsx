@@ -351,7 +351,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
 
               <View style={styles.footerTextContainer}>
                 <GuideItemText
-                  text="ניתן לפתוח מדריך זה מחדש בכל עת דרך כפתור [[מדריך לשימוש באפליקציה]] בתחתית מסך הבית או דרך [[מדריך שימוש]] במסך ההגדרות. כמו כן, במסך ההגדרות תוכלו לבדוק אם קיימים עדכונים חדשים, לנהל קבצים שמורים, ולצפות בפרטי הגרסה שבתחתית המסך."
+                  text="ניתן לפתוח מדריך זה מחדש בכל עת דרך [[מדריך שימוש]] במסך ההגדרות. כמו כן, במסך ההגדרות תוכלו לבדוק אם קיימים עדכונים חדשים, לנהל קבצים שמורים, ולצפות בפרטי הגרסה שבתחתית המסך."
                   baseStyle={styles.footerText}
                   boldStyle={styles.footerTextBold}
                   theme={theme}

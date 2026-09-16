@@ -43,3 +43,7 @@ export function statusToPercentage(status: DafStudyStatus): number {
 export function formatProgressCount(value: number): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(1);
 }
+
+export function formatPartialAmudLabel(amud: AmudSide | null | undefined): string {
+  return amud === 'b' ? 'עמוד ב׳ נלמד' : 'עמוד א׳ נלמד';
+}

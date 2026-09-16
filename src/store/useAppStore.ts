@@ -116,33 +116,49 @@ export const useAppStore = create<AppState>((set, get) => ({
   setCurrentDate: (date: Date) => {
     const dateStr = getDateStr(date);
     const dafInfo = getDafByDate(date);
+    const current = get();
 
-    let history = get().history;
+    let history = current.history;
     if (history.length === 0) {
       history = getAllRecords();
-    }
-    
-    const settings = getSettings();
-    const personalTrackRecords = getPersonalTrackRecords();
-    const cache = buildProgressCache(history, isPersonalTrackEnabled(settings) ? personalTrackRecords : []);
-    const record = history.find(r => r.date === dateStr) || null;
-    const activePersonalMasechet = settings?.active_personal_masechet || null;
+      const settings = getSettings();
+      const personalTrackRecords = getPersonalTrackRecords();
+      const cache = buildProgressCache(
+        history,
+        isPersonalTrackEnabled(settings) ? personalTrackRecords : [],
+      );
+      const record = history.find((r) => r.date === dateStr) || null;
+      const activePersonalMasechet = settings?.active_personal_masechet || null;
 
+      set({
+        currentDate: date,
+        todayRecord: record,
+        history,
+        settings,
+        personalTrackRecords,
+        activePersonalMasechet,
+        todayDafText: dafInfo.fullText,
+        todayMasechet: dafInfo.masechet,
+        todayDafNum: dafInfo.daf,
+        todayMasechetEn: dafInfo.masechetEn,
+        todayDafNumValue: dafInfo.dafNum,
+        todayAmud: dafInfo.amud,
+        streak: cache.streak,
+        progressCache: cache,
+      });
+      return;
+    }
+
+    const record = history.find((r) => r.date === dateStr) || null;
     set({
       currentDate: date,
       todayRecord: record,
-      history,
-      settings,
-      personalTrackRecords,
-      activePersonalMasechet,
       todayDafText: dafInfo.fullText,
       todayMasechet: dafInfo.masechet,
       todayDafNum: dafInfo.daf,
       todayMasechetEn: dafInfo.masechetEn,
       todayDafNumValue: dafInfo.dafNum,
       todayAmud: dafInfo.amud,
-      streak: cache.streak,
-      progressCache: cache
     });
   },
 

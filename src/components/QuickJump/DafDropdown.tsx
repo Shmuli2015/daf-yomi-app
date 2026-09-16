@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { View, Text, TouchableOpacity, FlatList, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
@@ -26,6 +26,7 @@ export default function DafDropdown({
 }: DafDropdownProps) {
   const theme = useTheme();
   const styles = useMemo(() => createDafDropdownStyles(theme), [theme]);
+  const listRef = useRef<FlatList<number>>(null);
 
   const dafOptions = useMemo(() => {
     if (dafList && dafList.length > 0) {
@@ -35,16 +36,26 @@ export default function DafDropdown({
     return Array.from({ length: count }, (_, i) => i + 2);
   }, [dafList, maxPages]);
 
-  if (!isOpen) return null;
-
   const selectedIndex = dafOptions.indexOf(selectedDaf);
   const initialIndex = selectedIndex >= 0 ? selectedIndex : 0;
+  const initialOffset = initialIndex * ITEM_HEIGHT;
+
+  const scrollToSelected = useCallback(() => {
+    if (initialIndex <= 0) return;
+    listRef.current?.scrollToOffset({
+      offset: initialOffset,
+      animated: false,
+    });
+  }, [initialIndex, initialOffset]);
+
+  if (!isOpen) return null;
 
   return (
     <>
       <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
       <View style={styles.menuContainer}>
         <FlatList
+          ref={listRef}
           data={dafOptions}
           keyExtractor={(item) => String(item)}
           style={styles.list}
@@ -53,8 +64,9 @@ export default function DafDropdown({
             offset: ITEM_HEIGHT * index,
             index,
           })}
-          initialScrollIndex={Math.max(0, Math.min(dafOptions.length - 1, initialIndex))}
-          onScrollToIndexFailed={() => {}}
+          contentOffset={{ x: 0, y: initialOffset }}
+          onLayout={scrollToSelected}
+          onContentSizeChange={scrollToSelected}
           showsVerticalScrollIndicator
           keyboardShouldPersistTaps="handled"
           renderItem={({ item: daf }) => {

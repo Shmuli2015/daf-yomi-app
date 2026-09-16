@@ -1,18 +1,9 @@
-import {
-  ScrollView,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  useWindowDimensions,
-} from "react-native";
+import React, { useMemo, useCallback } from "react";
+import { ScrollView, View, StyleSheet, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { useAppStore } from "../store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
-import React, { useMemo, useState, useCallback } from "react";
 import { HDate } from "@hebcal/core";
-import { format, subDays, addDays } from "date-fns";
+import { format, subDays } from "date-fns";
 import { he } from "date-fns/locale/he";
 import ConfettiCannon from "react-native-confetti-cannon";
 import { useNavigation } from "@react-navigation/native";
@@ -20,25 +11,28 @@ import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import HomeHeader from "../components/HomeHeader";
 import HomeContent from "../components/HomeContent";
-import ShasBanner from "../components/ShasBanner";
 import PersonalTrackBanner from "../components/PersonalTrackBanner";
 import PersonalMasechetPickerModal from "../components/PersonalMasechetPickerModal";
 import PersonalMasechetDetailModal from "../components/PersonalMasechetDetailModal";
 import QuickJumpModal from "../components/QuickJump/QuickJumpModal";
 import SiyumModal from "../components/Siyum/SiyumModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
-import { getDateStr } from "../utils/dafYomi";
+import YesterdayNudge from "../components/Home/YesterdayNudge";
+import { useAppStore } from "../store/useAppStore";
 import { buildLast7Days } from "../utils/last7Days";
-import { dafYomiDisplayMasechetHe } from "../utils/mishnahOnlySefaria";
+import { dafYomiDisplayMasechetHe, kinnimTamidCalendarDisplay } from "../utils/mishnahOnlySefaria";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { getMasechetDafim } from "../utils/shas";
 import { getStudyStatus, formatProgressCount, getPartialAmud } from "../utils/dafStatus";
 import { getMasechetProgressFromCache } from "../utils/progressCache";
 import { isPersonalTrackEnabled } from "../utils/personalTrack";
-import { triggerImpact, triggerSelection } from "../utils/haptics";
+import { shouldShowYesterdayNudge } from "../utils/yesterdayNudge";
+import { getHebrewDayEventInfo } from "../utils/hebrewCalendarEvents";
+import { useHomeDateNav } from "../hooks/useHomeDateNav";
+import { useHomeMarking } from "../hooks/useHomeMarking";
+import { useHomeScreenModals } from "../hooks/useHomeScreenModals";
 import { useTheme } from "../theme";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
-import { GuideModal } from "../components/Settings/GuideModal";
 import { HALF_DAF_TIP_VERSION } from "../constants/halfDafTip";
 
 type HomeScreenProps = {
@@ -50,33 +44,35 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showGuideModal, setShowGuideModal] = useState(false);
-  const [showPersonalPickerModal, setShowPersonalPickerModal] = useState(false);
-  const [showPersonalDetailModal, setShowPersonalDetailModal] = useState(false);
-  const [showQuickJumpModal, setShowQuickJumpModal] = useState(false);
-  const [showSiyumModal, setShowSiyumModal] = useState(false);
-  const [siyumMasechet, setSiyumMasechet] = useState<{ he: string; pages: number } | null>(null);
-  const [detailMasechetEn, setDetailMasechetEn] = useState<string | null>(null);
 
   const {
-    currentDate,
+    showPersonalPickerModal,
+    showPersonalDetailModal,
+    showQuickJumpModal,
+    detailMasechetEn,
+    nudgeDismissedFor,
+    setDetailMasechetEn,
+    openPersonalPicker,
+    closePersonalPicker,
+    openPersonalDetail,
+    closePersonalDetail,
+    openQuickJump,
+    closeQuickJump,
+    dismissNudgeForDay,
+  } = useHomeScreenModals();
+
+  const {
     todayRecord,
     todayMasechet,
     todayDafNum,
     todayMasechetEn,
     todayDafNumValue,
     todayAmud,
-    loadInitialData,
     streak,
-    toggleAnyDafLearned,
-    setDafStudyStatus,
-    markPartialAmud,
     history,
     settings,
     progressCache,
     isAppReady,
-    setCurrentDate,
     dismissHalfDafTip,
     activePersonalMasechet,
     personalTrackRecords,
@@ -85,23 +81,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     togglePersonalDafLearned,
   } = useAppStore(
     useShallow((s) => ({
-      currentDate: s.currentDate,
       todayRecord: s.todayRecord,
       todayMasechet: s.todayMasechet,
       todayDafNum: s.todayDafNum,
       todayMasechetEn: s.todayMasechetEn,
       todayDafNumValue: s.todayDafNumValue,
       todayAmud: s.todayAmud,
-      loadInitialData: s.loadInitialData,
       streak: s.streak,
-      toggleAnyDafLearned: s.toggleAnyDafLearned,
-      setDafStudyStatus: s.setDafStudyStatus,
-      markPartialAmud: s.markPartialAmud,
       history: s.history,
       settings: s.settings,
       progressCache: s.progressCache,
       isAppReady: s.isAppReady,
-      setCurrentDate: s.setCurrentDate,
       dismissHalfDafTip: s.dismissHalfDafTip,
       activePersonalMasechet: s.activePersonalMasechet,
       personalTrackRecords: s.personalTrackRecords,
@@ -111,14 +101,20 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     })),
   );
 
-  React.useEffect(() => {
-    loadInitialData();
-  }, []);
+  const {
+    currentDate,
+    currentDateStr,
+    todayStr,
+    isToday,
+    isFuture,
+    handlePrevDay,
+    handleNextDay,
+    handleTodayPress,
+  } = useHomeDateNav();
 
   const studyStatus = getStudyStatus(todayRecord);
-  const isLearned = studyStatus === "learned";
   const showHalfDafTip =
-    settings?.dismissed_half_daf_tip !== HALF_DAF_TIP_VERSION && studyStatus === "none";
+    settings?.dismissed_half_daf_tip !== HALF_DAF_TIP_VERSION && studyStatus === "none" && !isFuture;
 
   const masechetStats = useMemo(() => {
     const total = getMasechetDafim(todayMasechet).length;
@@ -128,97 +124,76 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     return { pct, learned: progress.learned, total };
   }, [todayMasechet, progressCache]);
 
+  const {
+    handleToggle,
+    handleMarkFull,
+    handleMarkPartialA,
+    handleMarkPartialB,
+    handleMarkYesterday,
+    showConfetti,
+    setShowConfetti,
+    showSiyumModal,
+    siyumMasechet,
+    closeSiyum,
+  } = useHomeMarking({
+    currentDate,
+    isFuture,
+    studyStatus,
+    todayMasechet,
+    todayDafNum,
+    masechetLearned: masechetStats.learned,
+    masechetTotal: masechetStats.total,
+  });
+
   const displayMasechetHe = useMemo(
     () => dafYomiDisplayMasechetHe(todayMasechet, todayDafNumValue),
     [todayMasechet, todayDafNumValue],
   );
 
-  const handleToggle = useCallback(() => {
-    void triggerImpact("medium");
-    if (!isLearned && studyStatus !== "partial") {
-      if (masechetStats.total > 0 && masechetStats.learned + 1 === masechetStats.total) {
-        setSiyumMasechet({ he: todayMasechet, pages: masechetStats.total });
-        setShowSiyumModal(true);
-      } else if (settings?.show_confetti) {
-        setShowConfetti(true);
-      }
-    }
-    toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
-  }, [isLearned, studyStatus, settings, currentDate, todayMasechet, todayDafNum, toggleAnyDafLearned, masechetStats]);
-
-  const handleMarkFull = useCallback(() => {
-    void triggerImpact("medium");
-    if (studyStatus !== "learned") {
-      if (masechetStats.total > 0 && masechetStats.learned + 1 === masechetStats.total) {
-        setSiyumMasechet({ he: todayMasechet, pages: masechetStats.total });
-        setShowSiyumModal(true);
-      } else if (settings?.show_confetti) {
-        setShowConfetti(true);
-      }
-    }
-    setDafStudyStatus(getDateStr(currentDate), todayMasechet, todayDafNum, "learned");
-  }, [settings, studyStatus, currentDate, todayMasechet, todayDafNum, setDafStudyStatus, masechetStats]);
-
-  const handleMarkPartialA = useCallback(() => {
-    void triggerImpact("light");
-    markPartialAmud(getDateStr(currentDate), todayMasechet, todayDafNum, "a");
-  }, [currentDate, todayMasechet, todayDafNum, markPartialAmud]);
-
-  const handleMarkPartialB = useCallback(() => {
-    void triggerImpact("light");
-    markPartialAmud(getDateStr(currentDate), todayMasechet, todayDafNum, "b");
-  }, [currentDate, todayMasechet, todayDafNum, markPartialAmud]);
+  const sharedSubtitle = useMemo(
+    () => kinnimTamidCalendarDisplay(todayMasechet, todayDafNumValue)?.subtitleHe,
+    [todayMasechet, todayDafNumValue],
+  );
 
   const partialAmud = getPartialAmud(todayRecord);
-
   const hDate = useMemo(() => new HDate(currentDate), [currentDate]);
   const hebrewDateStr = useMemo(() => hDate.renderGematriya(), [hDate]);
   const gregorianDateStr = useMemo(
-    () =>
-      `${format(currentDate, "EEEE", { locale: he })} · ${format(currentDate, "dd/MM/yyyy")}`,
+    () => `${format(currentDate, "EEEE", { locale: he })} · ${format(currentDate, "dd/MM/yyyy")}`,
     [currentDate],
   );
-
-  const handlePrevDay = useCallback(() => {
-    void triggerSelection();
-    setCurrentDate(subDays(currentDate, 1));
-  }, [currentDate, setCurrentDate]);
-
-  const handleNextDay = useCallback(() => {
-    void triggerSelection();
-    setCurrentDate(addDays(currentDate, 1));
-  }, [currentDate, setCurrentDate]);
-
-  const isToday = useMemo(() => {
-    return getDateStr(currentDate) === getDateStr(new Date());
-  }, [currentDate]);
+  const eventName = useMemo(() => getHebrewDayEventInfo(hDate).eventName, [hDate]);
 
   const shasProgress = useMemo(() => {
     return progressCache?.totalShasProgress || { learnedCount: 0, totalPages: 2711, percentage: 0 };
   }, [progressCache]);
 
-  const todayDateStr = getDateStr(new Date());
   const last7Days = useMemo(
     () => buildLast7Days(history, new Date()),
-    [history, todayDateStr],
+    [history, todayStr],
   );
 
+  const showYesterdayNudge =
+    isToday &&
+    nudgeDismissedFor !== todayStr &&
+    shouldShowYesterdayNudge(history, new Date());
+
   const handleOpenTzuratHadaf = useCallback(() => {
-    rootNavigation.navigate('TzuratHadaf', {
+    rootNavigation.navigate("TzuratHadaf", {
       masechetEn: todayMasechetEn,
       masechetHe: todayMasechet,
       dafNum: todayDafNumValue,
-      amud: todayAmud,
+      amud: partialAmud === "a" ? "b" : todayAmud,
     });
-  }, [rootNavigation, todayMasechetEn, todayMasechet, todayDafNumValue, todayAmud]);
+  }, [rootNavigation, todayMasechetEn, todayMasechet, todayDafNumValue, todayAmud, partialAmud]);
 
   const handleOpenPersonalTzuratHadaf = useCallback((masechetEn: string, dafNum: number) => {
-    const match = SHAS_MASECHTOT.find(m => m.en === masechetEn);
-    rootNavigation.navigate('TzuratHadaf', {
+    const match = SHAS_MASECHTOT.find((m) => m.en === masechetEn);
+    rootNavigation.navigate("TzuratHadaf", {
       masechetEn,
       masechetHe: match ? match.he : masechetEn,
       dafNum,
-      amud: 'a',
+      amud: "a",
     });
   }, [rootNavigation]);
 
@@ -229,6 +204,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     });
   }, [navigation, todayMasechetEn]);
 
+  const handleOpenYesterday = useCallback(() => {
+    useAppStore.getState().setCurrentDate(subDays(new Date(), 1));
+  }, []);
+
   if (!isAppReady) {
     return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
   }
@@ -237,79 +216,78 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     <View style={styles.screenOuter}>
       <ScreenTopGradient />
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <HomeHeader
-          gregorianDateStr={gregorianDateStr}
-          hebrewDateStr={hebrewDateStr}
-          todayMasechet={displayMasechetHe}
-          todayDafNum={todayDafNum}
-          onOpenTzuratHadaf={handleOpenTzuratHadaf}
-          onPressMasechet={handleOpenMasechet}
-          onOpenQuickJump={() => setShowQuickJumpModal(true)}
-          studyStatus={studyStatus}
-          handleToggle={handleToggle}
-          onMarkFull={handleMarkFull}
-          onMarkPartialA={handleMarkPartialA}
-          onMarkPartialB={handleMarkPartialB}
-          partialAmud={partialAmud}
-          showHalfDafTip={showHalfDafTip}
-          onDismissHalfDafTip={dismissHalfDafTip}
-          masechetProgressPct={masechetStats.pct}
-          masechetLearnedCountLabel={formatProgressCount(masechetStats.learned)}
-          masechetTotalCount={masechetStats.total}
-          showSecularDate={settings?.show_secular_date === 1}
-          onPrevDay={handlePrevDay}
-          onNextDay={handleNextDay}
-          onTodayPress={() => loadInitialData()}
-          isToday={isToday}
-          currentDate={currentDate}
-        />
-
-
-        {isPersonalTrackEnabled(settings) && (
-          <>
-            <View style={{ height: 20 }} />
-            <PersonalTrackBanner
-              activeMasechetEn={activePersonalMasechet}
-              personalTrackRecords={personalTrackRecords}
-              onSelectMasechetPress={() => setShowPersonalPickerModal(true)}
-              onOpenMasechetDetailPress={() => {
-                setDetailMasechetEn(activePersonalMasechet);
-                setShowPersonalDetailModal(true);
-              }}
-              onToggleDafLearned={togglePersonalDafLearned}
-              onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
-              onClearActiveMasechet={clearActivePersonalMasechet}
-            />
-          </>
-        )}
-
-        <View style={{ height: 20 }} />
-
-        <ShasBanner
-          learnedCount={shasProgress.learnedCount}
-          totalPages={shasProgress.totalPages}
-          percentage={shasProgress.percentage}
-          onPress={() => navigation.navigate("History")}
-        />
-
-        <View style={{ height: 20 }} />
-
-        <HomeContent streak={streak} last7Days={last7Days} hebrewDateStr={hebrewDateStr} />
-
-        <TouchableOpacity
-          onPress={() => setShowGuideModal(true)}
-          style={styles.bottomGuideBtn}
-          activeOpacity={0.75}
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Ionicons name="help-circle-outline" size={18} color={theme.colors.accent} />
-          <Text style={styles.bottomGuideText}>מדריך לשימוש באפליקציה</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {showYesterdayNudge && (
+            <YesterdayNudge
+              onMarkYesterday={handleMarkYesterday}
+              onOpenYesterday={handleOpenYesterday}
+              onDismiss={() => dismissNudgeForDay(todayStr)}
+            />
+          )}
+
+          <HomeHeader
+            gregorianDateStr={gregorianDateStr}
+            hebrewDateStr={hebrewDateStr}
+            eventName={eventName}
+            sharedSubtitle={sharedSubtitle}
+            todayMasechet={displayMasechetHe}
+            todayDafNum={todayDafNum}
+            onOpenTzuratHadaf={handleOpenTzuratHadaf}
+            onPressMasechet={handleOpenMasechet}
+            onOpenQuickJump={openQuickJump}
+            studyStatus={studyStatus}
+            handleToggle={handleToggle}
+            onMarkFull={handleMarkFull}
+            onMarkPartialA={handleMarkPartialA}
+            onMarkPartialB={handleMarkPartialB}
+            partialAmud={partialAmud}
+            showHalfDafTip={showHalfDafTip}
+            onDismissHalfDafTip={dismissHalfDafTip}
+            masechetProgressPct={masechetStats.pct}
+            masechetLearnedCountLabel={formatProgressCount(masechetStats.learned)}
+            masechetTotalCount={masechetStats.total}
+            showSecularDate={settings?.show_secular_date === 1}
+            onPrevDay={handlePrevDay}
+            onNextDay={handleNextDay}
+            onTodayPress={handleTodayPress}
+            isToday={isToday}
+            isFuture={isFuture}
+            currentDate={currentDate}
+          />
+
+          {isPersonalTrackEnabled(settings) && (
+            <>
+              <View style={{ height: 16 }} />
+              <PersonalTrackBanner
+                activeMasechetEn={activePersonalMasechet}
+                personalTrackRecords={personalTrackRecords}
+                hideMarkButton={activePersonalMasechet === todayMasechetEn}
+                onSelectMasechetPress={openPersonalPicker}
+                onOpenMasechetDetailPress={() => openPersonalDetail(activePersonalMasechet)}
+                onToggleDafLearned={togglePersonalDafLearned}
+                onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
+              />
+            </>
+          )}
+
+          <View style={{ height: 16 }} />
+
+          <HomeContent
+            streak={streak}
+            last7Days={last7Days}
+            hebrewDateStr={hebrewDateStr}
+            viewedDateStr={currentDateStr}
+            shasLearnedCount={shasProgress.learnedCount}
+            shasTotalPages={shasProgress.totalPages}
+            shasPercentage={shasProgress.percentage}
+            onPressShas={() => navigation.navigate("History")}
+            onSelectDay={(date) => useAppStore.getState().setCurrentDate(date)}
+          />
+        </ScrollView>
       </SafeAreaView>
 
       <PersonalMasechetPickerModal
@@ -320,11 +298,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           setActivePersonalMasechet(mEn);
           setDetailMasechetEn(mEn);
         }}
-        onOpenMasechetDetail={(mEn) => {
-          setDetailMasechetEn(mEn);
-          setShowPersonalDetailModal(true);
-        }}
-        onClose={() => setShowPersonalPickerModal(false)}
+        onOpenMasechetDetail={(mEn) => openPersonalDetail(mEn)}
+        onClose={closePersonalPicker}
       />
 
       <PersonalMasechetDetailModal
@@ -343,13 +318,15 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         }}
         onToggleDafLearned={togglePersonalDafLearned}
         onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
-        onOpenPicker={() => setShowPersonalPickerModal(true)}
-        onClose={() => setShowPersonalDetailModal(false)}
+        onOpenPicker={openPersonalPicker}
+        onClose={closePersonalDetail}
       />
 
       <QuickJumpModal
         visible={showQuickJumpModal}
         initialMasechetEn={todayMasechetEn}
+        initialDafNum={todayDafNumValue}
+        initialAmud={todayAmud}
         onNavigate={(params) => {
           rootNavigation.navigate("TzuratHadaf", {
             masechetEn: params.masechetEn,
@@ -358,7 +335,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             amud: params.amud,
           });
         }}
-        onClose={() => setShowQuickJumpModal(false)}
+        onClose={closeQuickJump}
       />
 
       {siyumMasechet && (
@@ -366,10 +343,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           visible={showSiyumModal}
           masechetHe={siyumMasechet.he}
           totalPages={siyumMasechet.pages}
-          onClose={() => {
-            setShowSiyumModal(false);
-            setSiyumMasechet(null);
-          }}
+          onClose={closeSiyum}
         />
       )}
 
@@ -383,19 +357,14 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             explosionSpeed={350}
             colors={[
               theme.colors.accent,
-              "#FFFFFF",
-              "#FFD700",
+              theme.colors.white,
+              theme.colors.gold,
               theme.colors.success,
             ]}
             onAnimationEnd={() => setShowConfetti(false)}
           />
         </View>
       )}
-
-      <GuideModal
-        visible={showGuideModal}
-        onClose={() => setShowGuideModal(false)}
-      />
     </View>
   );
 }
@@ -409,28 +378,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     },
     safeArea: { flex: 1, backgroundColor: "transparent" },
     scroll: { flex: 1, backgroundColor: "transparent" },
-    scrollContent: { paddingTop: 24, paddingBottom: 24 },
-    bottomGuideBtn: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-      paddingVertical: 12,
-      paddingHorizontal: 20,
-      marginTop: 12,
-      marginBottom: 16,
-      alignSelf: "center",
-      backgroundColor: theme.colors.surface,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      ...theme.shadow.card,
-    },
-    bottomGuideText: {
-      color: theme.colors.textSecondary,
-      fontSize: 13,
-      fontWeight: "700",
-    },
+    scrollContent: { paddingTop: 20, paddingBottom: 24 },
     confettiContainer: {
       position: "absolute",
       top: 0,

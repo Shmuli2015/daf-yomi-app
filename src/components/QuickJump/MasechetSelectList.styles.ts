@@ -11,6 +11,9 @@ export function createMasechetSelectListStyles(theme: Theme) {
       marginBottom: 14,
       overflow: 'hidden',
     },
+    listInvisible: {
+      opacity: 0,
+    },
     list: {
       flex: 1,
       borderWidth: 1,

@@ -1,15 +1,22 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { TAB_CONFIG } from './tabConfig';
 import TabButton from './TabButton';
+import { subscribeHomeTabFocus } from '../utils/homeTabFocus';
 
 export default function StandardTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  useEffect(() => {
+    return subscribeHomeTabFocus(() => {
+      navigation.navigate('Home');
+    });
+  }, [navigation]);
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom > 0 ? insets.bottom : 12 }]}>

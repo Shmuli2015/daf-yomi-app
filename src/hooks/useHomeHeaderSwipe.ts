@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { PanResponder } from 'react-native';
 import {
   useSharedValue,
@@ -7,6 +7,7 @@ import {
   withSpring,
   withSequence,
   Easing,
+  runOnJS,
 } from 'react-native-reanimated';
 
 interface UseHomeHeaderSwipeParams {
@@ -16,7 +17,6 @@ interface UseHomeHeaderSwipeParams {
   isToday?: boolean;
   currentDate?: Date;
   masechetProgressPct?: number;
-  isMarked?: boolean;
 }
 
 export function useHomeHeaderSwipe({
@@ -26,49 +26,92 @@ export function useHomeHeaderSwipe({
   isToday,
   currentDate,
   masechetProgressPct = 0,
-  isMarked,
 }: UseHomeHeaderSwipeParams) {
   const progressWidth = useSharedValue(0);
-  const pulseScale = useSharedValue(1);
   const todayJumpX = useSharedValue(0);
   const todayJumpOpacity = useSharedValue(1);
   const todayBtnScale = useSharedValue(1);
   const swipeTranslateX = useSharedValue(0);
+  const swipeOpacity = useSharedValue(1);
+  const onPrevDayRef = useRef(onPrevDay);
+  const onNextDayRef = useRef(onNextDay);
+  const isAnimatingRef = useRef(false);
+
+  onPrevDayRef.current = onPrevDay;
+  onNextDayRef.current = onNextDay;
 
   const SWIPE_THRESHOLD = 50;
+  const SLIDE_PX = 28;
 
-  const triggerSwipe = (direction: 'prev' | 'next') => {
-    const slideOut = direction === 'prev' ? -12 : 12;
-    const slideIn = direction === 'prev' ? 12 : -12;
+  const finishSwipe = useCallback(() => {
+    isAnimatingRef.current = false;
+  }, []);
 
-    swipeTranslateX.value = withTiming(
-      slideOut,
-      { duration: 110, easing: Easing.out(Easing.ease) },
-      () => {
-        swipeTranslateX.value = slideIn;
-        swipeTranslateX.value = withTiming(0, { duration: 170, easing: Easing.out(Easing.cubic) });
-      },
-    );
+  const changeDay = useCallback((direction: 'prev' | 'next') => {
     if (direction === 'prev') {
-      onPrevDay?.();
+      onPrevDayRef.current?.();
     } else {
-      onNextDay?.();
+      onNextDayRef.current?.();
     }
-  };
+  }, []);
+
+  const triggerSwipe = useCallback(
+    (direction: 'prev' | 'next') => {
+      if (isAnimatingRef.current) return;
+      isAnimatingRef.current = true;
+
+      const out = direction === 'prev' ? -SLIDE_PX : SLIDE_PX;
+      const inn = direction === 'prev' ? SLIDE_PX : -SLIDE_PX;
+
+      swipeOpacity.value = withTiming(0, { duration: 100, easing: Easing.in(Easing.cubic) });
+      swipeTranslateX.value = withTiming(
+        out,
+        { duration: 100, easing: Easing.in(Easing.cubic) },
+        (finished) => {
+          if (!finished) {
+            swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
+            swipeOpacity.value = withTiming(1, { duration: 120 });
+            runOnJS(finishSwipe)();
+            return;
+          }
+          swipeTranslateX.value = inn;
+          runOnJS(changeDay)(direction);
+          swipeOpacity.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.cubic) });
+          swipeTranslateX.value = withTiming(
+            0,
+            { duration: 180, easing: Easing.out(Easing.cubic) },
+            (done) => {
+              runOnJS(finishSwipe)();
+              if (!done) {
+                swipeTranslateX.value = 0;
+                swipeOpacity.value = 1;
+              }
+            },
+          );
+        },
+      );
+    },
+    [changeDay, finishSwipe, swipeOpacity, swipeTranslateX],
+  );
+
+  const triggerSwipeRef = useRef(triggerSwipe);
+  triggerSwipeRef.current = triggerSwipe;
 
   const panResponder = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gs) =>
-          Math.abs(gs.dx) > 10 && Math.abs(gs.dx) > Math.abs(gs.dy) * 1.5,
+          !isAnimatingRef.current &&
+          Math.abs(gs.dx) > 10 &&
+          Math.abs(gs.dx) > Math.abs(gs.dy) * 1.5,
         onPanResponderMove: (_, gs) => {
           swipeTranslateX.value = gs.dx * 0.15;
         },
         onPanResponderRelease: (_, gs) => {
           if (gs.dx < -SWIPE_THRESHOLD) {
-            triggerSwipe('prev');
+            triggerSwipeRef.current('prev');
           } else if (gs.dx > SWIPE_THRESHOLD) {
-            triggerSwipe('next');
+            triggerSwipeRef.current('next');
           } else {
             swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
           }
@@ -77,24 +120,23 @@ export function useHomeHeaderSwipe({
           swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
         },
       }),
-    [onPrevDay, onNextDay],
+    [swipeTranslateX],
   );
 
   useEffect(() => {
-    progressWidth.value = withTiming(masechetProgressPct, { duration: 1000, easing: Easing.out(Easing.exp) });
-    pulseScale.value = withSpring(1);
-  }, [masechetProgressPct, isMarked]);
+    progressWidth.value = withTiming(masechetProgressPct, {
+      duration: 1000,
+      easing: Easing.out(Easing.exp),
+    });
+  }, [masechetProgressPct, progressWidth]);
 
   const animatedProgressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
   }));
 
-  const animatedButtonStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-  }));
-
   const animatedSwipeStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: swipeTranslateX.value }],
+    opacity: swipeOpacity.value,
   }));
 
   const animatedTodayJumpStyle = useAnimatedStyle(() => ({
@@ -106,13 +148,16 @@ export function useHomeHeaderSwipe({
     transform: [{ scale: todayBtnScale.value }],
   }));
 
-  const handleTodayPress = () => {
-    if (!onTodayPress) return;
+  const handlePrevDay = useCallback(() => {
+    triggerSwipe('prev');
+  }, [triggerSwipe]);
 
-    if (isToday) {
-      onTodayPress();
-      return;
-    }
+  const handleNextDay = useCallback(() => {
+    triggerSwipe('next');
+  }, [triggerSwipe]);
+
+  const handleTodayPress = () => {
+    if (!onTodayPress || isToday) return;
 
     todayBtnScale.value = withSequence(
       withTiming(0.9, { duration: 80, easing: Easing.out(Easing.ease) }),
@@ -136,10 +181,11 @@ export function useHomeHeaderSwipe({
   return {
     panResponder,
     animatedProgressStyle,
-    animatedButtonStyle,
     animatedSwipeStyle,
     animatedTodayJumpStyle,
     animatedTodayBtnStyle,
     handleTodayPress,
+    handlePrevDay,
+    handleNextDay,
   };
 }

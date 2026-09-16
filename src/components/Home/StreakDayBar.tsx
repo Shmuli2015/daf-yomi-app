@@ -1,34 +1,68 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
-import type { HomeContentStyles } from './HomeContent.styles';
+import React, { useEffect } from 'react';
+import { View, Text, TouchableOpacity } from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  Easing,
+  type SharedValue,
+} from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
+import type { HomeStreakCardStyles } from './HomeStreakCard.styles';
 
 interface StreakDayBarProps {
-  showBars: SharedValue<number>;
+  showBars?: SharedValue<number>;
   barHeight: number;
   barColor: string;
   barOpacity: number;
   dayNameHe: string;
   isToday: boolean;
-  styles: HomeContentStyles;
+  isSelected: boolean;
+  isLearned?: boolean;
+  onPress: () => void;
+  styles: HomeStreakCardStyles;
 }
 
 export default function StreakDayBar({
-  showBars,
   barHeight,
   barColor,
   barOpacity,
   dayNameHe,
   isToday,
+  isSelected,
+  isLearned = false,
+  onPress,
   styles,
 }: StreakDayBarProps) {
+  const animatedHeight = useSharedValue(0);
+
+  useEffect(() => {
+    animatedHeight.value = withTiming(barHeight, {
+      duration: 400,
+      easing: Easing.out(Easing.exp),
+    });
+  }, [barHeight]);
+
   const animatedStyle = useAnimatedStyle(() => ({
-    height: showBars.value * barHeight,
+    height: animatedHeight.value,
   }));
 
   return (
-    <View style={styles.barColumn}>
-      <View style={styles.barBg}>
+    <TouchableOpacity
+      style={styles.barColumn}
+      onPress={onPress}
+      activeOpacity={0.75}
+      accessibilityRole="button"
+      accessibilityLabel={`יום ${dayNameHe}`}
+    >
+      <View style={styles.barIndicatorWrapper}>
+        {isLearned ? (
+          <Ionicons name="checkmark" size={11} color={barColor} />
+        ) : (
+          <View style={styles.barEmptyIndicator} />
+        )}
+      </View>
+      <View style={[styles.barBg, isSelected && styles.selectedBarBg]}>
         <Animated.View
           style={[
             styles.barFill,
@@ -40,7 +74,15 @@ export default function StreakDayBar({
           ]}
         />
       </View>
-      <Text style={[styles.dayLabel, isToday && styles.todayLabel]}>{dayNameHe}</Text>
-    </View>
+      <Text
+        style={[
+          styles.dayLabel,
+          isToday && styles.todayLabel,
+          isSelected && !isToday && styles.selectedLabel,
+        ]}
+      >
+        {dayNameHe}
+      </Text>
+    </TouchableOpacity>
   );
 }

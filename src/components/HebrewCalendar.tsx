@@ -167,6 +167,7 @@ export default function HebrewCalendar() {
         selectedDate={selectedDate}
         dafInfo={selectedDafInfo}
         studyStatus={currentStudyStatus}
+        partialAmud={currentPartialAmud}
         onToggle={handleToggleStudy}
         onLongPressToggle={() => setShowMarkMenu(true)}
         onOpenTzuratHadaf={handleOpenTzuratHadaf}

@@ -12,6 +12,7 @@ const OPEN_DURATION = 260;
 const CLOSE_DURATION = 200;
 const OPEN_EASING = Easing.out(Easing.cubic);
 const CLOSE_EASING = Easing.in(Easing.cubic);
+const HEIGHT_EPSILON = 1;
 
 export function useAccordionSlide(isExpanded: boolean) {
   const [isRendered, setIsRendered] = useState(isExpanded);
@@ -46,27 +47,28 @@ export function useAccordionSlide(isExpanded: boolean) {
   }, [isExpanded, animatedHeight, measuredHeight, finishClose]);
 
   const onContentLayout = (event: LayoutChangeEvent) => {
-    const nextHeight = event.nativeEvent.layout.height;
+    const nextHeight = Math.ceil(event.nativeEvent.layout.height);
     if (nextHeight <= 0) {
       return;
     }
 
-    const wasUnmeasured = measuredHeight.value === 0;
+    const previousHeight = measuredHeight.value;
+    if (Math.abs(previousHeight - nextHeight) < HEIGHT_EPSILON) {
+      return;
+    }
+
     measuredHeight.value = nextHeight;
 
     if (!isExpanded) {
       return;
     }
 
-    if (wasUnmeasured || animatedHeight.value === 0) {
+    if (previousHeight === 0 || animatedHeight.value < HEIGHT_EPSILON) {
       animatedHeight.value = withTiming(nextHeight, {
         duration: OPEN_DURATION,
         easing: OPEN_EASING,
       });
-      return;
     }
-
-    animatedHeight.value = nextHeight;
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
