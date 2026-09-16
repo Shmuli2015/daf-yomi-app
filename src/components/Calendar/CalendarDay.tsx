@@ -5,12 +5,14 @@ import { HDate } from '@hebcal/core';
 import { useTheme } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
 import { createCalendarDayStyles } from './CalendarDay.styles';
+import type { AmudSide } from '../../utils/dafStatus';
 
 interface CalendarDayProps {
   hdate: HDate;
   isCurrentMonth: boolean;
   learned: boolean;
   partial?: boolean;
+  partialAmud?: AmudSide | null;
   isToday: boolean;
   isSelected: boolean;
   dafLabel?: string;
@@ -19,7 +21,7 @@ interface CalendarDayProps {
 }
 
 const CalendarDay = React.memo(
-  ({ hdate, isCurrentMonth, learned, partial = false, isToday, isSelected, dafLabel, hasSpecialEvent, onPress }: CalendarDayProps) => {
+  ({ hdate, isCurrentMonth, learned, partial = false, partialAmud = null, isToday, isSelected, dafLabel, hasSpecialEvent, onPress }: CalendarDayProps) => {
     const theme = useTheme();
     const styles = useMemo(() => createCalendarDayStyles(theme), [theme]);
     const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
@@ -115,7 +117,7 @@ const CalendarDay = React.memo(
             ]}
           >
             {partial && !learned && (
-              <View style={styles.halfFill} />
+              <View style={partialAmud === 'b' ? styles.halfFillLeft : styles.halfFillRight} />
             )}
             <Animated.Text style={[styles.dayText, { color: textColor }]}>{gematriya}</Animated.Text>
             {showSecularDate && (
@@ -134,6 +136,7 @@ const CalendarDay = React.memo(
       prevProps.isCurrentMonth === nextProps.isCurrentMonth &&
       prevProps.learned === nextProps.learned &&
       prevProps.partial === nextProps.partial &&
+      prevProps.partialAmud === nextProps.partialAmud &&
       prevProps.isToday === nextProps.isToday &&
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.dafLabel === nextProps.dafLabel &&

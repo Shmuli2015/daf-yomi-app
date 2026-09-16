@@ -147,6 +147,7 @@ export default function HebrewCalendar() {
                 isCurrentMonth={day.isCurrentMonth}
                 learned={day.learned}
                 partial={day.partial}
+                partialAmud={day.partialAmud}
                 isToday={day.isToday}
                 isSelected={isSameDay(day.hdate, selectedDate)}
                 dafLabel={day.dafLabel}

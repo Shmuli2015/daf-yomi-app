@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { Animated, Easing, PanResponder } from 'react-native';
 import { HDate, Locale } from '@hebcal/core';
-import { getStudyStatus } from '../../utils/dafStatus';
+import { getPartialAmud, getStudyStatus, type AmudSide } from '../../utils/dafStatus';
 import { getDafByDate, getDateStr } from '../../utils/dafYomi';
 import { getHebrewDayEventInfo } from '../../utils/hebrewCalendarEvents';
 import { getMonthTractates, formatMonthTractatesSummary, formatMonthTractatesShort } from '../../utils/monthTractates';
@@ -11,6 +11,7 @@ export interface DayData {
   isCurrentMonth: boolean;
   learned: boolean;
   partial: boolean;
+  partialAmud: AmudSide | null;
   isToday: boolean;
   dateKey: string;
   dafLabel?: string;
@@ -118,6 +119,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
         isCurrentMonth: false,
         learned: studyStatus === 'learned',
         partial: studyStatus === 'partial',
+        partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, todayHd),
         dateKey,
         dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
@@ -136,6 +138,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
         isCurrentMonth: true,
         learned: studyStatus === 'learned',
         partial: studyStatus === 'partial',
+        partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, todayHd),
         dateKey,
         dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
@@ -155,6 +158,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
         isCurrentMonth: false,
         learned: studyStatus === 'learned',
         partial: studyStatus === 'partial',
+        partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, new HDate()),
         dateKey,
         dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
