@@ -57,7 +57,7 @@
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization
-- **App updates** (<span dir="rtl" lang="he">עדכוני אפליקציה</span>): **Check for updates** (<span dir="rtl" lang="he">בדוק עדכונים</span>) checks GitHub; when a newer APK exists, a modal offers **Download & install** in-app (Android). **Automatic update notifications** default to **off**. Fallback: **Download in browser** opens the simple [download page](https://shmuli2015.github.io/daf-yomi-app/). Tapping **later** suppresses automatic prompts for that version until a newer release ships. **Share download link** (<span dir="rtl" lang="he">שתף קישור להורדה</span>) sends the install page to friends via the system share sheet.
+- **App updates** (<span dir="rtl" lang="he">עדכוני אפליקציה</span>): **Check for updates** (<span dir="rtl" lang="he">בדוק עדכונים</span>) checks GitHub; when a newer APK exists, a modal offers **Download & install** in-app (Android) and shows Whats New highlights from the GitHub Release body. After install, a **מה חדש** window lists what changed (skipped versions are merged, up to 8 unique bullets). **Automatic update notifications** default to **off**. Fallback: **Download in browser** opens the simple [download page](https://shmuli2015.github.io/daf-yomi-app/). Tapping **later** suppresses automatic prompts for that version until a newer release ships. **Share download link** (<span dir="rtl" lang="he">שתף קישור להורדה</span>) sends the install page to friends via the system share sheet. Settings can reopen **מה חדש בגרסה זו**.
 - **Notifications Master Switch**: Toggle **Daily reminder** (<span dir="rtl" lang="he">תזכורת יומית</span>) on or off; when off, no reminders are scheduled
 - **Daily Notifications**: When reminders are enabled, choose one time for every day or set up per-day behavior
 - **Notification Mode**: **Every day** (<span dir="rtl" lang="he">כל יום</span>) uses a single time for the whole week; **By weekday** (<span dir="rtl" lang="he">לפי ימים</span>) lets you enable or disable each day and set a different time per enabled day
@@ -189,11 +189,14 @@ Three GitHub Actions workflows:
 
 **Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page and in-app updater point at the current APK. Deploys automatically after a successful release-branch APK build (does not run on `master` push because branch protection and merge timing make that unreliable). Use **Run workflow** manually if you change `docs/` without a new APK.
 
+**Whats New notes:** Before each release, add an entry for the **next** version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts) (Hebrew bullets). `npm run release` fails without it. The GitHub Release body and the in-app lists (pre-download modal, post-install **מה חדש**, Settings) come from that file. Unique bullets are capped at 8 overall. After install, skipped versions are merged (newest first) up to that cap. Older GitHub Releases are deleted, so the latest body is built from remaining file entries.
+
 **Maintainer checklist for a release**
 
-1. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the APK build on that branch).
-2. Open a pull request from `release/X.Y.Z` into `master` and merge after the **CI** quality check passes.
-3. Confirm the GitHub Release published with the APK asset named `{releaseApkBasename}-X.Y.Z.apk`, and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
+1. Add a `WHATS_NEW` entry for the next version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts).
+2. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the APK build on that branch).
+3. Open a pull request from `release/X.Y.Z` into `master` and merge after the **CI** quality check passes.
+4. Confirm the GitHub Release published with the APK asset named `{releaseApkBasename}-X.Y.Z.apk`, and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
 
 ---
 

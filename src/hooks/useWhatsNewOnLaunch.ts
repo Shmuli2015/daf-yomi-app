@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import Constants from 'expo-constants';
 import { useAppStore } from '../store/useAppStore';
 import { getSettings, setSeenAppVersion } from '../db/database';
 import {
   getHighlightsForVersion,
+  getHighlightsSince,
   hasWhatsNewForVersion,
   shouldShowWhatsNewOnLaunch,
 } from '../data/whatsNew';
@@ -13,7 +14,6 @@ export function useWhatsNewOnLaunch() {
   const refreshSettings = useAppStore(s => s.refreshSettings);
   const installedVersion = Constants.expoConfig?.version ?? '0.0.0';
   const decidedRef = useRef(false);
-  const pendingStampRef = useRef(false);
 
   const [visible, setVisible] = useState(false);
   const [highlights, setHighlights] = useState<string[]>([]);
@@ -23,16 +23,8 @@ export function useWhatsNewOnLaunch() {
     const seen = getSettings().seen_app_version;
     const shouldShow = shouldShowWhatsNewOnLaunch(seen, installedVersion);
     setVisible(shouldShow);
-    setHighlights(shouldShow ? getHighlightsForVersion(installedVersion) : []);
-    pendingStampRef.current = !shouldShow;
+    setHighlights(shouldShow ? getHighlightsSince(seen, installedVersion) : []);
   }
-
-  useEffect(() => {
-    if (!isAppReady || !pendingStampRef.current) return;
-    pendingStampRef.current = false;
-    setSeenAppVersion(installedVersion);
-    refreshSettings();
-  }, [isAppReady, installedVersion, refreshSettings]);
 
   const onDismiss = useCallback(() => {
     setVisible(false);

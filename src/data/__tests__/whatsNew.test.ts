@@ -1,7 +1,9 @@
 import {
   APP_NOTES_END_MARKER,
   formatWhatsNewReleaseBodyFrom,
+  getAllReleaseHighlightsFromEntries,
   getHighlightsFromEntries,
+  getHighlightsSinceFromEntries,
   parseReleaseNotesBody,
   shouldShowWhatsNewOnLaunch,
   type WhatsNewEntry,
@@ -11,6 +13,10 @@ const sampleEntries: WhatsNewEntry[] = [
   {
     version: '1.2.0',
     highlights: ['תיקון סימון חצי דף', 'שיפור יציבות בהורדת עדכונים'],
+  },
+  {
+    version: '1.1.2',
+    highlights: ['חלון מה חדש אחרי ההתקנה'],
   },
   {
     version: '1.1.1',
@@ -24,11 +30,31 @@ describe('whatsNew', () => {
     expect(getHighlightsFromEntries(sampleEntries, '9.9.9')).toEqual([]);
   });
 
-  it('shows after-install notes only when the installed version changed and has highlights', () => {
-    expect(shouldShowWhatsNewOnLaunch(null, '1.2.0', sampleEntries)).toBe(false);
+  it('shows after-install notes when this version has highlights and was not dismissed yet', () => {
+    expect(shouldShowWhatsNewOnLaunch(null, '1.2.0', sampleEntries)).toBe(true);
     expect(shouldShowWhatsNewOnLaunch('1.2.0', '1.2.0', sampleEntries)).toBe(false);
     expect(shouldShowWhatsNewOnLaunch('1.1.1', '1.2.0', sampleEntries)).toBe(true);
+    expect(shouldShowWhatsNewOnLaunch(null, '1.0.1', sampleEntries)).toBe(false);
     expect(shouldShowWhatsNewOnLaunch('1.0.0', '1.0.1', sampleEntries)).toBe(false);
+  });
+
+  it('merges skipped versions after an upgrade, but only the current version on first install', () => {
+    expect(getHighlightsSinceFromEntries(sampleEntries, '1.1.1', '1.2.0')).toEqual([
+      'תיקון סימון חצי דף',
+      'שיפור יציבות בהורדת עדכונים',
+      'חלון מה חדש אחרי ההתקנה',
+    ]);
+    expect(getHighlightsSinceFromEntries(sampleEntries, null, '1.2.0')).toEqual([
+      'תיקון סימון חצי דף',
+      'שיפור יציבות בהורדת עדכונים',
+    ]);
+    expect(getHighlightsSinceFromEntries(sampleEntries, '1.2.0', '1.2.0')).toEqual([]);
+    expect(getAllReleaseHighlightsFromEntries(sampleEntries)).toEqual([
+      'תיקון סימון חצי דף',
+      'שיפור יציבות בהורדת עדכונים',
+      'חלון מה חדש אחרי ההתקנה',
+      'נקודה אחת',
+    ]);
   });
 
   it('formats a GitHub body that the parser can read back', () => {
