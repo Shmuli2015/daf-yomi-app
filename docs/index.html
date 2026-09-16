@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>מסע דף - אפליקציית מעקב דף יומי לאנדרואיד</title>
     <meta
       name="description"
@@ -35,35 +35,6 @@
             />
             <h1>מסע דף</h1>
             <p class="tagline">מעקב דף יומי. פשוט, בעברית וללא פרסומות</p>
-
-            <ul class="benefits" aria-label="יתרונות האפליקציה">
-              <li class="benefit">
-                <span class="benefit-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-                  </svg>
-                </span>
-                <span>מעקב דף יומי ברור</span>
-              </li>
-              <li class="benefit">
-                <span class="benefit-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M12 6v6l4 2" />
-                  </svg>
-                </span>
-                <span>תזכורות יומיות</span>
-              </li>
-              <li class="benefit">
-                <span class="benefit-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                </span>
-                <span>פרטיות מלאה. הכל נשמר במכשיר</span>
-              </li>
-            </ul>
           </header>
 
           <div class="phone-preview" aria-hidden="true">
@@ -119,10 +90,39 @@
             </a>
             <p class="trust-line">ללא חשבון · ללא מעקב · ללא פרסומות</p>
             <p class="update-hint">
-              כבר מותקנת? עדכונים מתוך <strong class="highlight-text">הגדרות</strong> ➔ <strong class="highlight-text">בדוק עדכונים</strong>
+              כבר מותקנת? עדכונים מתוך <strong class="highlight-text">הגדרות</strong> ← <strong class="highlight-text">בדוק עדכונים</strong>
             </p>
             <p id="status" class="status" aria-live="polite"></p>
           </section>
+
+          <ul class="benefits" aria-label="יתרונות האפליקציה">
+            <li class="benefit">
+              <span class="benefit-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                </svg>
+              </span>
+              <span>מעקב דף יומי ברור</span>
+            </li>
+            <li class="benefit">
+              <span class="benefit-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" />
+                </svg>
+              </span>
+              <span>תזכורות יומיות</span>
+            </li>
+            <li class="benefit">
+              <span class="benefit-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+              </span>
+              <span>פרטיות מלאה. הכל נשמר במכשיר</span>
+            </li>
+          </ul>
         </div>
 
         <div class="page-details">
@@ -131,7 +131,10 @@
             <ol class="steps-list">
               <li class="step">
                 <span class="step-num" aria-hidden="true">1</span>
-                <p class="step-text">לחצו על <strong class="highlight-action">הורדה לאנדרואיד</strong> (אם מופיעה התראה שהקובץ עלול להזיק, אשרו בלחיצה על <strong class="highlight-action">הורדה בכל זאת</strong>)</p>
+                <div class="step-body">
+                  <p class="step-text">לחצו על <strong class="highlight-action">הורדה לאנדרואיד</strong></p>
+                  <p class="step-note">אם מופיעה התראה שהקובץ עלול להזיק, אשרו <strong class="highlight-action">הורדה בכל זאת</strong></p>
+                </div>
               </li>
               <li class="step">
                 <span class="step-num" aria-hidden="true">2</span>
