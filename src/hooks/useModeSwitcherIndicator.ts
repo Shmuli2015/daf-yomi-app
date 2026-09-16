@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { I18nManager, LayoutChangeEvent } from 'react-native';
+import { LayoutChangeEvent } from 'react-native';
 import {
   Easing,
   useAnimatedStyle,
@@ -18,7 +18,6 @@ export function useModeSwitcherIndicator(activeId: string, ids: readonly string[
   const progress = useSharedValue(index);
   const tabCount = useSharedValue(count);
   const [isReady, setIsReady] = useState(false);
-  const isRTL = I18nManager.isRTL;
 
   useEffect(() => {
     tabCount.value = count;
@@ -41,9 +40,6 @@ export function useModeSwitcherIndicator(activeId: string, ids: readonly string[
     const tabW = inner / tabCount.value;
     const offset = SWITCHER_PADDING + progress.value * tabW;
     const opacity = width.value > 0 ? 1 : 0;
-    if (isRTL) {
-      return { width: tabW, right: offset, opacity };
-    }
     return { width: tabW, left: offset, opacity };
   });
 
