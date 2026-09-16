@@ -12,6 +12,7 @@ export interface ContentLicenseEntry {
 }
 
 export const SEFARIA_URL = 'https://www.sefaria.org';
+export const CC_BY_URL = 'https://creativecommons.org/licenses/by/4.0/deed.he';
 export const CC_BY_NC_URL = 'https://creativecommons.org/licenses/by-nc/4.0/deed.he';
 export const CC_BY_NC_SA_25_URL = 'https://creativecommons.org/licenses/by-nc-sa/2.5/deed.he';
 export const KOREN_URL = 'https://korenpub.co.il';
@@ -32,8 +33,31 @@ export const READER_ATTRIBUTION_SHORT =
 export const MISHNAH_ATTRIBUTION_SHORT =
   'טקסט המשנה: נחלת הכלל, מתוך תורת אמת ודפוס וילנא, דרך ספריא';
 
+export const SHEKALIM_ATTRIBUTION_SHORT =
+  'טקסט ירושלמי שקלים: מהדורת היינריך ו. גוגנהיימר, ברישיון CC BY, דרך ספריא';
+
 export const COMMENTARY_ATTRIBUTION_SHORT =
   'ביאור שטיינזלץ: מהדורת ויליאם דייוידסון, הוצאת קורן, ברישיון CC BY-NC, דרך ספריא';
+
+export const SHEKALIM_STEINSALTZ_ATTRIBUTION_SHORT =
+  'ביאור שטיינזלץ לירושלמי שקלים: מהדורת ויליאם דייוידסון דרך ספריא. הרישיון לגרסה זו אינו מאושר בספריא';
+
+export function gemaraAttributionForTref(tref: string): string {
+  if (tref.includes('Mishnah_Kinnim') || tref.includes('Mishnah_Middot')) {
+    return MISHNAH_ATTRIBUTION_SHORT;
+  }
+  if (tref.includes('Jerusalem_Talmud_Shekalim')) {
+    return SHEKALIM_ATTRIBUTION_SHORT;
+  }
+  return READER_ATTRIBUTION_SHORT;
+}
+
+export function steinsaltzAttributionForTref(tref: string): string {
+  if (tref.includes('Jerusalem_Talmud_Shekalim')) {
+    return SHEKALIM_STEINSALTZ_ATTRIBUTION_SHORT;
+  }
+  return COMMENTARY_ATTRIBUTION_SHORT;
+}
 
 export const CHAVRUTA_ATTRIBUTION_SHORT =
   'ביאור חברותא מאת הרב יעקב שולביץ, מתוך מאגר תורת אמת, ברישיון CC BY-NC-SA 2.5';
@@ -64,7 +88,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
     id: 'steinsaltz',
     title: 'ביאור שטיינזלץ',
     attribution:
-      'ביאורו של הרב עדין אבן־ישראל שטיינזלץ מתוך מהדורת ויליאם דייוידסון הדיגיטלית, בהוצאת קורן ירושלים, המתקבל דרך ספריא.',
+      'ביאורו של הרב עדין אבן־ישראל שטיינזלץ על התלמוד הבבלי מתוך מהדורת ויליאם דייוידסון הדיגיטלית, בהוצאת קורן ירושלים, המתקבל דרך ספריא.',
     licenseLabel: 'CC BY-NC',
     links: [
       { label: 'ספריא', url: SEFARIA_URL },
@@ -92,6 +116,28 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
     links: [
       { label: 'ספריא', url: SEFARIA_URL },
       { label: 'הספרייה הלאומית', url: NLI_VILNA_URL },
+    ],
+  },
+  {
+    id: 'shekalim-text',
+    title: 'טקסט ירושלמי שקלים',
+    attribution:
+      'טקסט הירושלמי המנוקד למסכת שקלים מתוך מהדורת היינריך ו. גוגנהיימר, הוצאת דה גרויטר, ברישיון CC BY. הטקסט מתקבל דרך ספריא.',
+    licenseLabel: 'CC BY',
+    links: [
+      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'תנאי הרישיון', url: CC_BY_URL },
+    ],
+  },
+  {
+    id: 'steinsaltz-shekalim',
+    title: 'ביאור שטיינזלץ על ירושלמי שקלים',
+    attribution:
+      'ביאור שטיינזלץ לירושלמי שקלים מתקבל דרך ספריא ממהדורת ויליאם דייוידסון. ספריא אינה מציינת רישיון מאושר לגרסה זו.',
+    licenseLabel: 'לא צוין בספריא',
+    links: [
+      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'הוצאת קורן', url: KOREN_URL },
     ],
   },
   {

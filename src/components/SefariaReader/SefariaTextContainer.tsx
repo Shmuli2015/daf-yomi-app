@@ -15,8 +15,7 @@ import CommentaryBodyText from './CommentaryBodyText';
 import CommentaryBottomSheet from './CommentaryBottomSheet';
 import ReaderAttribution from './ReaderAttribution';
 import {
-  MISHNAH_ATTRIBUTION_SHORT,
-  READER_ATTRIBUTION_SHORT,
+  gemaraAttributionForTref,
   SEFARIA_INDEPENDENCE_NOTE,
 } from '../../data/contentLicenses';
 import ContentLicensesModal from '../Settings/ContentLicensesModal';
@@ -248,12 +247,7 @@ export default function SefariaTextContainer({
         })}
 
         <ReaderAttribution
-          lines={[
-            data.tref.includes('Mishnah_Kinnim') || data.tref.includes('Mishnah_Middot')
-              ? MISHNAH_ATTRIBUTION_SHORT
-              : READER_ATTRIBUTION_SHORT,
-            SEFARIA_INDEPENDENCE_NOTE,
-          ]}
+          lines={[gemaraAttributionForTref(data.tref), SEFARIA_INDEPENDENCE_NOTE]}
           textColor={subTextColor}
           borderColor={borderColor}
           accentColor={accentColor}
