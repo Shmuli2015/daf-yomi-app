@@ -7,7 +7,10 @@ export interface SettingsFeedback {
   emphasis?: string;
   iconName?: InfoModalIconName;
   actionLabel?: string;
+  secondaryLabel?: string;
+  onSecondary?: () => void;
   compact?: boolean;
+  toast?: boolean;
   autoCloseMs?: number;
 }
 

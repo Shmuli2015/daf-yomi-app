@@ -19,8 +19,27 @@ export const KOREN_URL = 'https://korenpub.co.il';
 export const DICTA_URL = 'https://dicta.org.il';
 export const NLI_VILNA_URL = 'https://www.nli.org.il/he/books/NNL_ALEPH001300957';
 export const NLI_YERUSHALMI_PIOTRKOW_URL = 'https://www.nli.org.il/he/books/NNL_ALEPH001886777/NLI';
+export const NLI_GUGGENHEIMER_URL = 'https://www.nli.org.il/he/books/NNL_ALEPH001901012/NLI';
 export const TORAT_EMET_URL = 'https://www.toratemetfreeware.com/';
-export const TORAT_EMET_RIGHTS_URL = 'http://www.toratemetfreeware.com/online/a_rights.html';
+export const TORAT_EMET_RIGHTS_URL = 'https://www.toratemetfreeware.com/online/a_rights.html';
+
+function sefariaVersionsUrl(slug: string): string {
+  return `${SEFARIA_URL}/${slug}?tab=versions`;
+}
+
+export const SEFARIA_GEMARA_VERSIONS_URL = sefariaVersionsUrl('Berakhot');
+export const SEFARIA_STEINSALTZ_VERSIONS_URL = sefariaVersionsUrl('Steinsaltz_on_Berakhot');
+export const SEFARIA_RASHI_VERSIONS_URL = sefariaVersionsUrl('Rashi_on_Berakhot');
+export const SEFARIA_MEFARESH_VERSIONS_URL = sefariaVersionsUrl('Mefaresh_on_Tamid');
+export const SEFARIA_SHEKALIM_VERSIONS_URL = sefariaVersionsUrl('Jerusalem_Talmud_Shekalim');
+export const SEFARIA_STEINSALTZ_SHEKALIM_VERSIONS_URL = sefariaVersionsUrl(
+  'Steinsaltz_on_Jerusalem_Talmud_Shekalim',
+);
+export const SEFARIA_KORBAN_HAEDAH_VERSIONS_URL = sefariaVersionsUrl(
+  'Korban_HaEdah_on_Jerusalem_Talmud_Shekalim',
+);
+export const SEFARIA_MISHNAH_KINNIM_VERSIONS_URL = sefariaVersionsUrl('Mishnah_Kinnim');
+export const SEFARIA_BARTENURA_VERSIONS_URL = sefariaVersionsUrl('Bartenura_on_Mishnah_Kinnim');
 
 export const SEFARIA_BADGE_LIGHT_URL =
   'https://www.sefaria.org/static/img/powered-by-sefaria-badge.png';
@@ -78,7 +97,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'הטקסט הארמי המנוקד מתוך מהדורת ויליאם דייוידסון הדיגיטלית של תלמוד קורן נאה. הניקוד בידי דיקטה, המרכז הישראלי לניתוח טקסטים. הטקסט מתקבל דרך ספריא.',
     licenseLabel: 'CC BY-NC',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_GEMARA_VERSIONS_URL },
       { label: 'הוצאת קורן', url: KOREN_URL },
       { label: 'דיקטה', url: DICTA_URL },
       { label: 'תנאי הרישיון', url: CC_BY_NC_URL },
@@ -91,7 +110,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'ביאורו של הרב עדין אבן־ישראל שטיינזלץ על התלמוד הבבלי מתוך מהדורת ויליאם דייוידסון הדיגיטלית, בהוצאת קורן ירושלים, המתקבל דרך ספריא.',
     licenseLabel: 'CC BY-NC',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_STEINSALTZ_VERSIONS_URL },
       { label: 'הוצאת קורן', url: KOREN_URL },
       { label: 'תנאי הרישיון', url: CC_BY_NC_URL },
     ],
@@ -103,7 +122,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'פירושי רש״י ותוספות מתוך דפוס וילנא, שהוא נחלת הכלל. הטקסט מתקבל דרך ספריא, על בסיס סריקות הספרייה הלאומית.',
     licenseLabel: 'נחלת הכלל',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_RASHI_VERSIONS_URL },
       { label: 'הספרייה הלאומית', url: NLI_VILNA_URL },
     ],
   },
@@ -114,7 +133,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'פירוש המפרש ופירוש הרא״ש על מסכת תמיד מתוך דפוס וילנא, שהוא נחלת הכלל. בדפוס וילנא נדפס המפרש בלי ייחוס; בספריא משוער כי מחברו הוא רבי ברוך בן יצחק. הטקסט מתקבל דרך ספריא, על בסיס סריקות הספרייה הלאומית.',
     licenseLabel: 'נחלת הכלל',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_MEFARESH_VERSIONS_URL },
       { label: 'הספרייה הלאומית', url: NLI_VILNA_URL },
     ],
   },
@@ -125,7 +144,8 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'טקסט הירושלמי המנוקד למסכת שקלים מתוך מהדורת היינריך ו. גוגנהיימר, הוצאת דה גרויטר, ברישיון CC BY. הטקסט מתקבל דרך ספריא.',
     licenseLabel: 'CC BY',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_SHEKALIM_VERSIONS_URL },
+      { label: 'הספרייה הלאומית', url: NLI_GUGGENHEIMER_URL },
       { label: 'תנאי הרישיון', url: CC_BY_URL },
     ],
   },
@@ -136,7 +156,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'ביאור שטיינזלץ לירושלמי שקלים מתקבל דרך ספריא ממהדורת ויליאם דייוידסון. ספריא אינה מציינת רישיון מאושר לגרסה זו.',
     licenseLabel: 'לא צוין בספריא',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_STEINSALTZ_SHEKALIM_VERSIONS_URL },
       { label: 'הוצאת קורן', url: KOREN_URL },
     ],
   },
@@ -147,7 +167,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'פירושי קרבן העדה, פני משה, רידב״ז ושיירי קרבן על ירושלמי שקלים מתוך דפוס פיטרקוב, שהוא נחלת הכלל. הטקסט מתקבל דרך ספריא, על בסיס סריקות הספרייה הלאומית.',
     licenseLabel: 'נחלת הכלל',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_KORBAN_HAEDAH_VERSIONS_URL },
       { label: 'הספרייה הלאומית', url: NLI_YERUSHALMI_PIOTRKOW_URL },
     ],
   },
@@ -158,7 +178,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'טקסט המשנה המנוקד למסכתות קינים ומדות, שאין להן גמרא בבלי, מתוך מאגר תורת אמת ודפוס וילנא, שהוא נחלת הכלל. הטקסט מתקבל דרך ספריא.',
     licenseLabel: 'נחלת הכלל',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_MISHNAH_KINNIM_VERSIONS_URL },
       { label: 'תורת אמת', url: TORAT_EMET_URL },
     ],
   },
@@ -169,7 +189,7 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
       'פירוש ר׳ עובדיה מברטנורא למשנה מתקבל דרך ספריא ממאגר תורת אמת, ברישיון CC BY-NC. פירוש הרמב״ם למשנה הוא נחלת הכלל ומתקבל דרך ספריא.',
     licenseLabel: 'CC BY-NC / נחלת הכלל',
     links: [
-      { label: 'ספריא', url: SEFARIA_URL },
+      { label: 'ספריא', url: SEFARIA_BARTENURA_VERSIONS_URL },
       { label: 'תורת אמת', url: TORAT_EMET_URL },
       { label: 'תנאי הרישיון', url: CC_BY_NC_URL },
     ],

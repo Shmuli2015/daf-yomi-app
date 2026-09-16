@@ -8,6 +8,7 @@ import SettingsLoadingView from '../components/Settings/SettingsLoadingView';
 import SettingsScrollContent from '../components/Settings/SettingsScrollContent';
 import SettingsModals from '../components/Settings/SettingsModals';
 import InfoModal from '../components/InfoModal';
+import Toast from '../components/Toast';
 import { createSettingsScreenStyles } from '../components/Settings/settingsScreenStyles';
 import { useTheme } from '../theme';
 import { useSettingsFeedback } from '../hooks/useSettingsFeedback';
@@ -17,6 +18,8 @@ import { useSettingsBackup } from '../hooks/useSettingsBackup';
 import { useSettingsReset } from '../hooks/useSettingsReset';
 import { useSettingsAppUpdates } from '../hooks/useSettingsAppUpdates';
 import { useStorageCache } from '../hooks/useStorageCache';
+import { useSettingsReaderPrefs } from '../hooks/useSettingsReaderPrefs';
+import { useReaderFontSize } from '../hooks/useReaderFontSize';
 
 export default function SettingsScreen() {
   const theme = useTheme();
@@ -29,6 +32,10 @@ export default function SettingsScreen() {
     setUpdateAutoPromptEnabled,
     setShowCalendarDafEnabled,
     setShowPersonalTrackBannerEnabled,
+    setShowSecularDateEnabled,
+    setShowConfettiEnabled,
+    setNotificationSoundEnabled,
+    markBackupExported,
     importBackup,
     resetDafYomiState,
     resetPersonalTrackState,
@@ -41,6 +48,10 @@ export default function SettingsScreen() {
       setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,
       setShowCalendarDafEnabled: s.setShowCalendarDafEnabled,
       setShowPersonalTrackBannerEnabled: s.setShowPersonalTrackBannerEnabled,
+      setShowSecularDateEnabled: s.setShowSecularDateEnabled,
+      setShowConfettiEnabled: s.setShowConfettiEnabled,
+      setNotificationSoundEnabled: s.setNotificationSoundEnabled,
+      markBackupExported: s.markBackupExported,
       importBackup: s.importBackup,
       resetDafYomiState: s.resetDafYomiState,
       resetPersonalTrackState: s.resetPersonalTrackState,
@@ -50,8 +61,18 @@ export default function SettingsScreen() {
 
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showReaderViewModal, setShowReaderViewModal] = useState(false);
 
   const { feedback, showFeedback, clearFeedback } = useSettingsFeedback();
+  const { fontSize, increase: onIncreaseFontSize, decrease: onDecreaseFontSize } = useReaderFontSize();
+  const {
+    readerViewMode,
+    showChavrutaNotes,
+    hapticsEnabled,
+    handleReaderViewModeSelect,
+    handleChavrutaNotesToggle,
+    handleHapticsToggle,
+  } = useSettingsReaderPrefs();
 
   const {
     showSecularDate,
@@ -66,10 +87,11 @@ export default function SettingsScreen() {
     handleThemeModeSelect,
   } = useSettingsDisplayPrefs({
     settings,
-    updateNotificationSettings,
     updateThemeMode,
     setShowCalendarDafEnabled,
     setShowPersonalTrackBannerEnabled,
+    setShowSecularDateEnabled,
+    setShowConfettiEnabled,
   });
 
   const {
@@ -81,14 +103,20 @@ export default function SettingsScreen() {
     editingDay,
     showTimePicker,
     exactAlarmStatus,
-    isSaving,
+    permissionStatus,
+    soundEnabled,
     scheduledCount,
     handleModeChange,
     handleToggleDay,
     handleEditDayTime,
     handleTimeSave,
+    handleApplyTimeToActiveDays,
+    handleDisableEditingDay,
+    timePickerTitle,
     handleNotificationsToggle,
+    handleSoundToggle,
     handleExactAlarmSettingsPress,
+    handleNotificationPermissionPress,
     handleTimePickerOpen,
     handleTimePickerClose,
     handleTestNotification,
@@ -99,6 +127,7 @@ export default function SettingsScreen() {
     showSecularDate,
     showConfettiPref,
     onFeedback: showFeedback,
+    setNotificationSoundEnabled,
   });
 
   const {
@@ -113,6 +142,7 @@ export default function SettingsScreen() {
   } = useSettingsBackup({
     onFeedback: showFeedback,
     importBackup,
+    markBackupExported,
   });
 
   const {
@@ -171,6 +201,8 @@ export default function SettingsScreen() {
             onNotificationsToggle={handleNotificationsToggle}
             exactAlarmStatus={exactAlarmStatus}
             onExactAlarmSettingsPress={handleExactAlarmSettingsPress}
+            permissionStatus={permissionStatus}
+            onNotificationPermissionPress={handleNotificationPermissionPress}
             notifMode={notifMode}
             onNotifModeChange={handleModeChange}
             hour={hour}
@@ -179,8 +211,19 @@ export default function SettingsScreen() {
             onDailyTimePress={handleTimePickerOpen}
             onToggleDay={handleToggleDay}
             onEditDayTime={handleEditDayTime}
+            soundEnabled={soundEnabled}
+            onSoundToggle={handleSoundToggle}
             themeMode={themeMode}
             onThemeModalOpen={() => setShowThemeModal(true)}
+            readerViewMode={readerViewMode}
+            onReaderViewModePress={() => setShowReaderViewModal(true)}
+            showChavrutaNotes={showChavrutaNotes}
+            onChavrutaNotesToggle={handleChavrutaNotesToggle}
+            hapticsEnabled={hapticsEnabled}
+            onHapticsToggle={handleHapticsToggle}
+            fontSize={fontSize}
+            onIncreaseFontSize={onIncreaseFontSize}
+            onDecreaseFontSize={onDecreaseFontSize}
             onGuideModalOpen={() => setShowGuideModal(true)}
             showSecularDate={showSecularDate}
             onSecularDateToggle={handleSecularDateToggle}
@@ -195,6 +238,7 @@ export default function SettingsScreen() {
             onTestNotification={handleTestNotification}
             onCheckScheduled={handleCheckScheduled}
             onResetModalOpen={openResetModal}
+            lastBackupAt={settings.last_backup_at}
             onSaveBackupToFile={handleSaveBackupToFile}
             onShareBackup={handleShareBackup}
             onImportBackup={handleImportBackupPick}
@@ -206,6 +250,15 @@ export default function SettingsScreen() {
             onShareDownloadLink={handleShareDownloadLink}
             storageSizeFormatted={storageSizeFormatted}
             onClearCacheOpen={openClearCacheModal}
+            onEmailCopied={() =>
+              showFeedback({
+                title: 'הכתובת הועתקה',
+                message: 'אפשר להדביק אותה בכל אפליקציית דוא״ל.',
+                iconName: 'copy-outline',
+                toast: true,
+                autoCloseMs: 2500,
+              })
+            }
           />
         </View>
 
@@ -221,6 +274,9 @@ export default function SettingsScreen() {
           timePickerHour={editingDay !== null ? daySchedules[editingDay].hour : hour}
           timePickerMinute={editingDay !== null ? daySchedules[editingDay].minute : minute}
           onTimeSave={handleTimeSave}
+          timePickerTitle={timePickerTitle}
+          onTimePickerDisable={editingDay !== null ? handleDisableEditingDay : undefined}
+          onTimePickerApplyToActiveDays={editingDay !== null ? handleApplyTimeToActiveDays : undefined}
           showResetModal={showResetModal}
           onResetModalClose={closeResetModal}
           onConfirmReset={handleSelectResetOption}
@@ -238,23 +294,35 @@ export default function SettingsScreen() {
           onBackupImportMerge={handleBackupImportMerge}
           onBackupImportReplace={handleBackupImportReplace}
           onBackupImportCancel={clearBackupImportState}
-          isSaving={isSaving}
           showClearCacheModal={showClearCacheModal}
           clearCacheSizeFormatted={storageSizeFormatted}
           isClearingCache={isClearingStorage}
           onClearCacheConfirm={handleClearCacheConfirm}
           onClearCacheClose={closeClearCacheModal}
+          readerViewMode={readerViewMode}
+          showReaderViewModal={showReaderViewModal}
+          onReaderViewModalClose={() => setShowReaderViewModal(false)}
+          onReaderViewModeSelect={handleReaderViewModeSelect}
         />
 
         <InfoModal
           compact={feedback?.compact}
-          visible={feedback != null}
+          visible={feedback != null && !feedback.toast}
           onClose={clearFeedback}
           title={feedback?.title ?? ''}
           message={feedback?.message ?? ''}
           emphasis={feedback?.emphasis}
           iconName={feedback?.iconName}
           actionLabel={feedback?.actionLabel ?? 'הבנתי'}
+          secondaryLabel={feedback?.secondaryLabel}
+          onSecondary={feedback?.onSecondary}
+        />
+        <Toast
+          visible={feedback?.toast === true}
+          onClose={clearFeedback}
+          title={feedback?.title ?? ''}
+          message={feedback?.message ?? ''}
+          iconName={feedback?.iconName}
         />
       </SafeAreaView>
     </View>

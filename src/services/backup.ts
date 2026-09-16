@@ -129,6 +129,11 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     show_personal_track_banner: num('show_personal_track_banner', 1),
     reader_font_size: clampReaderFontSize(num('reader_font_size', READER_FONT_SIZE_DEFAULT)),
     seen_app_version: nullableStr('seen_app_version'),
+    reader_view_mode: str('reader_view_mode', 'classic'),
+    show_chavruta_notes: num('show_chavruta_notes', 1),
+    haptics_enabled: num('haptics_enabled', 1),
+    last_backup_at: nullableStr('last_backup_at'),
+    notification_sound_enabled: num('notification_sound_enabled', 1),
   };
 }
 

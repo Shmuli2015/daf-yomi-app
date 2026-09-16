@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { fetchSefariaPageText, type SefariaPageData } from '../services/sefariaTextApi';
 import { useChavrutaPage } from './useChavrutaPage';
 import { hasChavrutaSource } from '../data/chavrutaSources';
@@ -17,16 +17,20 @@ import {
 } from '../utils/mishnahOnlySefaria';
 import { triggerSelection } from '../utils/haptics';
 import { useReaderFontSize } from './useReaderFontSize';
+import { useAppStore } from '../store/useAppStore';
+import { clampReaderViewMode } from '../utils/readerViewMode';
 
 export function useDafReader(initialLocation: DafLocation) {
   const [location, setLocation] = useState<DafLocation>(initialLocation);
-  const [viewMode, setViewMode] = useState<ViewMode>('classic');
+  const storedViewMode = useAppStore(state => clampReaderViewMode(state.settings?.reader_view_mode));
+  const storedShowNotes = useAppStore(state => state.settings?.show_chavruta_notes !== 0);
+  const persistViewMode = useAppStore(state => state.setReaderViewMode);
+  const persistShowNotes = useAppStore(state => state.setShowChavrutaNotesEnabled);
   const { fontSize, increase: handleIncreaseFontSize, decrease: handleDecreaseFontSize } =
     useReaderFontSize();
   const [sefariaData, setSefariaData] = useState<SefariaPageData | null>(null);
   const [sefariaLoading, setSefariaLoading] = useState(true);
   const [sefariaError, setSefariaError] = useState<string | null>(null);
-  const [showChavrutaNotes, setShowChavrutaNotes] = useState(true);
 
   const normalizedMasechet = normalizeMasechetEn(location.masechetEn);
   const mishnahOnly = isMishnahOnlySlot(normalizedMasechet, location.dafNum, location.amud);
@@ -38,6 +42,12 @@ export function useDafReader(initialLocation: DafLocation) {
   const chavrutaAvailable = hasChavrutaSource(chavrutaLocation.masechetEn);
   const steinsaltzAvailable = !mishnahOnly;
   const classicTabLabel = mishnahOnly ? 'משנה' : 'גמרא';
+  const viewMode = useMemo<ViewMode>(() => {
+    if (storedViewMode === 'chavruta' && !chavrutaAvailable) return 'classic';
+    if (storedViewMode === 'steinsaltz' && !steinsaltzAvailable) return 'classic';
+    return storedViewMode;
+  }, [storedViewMode, chavrutaAvailable, steinsaltzAvailable]);
+  const showChavrutaNotes = storedShowNotes;
   const chavruta = useChavrutaPage(
     { masechetEn: chavrutaLocation.masechetEn, dafNum: chavrutaLocation.dafNum, amud: chavrutaLocation.amud },
     viewMode === 'chavruta' && chavrutaAvailable,
@@ -68,15 +78,6 @@ export function useDafReader(initialLocation: DafLocation) {
     prefetchAdjacentPages(location);
   }, [location, loadSefariaText, prefetchAdjacentPages]);
 
-  useEffect(() => {
-    if (viewMode === 'chavruta' && !chavrutaAvailable) {
-      setViewMode('classic');
-    }
-    if (viewMode === 'steinsaltz' && !steinsaltzAvailable) {
-      setViewMode('classic');
-    }
-  }, [viewMode, chavrutaAvailable, steinsaltzAvailable]);
-
   const handleToggleViewMode = useCallback((mode: ViewMode) => {
     if (mode === viewMode) {
       return;
@@ -88,12 +89,12 @@ export function useDafReader(initialLocation: DafLocation) {
       return;
     }
     void triggerSelection();
-    setViewMode(mode);
-  }, [viewMode, chavrutaAvailable, steinsaltzAvailable]);
+    persistViewMode(mode);
+  }, [viewMode, chavrutaAvailable, steinsaltzAvailable, persistViewMode]);
 
   const handleToggleNotes = useCallback(() => {
-    setShowChavrutaNotes((prev) => !prev);
-  }, []);
+    persistShowNotes(!showChavrutaNotes);
+  }, [persistShowNotes, showChavrutaNotes]);
 
   const canPrevAmud = getPrevAmud(location) !== null;
   const canNextAmud = getNextAmud(location) !== null;

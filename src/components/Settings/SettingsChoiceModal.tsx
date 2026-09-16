@@ -1,25 +1,34 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { ThemeMode, useTheme } from '../../theme';
+import { useTheme } from '../../theme';
 import BottomSheetModal from '../BottomSheetModal';
 
-type Option = { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap };
+export type SettingsChoiceOption<T extends string> = {
+  value: T;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+};
 
-const OPTIONS: Option[] = [
-  { mode: 'system', label: 'לפי תצוגת המערכת', icon: 'contrast-outline' },
-  { mode: 'dark', label: 'מצב כהה', icon: 'moon-outline' },
-  { mode: 'light', label: 'מצב בהיר', icon: 'sunny-outline' },
-];
-
-interface ThemeModeModalProps {
+type SettingsChoiceModalProps<T extends string> = {
   visible: boolean;
-  value: ThemeMode;
+  title: string;
+  headerIcon: keyof typeof Ionicons.glyphMap;
+  value: T;
+  options: Array<SettingsChoiceOption<T>>;
   onClose: () => void;
-  onSelect: (mode: ThemeMode) => void;
-}
+  onSelect: (value: T) => void;
+};
 
-export function ThemeModeModal({ visible, value, onClose, onSelect }: ThemeModeModalProps) {
+export default function SettingsChoiceModal<T extends string>({
+  visible,
+  title,
+  headerIcon,
+  value,
+  options,
+  onClose,
+  onSelect,
+}: SettingsChoiceModalProps<T>) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -27,40 +36,49 @@ export function ThemeModeModal({ visible, value, onClose, onSelect }: ThemeModeM
     <BottomSheetModal visible={visible} onClose={onClose}>
       <View style={styles.header}>
         <View style={styles.headerIconCircle}>
-          <Ionicons name="color-palette-outline" size={20} color={theme.colors.accent} />
+          <Ionicons name={headerIcon} size={20} color={theme.colors.accent} />
         </View>
-        <Text style={styles.title}>בחירת מצב תצוגה</Text>
-        <TouchableOpacity style={styles.closeBtn} onPress={onClose} activeOpacity={0.7}>
+        <Text style={styles.title}>{title}</Text>
+        <TouchableOpacity
+          style={styles.closeBtn}
+          onPress={onClose}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="סגור"
+        >
           <Ionicons name="close" size={18} color={theme.colors.textMuted} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.optionsList}>
-        {OPTIONS.map((opt) => {
-          const selected = value === opt.mode;
+        {options.map(opt => {
+          const selected = value === opt.value;
           return (
             <TouchableOpacity
-              key={opt.mode}
+              key={opt.value}
               style={[styles.row, selected && styles.rowSelected]}
               onPress={() => {
-                onSelect(opt.mode);
+                onSelect(opt.value);
                 onClose();
               }}
               activeOpacity={0.75}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              accessibilityLabel={opt.label}
             >
               <View style={styles.rowLeft}>
                 <View style={[styles.iconWrap, selected && styles.iconWrapSelected]}>
                   <Ionicons
                     name={opt.icon}
                     size={17}
-                    color={selected ? '#FFFFFF' : theme.colors.accent}
+                    color={selected ? theme.colors.white : theme.colors.accent}
                   />
                 </View>
                 <Text style={[styles.rowLabel, selected && styles.rowLabelSelected]}>{opt.label}</Text>
               </View>
-              {selected && (
+              {selected ? (
                 <Ionicons name="checkmark-circle" size={20} color={theme.colors.accent} />
-              )}
+              ) : null}
             </TouchableOpacity>
           );
         })}
@@ -86,14 +104,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(201,150,60,0.2)',
+      borderColor: theme.colors.accentBorder,
     },
     title: {
       flex: 1,
       fontSize: 16,
       fontWeight: '800',
       color: theme.colors.textPrimary,
-      textAlign: 'start' as any,
+      textAlign: Platform.OS === 'web' ? 'right' : 'left',
+      writingDirection: 'rtl',
     },
     closeBtn: {
       width: 30,

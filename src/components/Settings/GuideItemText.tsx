@@ -25,7 +25,7 @@ export default function GuideItemText({
   const q = searchQuery.trim().toLowerCase();
 
   const highlightStyle = {
-    backgroundColor: 'rgba(201, 150, 60, 0.35)',
+    backgroundColor: theme.colors.accentBorder,
     color: theme.colors.accent,
     fontWeight: '900' as const,
     borderRadius: 4,
@@ -100,7 +100,7 @@ export default function GuideItemText({
             guideBadgeStyles.badgeInline,
             {
               backgroundColor: isMatchedByQuery
-                ? 'rgba(201, 150, 60, 0.4)'
+                ? theme.colors.accentBorder
                 : isGold
                 ? theme.colors.accentLight
                 : theme.colors.surface,
@@ -112,7 +112,7 @@ export default function GuideItemText({
               borderColor: isMatchedByQuery
                 ? theme.colors.accent
                 : isGold
-                ? 'rgba(201, 150, 60, 0.35)'
+                ? theme.colors.accentBorder
                 : theme.colors.border,
             },
           ];

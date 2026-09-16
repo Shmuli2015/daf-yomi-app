@@ -1,8 +1,6 @@
-import React, { useMemo } from 'react';
-import { View, Text } from 'react-native';
-import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
-import { ThemeMode, useTheme } from '../../theme';
-import { ThemeModeModal } from './ThemeModeModal';
+import React from 'react';
+import { ThemeMode } from '../../theme';
+import SettingsChoiceModal from './SettingsChoiceModal';
 import { GuideModal } from './GuideModal';
 import { TimePickerModal } from './TimePickerModal';
 import ResetOptionsModal from './ResetOptionsModal';
@@ -12,8 +10,7 @@ import ResetConfirmModal from './ResetConfirmModal';
 import BackupImportModal from './BackupImportModal';
 import type { BackupPreview } from '../../services/backup';
 import ClearCacheModal from './ClearCacheModal';
-import PulsingBookIcon from './PulsingBookIcon';
-import { createSettingsScreenStyles } from './settingsScreenStyles';
+import type { ViewMode } from '../SefariaReader/ReaderToolbar';
 
 export type SettingsModalsProps = {
   themeMode: ThemeMode;
@@ -27,6 +24,9 @@ export type SettingsModalsProps = {
   timePickerHour: number;
   timePickerMinute: number;
   onTimeSave: (hour: number, minute: number) => void;
+  timePickerTitle?: string;
+  onTimePickerDisable?: () => void;
+  onTimePickerApplyToActiveDays?: (hour: number, minute: number) => void;
   showResetModal: boolean;
   onResetModalClose: () => void;
   onConfirmReset: (type: ResetOptionType) => void;
@@ -44,12 +44,15 @@ export type SettingsModalsProps = {
   onBackupImportMerge: () => void;
   onBackupImportReplace: () => void;
   onBackupImportCancel: () => void;
-  isSaving: boolean;
   showClearCacheModal?: boolean;
   clearCacheSizeFormatted?: string;
   isClearingCache?: boolean;
   onClearCacheConfirm?: () => void;
   onClearCacheClose?: () => void;
+  readerViewMode: ViewMode;
+  showReaderViewModal: boolean;
+  onReaderViewModalClose: () => void;
+  onReaderViewModeSelect: (mode: ViewMode) => void;
 };
 
 export default function SettingsModals({
@@ -64,6 +67,9 @@ export default function SettingsModals({
   timePickerHour,
   timePickerMinute,
   onTimeSave,
+  timePickerTitle,
+  onTimePickerDisable,
+  onTimePickerApplyToActiveDays,
   showResetModal,
   onResetModalClose,
   onConfirmReset,
@@ -81,23 +87,43 @@ export default function SettingsModals({
   onBackupImportMerge,
   onBackupImportReplace,
   onBackupImportCancel,
-  isSaving,
   showClearCacheModal = false,
   clearCacheSizeFormatted = '0 B',
   isClearingCache = false,
   onClearCacheConfirm,
   onClearCacheClose,
+  readerViewMode,
+  showReaderViewModal,
+  onReaderViewModalClose,
+  onReaderViewModeSelect,
 }: SettingsModalsProps) {
-  const theme = useTheme();
-  const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
-
   return (
     <>
-      <ThemeModeModal
+      <SettingsChoiceModal
         visible={showThemeModal}
+        title="בחירת מצב תצוגה"
+        headerIcon="color-palette-outline"
         value={themeMode}
+        options={[
+          { value: 'system', label: 'לפי תצוגת המערכת', icon: 'contrast-outline' },
+          { value: 'dark', label: 'מצב כהה', icon: 'moon-outline' },
+          { value: 'light', label: 'מצב בהיר', icon: 'sunny-outline' },
+        ]}
         onClose={onThemeModalClose}
         onSelect={onThemeModeSelect}
+      />
+      <SettingsChoiceModal
+        visible={showReaderViewModal}
+        title="בחירת מצב קורא"
+        headerIcon="reader-outline"
+        value={readerViewMode}
+        options={[
+          { value: 'classic', label: 'גמרא', icon: 'book-outline' },
+          { value: 'steinsaltz', label: 'שטיינזלץ', icon: 'reader-outline' },
+          { value: 'chavruta', label: 'חברותא', icon: 'people-outline' },
+        ]}
+        onClose={onReaderViewModalClose}
+        onSelect={onReaderViewModeSelect}
       />
       <GuideModal visible={showGuideModal} onClose={onGuideModalClose} />
       <TimePickerModal
@@ -106,6 +132,9 @@ export default function SettingsModals({
         hour={timePickerHour}
         minute={timePickerMinute}
         onSave={onTimeSave}
+        title={timePickerTitle}
+        onDisable={onTimePickerDisable}
+        onApplyToActiveDays={onTimePickerApplyToActiveDays}
       />
       <ResetOptionsModal
         visible={showResetModal}
@@ -139,19 +168,6 @@ export default function SettingsModals({
         onClose={onClearCacheClose || (() => {})}
         onConfirm={onClearCacheConfirm || (() => {})}
       />
-
-      {isSaving && (
-        <Animated.View
-          entering={FadeIn.duration(200)}
-          exiting={FadeOut.duration(200)}
-          style={styles.overlay}
-        >
-          <View style={styles.loaderCard}>
-            <PulsingBookIcon />
-            <Text style={styles.loaderText}>מעדכן הגדרות...</Text>
-          </View>
-        </Animated.View>
-      )}
     </>
   );
 }

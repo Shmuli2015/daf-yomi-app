@@ -5,8 +5,8 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
 import { useAppStore } from '../store/useAppStore';
-import { getDafByDate } from '../utils/dafYomi';
-import { dafYomiDisplayMasechetHe } from '../utils/mishnahOnlySefaria';
+import { getNotificationPermissionStatus } from '../utils/notificationPermission';
+import { getSnoozeReminderCopy } from '../utils/notificationCopy';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
@@ -49,7 +49,7 @@ export function useNotificationsSetup() {
           }
         }
 
-        const { status } = await Notifications.requestPermissionsAsync();
+        const status = await getNotificationPermissionStatus();
         if (cancelled) return;
 
         console.log('Notification permission status:', status);
@@ -65,7 +65,8 @@ export function useNotificationsSetup() {
             s.notification_minute,
             (s.notif_mode as 'daily' | 'custom') || 'daily',
             daySchedules,
-            s.notifications_enabled === 1
+            s.notifications_enabled === 1,
+            { sound: s.notification_sound_enabled !== 0 },
           );
 
           console.log('Notifications scheduled successfully');
@@ -84,13 +85,14 @@ export function useNotificationsSetup() {
             markTodayAsLearned();
           } else if (actionIdentifier === 'later') {
             dismissReminderFromTray(notificationId);
-            const dafInfo = getDafByDate(new Date());
+            const settings = getSettings();
+            const snoozeCopy = getSnoozeReminderCopy(new Date());
             void Notifications.scheduleNotificationAsync({
               identifier: 'later-reminder',
               content: {
-                title: '⏰ תזכורת נוספת',
-                body: `${dafYomiDisplayMasechetHe(dafInfo.masechet, dafInfo.dafNum)} ${dafInfo.daf}, ביקשת שנזכיר לך שוב... ✨`,
-                sound: true,
+                title: snoozeCopy.title,
+                body: snoozeCopy.body,
+                sound: settings.notification_sound_enabled !== 0,
                 categoryIdentifier: 'study-reminder',
               },
               trigger: {

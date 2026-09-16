@@ -13,11 +13,13 @@ import type { SettingsFeedback } from './useSettingsFeedback';
 interface UseSettingsBackupParams {
   onFeedback: (feedback: SettingsFeedback) => void;
   importBackup: (backup: BackupData, mode: 'merge' | 'replace') => void;
+  markBackupExported: () => void;
 }
 
 export function useSettingsBackup({
   onFeedback,
   importBackup,
+  markBackupExported,
 }: UseSettingsBackupParams) {
   const [pendingBackup, setPendingBackup] = useState<BackupData | null>(null);
   const [backupPreview, setBackupPreview] = useState<BackupPreview | null>(null);
@@ -33,6 +35,7 @@ export function useSettingsBackup({
     try {
       const result = await saveBackupToDevice();
       if (result.status === 'success') {
+        markBackupExported();
         onFeedback({
           title: 'הגיבוי נשמר',
           message: 'קובץ הגיבוי נשמר בהצלחה בתיקייה שבחרת.',
@@ -56,7 +59,7 @@ export function useSettingsBackup({
         compact: true,
       });
     }
-  }, [onFeedback]);
+  }, [onFeedback, markBackupExported]);
 
   const handleShareBackup = useCallback(async () => {
     try {
@@ -68,6 +71,8 @@ export function useSettingsBackup({
           iconName: 'alert-circle-outline',
           compact: true,
         });
+      } else if (result === 'success') {
+        markBackupExported();
       }
     } catch {
       onFeedback({
@@ -77,7 +82,7 @@ export function useSettingsBackup({
         compact: true,
       });
     }
-  }, [onFeedback]);
+  }, [onFeedback, markBackupExported]);
 
   const handleImportBackupPick = useCallback(async () => {
     try {
@@ -115,6 +120,7 @@ export function useSettingsBackup({
           (backup.settings.notif_mode as 'daily' | 'custom') || 'daily',
           JSON.parse(backup.settings.day_schedules || '[]'),
           backup.settings.notifications_enabled === 1,
+          { sound: backup.settings.notification_sound_enabled !== 0 },
         );
       }
       onFeedback({

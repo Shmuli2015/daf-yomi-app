@@ -29,7 +29,7 @@ export const createSettingItemStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1,
-      borderColor: 'rgba(201,150,60,0.15)',
+      borderColor: theme.colors.accentBorder,
     },
     textBlock: {
       flex: 1,
@@ -65,7 +65,7 @@ export const createSettingItemStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingVertical: 4,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: 'rgba(201,150,60,0.2)',
+      borderColor: theme.colors.accentBorder,
     },
     valueText: {
       fontSize: 13,

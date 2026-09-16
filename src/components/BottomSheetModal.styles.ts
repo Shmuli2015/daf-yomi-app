@@ -22,7 +22,6 @@ export function createBottomSheetModalStyles(theme: Theme) {
       borderTopLeftRadius: 28,
       borderTopRightRadius: 28,
       paddingHorizontal: 20,
-      paddingBottom: 16,
       borderTopWidth: 1,
       borderLeftWidth: 1,
       borderRightWidth: 1,

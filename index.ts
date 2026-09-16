@@ -2,9 +2,9 @@ import { registerRootComponent } from 'expo';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as TaskManager from 'expo-task-manager';
 import * as Notifications from 'expo-notifications';
-import { getDafByDate } from './src/utils/dafYomi';
 import { initDB } from './src/db/database';
 import { useAppStore } from './src/store/useAppStore';
+import { getSnoozeReminderCopy } from './src/utils/notificationCopy';
 
 import App from './App';
 
@@ -40,12 +40,12 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error, execu
         Notifications.dismissNotificationAsync(notificationId).catch(() => {});
       }
       
-      const dafInfo = getDafByDate(new Date());
+      const snoozeCopy = getSnoozeReminderCopy(new Date());
       Notifications.scheduleNotificationAsync({
         identifier: 'later-reminder',
         content: {
-          title: '⏰ תזכורת נוספת',
-          body: `${dafInfo.masechet} ${dafInfo.daf} - ביקשת שנזכיר לך שוב... ✨`,
+          title: snoozeCopy.title,
+          body: snoozeCopy.body,
           sound: true,
           categoryIdentifier: 'study-reminder',
         },

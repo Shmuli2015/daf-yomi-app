@@ -1,8 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { getDafByDate } from './dafYomi';
-import { dafYomiDisplayMasechetHe } from './mishnahOnlySefaria';
 import { hasExactAlarmPermission, promptForExactAlarmPermission } from './exactAlarm';
+import { getStudyReminderCopy } from './notificationCopy';
 
 export type DaySchedule = { enabled: boolean; hour: number; minute: number };
 
@@ -14,6 +13,7 @@ export const DEFAULT_SCHEDULES: DaySchedule[] = Array.from({ length: 7 }, (_, i)
 
 export type ScheduleNotificationsOptions = {
   promptForExactAlarm?: boolean;
+  sound?: boolean;
 };
 
 export async function scheduleNotifications(
@@ -42,6 +42,7 @@ export async function scheduleNotifications(
     const today = new Date();
     const DAYS_TO_SCHEDULE = 30;
     const notificationPromises: Promise<string>[] = [];
+    const sound = options?.sound !== false;
 
     if (mode === 'daily') {
       for (let dayOffset = 0; dayOffset < DAYS_TO_SCHEDULE; dayOffset++) {
@@ -54,12 +55,12 @@ export async function scheduleNotifications(
           continue;
         }
 
-        const dafInfo = getDafByDate(targetDate);
+        const copy = getStudyReminderCopy(targetDate);
         
         const content: Notifications.NotificationContentInput = {
-          title: '📖 זמן הלימוד היומי הגיע',
-          body: `הדף היומי מחכה לך: ${dafYomiDisplayMasechetHe(dafInfo.masechet, dafInfo.dafNum)} ${dafInfo.daf}. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️`,
-          sound: true,
+          title: copy.title,
+          body: copy.body,
+          sound,
           priority: Notifications.AndroidNotificationPriority.MAX,
           categoryIdentifier: 'study-reminder',
         };
@@ -98,12 +99,12 @@ export async function scheduleNotifications(
           continue;
         }
         
-        const dafInfo = getDafByDate(targetDate);
+        const copy = getStudyReminderCopy(targetDate);
         
         const content: Notifications.NotificationContentInput = {
-          title: '📖 זמן הלימוד היומי הגיע',
-          body: `הדף היומי מחכה לך: ${dafYomiDisplayMasechetHe(dafInfo.masechet, dafInfo.dafNum)} ${dafInfo.daf}. הגיע הזמן לצלול לתוך הים של התלמוד... 🕯️`,
-          sound: true,
+          title: copy.title,
+          body: copy.body,
+          sound,
           priority: Notifications.AndroidNotificationPriority.MAX,
           categoryIdentifier: 'study-reminder',
         };
@@ -153,18 +154,18 @@ export async function getScheduledNotifications() {
   }
 }
 
-export async function sendTestNotification() {
+export async function sendTestNotification(sound = true) {
   try {
     await promptForExactAlarmPermission({ force: true });
 
-    const dafInfo = getDafByDate(new Date());
+    const copy = getStudyReminderCopy(new Date());
     const isAndroid = Platform.OS === 'android';
     
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '🧪 התראת בדיקה',
-        body: `הדף היומי: ${dafYomiDisplayMasechetHe(dafInfo.masechet, dafInfo.dafNum)} ${dafInfo.daf}`,
-        sound: true,
+        body: copy.body,
+        sound,
         priority: Notifications.AndroidNotificationPriority.MAX,
         categoryIdentifier: 'study-reminder',
       },

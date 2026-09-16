@@ -25,6 +25,7 @@ export type Theme = {
     tabBar: string;
     white: string;
     gold: string;
+    overlay: string;
   };
   radius: {
     sm: number;
@@ -64,6 +65,7 @@ export const DARK_THEME: Theme = {
     tabBar: '#18181B',
     white: '#FFFFFF',
     gold: '#FFD700',
+    overlay: 'rgba(0,0,0,0.4)',
   },
   radius: {
     sm: 12,
