@@ -19,6 +19,7 @@ import {
   type DownloadProgress,
 } from '../services/apkInstall';
 import BottomSheetModal from './BottomSheetModal';
+import WhatsNewHighlights from './WhatsNewHighlights';
 
 export type AppUpdateModalProps = {
   visible: boolean;
@@ -148,6 +149,7 @@ export function AppUpdateModal({
             {'\n'}
             גרסה חדשה: {offer.latestVersion}
           </Text>
+          {phase === 'idle' ? <WhatsNewHighlights items={offer.highlights ?? []} /> : null}
 
           {phase === 'downloading' && (
             <>
@@ -241,7 +243,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       color: theme.colors.textMuted,
       textAlign: 'center',
       fontWeight: '600',
-      marginBottom: 18,
+      marginBottom: 12,
     },
     progressTrack: {
       height: 8,

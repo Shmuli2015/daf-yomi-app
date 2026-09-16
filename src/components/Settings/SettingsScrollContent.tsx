@@ -56,6 +56,7 @@ export type SettingsScrollContentProps = {
   updateAutoPromptEnabled?: boolean;
   onUpdateAutoPromptToggle?: (enabled: boolean) => void;
   onCheckAppUpdate?: () => void;
+  onShowWhatsNew?: () => void;
   onProbeGithubRelease?: () => void;
   onShareDownloadLink?: () => void;
   storageSizeFormatted?: string;
@@ -98,6 +99,7 @@ export default function SettingsScrollContent({
   updateAutoPromptEnabled,
   onUpdateAutoPromptToggle,
   onCheckAppUpdate,
+  onShowWhatsNew,
   onProbeGithubRelease,
   onShareDownloadLink,
   storageSizeFormatted = '0 B',
@@ -161,6 +163,7 @@ export default function SettingsScrollContent({
   const sec4Match =
     (updateAutoPromptEnabled != null && matchItem('התראות עדכון אוטומטיות', 'בדיקת עדכונים אוטומטית בפתיחת האפליקציה')) ||
     (onCheckAppUpdate != null && matchItem('בדוק עדכונים', 'מוודא אם יש גרסה חדשה לאפליקציה')) ||
+    (onShowWhatsNew != null && matchItem('מה חדש בגרסה זו', 'רשימת השינויים בגרסה המותקנת')) ||
     (onShareDownloadLink != null && matchItem('שתף קישור להורדה', 'שלח לחברים קישור להתקנת מסע דף'));
 
   const sec5Match =
@@ -433,10 +436,20 @@ export default function SettingsScrollContent({
                             title="בדוק עדכונים"
                             description="מוודא אם יש גרסה חדשה לאפליקציה (כדאי מדי פעם)"
                             onPress={onCheckAppUpdate}
-                            isLast={!onShareDownloadLink}
+                            isLast={!onShowWhatsNew && !onShareDownloadLink}
                             highlightText={searchQuery}
                           />
                         )}
+                        {onShowWhatsNew && matchItem('מה חדש בגרסה זו', 'רשימת השינויים בגרסה המותקנת') ? (
+                          <SettingItem
+                            icon="sparkles-outline"
+                            title="מה חדש בגרסה זו"
+                            description="רשימת השינויים בגרסה המותקנת"
+                            onPress={onShowWhatsNew}
+                            isLast={!onShareDownloadLink}
+                            highlightText={searchQuery}
+                          />
+                        ) : null}
                         {onShareDownloadLink && matchItem('שתף קישור להורדה') ? (
                           <SettingItem
                             icon="share-social-outline"

@@ -1,4 +1,5 @@
 import Constants from 'expo-constants';
+import { parseReleaseNotesBody } from '../data/whatsNew';
 
 export type AppExtraConfig = {
   githubOwner?: string;
@@ -13,6 +14,7 @@ export type LatestReleaseOffer = {
   releasePageUrl: string;
   rawTag: string;
   apkFileName: string;
+  highlights: string[];
 };
 
 type GithubAsset = {
@@ -22,6 +24,7 @@ type GithubAsset = {
 
 type GithubReleaseJson = {
   tag_name?: string;
+  body?: string;
   assets?: GithubAsset[];
 };
 
@@ -152,7 +155,14 @@ export async function resolveUpdateOfferIfAny(installedVersion: string): Promise
     });
   }
 
-  return { latestVersion, downloadUrl, releasePageUrl, rawTag: tag, apkFileName };
+  return {
+    latestVersion,
+    downloadUrl,
+    releasePageUrl,
+    rawTag: tag,
+    apkFileName,
+    highlights: parseReleaseNotesBody(release.body),
+  };
 }
 
 export async function probeLatestReleaseForDev(): Promise<{

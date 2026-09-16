@@ -19,9 +19,10 @@ function shouldSkipDueToDismissed(remote: string, dismissed: string | null | und
 
 export type UpdateCheckRunResult = 'opened' | 'none' | 'dismissed';
 
-export function useAppUpdateCheck() {
+export function useAppUpdateCheck(options?: { pauseAutoCheck?: boolean }) {
   const isAppReady = useAppStore(s => s.isAppReady);
   const refreshSettings = useAppStore(s => s.refreshSettings);
+  const pauseAutoCheck = options?.pauseAutoCheck ?? false;
 
   const [visible, setVisible] = useState(false);
   const [offer, setOffer] = useState<LatestReleaseOffer | null>(null);
@@ -70,22 +71,22 @@ export function useAppUpdateCheck() {
   );
 
   const kickAutoRemoteCheck = useCallback(() => {
-    if (!isAppReady || !isUpdateCheckConfigured()) return;
+    if (!isAppReady || pauseAutoCheck || !isUpdateCheckConfigured()) return;
     if ((getSettings().update_auto_prompt_enabled ?? 1) !== 1) return;
     const now = Date.now();
     if (now - lastAutoRunAtRef.current < AUTO_CHECK_MIN_GAP_MS) return;
     lastAutoRunAtRef.current = now;
     void runRemoteCheck(false);
-  }, [isAppReady, runRemoteCheck]);
+  }, [isAppReady, pauseAutoCheck, runRemoteCheck]);
 
   useEffect(() => {
-    if (!isAppReady) return;
+    if (!isAppReady || pauseAutoCheck) return;
     kickAutoRemoteCheck();
     const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
       if (next === 'active') kickAutoRemoteCheck();
     });
     return () => sub.remove();
-  }, [isAppReady, kickAutoRemoteCheck]);
+  }, [isAppReady, pauseAutoCheck, kickAutoRemoteCheck]);
 
   const checkManualAsync = useCallback(() => runRemoteCheck(true), [runRemoteCheck]);
 

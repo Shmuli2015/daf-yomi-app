@@ -128,6 +128,7 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     active_personal_masechet: nullableStr('active_personal_masechet'),
     show_personal_track_banner: num('show_personal_track_banner', 1),
     reader_font_size: clampReaderFontSize(num('reader_font_size', READER_FONT_SIZE_DEFAULT)),
+    seen_app_version: nullableStr('seen_app_version'),
   };
 }
 
