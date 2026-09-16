@@ -12,8 +12,8 @@ import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import CommentaryBodyText from './CommentaryBodyText';
 import ReaderAttribution from './ReaderAttribution';
 import {
-  COMMENTARY_ATTRIBUTION_SHORT,
   SEFARIA_INDEPENDENCE_NOTE,
+  steinsaltzAttributionForTref,
 } from '../../data/contentLicenses';
 import type { SefariaPageData } from '../../services/sefariaTextApi';
 import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
@@ -140,7 +140,7 @@ export default function SteinsaltzTextContainer({
         })}
 
         <ReaderAttribution
-          lines={[COMMENTARY_ATTRIBUTION_SHORT, SEFARIA_INDEPENDENCE_NOTE]}
+          lines={[steinsaltzAttributionForTref(data.tref), SEFARIA_INDEPENDENCE_NOTE]}
           textColor={theme.colors.textMuted}
           accentColor={accentColor}
           onPress={() => setLicensesVisible(true)}

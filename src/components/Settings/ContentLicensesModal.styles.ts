@@ -91,6 +91,7 @@ export function createContentLicensesModalStyles(theme: Theme) {
       writingDirection: 'rtl',
     },
     licenseBadge: {
+      flexShrink: 0,
       backgroundColor: theme.colors.accentLight,
       borderWidth: 1,
       borderColor: theme.colors.accentBorder,
