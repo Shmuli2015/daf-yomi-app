@@ -6,7 +6,17 @@ export type WhatsNewEntry = {
   highlights: string[];
 };
 
-export const WHATS_NEW: WhatsNewEntry[] = [];
+export const WHATS_NEW: WhatsNewEntry[] = [
+  {
+    version: '1.1.2',
+    highlights: [
+      'רואים מה השתנה לפני הורדת העדכון',
+      'חלון מה חדש אחרי ההתקנה',
+      'אפשר לפתוח שוב מההגדרות',
+      'תיקון יישור בקריאת הגמרא',
+    ],
+  },
+];
 
 export function normalizeWhatsNewVersion(raw: string): string {
   return raw.trim().replace(/^v/i, '');
