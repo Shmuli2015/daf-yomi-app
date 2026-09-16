@@ -14,6 +14,7 @@
 
 ### 🏠 Home Dashboard
 - **Day Navigation**: Prev/next arrows on the dashboard move between calendar days for that day's Daf; tap the dates to jump back to today, or use **Return to today** (<span dir="rtl" lang="he">חזור להיום</span>) when you have moved away from the real calendar date
+- **Yesterday's Daf Catch-up Nudge** (<span dir="rtl" lang="he">שכחת לסמן אתמול?</span>): When opening the app on the current day, if yesterday's Daf was not yet marked as learned, a top reminder banner appears. Tap **Mark** (<span dir="rtl" lang="he">סמן</span>) to quickly mark yesterday's Daf as learned without leaving today's view, tap the banner to navigate to yesterday, or dismiss it for the day
 - **Quick Jump to Daf** (<span dir="rtl" lang="he">קפיצה מהירה</span>): Header shortcut to jump directly to any tractate and page in Shas. Search by selecting a tractate and page from a searchable dropdown, or type the page number using numerals or Hebrew gematria (e.g. "סד", "קכ", "12"). Direct one-tap jump to the in-app reader or Sefaria
 - **Today's Daf Display**: Shows the Daf Yomi for the selected day (tractate and page) with both Hebrew and Gregorian dates (Gregorian respects the visibility toggle)
 - **Learning Tracker**: Tap **Mark as learned** (<span dir="rtl" lang="he">סמן כנלמד</span>) for a full page; **long press** opens a menu for **full page**, **half page (amud א)**, or **half page (amud ב)**. When half-done, the control shows **I finished the page!** (<span dir="rtl" lang="he">סיימתי את הדף!</span>); tap to upgrade to full. When fully learned, it shows **Learned** (<span dir="rtl" lang="he">אשריך! הדף נלמד</span>) and asks for confirmation before unsetting
@@ -24,10 +25,10 @@
 - **In-app Daf Reader** (<span dir="rtl" lang="he">לימוד הדף</span>): Three tabs: vocalized **Gemara** from Sefaria with **Rashi** and **Tosafot** in a bottom sheet, a continuous **Steinsaltz** commentary that weaves the Gemara into the biur, and **Chavruta**. Includes amud/daf navigation, **fullscreen mode**, **swipe gestures**, **mark as learned** header control, font size controls (`+`/`-`), and local text caching
 - **Study Link Buttons**: In Settings, choose to show **Sefaria only**, **the in-app reader only**, or **both** on Home and Calendar
 - **Streak Counter**: Track your consecutive days of learning to maintain momentum; half pages **do not break** the streak but **do not add** a day either
-- **7-Day Progress Overview**: In-app mini chart of the last seven days: tall bar = full page, medium bar = half page, short bar = not learned
+- **Interactive 7-Day Progress Chart**: In-app mini chart of the last seven days: tall bar = full page, medium bar = half page, short bar = not learned. Learned days show a checkmark indicator. Tap any day's bar to jump directly to that date's page, with the active day highlighted
 - **Share progress as an image** (<span dir="rtl" lang="he">שיתוף תמונה</span>): On the streak card, tap the **share** (<span dir="rtl" lang="he">שתף</span>) control to open a preview, then **Share image** (<span dir="rtl" lang="he">שתף תמונה</span>) to export a square graphic (streak, Hebrew date, app branding) for WhatsApp Status, Instagram Stories, etc. (requires a **development or production build**, not Expo Go; see Tech Stack)
 - **Personal Track Banner & Quick Overview Card** (<span dir="rtl" lang="he">מסלול אישי</span>): Track self-paced tractate study separate from the Daf Yomi cycle. Set an active tractate, view an overview card with real-time statistics (pages completed, progress percentage, next page), mark the next page directly with one tap, or open the full tractate daf grid
-- **Shas Progress Banner**: Overall progress across Shas; **tap the banner** to open the History screen for full tractate details
+- **Shas Progress Card** (<span dir="rtl" lang="he">כרטיס התקדמות הש״ס</span>): Overall progress across Shas with animated progress bar and page count; tap the card to open the History screen for full tractate details
 - **Confetti Celebration**: Optional festive animation when marking a Daf as learned
 
 
@@ -53,7 +54,7 @@
 - **Navigation**: Month arrows, **swipe left/right** to change months, and a dedicated **Return to today** (<span dir="rtl" lang="he">היום</span>) button to jump back to the current date from any month or year
 - **Learned days**: Full pages use solid accent highlight; **half pages** use a lighter/semi-transparent accent with dashed border; **today** uses a highlighted accent border
 - **Compact Calendar Legend**: Bottom legend clearly indicates full page, half page, today, and not yet learned
-- **Selected Day Card**: Tap any date to view full Hebrew/Gregorian dates, holiday/event badge (if applicable), tractate and daf, learning status badge, direct **Study Daf** (<span dir="rtl" lang="he">לימוד הדף</span>) button into the in-app reader, and quick mark / unmark. **Long press** the mark control for the half page menu (Amud A / Amud B)
+- **Selected Day Card**: Tap any date to view full Hebrew/Gregorian dates, holiday/event badge (if applicable), tractate and daf, learning status badge, direct **Study Daf** (<span dir="rtl" lang="he">לימוד הדף</span>) button into the in-app reader, and quick mark / unmark. **Long press** the mark control for the half page menu (Amud A / Amud B). When a half page is recorded, an explicit status badge indicates which amud was studied (<span dir="rtl" lang="he">עמוד א׳ נלמד</span> / <span dir="rtl" lang="he">עמוד ב׳ נלמד</span>)
 - **Future dates**: Option to mark **learned ahead** (<span dir="rtl" lang="he">למדתי מראש</span>) when you have already studied that calendar day's page
 
 ### ⚙️ Settings & Customization

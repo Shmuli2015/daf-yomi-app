@@ -7,6 +7,7 @@ import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/
 import { useAppStore } from '../store/useAppStore';
 import { getNotificationPermissionStatus } from '../utils/notificationPermission';
 import { getSnoozeReminderCopy } from '../utils/notificationCopy';
+import { requestHomeTabFocus } from '../utils/homeTabFocus';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
@@ -81,7 +82,8 @@ export function useNotificationsSetup() {
 
           if (actionIdentifier === 'finish-daf') {
             dismissReminderFromTray(notificationId);
-            const { markTodayAsLearned } = useAppStore.getState();
+            const { markTodayAsLearned, loadInitialData } = useAppStore.getState();
+            loadInitialData();
             markTodayAsLearned();
           } else if (actionIdentifier === 'later') {
             dismissReminderFromTray(notificationId);
@@ -101,6 +103,10 @@ export function useNotificationsSetup() {
                 repeats: false,
               },
             });
+          } else if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
+            const { loadInitialData } = useAppStore.getState();
+            loadInitialData();
+            requestHomeTabFocus();
           }
         });
       } catch (e) {

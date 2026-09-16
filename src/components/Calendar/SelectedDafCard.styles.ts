@@ -92,6 +92,14 @@ export const createSelectedDafCardStyles = (theme: Theme) =>
       width: '100%',
     },
     actions: { gap: 10 },
+    partialStatusText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: theme.colors.accent,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      width: '100%',
+    },
     toggleBtn: {
       flexDirection: 'row',
       alignItems: 'center',

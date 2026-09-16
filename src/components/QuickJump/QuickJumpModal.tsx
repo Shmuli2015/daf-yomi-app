@@ -24,6 +24,8 @@ import SheetDragHandle from '../SheetDragHandle';
 interface QuickJumpModalProps {
   visible: boolean;
   initialMasechetEn?: string;
+  initialDafNum?: number;
+  initialAmud?: 'a' | 'b';
   onNavigate: (params: {
     masechetEn: string;
     masechetHe: string;
@@ -36,6 +38,8 @@ interface QuickJumpModalProps {
 export default function QuickJumpModal({
   visible,
   initialMasechetEn,
+  initialDafNum,
+  initialAmud,
   onNavigate,
   onClose,
 }: QuickJumpModalProps) {
@@ -60,7 +64,14 @@ export default function QuickJumpModal({
     handleSelectMasechet,
     handleSelectAmud,
     handleSubmit,
-  } = useQuickJump({ visible, initialMasechetEn, onNavigate, onClose });
+  } = useQuickJump({
+    visible,
+    initialMasechetEn,
+    initialDafNum,
+    initialAmud,
+    onNavigate,
+    onClose,
+  });
 
   const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType } =
     useSheetDismissGesture({ visible, onClose });

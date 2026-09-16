@@ -69,13 +69,13 @@ export function useSheetDismissGesture({
         toValue: 0,
         duration: ENTER_DURATION,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
       Animated.timing(overlayOpacity, {
         toValue: 1,
         duration: ENTER_DURATION,
         easing: Easing.out(Easing.cubic),
-        useNativeDriver: false,
+        useNativeDriver: true,
       }),
     ]);
     enterAnimRef.current = enter;
@@ -113,13 +113,13 @@ export function useSheetDismissGesture({
           toValue: paramsRef.current.windowHeight,
           duration: EXIT_DURATION,
           easing: Easing.in(Easing.cubic),
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
         Animated.timing(overlayOpacity, {
           toValue: 0,
           duration: EXIT_DURATION,
           easing: Easing.in(Easing.cubic),
-          useNativeDriver: false,
+          useNativeDriver: true,
         }),
       ]).start(() => {
         onDone();
@@ -165,14 +165,14 @@ export function useSheetDismissGesture({
             Animated.parallel([
               Animated.spring(translateY, {
                 toValue: 0,
-                useNativeDriver: false,
+                useNativeDriver: true,
                 tension: 80,
                 friction: 12,
               }),
               Animated.timing(overlayOpacity, {
                 toValue: 1,
                 duration: EXIT_DURATION,
-                useNativeDriver: false,
+                useNativeDriver: true,
               }),
             ]).start();
             return;
@@ -185,14 +185,14 @@ export function useSheetDismissGesture({
           Animated.parallel([
             Animated.spring(translateY, {
               toValue: 0,
-              useNativeDriver: false,
+              useNativeDriver: true,
               tension: 80,
               friction: 12,
             }),
             Animated.timing(overlayOpacity, {
               toValue: 1,
               duration: EXIT_DURATION,
-              useNativeDriver: false,
+              useNativeDriver: true,
             }),
           ]).start();
         },
