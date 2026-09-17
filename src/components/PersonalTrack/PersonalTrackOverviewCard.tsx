@@ -7,11 +7,13 @@ import { useTheme } from '../../theme';
 interface PersonalTrackOverviewCardProps {
   totalLearned: number;
   onOpenPicker: () => void;
+  onOpenGuide?: () => void;
 }
 
 export default function PersonalTrackOverviewCard({
   totalLearned,
   onOpenPicker,
+  onOpenGuide,
 }: PersonalTrackOverviewCardProps) {
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -35,7 +37,23 @@ export default function PersonalTrackOverviewCard({
               <Ionicons name="bookmark-outline" size={22} color={theme.colors.accent} />
             </View>
             <View style={styles.emptyTitleSection}>
-              <Text style={styles.emptyTitle}>המסלול האישי שלי</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.emptyTitle}>המסלול האישי שלי</Text>
+                {onOpenGuide && (
+                  <TouchableOpacity
+                    onPress={onOpenGuide}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="הסבר על המסלול האישי"
+                  >
+                    <Ionicons
+                      name="help-circle-outline"
+                      size={18}
+                      color={theme.colors.accent}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
               <Text style={styles.emptySubtitle}>מעקב עצמאי אחר מסכת לבחירתך בקצב שלך</Text>
             </View>
           </View>

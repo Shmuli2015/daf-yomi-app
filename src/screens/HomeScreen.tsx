@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from "react";
+import React, { useMemo, useCallback, useState } from "react";
 import { ScrollView, View, StyleSheet, useWindowDimensions } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useShallow } from "zustand/react/shallow";
@@ -16,6 +16,7 @@ import PersonalMasechetPickerModal from "../components/PersonalMasechetPickerMod
 import PersonalMasechetDetailModal from "../components/PersonalMasechetDetailModal";
 import QuickJumpModal from "../components/QuickJump/QuickJumpModal";
 import SiyumModal from "../components/Siyum/SiyumModal";
+import GuideModal from "../components/Settings/GuideModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import YesterdayNudge from "../components/Home/YesterdayNudge";
 import { useAppStore } from "../store/useAppStore";
@@ -61,6 +62,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     closeQuickJump,
     dismissNudgeForDay,
   } = useHomeScreenModals();
+
+  const [showPersonalGuideModal, setShowPersonalGuideModal] = useState(false);
 
   const {
     todayRecord,
@@ -334,6 +337,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 onOpenMasechetDetailPress={handleOpenActivePersonalDetail}
                 onToggleDafLearned={togglePersonalDafLearned}
                 onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
+                onOpenGuide={() => setShowPersonalGuideModal(true)}
               />
             </>
           )}
@@ -382,6 +386,13 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         initialAmud={todayAmud}
         onNavigate={handleQuickJumpNavigate}
         onClose={closeQuickJump}
+      />
+
+      <GuideModal
+        visible={showPersonalGuideModal}
+        onClose={() => setShowPersonalGuideModal(false)}
+        initialTab="faq"
+        initialQuery="מסלול אישי"
       />
 
       {siyumMasechet && (

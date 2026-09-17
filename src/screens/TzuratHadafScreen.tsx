@@ -11,6 +11,7 @@ import TzuratMarkTrackModal from '../components/TzuratHadaf/TzuratMarkTrackModal
 import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
+import GuideModal from '../components/Settings/GuideModal';
 import ReaderToolbar, { type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
 import ReaderModePane from '../components/SefariaReader/ReaderModePane';
 import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';
@@ -43,6 +44,7 @@ export default function TzuratHadafScreen() {
   const isLandscape = width > height;
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMarkMenu, setShowMarkMenu] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const readerTheme: ReaderTheme = theme.colors.background === '#121212' ? 'dark' : 'light';
 
   const reader = useDafReader({
@@ -156,6 +158,7 @@ export default function TzuratHadafScreen() {
             chavrutaAvailable={reader.chavrutaAvailable}
             steinsaltzAvailable={reader.steinsaltzAvailable}
             classicTabLabel={reader.classicTabLabel}
+            onOpenGuide={() => setShowGuideModal(true)}
           />
         </>
       )}
@@ -274,6 +277,13 @@ export default function TzuratHadafScreen() {
             : masechetTotalPages
         }
         onClose={() => setShowSiyumModal(false)}
+      />
+
+      <GuideModal
+        visible={showGuideModal}
+        onClose={() => setShowGuideModal(false)}
+        initialTab="faq"
+        initialQuery="קורא"
       />
 
       {showConfetti && (

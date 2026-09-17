@@ -60,6 +60,19 @@ export function createReaderToolbarStyles(theme: Theme) {
       width: '100%',
       direction: 'rtl',
     },
+    actionsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    helpBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.accentLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     fontControls: {
       flexDirection: 'row',
       alignItems: 'center',

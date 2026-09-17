@@ -32,9 +32,16 @@ import SheetDragHandle from '../SheetDragHandle';
 interface GuideModalProps {
   visible: boolean;
   onClose: () => void;
+  initialTab?: GuideTabType;
+  initialQuery?: string;
 }
 
-export function GuideModal({ visible, onClose }: GuideModalProps) {
+export function GuideModal({
+  visible,
+  onClose,
+  initialTab = 'faq',
+  initialQuery,
+}: GuideModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createGuideModalStyles(theme), [theme]);
   const insets = useSafeAreaInsets();
@@ -44,10 +51,10 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
   }
   const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType, dismiss } =
     useSheetDismissGesture({ visible, onClose });
-  const [activeTab, setActiveTab] = useState<GuideTabType>('faq');
+  const [activeTab, setActiveTab] = useState<GuideTabType>(initialTab);
   const chipsScrollRef = useRef<ScrollView>(null);
   const [mailHintVisible, setMailHintVisible] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialQuery || '');
   const [activeChipId, setActiveChipId] = useState<string | null>(null);
 
   const scrollChipsToStart = useCallback(() => {
@@ -58,9 +65,16 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
 
   useEffect(() => {
     if (visible) {
+      if (initialTab) {
+        setActiveTab(initialTab);
+      }
+      if (initialQuery !== undefined) {
+        setSearchQuery(initialQuery);
+        setActiveChipId(null);
+      }
       scrollChipsToStart();
     }
-  }, [visible, scrollChipsToStart]);
+  }, [visible, initialTab, initialQuery, scrollChipsToStart]);
 
   const openSupportEmail = useCallback(async () => {
     try {
