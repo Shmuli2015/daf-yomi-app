@@ -1,6 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { useSharedValue, withTiming, withDelay, Easing } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
@@ -26,14 +25,6 @@ const HomeStreakCard = React.memo(function HomeStreakCard({
 }: HomeStreakCardProps) {
   const theme = useTheme();
   const styles = useMemo(() => createHomeStreakCardStyles(theme), [theme]);
-  const showBars = useSharedValue(0);
-
-  useEffect(() => {
-    showBars.value = withDelay(
-      500,
-      withTiming(1, { duration: 800, easing: Easing.out(Easing.exp) }),
-    );
-  }, []);
 
   return (
     <View style={styles.streakCard}>
@@ -91,7 +82,6 @@ const HomeStreakCard = React.memo(function HomeStreakCard({
             return (
               <StreakDayBar
                 key={day.dateStr}
-                showBars={showBars}
                 barHeight={barHeight}
                 barColor={barColor}
                 barOpacity={barOpacity}

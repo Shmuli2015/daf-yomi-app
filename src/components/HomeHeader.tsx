@@ -76,8 +76,10 @@ const HomeHeader = React.memo(function HomeHeader({
   const {
     panResponder,
     animatedProgressStyle,
-    animatedSwipeStyle,
-    animatedTodayJumpStyle,
+    animatedSwipeTranslateStyle,
+    animatedSwipeOpacityStyle,
+    animatedTodayJumpTranslateStyle,
+    animatedTodayJumpOpacityStyle,
     animatedTodayBtnStyle,
     handleTodayPress,
     handlePrevDay,
@@ -93,20 +95,22 @@ const HomeHeader = React.memo(function HomeHeader({
 
   return (
     <View style={styles.outerContainer}>
-      <Animated.View style={animatedTodayJumpStyle}>
-        <HomeDateBar
-          hebrewDateStr={hebrewDateStr}
-          gregorianDateStr={gregorianDateStr}
-          eventName={eventName}
-          showSecularDate={showSecularDate}
-          isToday={isToday}
-          onPrevDay={handlePrevDay}
-          onNextDay={handleNextDay}
-          onTodayPress={handleTodayPress}
-          animatedTodayBtnStyle={animatedTodayBtnStyle}
-        />
+      <Animated.View style={animatedTodayJumpTranslateStyle}>
+        <Animated.View style={animatedTodayJumpOpacityStyle}>
+          <HomeDateBar
+            hebrewDateStr={hebrewDateStr}
+            gregorianDateStr={gregorianDateStr}
+            eventName={eventName}
+            showSecularDate={showSecularDate}
+            isToday={isToday}
+            onPrevDay={handlePrevDay}
+            onNextDay={handleNextDay}
+            onTodayPress={handleTodayPress}
+            animatedTodayBtnStyle={animatedTodayBtnStyle}
+          />
+        </Animated.View>
 
-        <Animated.View style={animatedSwipeStyle}>
+        <Animated.View style={animatedSwipeTranslateStyle}>
           <HomeHeroCard
             todayMasechet={todayMasechet}
             todayDafNum={todayDafNum}
@@ -120,6 +124,8 @@ const HomeHeader = React.memo(function HomeHeader({
             masechetLearnedCountLabel={masechetLearnedCountLabel}
             masechetTotalCount={masechetTotalCount}
             animatedProgressStyle={animatedProgressStyle}
+            animatedContentStyle={animatedSwipeOpacityStyle}
+            animatedTodayContentStyle={animatedTodayJumpOpacityStyle}
             panHandlers={panResponder.panHandlers}
             onOpenTzuratHadaf={onOpenTzuratHadaf}
             onPressMasechet={onPressMasechet}

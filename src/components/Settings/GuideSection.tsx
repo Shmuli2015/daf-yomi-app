@@ -1,15 +1,12 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import Animated, {
-  FadeInDown,
-  FadeOutUp,
-  LinearTransition,
-} from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import GuideItemText from './GuideItemText';
 import { createGuideModalStyles } from './GuideModal.styles';
 import { useGuideSectionAnimation } from './useGuideSectionAnimation';
+import AccordionSlideContent from '../AccordionSlideContent';
 
 interface GuideSectionProps {
   icon: keyof typeof Ionicons.glyphMap;
@@ -32,14 +29,9 @@ export default function GuideSection({
 }: GuideSectionProps) {
   const styles = useMemo(() => createGuideModalStyles(theme), [theme]);
   const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
-  const skipEnteringRef = useRef(true);
-
-  useEffect(() => {
-    skipEnteringRef.current = false;
-  }, []);
 
   return (
-    <Animated.View layout={LinearTransition.duration(260)} style={styles.sectionCard}>
+    <View style={styles.sectionCard}>
       <TouchableOpacity
         onPress={onToggle}
         activeOpacity={0.7}
@@ -61,13 +53,8 @@ export default function GuideSection({
         </Animated.View>
       </TouchableOpacity>
 
-      {isExpanded && (
-        <Animated.View
-          entering={skipEnteringRef.current ? undefined : FadeInDown.duration(260)}
-          exiting={FadeOutUp.duration(200)}
-          layout={LinearTransition.duration(260)}
-          style={styles.itemsList}
-        >
+      <AccordionSlideContent isExpanded={isExpanded}>
+        <View style={styles.itemsList}>
           {items.map((item, index) => (
             <View key={index} style={styles.item}>
               <View style={styles.bullet} />
@@ -80,8 +67,8 @@ export default function GuideSection({
               />
             </View>
           ))}
-        </Animated.View>
-      )}
-    </Animated.View>
+        </View>
+      </AccordionSlideContent>
+    </View>
   );
 }

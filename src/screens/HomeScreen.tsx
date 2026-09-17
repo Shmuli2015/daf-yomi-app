@@ -32,6 +32,7 @@ import { useHomeDateNav } from "../hooks/useHomeDateNav";
 import { useHomeMarking } from "../hooks/useHomeMarking";
 import { useHomeScreenModals } from "../hooks/useHomeScreenModals";
 import { useTheme } from "../theme";
+import { triggerSelection } from "../utils/haptics";
 import type { RootStackParamList, MainTabParamList } from "../navigation/types";
 import { HALF_DAF_TIP_VERSION } from "../constants/halfDafTip";
 
@@ -208,6 +209,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     useAppStore.getState().setCurrentDate(subDays(new Date(), 1));
   }, []);
 
+  const handleSelectDay = useCallback((date: Date) => {
+    void triggerSelection();
+    useAppStore.getState().setCurrentDate(date);
+  }, []);
+
   if (!isAppReady) {
     return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
   }
@@ -285,7 +291,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             shasTotalPages={shasProgress.totalPages}
             shasPercentage={shasProgress.percentage}
             onPressShas={() => navigation.navigate("History")}
-            onSelectDay={(date) => useAppStore.getState().setCurrentDate(date)}
+            onSelectDay={handleSelectDay}
           />
         </ScrollView>
       </SafeAreaView>

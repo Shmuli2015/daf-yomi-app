@@ -28,6 +28,8 @@ interface HomeHeroCardProps {
   masechetLearnedCountLabel?: string;
   masechetTotalCount?: number;
   animatedProgressStyle: any;
+  animatedContentStyle?: any;
+  animatedTodayContentStyle?: any;
   panHandlers?: any;
   onOpenTzuratHadaf?: () => void;
   onPressMasechet?: () => void;
@@ -52,6 +54,8 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
   masechetLearnedCountLabel = '0',
   masechetTotalCount = 0,
   animatedProgressStyle,
+  animatedContentStyle,
+  animatedTodayContentStyle,
   panHandlers,
   onOpenTzuratHadaf,
   onPressMasechet,
@@ -93,10 +97,12 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
       <View
         style={[
           styles.dafCard,
-          isLearned && { borderColor: theme.colors.success + '60', borderWidth: 2 },
-          isPartial && { borderColor: theme.colors.accent + '60', borderWidth: 2 },
+          isLearned && { borderColor: theme.colors.success + '60' },
+          isPartial && { borderColor: theme.colors.accent + '60' },
         ]}
       >
+        <Animated.View style={animatedTodayContentStyle}>
+          <Animated.View style={[styles.dafCardInner, animatedContentStyle]}>
         <LinearGradient
           colors={[theme.colors.white + '0D', 'transparent']}
           start={{ x: 0, y: 0 }}
@@ -267,6 +273,8 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
           <View style={styles.swipeHintActiveDot} />
           <View style={styles.swipeHintDot} />
         </View>
+          </Animated.View>
+        </Animated.View>
       </View>
     </View>
   );
