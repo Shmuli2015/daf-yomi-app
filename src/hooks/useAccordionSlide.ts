@@ -17,12 +17,18 @@ const HEIGHT_EPSILON = 1;
 export function useAccordionSlide(isExpanded: boolean) {
   const [isRendered, setIsRendered] = useState(isExpanded);
   const [isHeightLocked, setIsHeightLocked] = useState(!isExpanded);
+  const [isAnimating, setIsAnimating] = useState(false);
   const measuredHeight = useSharedValue(0);
   const animatedHeight = useSharedValue(0);
   const skipMountEffect = useRef(true);
 
   const finishClose = useCallback(() => {
     setIsRendered(false);
+    setIsAnimating(false);
+  }, []);
+
+  const finishOpen = useCallback(() => {
+    setIsAnimating(false);
   }, []);
 
   useEffect(() => {
@@ -34,10 +40,19 @@ export function useAccordionSlide(isExpanded: boolean) {
     if (isExpanded) {
       setIsRendered(true);
       if (isHeightLocked && measuredHeight.value > 0) {
-        animatedHeight.value = withTiming(measuredHeight.value, {
-          duration: OPEN_DURATION,
-          easing: OPEN_EASING,
-        });
+        setIsAnimating(true);
+        animatedHeight.value = withTiming(
+          measuredHeight.value,
+          {
+            duration: OPEN_DURATION,
+            easing: OPEN_EASING,
+          },
+          (finished) => {
+            if (finished) {
+              runOnJS(finishOpen)();
+            }
+          },
+        );
       }
       return;
     }
@@ -48,6 +63,7 @@ export function useAccordionSlide(isExpanded: boolean) {
       return;
     }
 
+    setIsAnimating(true);
     animatedHeight.value = withTiming(
       0,
       { duration: CLOSE_DURATION, easing: CLOSE_EASING },
@@ -57,7 +73,7 @@ export function useAccordionSlide(isExpanded: boolean) {
         }
       }
     );
-  }, [isExpanded, isHeightLocked, animatedHeight, measuredHeight, finishClose]);
+  }, [isExpanded, isHeightLocked, animatedHeight, measuredHeight, finishClose, finishOpen]);
 
   const onContentLayout = (event: LayoutChangeEvent) => {
     const nextHeight = Math.ceil(event.nativeEvent.layout.height);
@@ -77,10 +93,19 @@ export function useAccordionSlide(isExpanded: boolean) {
     }
 
     if (previousHeight === 0 || animatedHeight.value < HEIGHT_EPSILON) {
-      animatedHeight.value = withTiming(nextHeight, {
-        duration: OPEN_DURATION,
-        easing: OPEN_EASING,
-      });
+      setIsAnimating(true);
+      animatedHeight.value = withTiming(
+        nextHeight,
+        {
+          duration: OPEN_DURATION,
+          easing: OPEN_EASING,
+        },
+        (finished) => {
+          if (finished) {
+            runOnJS(finishOpen)();
+          }
+        },
+      );
       return;
     }
 
@@ -92,5 +117,5 @@ export function useAccordionSlide(isExpanded: boolean) {
     overflow: 'hidden',
   }));
 
-  return { isRendered, onContentLayout, animatedStyle, isHeightLocked };
+  return { isRendered, onContentLayout, animatedStyle, isHeightLocked, isAnimating };
 }

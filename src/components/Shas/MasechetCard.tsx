@@ -16,7 +16,7 @@ export interface MasechetData {
 interface MasechetCardProps {
   data: MasechetData;
   index: number;
-  onPress: () => void;
+  onPress: (masechetEn: string) => void;
 }
 
 const MasechetCard = React.memo(function MasechetCard({
@@ -46,7 +46,7 @@ const MasechetCard = React.memo(function MasechetCard({
     <View style={styles.cardWrapper}>
       <TouchableOpacity
         activeOpacity={0.82}
-        onPress={onPress}
+        onPress={() => onPress(data.m.en)}
         style={[styles.card, data.isCompleted ? styles.cardCompleted : styles.cardDefault]}
       >
         <View style={styles.cardHeader}>

@@ -12,7 +12,7 @@ export default function AccordionSlideContent({
   isExpanded,
   children,
 }: AccordionSlideContentProps) {
-  const { isRendered, onContentLayout, animatedStyle, isHeightLocked } =
+  const { isRendered, onContentLayout, animatedStyle, isHeightLocked, isAnimating } =
     useAccordionSlide(isExpanded);
 
   if (!isRendered) {
@@ -25,8 +25,8 @@ export default function AccordionSlideContent({
         onLayout={onContentLayout}
         style={isHeightLocked ? styles.measure : undefined}
         collapsable={false}
-        renderToHardwareTextureAndroid
-        shouldRasterizeIOS
+        renderToHardwareTextureAndroid={isAnimating}
+        shouldRasterizeIOS={isAnimating}
       >
         {children}
       </View>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useAppStore } from '../../store/useAppStore';
-import { SHAS_MASECHTOT, SEDARIM, Seder } from '../../data/shas';
+import { SHAS_MASECHTOT, SEDARIM, type Seder } from '../../data/shas';
 import { getSederProgressFromCache } from '../../utils/progressCache';
 import MasechetModal from './MasechetModal';
 import MasechetCard from './MasechetCard';
@@ -63,7 +63,7 @@ export default function MasechetGrid({
     }
   }, [onReturnToHome]);
 
-  const toggleSeder = (seder: Seder) => {
+  const toggleSeder = useCallback((seder: Seder) => {
     setExpandedSedarim((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(seder)) {
@@ -73,7 +73,21 @@ export default function MasechetGrid({
       }
       return newSet;
     });
-  };
+  }, []);
+
+  const handleSelectSeder = useCallback((seder: Seder | null) => {
+    setSelectedSeder(seder);
+    if (seder) {
+      setExpandedSedarim((prev) => new Set(prev).add(seder));
+    }
+  }, [setSelectedSeder]);
+
+  const handlePressMasechet = useCallback((masechetEn: string) => {
+    const masechet = SHAS_MASECHTOT.find((m) => m.en === masechetEn);
+    if (masechet) {
+      setSelectedMasechet(masechet);
+    }
+  }, []);
 
   const isFilteringActive = selectedSeder !== null || searchQuery.trim().length > 0 || selectedStatus !== 'all';
 
@@ -81,12 +95,7 @@ export default function MasechetGrid({
     <View style={styles.container}>
       <SederFilterBar
         selectedSeder={selectedSeder}
-        onSelectSeder={(seder) => {
-          setSelectedSeder(seder);
-          if (seder) {
-            setExpandedSedarim((prev) => new Set(prev).add(seder));
-          }
-        }}
+        onSelectSeder={handleSelectSeder}
         selectedStatus={selectedStatus}
         onSelectStatus={setSelectedStatus}
         searchQuery={searchQuery}
@@ -115,6 +124,7 @@ export default function MasechetGrid({
         return (
           <SederSection
             key={seder.id}
+            sederId={seder.id}
             sederName={seder.he}
             percentage={sederProgress.percentage}
             learnedDafim={sederProgress.learnedDafim}
@@ -122,7 +132,7 @@ export default function MasechetGrid({
             completedMasechtot={sederProgress.completedMasechtot}
             totalMasechtot={sederProgress.totalMasechtot}
             isExpanded={isExpanded}
-            onToggle={() => toggleSeder(seder.id)}
+            onToggle={toggleSeder}
           >
             <View style={styles.gridRow}>
               {masechetData.map((data, index) => (
@@ -130,7 +140,7 @@ export default function MasechetGrid({
                   key={data.m.en}
                   data={data}
                   index={index}
-                  onPress={() => setSelectedMasechet(data.m)}
+                  onPress={handlePressMasechet}
                 />
               ))}
             </View>

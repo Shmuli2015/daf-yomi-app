@@ -19,7 +19,7 @@ import SiyumModal from "../components/Siyum/SiyumModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import YesterdayNudge from "../components/Home/YesterdayNudge";
 import { useAppStore } from "../store/useAppStore";
-import { buildLast7Days } from "../utils/last7Days";
+import { buildLast7Days, buildRecentHistoryKey } from "../utils/last7Days";
 import { dafYomiDisplayMasechetHe, kinnimTamidCalendarDisplay } from "../utils/mishnahOnlySefaria";
 import { SHAS_MASECHTOT } from "../data/shas";
 import { getMasechetDafim } from "../utils/shas";
@@ -70,8 +70,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     todayDafNumValue,
     todayAmud,
     streak,
-    history,
-    settings,
+    recentHistoryKey,
+    showSecularDate,
+    dismissedHalfDafTip,
+    personalTrackEnabled,
     progressCache,
     isAppReady,
     dismissHalfDafTip,
@@ -89,8 +91,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       todayDafNumValue: s.todayDafNumValue,
       todayAmud: s.todayAmud,
       streak: s.streak,
-      history: s.history,
-      settings: s.settings,
+      recentHistoryKey: buildRecentHistoryKey(s.history),
+      showSecularDate: s.settings?.show_secular_date === 1,
+      dismissedHalfDafTip: s.settings?.dismissed_half_daf_tip,
+      personalTrackEnabled: isPersonalTrackEnabled(s.settings),
       progressCache: s.progressCache,
       isAppReady: s.isAppReady,
       dismissHalfDafTip: s.dismissHalfDafTip,
@@ -115,7 +119,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
 
   const studyStatus = getStudyStatus(todayRecord);
   const showHalfDafTip =
-    settings?.dismissed_half_daf_tip !== HALF_DAF_TIP_VERSION && studyStatus === "none" && !isFuture;
+    dismissedHalfDafTip !== HALF_DAF_TIP_VERSION && studyStatus === "none" && !isFuture;
 
   const masechetStats = useMemo(() => {
     const total = getMasechetDafim(todayMasechet).length;
@@ -170,14 +174,14 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   }, [progressCache]);
 
   const last7Days = useMemo(
-    () => buildLast7Days(history, new Date()),
-    [history, todayStr],
+    () => buildLast7Days(useAppStore.getState().history, new Date()),
+    [recentHistoryKey, todayStr],
   );
 
   const showYesterdayNudge =
     isToday &&
     nudgeDismissedFor !== todayStr &&
-    shouldShowYesterdayNudge(history, new Date());
+    shouldShowYesterdayNudge(useAppStore.getState().history, new Date());
 
   const handleOpenTzuratHadaf = useCallback(() => {
     rootNavigation.navigate("TzuratHadaf", {
@@ -209,10 +213,64 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     useAppStore.getState().setCurrentDate(subDays(new Date(), 1));
   }, []);
 
+  const handlePressShas = useCallback(() => {
+    navigation.navigate("History");
+  }, [navigation]);
+
   const handleSelectDay = useCallback((date: Date) => {
     void triggerSelection();
     useAppStore.getState().setCurrentDate(date);
   }, []);
+
+  const handleDismissNudge = useCallback(() => {
+    dismissNudgeForDay(todayStr);
+  }, [dismissNudgeForDay, todayStr]);
+
+  const handleOpenActivePersonalDetail = useCallback(() => {
+    openPersonalDetail(activePersonalMasechet);
+  }, [activePersonalMasechet, openPersonalDetail]);
+
+  const handleSelectPersonalMasechet = useCallback((mEn: string | null) => {
+    setActivePersonalMasechet(mEn);
+    setDetailMasechetEn(mEn);
+  }, [setActivePersonalMasechet, setDetailMasechetEn]);
+
+  const handleOpenPersonalMasechetDetail = useCallback((mEn: string) => {
+    openPersonalDetail(mEn);
+  }, [openPersonalDetail]);
+
+  const handleToggleHomeActive = useCallback(() => {
+    const current = detailMasechetEn || activePersonalMasechet;
+    if (!current) return;
+    if (activePersonalMasechet === current) {
+      clearActivePersonalMasechet();
+    } else {
+      setActivePersonalMasechet(current);
+    }
+  }, [
+    activePersonalMasechet,
+    clearActivePersonalMasechet,
+    detailMasechetEn,
+    setActivePersonalMasechet,
+  ]);
+
+  const handleQuickJumpNavigate = useCallback((params: {
+    masechetEn: string;
+    masechetHe: string;
+    dafNum: number;
+    amud: "a" | "b";
+  }) => {
+    rootNavigation.navigate("TzuratHadaf", {
+      masechetEn: params.masechetEn,
+      masechetHe: params.masechetHe,
+      dafNum: params.dafNum,
+      amud: params.amud,
+    });
+  }, [rootNavigation]);
+
+  const handleConfettiEnd = useCallback(() => {
+    setShowConfetti(false);
+  }, [setShowConfetti]);
 
   if (!isAppReady) {
     return <View style={{ flex: 1, backgroundColor: theme.colors.background }} />;
@@ -231,7 +289,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             <YesterdayNudge
               onMarkYesterday={handleMarkYesterday}
               onOpenYesterday={handleOpenYesterday}
-              onDismiss={() => dismissNudgeForDay(todayStr)}
+              onDismiss={handleDismissNudge}
             />
           )}
 
@@ -256,7 +314,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             masechetProgressPct={masechetStats.pct}
             masechetLearnedCountLabel={formatProgressCount(masechetStats.learned)}
             masechetTotalCount={masechetStats.total}
-            showSecularDate={settings?.show_secular_date === 1}
+            showSecularDate={showSecularDate}
             onPrevDay={handlePrevDay}
             onNextDay={handleNextDay}
             onTodayPress={handleTodayPress}
@@ -265,7 +323,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             currentDate={currentDate}
           />
 
-          {isPersonalTrackEnabled(settings) && (
+          {personalTrackEnabled && (
             <>
               <View style={{ height: 16 }} />
               <PersonalTrackBanner
@@ -273,7 +331,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 personalTrackRecords={personalTrackRecords}
                 hideMarkButton={activePersonalMasechet === todayMasechetEn}
                 onSelectMasechetPress={openPersonalPicker}
-                onOpenMasechetDetailPress={() => openPersonalDetail(activePersonalMasechet)}
+                onOpenMasechetDetailPress={handleOpenActivePersonalDetail}
                 onToggleDafLearned={togglePersonalDafLearned}
                 onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
               />
@@ -290,7 +348,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             shasLearnedCount={shasProgress.learnedCount}
             shasTotalPages={shasProgress.totalPages}
             shasPercentage={shasProgress.percentage}
-            onPressShas={() => navigation.navigate("History")}
+            onPressShas={handlePressShas}
             onSelectDay={handleSelectDay}
           />
         </ScrollView>
@@ -300,11 +358,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         visible={showPersonalPickerModal}
         selectedMasechetEn={activePersonalMasechet}
         personalTrackRecords={personalTrackRecords}
-        onSelectMasechet={(mEn) => {
-          setActivePersonalMasechet(mEn);
-          setDetailMasechetEn(mEn);
-        }}
-        onOpenMasechetDetail={(mEn) => openPersonalDetail(mEn)}
+        onSelectMasechet={handleSelectPersonalMasechet}
+        onOpenMasechetDetail={handleOpenPersonalMasechetDetail}
         onClose={closePersonalPicker}
       />
 
@@ -313,15 +368,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         masechetEn={detailMasechetEn || activePersonalMasechet}
         personalTrackRecords={personalTrackRecords}
         isHomeActive={activePersonalMasechet === (detailMasechetEn || activePersonalMasechet)}
-        onToggleHomeActive={() => {
-          const current = detailMasechetEn || activePersonalMasechet;
-          if (!current) return;
-          if (activePersonalMasechet === current) {
-            clearActivePersonalMasechet();
-          } else {
-            setActivePersonalMasechet(current);
-          }
-        }}
+        onToggleHomeActive={handleToggleHomeActive}
         onToggleDafLearned={togglePersonalDafLearned}
         onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
         onOpenPicker={openPersonalPicker}
@@ -333,14 +380,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         initialMasechetEn={todayMasechetEn}
         initialDafNum={todayDafNumValue}
         initialAmud={todayAmud}
-        onNavigate={(params) => {
-          rootNavigation.navigate("TzuratHadaf", {
-            masechetEn: params.masechetEn,
-            masechetHe: params.masechetHe,
-            dafNum: params.dafNum,
-            amud: params.amud,
-          });
-        }}
+        onNavigate={handleQuickJumpNavigate}
         onClose={closeQuickJump}
       />
 
@@ -367,7 +407,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               theme.colors.gold,
               theme.colors.success,
             ]}
-            onAnimationEnd={() => setShowConfetti(false)}
+            onAnimationEnd={handleConfettiEnd}
           />
         </View>
       )}

@@ -12,6 +12,25 @@ export type Last7DayRecord = {
   isToday: boolean;
 };
 
+export function buildRecentHistoryKey(
+  history: Array<{ date: string; status?: string | null }>,
+  today: Date = new Date(),
+): string {
+  const dates: string[] = [];
+  for (let i = 0; i < 7; i += 1) {
+    dates.push(getDateStr(subDays(today, i)));
+  }
+  const needed = new Set(dates);
+  const byDate = new Map<string, string>();
+  for (const record of history) {
+    if (needed.has(record.date)) {
+      byDate.set(record.date, record.status ?? "");
+      if (byDate.size === needed.size) break;
+    }
+  }
+  return dates.map((dateStr) => `${dateStr}:${byDate.get(dateStr) ?? ""}`).join("|");
+}
+
 export function buildLast7Days(
   history: Array<{ date: string; status?: string }>,
   today: Date,

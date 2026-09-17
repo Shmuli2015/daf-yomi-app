@@ -1,6 +1,7 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useCallback } from 'react';
 import { TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme } from '../theme';
 import { TAB_CONFIG } from './tabConfig';
 import { triggerSelection } from '../utils/haptics';
@@ -8,10 +9,18 @@ import { triggerSelection } from '../utils/haptics';
 type Props = {
   isFocused: boolean;
   config: typeof TAB_CONFIG[string];
-  onPress: () => void;
+  routeKey: string;
+  routeName: string;
+  navigation: BottomTabBarProps['navigation'];
 };
 
-export default function TabButton({ isFocused, config, onPress }: Props) {
+const TabButton = React.memo(function TabButton({
+  isFocused,
+  config,
+  routeKey,
+  routeName,
+  navigation,
+}: Props) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const pressScale = useRef(new Animated.Value(1)).current;
@@ -24,16 +33,24 @@ export default function TabButton({ isFocused, config, onPress }: Props) {
       stiffness: 280,
       useNativeDriver: true,
     }).start();
-  }, [isFocused]);
+  }, [iconScale, isFocused]);
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     void triggerSelection();
     Animated.sequence([
       Animated.spring(pressScale, { toValue: 0.88, damping: 10, stiffness: 320, useNativeDriver: true }),
       Animated.spring(pressScale, { toValue: 1, damping: 12, stiffness: 220, useNativeDriver: true }),
     ]).start();
-    onPress();
-  };
+
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: routeKey,
+      canPreventDefault: true,
+    });
+    if (!isFocused && !event.defaultPrevented) {
+      navigation.navigate(routeName);
+    }
+  }, [isFocused, navigation, pressScale, routeKey, routeName]);
 
   return (
     <TouchableOpacity style={styles.tab} onPress={handlePress} activeOpacity={1}>
@@ -56,7 +73,9 @@ export default function TabButton({ isFocused, config, onPress }: Props) {
       </Animated.View>
     </TouchableOpacity>
   );
-}
+});
+
+export default TabButton;
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({

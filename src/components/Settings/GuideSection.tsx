@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,16 +9,18 @@ import { useGuideSectionAnimation } from './useGuideSectionAnimation';
 import AccordionSlideContent from '../AccordionSlideContent';
 
 interface GuideSectionProps {
+  id: string;
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
   items: string[];
   theme: ReturnType<typeof useTheme>;
   isExpanded: boolean;
-  onToggle: () => void;
+  onToggle: (id: string) => void;
   searchQuery?: string;
 }
 
-export default function GuideSection({
+const GuideSection = React.memo(function GuideSection({
+  id,
   icon,
   title,
   items,
@@ -29,11 +31,14 @@ export default function GuideSection({
 }: GuideSectionProps) {
   const styles = useMemo(() => createGuideModalStyles(theme), [theme]);
   const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
+  const handlePress = useCallback(() => {
+    onToggle(id);
+  }, [id, onToggle]);
 
   return (
     <View style={styles.sectionCard}>
       <TouchableOpacity
-        onPress={onToggle}
+        onPress={handlePress}
         activeOpacity={0.7}
         style={styles.sectionHeaderTouchable}
       >
@@ -71,4 +76,6 @@ export default function GuideSection({
       </AccordionSlideContent>
     </View>
   );
-}
+});
+
+export default GuideSection;

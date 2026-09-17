@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInLeft, FadeInRight, FadeOut } from 'react-native-reanimated';
 import { SettingItem } from './SettingItem';
@@ -96,6 +96,13 @@ export default function SettingsNotificationsSection({
   soundEnabled,
   onSoundToggle,
 }: SettingsNotificationsSectionProps) {
+  const skipEnter = useRef(true);
+  useEffect(() => {
+    skipEnter.current = false;
+  }, []);
+  const timeEntering = skipEnter.current ? undefined : FadeInRight.duration(220);
+  const daysEntering = skipEnter.current ? undefined : FadeInLeft.duration(220);
+
   const exactAlarmLabel =
     exactAlarmStatus === 'granted'
       ? 'פעיל'
@@ -162,7 +169,7 @@ export default function SettingsNotificationsSection({
         ) : null}
         {showMode ? <NotifModeToggle mode={notifMode} onChange={onNotifModeChange} /> : null}
         {showTime ? (
-          <Animated.View entering={FadeInRight.duration(220)} exiting={FadeOut.duration(140)}>
+          <Animated.View entering={timeEntering} exiting={FadeOut.duration(140)}>
             <SettingItem
               icon="time-outline"
               title={TIME_ITEM.title}
@@ -175,7 +182,7 @@ export default function SettingsNotificationsSection({
           </Animated.View>
         ) : null}
         {showDays ? (
-          <Animated.View entering={FadeInLeft.duration(220)} exiting={FadeOut.duration(140)}>
+          <Animated.View entering={daysEntering} exiting={FadeOut.duration(140)}>
             <DayScheduleList
               schedules={daySchedules}
               onToggleDay={onToggleDay}
