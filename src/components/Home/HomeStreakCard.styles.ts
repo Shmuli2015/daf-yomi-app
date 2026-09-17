@@ -71,7 +71,7 @@ export const createHomeStreakCardStyles = (theme: ReturnType<typeof useTheme>) =
       flexDirection: 'row',
       alignItems: 'flex-end',
       justifyContent: 'space-between',
-      height: 95,
+      height: 108,
     },
     barColumn: {
       alignItems: 'center',
@@ -86,9 +86,19 @@ export const createHomeStreakCardStyles = (theme: ReturnType<typeof useTheme>) =
       justifyContent: 'flex-end',
       overflow: 'hidden',
     },
+    learnedBarBg: {
+      backgroundColor: theme.colors.accent,
+    },
+    selectedBarOutline: {
+      borderWidth: 1.5,
+      borderColor: theme.colors.accent,
+    },
     barFill: {
       width: '100%',
-      borderRadius: 6,
+    },
+    dayLabelWrapper: {
+      alignItems: 'center',
+      gap: 3,
     },
     dayLabel: {
       color: theme.colors.textMuted,
@@ -99,11 +109,18 @@ export const createHomeStreakCardStyles = (theme: ReturnType<typeof useTheme>) =
       color: theme.colors.accent,
     },
     selectedLabel: {
-      color: theme.colors.textPrimary,
+      color: theme.colors.accent,
+      fontWeight: '900',
     },
-    selectedBarBg: {
-      borderWidth: 1,
-      borderColor: theme.colors.accent,
+    selectedDot: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: theme.colors.accent,
+    },
+    selectedDotEmpty: {
+      width: 4,
+      height: 4,
     },
     barIndicatorWrapper: {
       height: 14,
