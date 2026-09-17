@@ -98,7 +98,11 @@ function cleanText(html: string): string {
     .replace(/<\/?p\b[^>]*>/gi, ' ')
     .replace(/<[^>]*>/g, '');
 
-  return decodeEntities(withBreaks).replace(/\s+/g, ' ').trim();
+  return decodeEntities(withBreaks)
+    .replace(/\u2014/g, '-')
+    .replace(/--+/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function markGemaraHtml(html: string): string {

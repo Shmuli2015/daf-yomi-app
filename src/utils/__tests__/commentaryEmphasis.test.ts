@@ -5,7 +5,22 @@ import {
   parseCommentaryRuns,
   prepareCommentaryText,
   prepareGemaraText,
+  stripEmDash,
 } from '../commentaryEmphasis';
+
+describe('stripEmDash', () => {
+  it('replaces unicode em-dash with hyphen', () => {
+    expect(stripEmDash('שלום\u2014עולם')).toBe('שלום-עולם');
+  });
+
+  it('replaces html entities and double hyphens', () => {
+    expect(stripEmDash('א &mdash; ב &#8212; ג -- ד')).toBe('א - ב - ג - ד');
+  });
+
+  it('returns empty string for empty input', () => {
+    expect(stripEmDash('')).toBe('');
+  });
+});
 
 describe('cleanCommentaryHtml', () => {
   it('converts bold tags to emphasis markers and strips other html', () => {

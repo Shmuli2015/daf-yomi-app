@@ -44,71 +44,68 @@ export default function TzuratHeader({
   const title = masechetHe || masechetEn;
   const btnSize = isLandscape ? 34 : 40;
   const iconSize = isLandscape ? 18 : 20;
+  const markLabel = isLearned ? 'נלמד' : isPartial ? 'סיימתי!' : 'סמן כנלמד';
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + (isLandscape ? 4 : 8) }]}>
-      <TouchableOpacity
-        onPress={onClose}
-        style={[styles.iconBtn, { width: btnSize, height: btnSize }]}
-        activeOpacity={0.7}
-      >
-        <Ionicons name="close" size={iconSize + 2} color={theme.colors.textPrimary} />
-      </TouchableOpacity>
+      <View style={styles.content}>
+        <View style={styles.titleBlock} pointerEvents="none">
+          <Text style={styles.masechet} numberOfLines={1}>
+            {title}
+          </Text>
+          <Text style={styles.daf} numberOfLines={1}>
+            {formatDafLabel(dafNum, amud)}
+          </Text>
+        </View>
 
-      <View style={styles.titleBlock}>
-        {!isLandscape && <Text style={styles.badge}>לימוד הדף</Text>}
-        <Text style={styles.masechet} numberOfLines={1}>{title}</Text>
-        <Text style={styles.daf}>{formatDafLabel(dafNum, amud)}</Text>
-      </View>
-
-      <View style={styles.actions}>
-        {onToggleFullscreen && (
+        <View style={styles.row}>
           <TouchableOpacity
-            onPress={onToggleFullscreen}
+            onPress={onClose}
             style={[styles.iconBtn, { width: btnSize, height: btnSize }]}
             activeOpacity={0.7}
-            accessibilityLabel="מסך מלא"
+            accessibilityLabel="סגור"
           >
-            <Ionicons
-              name={isFullscreen ? 'contract-outline' : 'expand-outline'}
-              size={iconSize}
-              color={theme.colors.accent}
-            />
+            <Ionicons name="close" size={iconSize + 2} color={theme.colors.textPrimary} />
           </TouchableOpacity>
-        )}
 
-        {canMarkLearned ? (
-          <TouchableOpacity
-            onPress={onToggleLearned}
-            onLongPress={studyStatus !== 'learned' ? onLongPressLearned : undefined}
-            delayLongPress={400}
-            style={[
-              styles.markBtn,
-              isLandscape && styles.markBtnLandscape,
-              isLearned ? styles.markBtnLearned : isPartial ? styles.markBtnPartial : styles.markBtnPending,
-            ]}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name={isLearned ? 'checkmark-circle' : isPartial ? 'ellipse' : 'checkmark-circle-outline'}
-              size={iconSize}
-              color={isLearned ? theme.colors.success : theme.colors.accent}
-            />
-            {!isLandscape && (
-              <Text
-                style={[
-                  styles.markBtnText,
-                  { color: isLearned ? theme.colors.success : theme.colors.accent },
-                ]}
-                numberOfLines={1}
+          <View style={styles.actions}>
+            {onToggleFullscreen ? (
+              <TouchableOpacity
+                onPress={onToggleFullscreen}
+                style={[styles.iconBtn, { width: btnSize, height: btnSize }]}
+                activeOpacity={0.7}
+                accessibilityLabel="מסך מלא"
               >
-                {isLearned ? 'נלמד' : isPartial ? 'סיימתי!' : 'סמן כנלמד'}
-              </Text>
-            )}
-          </TouchableOpacity>
-        ) : (
-          <View style={{ width: btnSize }} />
-        )}
+                <Ionicons
+                  name={isFullscreen ? 'contract-outline' : 'expand-outline'}
+                  size={iconSize}
+                  color={theme.colors.accent}
+                />
+              </TouchableOpacity>
+            ) : null}
+
+            {canMarkLearned ? (
+              <TouchableOpacity
+                onPress={onToggleLearned}
+                onLongPress={studyStatus !== 'learned' ? onLongPressLearned : undefined}
+                delayLongPress={400}
+                style={[
+                  styles.iconBtn,
+                  { width: btnSize, height: btnSize },
+                  isLearned ? styles.markBtnLearned : isPartial ? styles.markBtnPartial : styles.markBtnPending,
+                ]}
+                activeOpacity={0.7}
+                accessibilityLabel={markLabel}
+              >
+                <Ionicons
+                  name={isLearned ? 'checkmark-circle' : isPartial ? 'ellipse' : 'checkmark-circle-outline'}
+                  size={iconSize}
+                  color={isLearned ? theme.colors.success : theme.colors.accent}
+                />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
       </View>
     </View>
   );
@@ -117,13 +114,51 @@ export default function TzuratHeader({
 const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) =>
   StyleSheet.create({
     container: {
-      flexDirection: 'row',
-      alignItems: 'center',
       paddingHorizontal: isLandscape ? 10 : 16,
-      paddingBottom: isLandscape ? 6 : 12,
+      paddingBottom: isLandscape ? 6 : 10,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border,
       backgroundColor: theme.colors.surface,
+    },
+    content: {
+      position: 'relative',
+      justifyContent: 'center',
+      minHeight: isLandscape ? 34 : 40,
+    },
+    titleBlock: {
+      ...StyleSheet.absoluteFill,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 88,
+    },
+    masechet: {
+      color: theme.colors.textPrimary,
+      fontSize: isLandscape ? 15 : 17,
+      fontWeight: '900',
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      width: '100%',
+    },
+    daf: {
+      color: theme.colors.textSecondary,
+      fontSize: isLandscape ? 12 : 13,
+      fontWeight: '700',
+      marginTop: 1,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      width: '100%',
+    },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      minHeight: isLandscape ? 34 : 40,
+      zIndex: 1,
+    },
+    actions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: isLandscape ? 4 : 6,
     },
     iconBtn: {
       borderRadius: isLandscape ? 10 : 12,
@@ -132,46 +167,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) 
       borderColor: theme.colors.border,
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    titleBlock: {
-      flex: 1,
-      alignItems: 'center',
-      paddingHorizontal: 6,
-    },
-    badge: {
-      color: theme.colors.accent,
-      fontSize: 11,
-      fontWeight: '800',
-      marginBottom: 2,
-    },
-    masechet: {
-      color: theme.colors.textPrimary,
-      fontSize: isLandscape ? 15 : 18,
-      fontWeight: '900',
-    },
-    daf: {
-      color: theme.colors.textSecondary,
-      fontSize: isLandscape ? 12 : 14,
-      fontWeight: '700',
-      marginTop: isLandscape ? 0 : 2,
-    },
-    actions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: isLandscape ? 4 : 6,
-    },
-    markBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      borderRadius: isLandscape ? 10 : 12,
-      borderWidth: 1,
-    },
-    markBtnLandscape: {
-      paddingHorizontal: 6,
-      paddingVertical: 6,
     },
     markBtnPending: {
       backgroundColor: theme.colors.accentLight,
@@ -184,10 +179,5 @@ const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) 
     markBtnPartial: {
       backgroundColor: theme.colors.accentLight,
       borderColor: theme.colors.accent + '50',
-    },
-    markBtnText: {
-      fontSize: 11,
-      fontWeight: '800',
-      maxWidth: 72,
     },
   });

@@ -20,8 +20,11 @@ import { useReaderFontSize } from './useReaderFontSize';
 import { useAppStore } from '../store/useAppStore';
 import { clampReaderViewMode } from '../utils/readerViewMode';
 
+export type NavDirection = 'next' | 'prev' | null;
+
 export function useDafReader(initialLocation: DafLocation) {
   const [location, setLocation] = useState<DafLocation>(initialLocation);
+  const [navDirection, setNavDirection] = useState<NavDirection>(null);
   const storedViewMode = useAppStore(state => clampReaderViewMode(state.settings?.reader_view_mode));
   const storedShowNotes = useAppStore(state => state.settings?.show_chavruta_notes !== 0);
   const persistViewMode = useAppStore(state => state.setReaderViewMode);
@@ -105,6 +108,7 @@ export function useDafReader(initialLocation: DafLocation) {
     const prev = getPrevAmud(location);
     if (prev) {
       void triggerSelection();
+      setNavDirection('prev');
       setLocation(prev);
     }
   }, [location]);
@@ -113,6 +117,7 @@ export function useDafReader(initialLocation: DafLocation) {
     const next = getNextAmud(location);
     if (next) {
       void triggerSelection();
+      setNavDirection('next');
       setLocation(next);
     }
   }, [location]);
@@ -121,6 +126,7 @@ export function useDafReader(initialLocation: DafLocation) {
     const prev = getPrevDaf(location);
     if (prev) {
       void triggerSelection();
+      setNavDirection('prev');
       setLocation(prev);
     }
   }, [location]);
@@ -129,12 +135,17 @@ export function useDafReader(initialLocation: DafLocation) {
     const next = getNextDaf(location);
     if (next) {
       void triggerSelection();
+      setNavDirection('next');
       setLocation(next);
     }
   }, [location]);
 
+  const pageKey = `${location.masechetEn}-${location.dafNum}-${location.amud}`;
+
   return {
     location,
+    pageKey,
+    navDirection,
     viewMode,
     fontSize,
     sefariaData,

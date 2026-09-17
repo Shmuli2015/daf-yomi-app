@@ -17,7 +17,7 @@ export function createSteinsaltzTextContainerStyles(theme: Theme) {
     scrollContent: {
       paddingHorizontal: 16,
       paddingVertical: 16,
-      paddingBottom: 40,
+      paddingBottom: 32,
       gap: 16,
     },
     centerContainer: {

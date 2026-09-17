@@ -30,8 +30,18 @@ const GEMARA_SECTION_LABEL_RE = new RegExp(
   'g',
 );
 
+export function stripEmDash(text: string): string {
+  if (!text) return '';
+  return text
+    .replace(/\u2014/g, '-')
+    .replace(/&mdash;/gi, '-')
+    .replace(/&#8212;/g, '-')
+    .replace(/&#x2014;/gi, '-')
+    .replace(/--+/g, '-');
+}
+
 function stripHtmlToText(html: string): string {
-  return html
+  const stripped = html
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
     .replace(/<[^>]+>/g, '')
@@ -47,6 +57,7 @@ function stripHtmlToText(html: string): string {
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .trim();
+  return stripEmDash(stripped);
 }
 
 function wrapBareLabel(match: string, offset: number, full: string): string {
@@ -130,7 +141,8 @@ function emphasizeRashiDiburBlock(block: string): string {
     const dibur = block.slice(0, dashIndex).trim();
     const rest = block.slice(dashIndex + dashMatch[0].length).trim();
     if (!dibur) return block;
-    return rest ? `**${dibur}** ${dashMatch[1]} ${rest}` : `**${dibur}**`;
+    const dashChar = dashMatch[1] === '\u2014' ? '-' : dashMatch[1];
+    return rest ? `**${dibur}** ${dashChar} ${rest}` : `**${dibur}**`;
   }
 
   return block;

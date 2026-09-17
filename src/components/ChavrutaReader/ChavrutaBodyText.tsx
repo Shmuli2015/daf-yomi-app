@@ -63,7 +63,6 @@ export default function ChavrutaBodyText({
                 styles.gemaraRun,
                 {
                   color: accentColor,
-                  backgroundColor: `${accentColor}26`,
                 },
               ]}
             >

@@ -1,19 +1,29 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { useAccordionSlide } from '../hooks/useAccordionSlide';
+import { useAccordionSlide, type AccordionCollapseScroll } from '../hooks/useAccordionSlide';
 
 interface AccordionSlideContentProps {
   isExpanded: boolean;
   children: React.ReactNode;
+  collapseScroll?: AccordionCollapseScroll;
+  collapseCardIndex?: number;
+  adaptCloseToHeight?: boolean;
 }
 
 export default function AccordionSlideContent({
   isExpanded,
   children,
+  collapseScroll,
+  collapseCardIndex,
+  adaptCloseToHeight,
 }: AccordionSlideContentProps) {
   const { isRendered, onContentLayout, animatedStyle, isHeightLocked, isAnimating } =
-    useAccordionSlide(isExpanded);
+    useAccordionSlide(isExpanded, {
+      collapseScroll,
+      collapseCardIndex,
+      adaptCloseToHeight,
+    });
 
   if (!isRendered) {
     return null;

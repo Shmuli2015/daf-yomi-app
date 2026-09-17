@@ -244,26 +244,6 @@ export const createHomeHeroCardStyles = (theme: ReturnType<typeof useTheme>) =>
       fontSize: 13,
       fontWeight: '700',
     },
-    swipeHintRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      marginTop: 14,
-      opacity: 0.6,
-    },
-    swipeHintDot: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.colors.textSecondary,
-    },
-    swipeHintActiveDot: {
-      width: 14,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.colors.accent,
-    },
   });
 
 export type HomeHeroCardStyles = ReturnType<typeof createHomeHeroCardStyles>;

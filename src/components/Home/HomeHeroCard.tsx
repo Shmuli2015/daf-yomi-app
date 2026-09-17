@@ -12,6 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../theme';
 import { createHomeHeroCardStyles } from './HomeHeroCard.styles';
+import HomeHeroSwipeHint from './HomeHeroSwipeHint';
 import { formatPartialAmudLabel } from '../../utils/dafStatus';
 import QuickJumpButton from '../QuickJump/QuickJumpButton';
 
@@ -268,11 +269,7 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
           )}
         </View>
 
-        <View style={styles.swipeHintRow} pointerEvents="none">
-          <View style={styles.swipeHintDot} />
-          <View style={styles.swipeHintActiveDot} />
-          <View style={styles.swipeHintDot} />
-        </View>
+        <HomeHeroSwipeHint />
           </Animated.View>
         </Animated.View>
       </View>

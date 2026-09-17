@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +17,7 @@ import ReaderModePane from '../components/SefariaReader/ReaderModePane';
 import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';
 import SteinsaltzTextContainer from '../components/SefariaReader/SteinsaltzTextContainer';
 import ChavrutaTextContainer from '../components/ChavrutaReader/ChavrutaTextContainer';
+import ReadingProgressBar from '../components/SefariaReader/ReadingProgressBar';
 import { useDafReader } from '../hooks/useDafReader';
 import { useTheme } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
@@ -45,6 +46,7 @@ export default function TzuratHadafScreen() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   const readerTheme: ReaderTheme = theme.colors.background === '#121212' ? 'dark' : 'light';
 
   const reader = useDafReader({
@@ -52,6 +54,10 @@ export default function TzuratHadafScreen() {
     dafNum: route.params.dafNum,
     amud: route.params.amud,
   });
+
+  useEffect(() => {
+    setScrollProgress(0);
+  }, [reader.pageKey]);
 
   const masechetHe = useMemo(
     () => getMasechetHe(reader.location.masechetEn, route.params.masechetHe),
@@ -103,17 +109,21 @@ export default function TzuratHadafScreen() {
     dafNum: reader.location.dafNum,
   });
 
+  const handleNavigateNext = () => {
+    if (reader.canNextAmud) reader.handleNextAmud();
+    else if (reader.canNextDaf) reader.handleNextDaf();
+  };
+
+  const handleNavigatePrev = () => {
+    if (reader.canPrevAmud) reader.handlePrevAmud();
+    else if (reader.canPrevDaf) reader.handlePrevDaf();
+  };
+
   const swipeHandlers = useDafSwipeGesture({
     canSwipeNext: reader.canNextAmud || reader.canNextDaf,
     canSwipePrev: reader.canPrevAmud || reader.canPrevDaf,
-    onSwipeNext: () => {
-      if (reader.canNextAmud) reader.handleNextAmud();
-      else if (reader.canNextDaf) reader.handleNextDaf();
-    },
-    onSwipePrev: () => {
-      if (reader.canPrevAmud) reader.handlePrevAmud();
-      else if (reader.canPrevDaf) reader.handlePrevDaf();
-    },
+    onSwipeNext: handleNavigateNext,
+    onSwipePrev: handleNavigatePrev,
     enabled: true,
   });
 
@@ -160,11 +170,17 @@ export default function TzuratHadafScreen() {
             classicTabLabel={reader.classicTabLabel}
             onOpenGuide={() => setShowGuideModal(true)}
           />
+
+          <ReadingProgressBar progress={scrollProgress} accentColor={theme.colors.accent} />
         </>
       )}
 
       <View style={styles.viewerContainer} {...swipeHandlers}>
-        <ReaderModePane viewMode={reader.viewMode}>
+        <ReaderModePane
+          viewMode={reader.viewMode}
+          pageKey={reader.pageKey}
+          navDirection={reader.navDirection}
+        >
           {reader.viewMode === 'classic' ? (
             <SefariaTextContainer
               data={reader.sefariaData}
@@ -175,6 +191,7 @@ export default function TzuratHadafScreen() {
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
               classicTabLabel={reader.classicTabLabel}
+              onScrollProgress={setScrollProgress}
             />
           ) : reader.viewMode === 'steinsaltz' ? (
             <SteinsaltzTextContainer
@@ -185,6 +202,7 @@ export default function TzuratHadafScreen() {
               fontSize={reader.fontSize}
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
+              onScrollProgress={setScrollProgress}
             />
           ) : (
             <ChavrutaTextContainer
@@ -194,6 +212,7 @@ export default function TzuratHadafScreen() {
               onRetry={reader.chavruta.reload}
               fontSize={reader.fontSize}
               showNotes={reader.showChavrutaNotes}
+              onScrollProgress={setScrollProgress}
             />
           )}
         </ReaderModePane>
