@@ -23,6 +23,7 @@ interface PersonalTrackBannerProps {
   onToggleDafLearned: (masechetEn: string, dafNum: number) => void;
   onOpenTzuratHadaf?: (masechetEn: string, dafNum: number) => void;
   hideMarkButton?: boolean;
+  onOpenGuide?: () => void;
 }
 
 export default function PersonalTrackBanner({
@@ -33,6 +34,7 @@ export default function PersonalTrackBanner({
   onToggleDafLearned,
   onOpenTzuratHadaf,
   hideMarkButton = false,
+  onOpenGuide,
 }: PersonalTrackBannerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createPersonalTrackBannerStyles(theme), [theme]);
@@ -65,6 +67,7 @@ export default function PersonalTrackBanner({
       <PersonalTrackOverviewCard
         totalLearned={totalPersonalLearnedCount}
         onOpenPicker={onSelectMasechetPress}
+        onOpenGuide={onOpenGuide}
       />
     );
   }
@@ -106,7 +109,23 @@ export default function PersonalTrackBanner({
               <Ionicons name="bookmark" size={18} color={theme.colors.accent} />
             </View>
             <View style={styles.compactCopy}>
-              <Text style={styles.bannerTag}>מסלול אישי</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={styles.bannerTag}>מסלול אישי</Text>
+                {onOpenGuide && (
+                  <TouchableOpacity
+                    onPress={onOpenGuide}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                    accessibilityRole="button"
+                    accessibilityLabel="הסבר על המסלול האישי"
+                  >
+                    <Ionicons
+                      name="help-circle-outline"
+                      size={15}
+                      color={theme.colors.accent}
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
               <Text style={styles.masechetTitle}>מסכת {masechet.he}</Text>
               <Text style={styles.compactMeta}>{compactMeta}</Text>
             </View>

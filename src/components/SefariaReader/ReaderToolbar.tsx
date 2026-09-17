@@ -24,6 +24,7 @@ interface ReaderToolbarProps {
   chavrutaAvailable?: boolean;
   steinsaltzAvailable?: boolean;
   classicTabLabel?: string;
+  onOpenGuide?: () => void;
 }
 
 const MODES: Array<{ id: ViewMode; label: string; icon: keyof typeof Ionicons.glyphMap }> = [
@@ -44,6 +45,7 @@ export default function ReaderToolbar({
   chavrutaAvailable = true,
   steinsaltzAvailable = true,
   classicTabLabel = 'גמרא',
+  onOpenGuide,
 }: ReaderToolbarProps) {
   const theme = useTheme();
   const styles = useMemo(() => createReaderToolbarStyles(theme), [theme]);
@@ -126,26 +128,44 @@ export default function ReaderToolbar({
           <View style={styles.controlsSpacer} />
         )}
 
-        <View style={styles.fontControls}>
-          <TouchableOpacity
-            style={styles.fontBtn}
-            onPress={onDecreaseFontSize}
-            disabled={fontSize <= READER_FONT_SIZE_MIN}
-            activeOpacity={0.7}
-            accessibilityLabel="הקטן גופן"
-          >
-            <Text style={[styles.fontBtnText, fontSize <= READER_FONT_SIZE_MIN && styles.btnDisabled]}>A-</Text>
-          </TouchableOpacity>
-          <Text style={styles.fontSizeLabel}>{fontSize}</Text>
-          <TouchableOpacity
-            style={styles.fontBtn}
-            onPress={onIncreaseFontSize}
-            disabled={fontSize >= READER_FONT_SIZE_MAX}
-            activeOpacity={0.7}
-            accessibilityLabel="הגדל גופן"
-          >
-            <Text style={[styles.fontBtnText, fontSize >= READER_FONT_SIZE_MAX && styles.btnDisabled]}>A+</Text>
-          </TouchableOpacity>
+        <View style={styles.actionsRow}>
+          {onOpenGuide && (
+            <TouchableOpacity
+              style={styles.helpBtn}
+              onPress={onOpenGuide}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="מדריך ושאלות נפוצות לקורא"
+            >
+              <Ionicons
+                name="help-circle-outline"
+                size={18}
+                color={theme.colors.accent}
+              />
+            </TouchableOpacity>
+          )}
+
+          <View style={styles.fontControls}>
+            <TouchableOpacity
+              style={styles.fontBtn}
+              onPress={onDecreaseFontSize}
+              disabled={fontSize <= READER_FONT_SIZE_MIN}
+              activeOpacity={0.7}
+              accessibilityLabel="הקטן גופן"
+            >
+              <Text style={[styles.fontBtnText, fontSize <= READER_FONT_SIZE_MIN && styles.btnDisabled]}>A-</Text>
+            </TouchableOpacity>
+            <Text style={styles.fontSizeLabel}>{fontSize}</Text>
+            <TouchableOpacity
+              style={styles.fontBtn}
+              onPress={onIncreaseFontSize}
+              disabled={fontSize >= READER_FONT_SIZE_MAX}
+              activeOpacity={0.7}
+              accessibilityLabel="הגדל גופן"
+            >
+              <Text style={[styles.fontBtnText, fontSize >= READER_FONT_SIZE_MAX && styles.btnDisabled]}>A+</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
