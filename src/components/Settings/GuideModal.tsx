@@ -111,6 +111,16 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
     }).filter(Boolean) as typeof GUIDE_SECTIONS;
   }, [hasSearch, normalizedQuery]);
 
+  const searchResultCount = useMemo(
+    () => filteredSections.reduce((acc, s) => acc + s.items.length, 0),
+    [filteredSections],
+  );
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setActiveChipId(null);
+  }, []);
+
   return (
     <>
       <Modal
@@ -171,10 +181,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
               />
               {hasSearch && (
                 <TouchableOpacity
-                  onPress={() => {
-                    setSearchQuery('');
-                    setActiveChipId(null);
-                  }}
+                  onPress={handleClearSearch}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
                   <Ionicons
@@ -262,7 +269,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
             {hasSearch && (
               <View style={styles.searchResultsInfo}>
                 <Text style={styles.searchResultsText}>
-                  נמצאו {filteredSections.reduce((acc, s) => acc + s.items.length, 0)} תוצאות עבור "{searchQuery}"
+                  נמצאו {searchResultCount} תוצאות עבור "{searchQuery}"
                 </Text>
               </View>
             )}
@@ -279,10 +286,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
                   לא מצאנו נושאים המתאימים לחיפוש "{searchQuery}". נסה לחפש במילים אחרות.
                 </Text>
                 <TouchableOpacity
-                  onPress={() => {
-                    setSearchQuery('');
-                    setActiveChipId(null);
-                  }}
+                  onPress={handleClearSearch}
                   style={styles.clearSearchBtn}
                 >
                   <Text style={styles.clearSearchBtnText}>נקה חיפוש</Text>
@@ -293,12 +297,13 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
             {filteredSections.map((sec) => (
               <GuideSection
                 key={sec.id}
+                id={sec.id}
                 icon={sec.icon}
                 title={sec.title}
                 items={sec.items}
                 theme={theme}
                 isExpanded={isSectionExpanded(sec.id)}
-                onToggle={() => toggleSection(sec.id)}
+                onToggle={toggleSection}
                 searchQuery={searchQuery}
               />
             ))}

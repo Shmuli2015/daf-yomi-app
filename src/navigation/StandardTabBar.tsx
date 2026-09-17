@@ -25,19 +25,15 @@ export default function StandardTabBar({ state, navigation }: BottomTabBarProps)
         const config = TAB_CONFIG[route.name];
         if (!config) return null;
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
-          }
-        };
-
         return (
-          <TabButton key={route.key} isFocused={isFocused} config={config} onPress={onPress} />
+          <TabButton
+            key={route.key}
+            isFocused={isFocused}
+            config={config}
+            routeKey={route.key}
+            routeName={route.name}
+            navigation={navigation}
+          />
         );
       })}
     </View>

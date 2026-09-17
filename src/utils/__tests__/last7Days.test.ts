@@ -1,4 +1,4 @@
-import { buildLast7Days } from "../last7Days";
+import { buildLast7Days, buildRecentHistoryKey } from "../last7Days";
 
 describe("buildLast7Days", () => {
   const today = new Date(2026, 8, 16);
@@ -27,5 +27,34 @@ describe("buildLast7Days", () => {
     expect(days[0].status).toBe("learned");
     expect(days[5].status).toBe("partial");
     expect(days[6].status).toBe("missed");
+  });
+
+  it("fingerprints only the last 7 days so older history is ignored", () => {
+    const keyA = buildRecentHistoryKey(
+      [
+        { date: "2026-09-16", status: "learned" },
+        { date: "2026-09-10", status: "partial" },
+        { date: "2026-01-01", status: "learned" },
+      ],
+      today,
+    );
+    const keyB = buildRecentHistoryKey(
+      [
+        { date: "2026-09-16", status: "learned" },
+        { date: "2026-09-10", status: "partial" },
+        { date: "2026-01-01", status: "missed" },
+      ],
+      today,
+    );
+    const keyC = buildRecentHistoryKey(
+      [
+        { date: "2026-09-16", status: "missed" },
+        { date: "2026-09-10", status: "partial" },
+      ],
+      today,
+    );
+
+    expect(keyA).toBe(keyB);
+    expect(keyA).not.toBe(keyC);
   });
 });

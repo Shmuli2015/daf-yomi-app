@@ -5,8 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { useGuideSectionAnimation } from '../Settings/useGuideSectionAnimation';
 import AccordionSlideContent from '../AccordionSlideContent';
+import type { Seder } from '../../data/shas';
 
 interface SederSectionProps {
+  sederId: Seder;
   sederName: string;
   percentage: number;
   learnedDafim: number;
@@ -14,11 +16,12 @@ interface SederSectionProps {
   completedMasechtot: number;
   totalMasechtot: number;
   isExpanded: boolean;
-  onToggle: () => void;
+  onToggle: (sederId: Seder) => void;
   children?: React.ReactNode;
 }
 
 const SederSection = React.memo(function SederSection({
+  sederId,
   sederName,
   percentage,
   learnedDafim,
@@ -32,12 +35,15 @@ const SederSection = React.memo(function SederSection({
   const theme = useTheme();
   const styles = React.useMemo(() => createStyles(theme), [theme]);
   const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
+  const handlePress = React.useCallback(() => {
+    onToggle(sederId);
+  }, [onToggle, sederId]);
 
   return (
     <View style={styles.container}>
       <TouchableOpacity 
         style={styles.headerContainer} 
-        onPress={onToggle}
+        onPress={handlePress}
         activeOpacity={0.7}
       >
         <View style={styles.topRow}>

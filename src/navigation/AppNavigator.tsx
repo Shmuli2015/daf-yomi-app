@@ -14,7 +14,7 @@ export default function AppNavigator() {
     <Tab.Navigator
       initialRouteName="Home"
       tabBar={(props) => <StandardTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, freezeOnBlur: true }}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Calendar" component={CalendarScreen} />

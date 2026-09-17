@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import ConfirmModal from './ConfirmModal';
@@ -93,6 +93,31 @@ const HomeHeader = React.memo(function HomeHeader({
     masechetProgressPct,
   });
 
+  const handleOpenMarkMenu = useCallback(() => setShowMarkMenu(true), []);
+  const handleOpenUnmarkConfirm = useCallback(() => setShowConfirm(true), []);
+  const handleCancelConfirm = useCallback(() => setShowConfirm(false), []);
+  const handleConfirmUnmark = useCallback(() => {
+    setShowConfirm(false);
+    handleToggle?.();
+  }, [handleToggle]);
+  const handleCancelMarkMenu = useCallback(() => setShowMarkMenu(false), []);
+  const handleSelectFull = useCallback(() => {
+    setShowMarkMenu(false);
+    onMarkFull?.();
+  }, [onMarkFull]);
+  const handleSelectHalfA = useCallback(() => {
+    setShowMarkMenu(false);
+    onMarkPartialA?.();
+  }, [onMarkPartialA]);
+  const handleSelectHalfB = useCallback(() => {
+    setShowMarkMenu(false);
+    onMarkPartialB?.();
+  }, [onMarkPartialB]);
+  const handleUnmarkFromMenu = useCallback(() => {
+    setShowMarkMenu(false);
+    setShowConfirm(true);
+  }, []);
+
   return (
     <View style={styles.outerContainer}>
       <Animated.View style={animatedTodayJumpTranslateStyle}>
@@ -130,8 +155,8 @@ const HomeHeader = React.memo(function HomeHeader({
             onOpenTzuratHadaf={onOpenTzuratHadaf}
             onPressMasechet={onPressMasechet}
             onOpenQuickJump={onOpenQuickJump}
-            onOpenMarkMenu={() => setShowMarkMenu(true)}
-            onOpenUnmarkConfirm={() => setShowConfirm(true)}
+            onOpenMarkMenu={handleOpenMarkMenu}
+            onOpenUnmarkConfirm={handleOpenUnmarkConfirm}
             handleToggle={handleToggle}
             onMarkFull={onMarkFull}
             onDismissHalfDafTip={onDismissHalfDafTip}
@@ -143,34 +168,19 @@ const HomeHeader = React.memo(function HomeHeader({
         visible={showConfirm}
         title="ביטול סימון דף"
         message="האם לבטל את סימון הדף כנלמד?"
-        onConfirm={() => {
-          setShowConfirm(false);
-          handleToggle?.();
-        }}
-        onCancel={() => setShowConfirm(false)}
+        onConfirm={handleConfirmUnmark}
+        onCancel={handleCancelConfirm}
       />
 
       <DafMarkMenuModal
         visible={showMarkMenu}
-        onSelectFull={() => {
-          setShowMarkMenu(false);
-          onMarkFull?.();
-        }}
-        onSelectHalfA={() => {
-          setShowMarkMenu(false);
-          onMarkPartialA?.();
-        }}
-        onSelectHalfB={() => {
-          setShowMarkMenu(false);
-          onMarkPartialB?.();
-        }}
+        onSelectFull={handleSelectFull}
+        onSelectHalfA={handleSelectHalfA}
+        onSelectHalfB={handleSelectHalfB}
         partialAmud={partialAmud}
         showUnmark={studyStatus === 'partial'}
-        onUnmark={() => {
-          setShowMarkMenu(false);
-          setShowConfirm(true);
-        }}
-        onCancel={() => setShowMarkMenu(false)}
+        onUnmark={handleUnmarkFromMenu}
+        onCancel={handleCancelMarkMenu}
       />
     </View>
   );

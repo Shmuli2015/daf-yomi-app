@@ -35,10 +35,16 @@ export function useHomeHeaderSwipe({
   const swipeOpacity = useSharedValue(1);
   const onPrevDayRef = useRef(onPrevDay);
   const onNextDayRef = useRef(onNextDay);
+  const onTodayPressRef = useRef(onTodayPress);
+  const isTodayRef = useRef(isToday);
+  const currentDateRef = useRef(currentDate);
   const isAnimatingRef = useRef(false);
 
   onPrevDayRef.current = onPrevDay;
   onNextDayRef.current = onNextDay;
+  onTodayPressRef.current = onTodayPress;
+  isTodayRef.current = isToday;
+  currentDateRef.current = currentDate;
 
   const SWIPE_THRESHOLD = 50;
   const SLIDE_PX = 28;
@@ -162,8 +168,8 @@ export function useHomeHeaderSwipe({
     triggerSwipe('next');
   }, [triggerSwipe]);
 
-  const handleTodayPress = () => {
-    if (!onTodayPress || isToday) return;
+  const handleTodayPress = useCallback(() => {
+    if (!onTodayPressRef.current || isTodayRef.current) return;
 
     todayBtnScale.value = withSequence(
       withTiming(0.9, { duration: 80, easing: Easing.out(Easing.ease) }),
@@ -172,7 +178,7 @@ export function useHomeHeaderSwipe({
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const viewing = new Date(currentDate ?? today);
+    const viewing = new Date(currentDateRef.current ?? today);
     viewing.setHours(0, 0, 0, 0);
     const slideFrom = viewing < today ? -18 : 18;
 
@@ -181,8 +187,8 @@ export function useHomeHeaderSwipe({
     todayJumpX.value = withSpring(0, { damping: 16, stiffness: 180 });
     todayJumpOpacity.value = withTiming(1, { duration: 260, easing: Easing.out(Easing.cubic) });
 
-    onTodayPress();
-  };
+    onTodayPressRef.current();
+  }, [todayBtnScale, todayJumpOpacity, todayJumpX]);
 
   return {
     panResponder,
