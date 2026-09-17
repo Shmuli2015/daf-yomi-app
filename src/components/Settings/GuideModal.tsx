@@ -20,7 +20,10 @@ import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
 import InfoModal from '../InfoModal';
 import GuideSection from './GuideSection';
 import GuideItemText from './GuideItemText';
+import GuideTabToggle, { GuideTabType } from './GuideTabToggle';
+import GuideFaqList from './GuideFaqList';
 import { GUIDE_SECTIONS, FAQ_CHIPS } from './guideData';
+import { GUIDE_FAQ_ITEMS } from './guideFaqData';
 import { createGuideModalStyles } from './GuideModal.styles';
 import { useGuideExpandState } from './useGuideExpandState';
 import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
@@ -41,6 +44,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
   }
   const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType, dismiss } =
     useSheetDismissGesture({ visible, onClose });
+  const [activeTab, setActiveTab] = useState<GuideTabType>('faq');
   const chipsScrollRef = useRef<ScrollView>(null);
   const [mailHintVisible, setMailHintVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -87,6 +91,18 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
     isSectionExpanded,
   } = useGuideExpandState(hasSearch, normalizedQuery);
 
+  const filteredFaqItems = useMemo(() => {
+    if (!hasSearch) return GUIDE_FAQ_ITEMS;
+
+    return GUIDE_FAQ_ITEMS.filter((faq) => {
+      return (
+        faq.question.toLowerCase().includes(normalizedQuery) ||
+        faq.answer.toLowerCase().includes(normalizedQuery) ||
+        faq.category.toLowerCase().includes(normalizedQuery)
+      );
+    });
+  }, [hasSearch, normalizedQuery]);
+
   const filteredSections = useMemo(() => {
     if (!hasSearch) return GUIDE_SECTIONS;
 
@@ -111,7 +127,9 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
     }).filter(Boolean) as typeof GUIDE_SECTIONS;
   }, [hasSearch, normalizedQuery]);
 
-  const searchResultCount = useMemo(
+  const faqResultCount = filteredFaqItems.length;
+
+  const guideResultCount = useMemo(
     () => filteredSections.reduce((acc, s) => acc + s.items.length, 0),
     [filteredSections],
   );
@@ -171,7 +189,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
               />
               <TextInput
                 style={styles.searchInput}
-                placeholder="חפש במדריך..."
+                placeholder="חפש במדריך ובשאלות הנפוצות..."
                 placeholderTextColor={theme.colors.textMuted}
                 value={searchQuery}
                 onChangeText={(text) => {
@@ -192,6 +210,14 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
                 </TouchableOpacity>
               )}
             </View>
+
+            <GuideTabToggle
+              activeTab={activeTab}
+              onSelectTab={setActiveTab}
+              faqCount={faqResultCount}
+              guideCount={guideResultCount}
+              hasSearch={hasSearch}
+            />
 
             <ScrollView
               ref={chipsScrollRef}
@@ -233,80 +259,91 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
               })}
             </ScrollView>
 
-            {!hasSearch && (
-              <View style={styles.controlsRow}>
-                <TouchableOpacity
-                  onPress={handleExpandAll}
-                  style={styles.controlBtn}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="expand-outline"
-                    size={14}
-                    color={allExpanded ? theme.colors.textMuted : theme.colors.accent}
-                  />
-                  <Text style={allExpanded ? styles.controlBtnTextMuted : styles.controlBtnText}>
-                    פתח הכל
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleCollapseAll}
-                  style={styles.controlBtn}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons
-                    name="contract-outline"
-                    size={14}
-                    color={noneExpanded ? theme.colors.textMuted : theme.colors.accent}
-                  />
-                  <Text style={noneExpanded ? styles.controlBtnTextMuted : styles.controlBtnText}>
-                    סגור הכל
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
             {hasSearch && (
               <View style={styles.searchResultsInfo}>
                 <Text style={styles.searchResultsText}>
-                  נמצאו {searchResultCount} תוצאות עבור "{searchQuery}"
+                  נמצאו {activeTab === 'faq' ? faqResultCount : guideResultCount} תוצאות ב{activeTab === 'faq' ? 'שאלות הנפוצות' : 'מדריך המפורט'} עבור "{searchQuery}"
                 </Text>
               </View>
             )}
 
-            {filteredSections.length === 0 && (
-              <View style={styles.emptyState}>
-                <Ionicons
-                  name="help-circle-outline"
-                  size={48}
-                  color={theme.colors.textMuted}
-                />
-                <Text style={styles.emptyTitle}>לא נמצאו תוצאות</Text>
-                <Text style={styles.emptySubtitle}>
-                  לא מצאנו נושאים המתאימים לחיפוש "{searchQuery}". נסה לחפש במילים אחרות.
-                </Text>
-                <TouchableOpacity
-                  onPress={handleClearSearch}
-                  style={styles.clearSearchBtn}
-                >
-                  <Text style={styles.clearSearchBtnText}>נקה חיפוש</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {filteredSections.map((sec) => (
-              <GuideSection
-                key={sec.id}
-                id={sec.id}
-                icon={sec.icon}
-                title={sec.title}
-                items={sec.items}
-                theme={theme}
-                isExpanded={isSectionExpanded(sec.id)}
-                onToggle={toggleSection}
+            {activeTab === 'faq' ? (
+              <GuideFaqList
+                items={filteredFaqItems}
+                hasSearch={hasSearch}
                 searchQuery={searchQuery}
+                onClearSearch={handleClearSearch}
               />
-            ))}
+            ) : (
+              <>
+                {!hasSearch && (
+                  <View style={styles.controlsRow}>
+                    <TouchableOpacity
+                      onPress={handleExpandAll}
+                      style={styles.controlBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name="expand-outline"
+                        size={14}
+                        color={allExpanded ? theme.colors.textMuted : theme.colors.accent}
+                      />
+                      <Text style={allExpanded ? styles.controlBtnTextMuted : styles.controlBtnText}>
+                        פתח הכל
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={handleCollapseAll}
+                      style={styles.controlBtn}
+                      activeOpacity={0.7}
+                    >
+                      <Ionicons
+                        name="contract-outline"
+                        size={14}
+                        color={noneExpanded ? theme.colors.textMuted : theme.colors.accent}
+                      />
+                      <Text style={noneExpanded ? styles.controlBtnTextMuted : styles.controlBtnText}>
+                        סגור הכל
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {filteredSections.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <Ionicons
+                      name="help-circle-outline"
+                      size={48}
+                      color={theme.colors.textMuted}
+                    />
+                    <Text style={styles.emptyTitle}>לא נמצאו תוצאות</Text>
+                    <Text style={styles.emptySubtitle}>
+                      לא מצאנו נושאים המתאימים לחיפוש "{searchQuery}". נסה לחפש במילים אחרות או לעבור ללשונית "שאלות נפוצות".
+                    </Text>
+                    <TouchableOpacity
+                      onPress={handleClearSearch}
+                      style={styles.clearSearchBtn}
+                    >
+                      <Text style={styles.clearSearchBtnText}>נקה חיפוש</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {filteredSections.map((sec) => (
+                  <GuideSection
+                    key={sec.id}
+                    id={sec.id}
+                    icon={sec.icon}
+                    title={sec.title}
+                    items={sec.items}
+                    theme={theme}
+                    isExpanded={isSectionExpanded(sec.id)}
+                    onToggle={toggleSection}
+                    searchQuery={searchQuery}
+                  />
+                ))}
+              </>
+            )}
 
             <View style={styles.contactBox}>
               <View style={styles.contactHeader}>
