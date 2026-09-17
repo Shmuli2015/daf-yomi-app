@@ -1,5 +1,4 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
-import { InteractionManager } from 'react-native';
 import { SHAS_MASECHTOT, type Masechet } from '../../data/shas';
 import { getReaderDafim, isAmudAvailable } from '../../utils/shas';
 import { triggerSelection } from '../../utils/haptics';
@@ -155,7 +154,13 @@ export function useQuickJump({
       dafNum: selectedDaf,
       amud: finalAmud,
     });
-    InteractionManager.runAfterInteractions(() => {
+    if (typeof requestIdleCallback === 'function') {
+      requestIdleCallback(() => {
+        onClose();
+      });
+      return;
+    }
+    requestAnimationFrame(() => {
       onClose();
     });
   }, [selectedMasechet, selectedDaf, amud, isAmudAAvailable, onNavigate, onClose]);

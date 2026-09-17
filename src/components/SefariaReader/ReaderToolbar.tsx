@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LIGHT_THEME, useTheme } from '../../theme';
 import { useModeSwitcherIndicator } from '../../hooks/useModeSwitcherIndicator';
 import { READER_FONT_SIZE_MAX, READER_FONT_SIZE_MIN } from '../../utils/readerFontSize';
+import { triggerImpact } from '../../utils/haptics';
 import { createReaderToolbarStyles } from './ReaderToolbar.styles';
 
 export type ReaderTheme = 'light' | 'dark' | 'sepia';
@@ -62,6 +63,20 @@ export default function ReaderToolbar({
   );
   const modeIds = useMemo(() => visibleModes.map((mode) => mode.id), [visibleModes]);
   const { onSwitcherLayout, indicatorStyle, isReady } = useModeSwitcherIndicator(viewMode, modeIds);
+
+  const handleDecreaseFont = () => {
+    if (fontSize > READER_FONT_SIZE_MIN) {
+      triggerImpact('light');
+      onDecreaseFontSize();
+    }
+  };
+
+  const handleIncreaseFont = () => {
+    if (fontSize < READER_FONT_SIZE_MAX) {
+      triggerImpact('light');
+      onIncreaseFontSize();
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -148,9 +163,9 @@ export default function ReaderToolbar({
           <View style={styles.fontControls}>
             <TouchableOpacity
               style={styles.fontBtn}
-              onPress={onDecreaseFontSize}
+              onPress={handleDecreaseFont}
               disabled={fontSize <= READER_FONT_SIZE_MIN}
-              activeOpacity={0.7}
+              activeOpacity={0.6}
               accessibilityLabel="הקטן גופן"
             >
               <Text style={[styles.fontBtnText, fontSize <= READER_FONT_SIZE_MIN && styles.btnDisabled]}>A-</Text>
@@ -158,9 +173,9 @@ export default function ReaderToolbar({
             <Text style={styles.fontSizeLabel}>{fontSize}</Text>
             <TouchableOpacity
               style={styles.fontBtn}
-              onPress={onIncreaseFontSize}
+              onPress={handleIncreaseFont}
               disabled={fontSize >= READER_FONT_SIZE_MAX}
-              activeOpacity={0.7}
+              activeOpacity={0.6}
               accessibilityLabel="הגדל גופן"
             >
               <Text style={[styles.fontBtnText, fontSize >= READER_FONT_SIZE_MAX && styles.btnDisabled]}>A+</Text>

@@ -1,24 +1,20 @@
-import { Platform, StyleSheet } from 'react-native';
-import { LIGHT_THEME, type Theme } from '../../theme';
+import { StyleSheet } from 'react-native';
+import type { Theme } from '../../theme';
 
-export function createChavrutaTextContainerStyles(theme: Theme) {
-  const textAlignment = Platform.OS === 'web' ? 'right' : 'left';
-  const onAccent = LIGHT_THEME.colors.surface;
-
+export function createSefariaTextContainerStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.colors.background,
-      direction: 'rtl',
     },
     scrollView: {
       flex: 1,
     },
     scrollContent: {
       paddingHorizontal: 16,
-      paddingVertical: 16,
+      paddingVertical: 12,
       paddingBottom: 32,
-      gap: 14,
+      gap: 8,
     },
     centerContainer: {
       flex: 1,
@@ -26,7 +22,6 @@ export function createChavrutaTextContainerStyles(theme: Theme) {
       alignItems: 'center',
       padding: 24,
       gap: 12,
-      backgroundColor: theme.colors.background,
     },
     loadingText: {
       fontSize: 14,
@@ -56,7 +51,7 @@ export function createChavrutaTextContainerStyles(theme: Theme) {
       backgroundColor: theme.colors.accent,
     },
     retryBtnText: {
-      color: onAccent,
+      color: theme.colors.white,
       fontWeight: '700',
       fontSize: 14,
     },
@@ -65,6 +60,7 @@ export function createChavrutaTextContainerStyles(theme: Theme) {
       paddingBottom: 12,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.colors.border,
+      marginBottom: 4,
     },
     titleHe: {
       fontSize: 22,
@@ -72,18 +68,6 @@ export function createChavrutaTextContainerStyles(theme: Theme) {
       textAlign: 'center',
       writingDirection: 'rtl',
       color: theme.colors.accent,
-    },
-    paragraph: {
-      gap: 8,
-      alignSelf: 'stretch',
-      width: '100%',
-    },
-    paragraphText: {
-      textAlign: textAlignment,
-      writingDirection: 'rtl',
-      alignSelf: 'stretch',
-      width: '100%',
-      color: theme.colors.textPrimary,
     },
   });
 }

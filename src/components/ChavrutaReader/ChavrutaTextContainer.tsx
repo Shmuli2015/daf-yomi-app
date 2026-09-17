@@ -1,20 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ContentLicensesModal from '../Settings/ContentLicensesModal';
 import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
-import ReaderAttribution from '../SefariaReader/ReaderAttribution';
-import { CHAVRUTA_ATTRIBUTION_SHORT } from '../../data/contentLicenses';
+import ReaderSkeleton from '../SefariaReader/ReaderSkeleton';
+import ScrollToTopFab from '../SefariaReader/ScrollToTopFab';
 import { useTheme } from '../../theme';
 import type { ChavrutaBlock, ChavrutaFootnote, ChavrutaPageData } from '../../services/chavrutaApi';
 import ChavrutaBodyText from './ChavrutaBodyText';
 import ChavrutaFootnoteSheet from './ChavrutaFootnoteSheet';
+import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { createChavrutaTextContainerStyles } from './ChavrutaTextContainer.styles';
 
 interface ChavrutaTextContainerProps {
@@ -24,6 +23,7 @@ interface ChavrutaTextContainerProps {
   onRetry: () => void;
   fontSize: number;
   showNotes: boolean;
+  onScrollProgress?: (progress: number) => void;
 }
 
 export default function ChavrutaTextContainer({
@@ -33,28 +33,30 @@ export default function ChavrutaTextContainer({
   onRetry,
   fontSize,
   showNotes,
+  onScrollProgress,
 }: ChavrutaTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createChavrutaTextContainerStyles(theme), [theme]);
-  const [licensesVisible, setLicensesVisible] = useState(false);
   const [activeFootnoteIndex, setActiveFootnoteIndex] = useState<number | null>(null);
+
+  const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
+  const { scrollViewRef, showFab, handleScroll, scrollToTop } =
+    useScrollProgress({
+      onProgressChange: onScrollProgress,
+      resetKey,
+    });
 
   const footnotesById = useMemo(
     () => new Map((data?.footnotes ?? []).map((footnote) => [footnote.id, footnote])),
-    [data?.footnotes]
+    [data?.footnotes],
   );
 
   useEffect(() => {
     setActiveFootnoteIndex(null);
   }, [data?.masechetEn, data?.dafNum, data?.amud, showNotes]);
 
-  if (loading && !data) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.accent} />
-        <Text style={styles.loadingText}>טוען את חברותא...</Text>
-      </View>
-    );
+  if (loading) {
+    return <ReaderSkeleton />;
   }
 
   if (!data) {
@@ -90,15 +92,15 @@ export default function ChavrutaTextContainer({
     setActiveFootnoteIndex(index >= 0 ? index : null);
   };
 
-  const pageKey = `${data.masechetEn}-${data.dafNum}-${data.amud}`;
-
   return (
     <View style={styles.container}>
       <ScrollView
-        key={pageKey}
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator
+        showsVerticalScrollIndicator={true}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.headerBox}>
           <Text style={styles.titleHe}>{`חברותא · ${data.titleHe}`}</Text>
@@ -146,18 +148,12 @@ export default function ChavrutaTextContainer({
             </View>
           );
         })}
-
-        <ReaderAttribution
-          lines={[CHAVRUTA_ATTRIBUTION_SHORT]}
-          textColor={theme.colors.textMuted}
-          accentColor={theme.colors.accent}
-          onPress={() => setLicensesVisible(true)}
-        />
       </ScrollView>
 
-      <ContentLicensesModal
-        visible={licensesVisible}
-        onClose={() => setLicensesVisible(false)}
+      <ScrollToTopFab
+        visible={showFab}
+        onPress={scrollToTop}
+        accentColor={theme.colors.accent}
       />
 
       <ChavrutaFootnoteSheet

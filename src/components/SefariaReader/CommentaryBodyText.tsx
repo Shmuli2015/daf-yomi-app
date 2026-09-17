@@ -3,6 +3,7 @@ import { Text, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 import {
   emphasizeRashiDibur,
   parseCommentaryRuns,
+  stripEmDash,
 } from '../../utils/commentaryEmphasis';
 import type { SefariaCommentatorKey } from '../../utils/sefariaCommentators';
 
@@ -19,7 +20,8 @@ export default function CommentaryBodyText({
   baseStyle,
   accentColor,
 }: CommentaryBodyTextProps) {
-  const prepared = commentator && commentator !== 'steinsaltz' ? emphasizeRashiDibur(text) : text;
+  const sanitized = stripEmDash(text);
+  const prepared = commentator && commentator !== 'steinsaltz' ? emphasizeRashiDibur(sanitized) : sanitized;
   const runs = parseCommentaryRuns(prepared);
 
   return (
@@ -33,7 +35,6 @@ export default function CommentaryBodyText({
               styles.gemaraRun,
               {
                 color: accentColor,
-                backgroundColor: `${accentColor}26`,
               },
             ]}
           >

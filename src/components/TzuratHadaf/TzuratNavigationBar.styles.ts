@@ -7,40 +7,50 @@ export const createTzuratNavigationStyles = (
 ) =>
   StyleSheet.create({
     container: {
-      flexDirection: 'row',
-      gap: isLandscape ? 4 : 8,
       paddingHorizontal: isLandscape ? 8 : 12,
-      paddingTop: isLandscape ? 6 : 12,
+      paddingTop: isLandscape ? 4 : 6,
       borderTopWidth: 1,
       borderTopColor: theme.colors.border,
       backgroundColor: theme.colors.surface,
-    },
-    btn: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: isLandscape ? 6 : 10,
-      paddingHorizontal: 4,
-      borderRadius: isLandscape ? 10 : 14,
-      backgroundColor: theme.colors.background,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
       gap: isLandscape ? 2 : 4,
     },
-    btnCompact: {
-      flex: 0.85,
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: isLandscape ? 4 : 8,
+    },
+    btn: {
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    btnAmud: {
+      flex: 1,
+      minHeight: 44,
+      paddingVertical: isLandscape ? 4 : 6,
+      paddingHorizontal: 4,
+    },
+    btnDaf: {
+      flexGrow: 0,
+      flexShrink: 0,
+      minWidth: 44,
+      minHeight: 44,
+      paddingHorizontal: 4,
+    },
+    btnInner: {
+      width: '100%',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: isLandscape ? 2 : 4,
     },
     btnDisabled: {
       opacity: 0.45,
     },
     btnText: {
       color: theme.colors.textPrimary,
-      fontSize: isLandscape ? 9 : 11,
-      fontWeight: '800',
+      fontSize: isLandscape ? 11 : 13,
+      fontWeight: '700',
       textAlign: 'center',
-    },
-    btnTextCompact: {
-      fontSize: isLandscape ? 8 : 10,
     },
     btnTextDisabled: {
       color: theme.colors.textSecondary,

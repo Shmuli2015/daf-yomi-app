@@ -68,7 +68,7 @@ export function useChavrutaPage(location: DafLocation, enabled: boolean): UseCha
 
   return {
     data,
-    loading: enabled && !isCurrent && data == null,
+    loading: enabled && !isCurrent,
     error: isCurrent ? error : null,
     reload,
   };

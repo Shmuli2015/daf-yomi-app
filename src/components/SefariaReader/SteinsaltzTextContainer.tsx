@@ -1,25 +1,21 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import {
-  ActivityIndicator,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ContentLicensesModal from '../Settings/ContentLicensesModal';
 import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import CommentaryBodyText from './CommentaryBodyText';
-import ReaderAttribution from './ReaderAttribution';
-import {
-  SEFARIA_INDEPENDENCE_NOTE,
-  steinsaltzAttributionForTref,
-} from '../../data/contentLicenses';
+import ReaderSkeleton from './ReaderSkeleton';
+import ScrollToTopFab from './ScrollToTopFab';
 import type { SefariaPageData } from '../../services/sefariaTextApi';
 import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
 import { collectCommentariesWithIndex } from '../../utils/sefariaCommentators';
 import { useTheme } from '../../theme';
 import type { ReaderTheme } from './ReaderToolbar';
+import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { createSteinsaltzTextContainerStyles } from './SteinsaltzTextContainer.styles';
 
 interface SteinsaltzTextContainerProps {
@@ -30,6 +26,7 @@ interface SteinsaltzTextContainerProps {
   fontSize: number;
   readerTheme?: ReaderTheme;
   accentColor: string;
+  onScrollProgress?: (progress: number) => void;
 }
 
 export default function SteinsaltzTextContainer({
@@ -40,10 +37,16 @@ export default function SteinsaltzTextContainer({
   fontSize,
   readerTheme,
   accentColor,
+  onScrollProgress,
 }: SteinsaltzTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSteinsaltzTextContainerStyles(theme), [theme]);
-  const [licensesVisible, setLicensesVisible] = useState(false);
+
+  const { scrollViewRef, showFab, handleScroll, scrollToTop } =
+    useScrollProgress({
+      onProgressChange: onScrollProgress,
+      resetKey: data?.tref || '',
+    });
 
   const isSepia = readerTheme === 'sepia';
   const bgColor = isSepia ? theme.colors.surface : theme.colors.background;
@@ -57,12 +60,7 @@ export default function SteinsaltzTextContainer({
   );
 
   if (loading) {
-    return (
-      <View style={[styles.centerContainer, { backgroundColor: bgColor }]}>
-        <ActivityIndicator size="large" color={accentColor} />
-        <Text style={styles.loadingText}>טוען את שטיינזלץ...</Text>
-      </View>
-    );
+    return <ReaderSkeleton />;
   }
 
   if (error || !data) {
@@ -91,9 +89,12 @@ export default function SteinsaltzTextContainer({
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator
+        showsVerticalScrollIndicator={true}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.headerBox}>
           <Text style={styles.titleHe}>{`שטיינזלץ · ${data.titleHe}`}</Text>
@@ -138,18 +139,12 @@ export default function SteinsaltzTextContainer({
             </View>
           );
         })}
-
-        <ReaderAttribution
-          lines={[steinsaltzAttributionForTref(data.tref), SEFARIA_INDEPENDENCE_NOTE]}
-          textColor={theme.colors.textMuted}
-          accentColor={accentColor}
-          onPress={() => setLicensesVisible(true)}
-        />
       </ScrollView>
 
-      <ContentLicensesModal
-        visible={licensesVisible}
-        onClose={() => setLicensesVisible(false)}
+      <ScrollToTopFab
+        visible={showFab}
+        onPress={scrollToTop}
+        accentColor={accentColor}
       />
     </View>
   );
