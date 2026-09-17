@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LayoutChangeEvent } from 'react-native';
 import {
   Easing,
@@ -16,22 +16,35 @@ const HEIGHT_EPSILON = 1;
 
 export function useAccordionSlide(isExpanded: boolean) {
   const [isRendered, setIsRendered] = useState(isExpanded);
+  const [isHeightLocked, setIsHeightLocked] = useState(!isExpanded);
   const measuredHeight = useSharedValue(0);
   const animatedHeight = useSharedValue(0);
+  const skipMountEffect = useRef(true);
 
   const finishClose = useCallback(() => {
     setIsRendered(false);
   }, []);
 
   useEffect(() => {
+    if (skipMountEffect.current) {
+      skipMountEffect.current = false;
+      return;
+    }
+
     if (isExpanded) {
       setIsRendered(true);
-      if (measuredHeight.value > 0) {
+      if (isHeightLocked && measuredHeight.value > 0) {
         animatedHeight.value = withTiming(measuredHeight.value, {
           duration: OPEN_DURATION,
           easing: OPEN_EASING,
         });
       }
+      return;
+    }
+
+    if (!isHeightLocked) {
+      animatedHeight.value = measuredHeight.value;
+      setIsHeightLocked(true);
       return;
     }
 
@@ -44,7 +57,7 @@ export function useAccordionSlide(isExpanded: boolean) {
         }
       }
     );
-  }, [isExpanded, animatedHeight, measuredHeight, finishClose]);
+  }, [isExpanded, isHeightLocked, animatedHeight, measuredHeight, finishClose]);
 
   const onContentLayout = (event: LayoutChangeEvent) => {
     const nextHeight = Math.ceil(event.nativeEvent.layout.height);
@@ -59,7 +72,7 @@ export function useAccordionSlide(isExpanded: boolean) {
 
     measuredHeight.value = nextHeight;
 
-    if (!isExpanded) {
+    if (!isExpanded || !isHeightLocked) {
       return;
     }
 
@@ -68,7 +81,10 @@ export function useAccordionSlide(isExpanded: boolean) {
         duration: OPEN_DURATION,
         easing: OPEN_EASING,
       });
+      return;
     }
+
+    animatedHeight.value = nextHeight;
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -76,5 +92,5 @@ export function useAccordionSlide(isExpanded: boolean) {
     overflow: 'hidden',
   }));
 
-  return { isRendered, onContentLayout, animatedStyle };
+  return { isRendered, onContentLayout, animatedStyle, isHeightLocked };
 }

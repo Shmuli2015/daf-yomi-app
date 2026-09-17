@@ -22,6 +22,7 @@ import GuideSection from './GuideSection';
 import GuideItemText from './GuideItemText';
 import { GUIDE_SECTIONS, FAQ_CHIPS } from './guideData';
 import { createGuideModalStyles } from './GuideModal.styles';
+import { useGuideExpandState } from './useGuideExpandState';
 import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
 import SheetDragHandle from '../SheetDragHandle';
 
@@ -57,39 +58,12 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
     }
   }, [visible, scrollChipsToStart]);
 
-  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>(() =>
-    GUIDE_SECTIONS.reduce((acc, sec) => {
-      acc[sec.id] = true;
-      return acc;
-    }, {} as Record<string, boolean>),
-  );
-
   const openSupportEmail = useCallback(async () => {
     try {
       await Linking.openURL(getSupportMailtoUrl());
     } catch {
       setMailHintVisible(true);
     }
-  }, []);
-
-  const toggleSection = useCallback((id: string) => {
-    setExpandedMap((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  }, []);
-
-  const handleExpandAll = useCallback(() => {
-    setExpandedMap(
-      GUIDE_SECTIONS.reduce((acc, sec) => {
-        acc[sec.id] = true;
-        return acc;
-      }, {} as Record<string, boolean>),
-    );
-  }, []);
-
-  const handleCollapseAll = useCallback(() => {
-    setExpandedMap({});
   }, []);
 
   const handleChipPress = useCallback((chipId: string, query: string) => {
@@ -104,6 +78,14 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const hasSearch = normalizedQuery.length > 0;
+  const {
+    toggleSection,
+    handleExpandAll,
+    handleCollapseAll,
+    allExpanded,
+    noneExpanded,
+    isSectionExpanded,
+  } = useGuideExpandState(hasSearch, normalizedQuery);
 
   const filteredSections = useMemo(() => {
     if (!hasSearch) return GUIDE_SECTIONS;
@@ -225,7 +207,11 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
                     ]}
                     activeOpacity={0.7}
                   >
-                    <Text style={styles.faqChipEmoji}>{chip.emoji}</Text>
+                    <Ionicons
+                      name={chip.icon}
+                      size={14}
+                      color={isSelected ? theme.colors.accent : theme.colors.textSecondary}
+                    />
                     <Text
                       style={[
                         styles.faqChipText,
@@ -250,9 +236,11 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
                   <Ionicons
                     name="expand-outline"
                     size={14}
-                    color={theme.colors.accent}
+                    color={allExpanded ? theme.colors.textMuted : theme.colors.accent}
                   />
-                  <Text style={styles.controlBtnText}>פתח הכל</Text>
+                  <Text style={allExpanded ? styles.controlBtnTextMuted : styles.controlBtnText}>
+                    פתח הכל
+                  </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleCollapseAll}
@@ -262,9 +250,11 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
                   <Ionicons
                     name="contract-outline"
                     size={14}
-                    color={theme.colors.textMuted}
+                    color={noneExpanded ? theme.colors.textMuted : theme.colors.accent}
                   />
-                  <Text style={styles.controlBtnTextMuted}>סגור הכל</Text>
+                  <Text style={noneExpanded ? styles.controlBtnTextMuted : styles.controlBtnText}>
+                    סגור הכל
+                  </Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -307,7 +297,7 @@ export function GuideModal({ visible, onClose }: GuideModalProps) {
                 title={sec.title}
                 items={sec.items}
                 theme={theme}
-                isExpanded={hasSearch || !!expandedMap[sec.id]}
+                isExpanded={isSectionExpanded(sec.id)}
                 onToggle={() => toggleSection(sec.id)}
                 searchQuery={searchQuery}
               />

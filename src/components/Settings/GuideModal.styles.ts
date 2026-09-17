@@ -127,9 +127,6 @@ export const createGuideModalStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.accentLight,
       borderColor: theme.colors.accent,
     },
-    faqChipEmoji: {
-      fontSize: 13,
-    },
     faqChipText: {
       fontSize: 13,
       fontWeight: '600',

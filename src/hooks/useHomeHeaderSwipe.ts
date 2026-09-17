@@ -134,13 +134,19 @@ export function useHomeHeaderSwipe({
     width: `${progressWidth.value}%`,
   }));
 
-  const animatedSwipeStyle = useAnimatedStyle(() => ({
+  const animatedSwipeTranslateStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: swipeTranslateX.value }],
+  }));
+
+  const animatedSwipeOpacityStyle = useAnimatedStyle(() => ({
     opacity: swipeOpacity.value,
   }));
 
-  const animatedTodayJumpStyle = useAnimatedStyle(() => ({
+  const animatedTodayJumpTranslateStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: todayJumpX.value }],
+  }));
+
+  const animatedTodayJumpOpacityStyle = useAnimatedStyle(() => ({
     opacity: todayJumpOpacity.value,
   }));
 
@@ -181,8 +187,10 @@ export function useHomeHeaderSwipe({
   return {
     panResponder,
     animatedProgressStyle,
-    animatedSwipeStyle,
-    animatedTodayJumpStyle,
+    animatedSwipeTranslateStyle,
+    animatedSwipeOpacityStyle,
+    animatedTodayJumpTranslateStyle,
+    animatedTodayJumpOpacityStyle,
     animatedTodayBtnStyle,
     handleTodayPress,
     handlePrevDay,

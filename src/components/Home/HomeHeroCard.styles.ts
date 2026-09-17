@@ -7,11 +7,14 @@ export const createHomeHeroCardStyles = (theme: ReturnType<typeof useTheme>) =>
       backgroundColor: theme.colors.surface,
       marginHorizontal: 20,
       borderRadius: 32,
-      padding: 24,
-      borderWidth: 1,
+      borderWidth: 2,
       borderColor: theme.colors.border,
-      overflow: 'hidden',
       ...theme.shadow.hero,
+    },
+    dafCardInner: {
+      overflow: 'hidden',
+      borderRadius: 32,
+      padding: 24,
     },
     cardHeader: {
       flexDirection: 'row',

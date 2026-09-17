@@ -1,28 +1,27 @@
 import { useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform, type AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { getSettings } from '../db/database';
+import { getDailyRecord, getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
 import { useAppStore } from '../store/useAppStore';
 import { getNotificationPermissionStatus } from '../utils/notificationPermission';
 import { getSnoozeReminderCopy } from '../utils/notificationCopy';
 import { requestHomeTabFocus } from '../utils/homeTabFocus';
+import { getDateStr } from '../utils/dafYomi';
+import { dismissReminderFromTray } from '../utils/dismissReminderFromTray';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
-export function dismissReminderFromTray(notificationId?: string): void {
-  setImmediate(() => {
-    const delayMs = Platform.OS === 'android' ? 300 : 50;
-    setTimeout(() => {
-      void (async () => {
-        if (notificationId) {
-          await Notifications.dismissNotificationAsync(notificationId).catch(() => {});
-        }
-        await Notifications.dismissAllNotificationsAsync().catch(() => {});
-      })();
-    }, delayMs);
-  });
+function dismissStuckRemindersIfTodayLearned(): void {
+  try {
+    const record = getDailyRecord(getDateStr(new Date()));
+    if (record?.status === 'learned') {
+      void dismissReminderFromTray();
+    }
+  } catch (e) {
+    console.warn('Dismiss stuck reminders error:', e);
+  }
 }
 
 export function useNotificationsSetup() {
@@ -75,34 +74,38 @@ export function useNotificationsSetup() {
 
         if (cancelled) return;
 
+        dismissStuckRemindersIfTodayLearned();
+
         responseSubRef.current?.remove();
         responseSubRef.current = Notifications.addNotificationResponseReceivedListener(response => {
           const { actionIdentifier } = response;
           const notificationId = response.notification.request.identifier;
 
           if (actionIdentifier === 'finish-daf') {
-            dismissReminderFromTray(notificationId);
+            void dismissReminderFromTray(notificationId);
             const { markTodayAsLearned, loadInitialData } = useAppStore.getState();
             loadInitialData();
             markTodayAsLearned();
           } else if (actionIdentifier === 'later') {
-            dismissReminderFromTray(notificationId);
             const settings = getSettings();
             const snoozeCopy = getSnoozeReminderCopy(new Date());
-            void Notifications.scheduleNotificationAsync({
-              identifier: 'later-reminder',
-              content: {
-                title: snoozeCopy.title,
-                body: snoozeCopy.body,
-                sound: settings.notification_sound_enabled !== 0,
-                categoryIdentifier: 'study-reminder',
-              },
-              trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-                seconds: 3600,
-                repeats: false,
-              },
-            });
+            void (async () => {
+              await dismissReminderFromTray(notificationId);
+              await Notifications.scheduleNotificationAsync({
+                identifier: 'later-reminder',
+                content: {
+                  title: snoozeCopy.title,
+                  body: snoozeCopy.body,
+                  sound: settings.notification_sound_enabled !== 0,
+                  categoryIdentifier: 'study-reminder',
+                },
+                trigger: {
+                  type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+                  seconds: 3600,
+                  repeats: false,
+                },
+              });
+            })();
           } else if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
             const { loadInitialData } = useAppStore.getState();
             loadInitialData();
@@ -114,8 +117,16 @@ export function useNotificationsSetup() {
       }
     })();
 
+    const onAppStateChange = (nextState: AppStateStatus) => {
+      if (nextState === 'active') {
+        dismissStuckRemindersIfTodayLearned();
+      }
+    };
+    const appStateSub = AppState.addEventListener('change', onAppStateChange);
+
     return () => {
       cancelled = true;
+      appStateSub.remove();
       responseSubRef.current?.remove();
       responseSubRef.current = undefined;
     };

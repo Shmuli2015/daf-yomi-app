@@ -12,17 +12,18 @@ export default function AccordionSlideContent({
   isExpanded,
   children,
 }: AccordionSlideContentProps) {
-  const { isRendered, onContentLayout, animatedStyle } = useAccordionSlide(isExpanded);
+  const { isRendered, onContentLayout, animatedStyle, isHeightLocked } =
+    useAccordionSlide(isExpanded);
 
   if (!isRendered) {
     return null;
   }
 
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View style={isHeightLocked ? animatedStyle : undefined}>
       <View
         onLayout={onContentLayout}
-        style={styles.measure}
+        style={isHeightLocked ? styles.measure : undefined}
         collapsable={false}
         renderToHardwareTextureAndroid
         shouldRasterizeIOS

@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
+import { useModeSwitcherIndicator } from '../../hooks/useModeSwitcherIndicator';
 import { createSederFilterBarStyles } from './sederFilterBarStyles';
 import type { Seder } from '../../data/shas';
 import { triggerSelection } from '../../utils/haptics';
@@ -22,11 +24,13 @@ interface SederFilterBarProps {
 }
 
 const STATUS_OPTIONS: { id: StatusFilter; label: string }[] = [
-  { id: 'all', label: 'הכל' },
-  { id: 'in_progress', label: 'בתהליך' },
-  { id: 'completed', label: 'הושלמו' },
   { id: 'not_started', label: 'טרם נלמדו' },
+  { id: 'completed', label: 'הושלמו' },
+  { id: 'in_progress', label: 'בתהליך' },
+  { id: 'all', label: 'הכל' },
 ];
+
+const STATUS_IDS = STATUS_OPTIONS.map((opt) => opt.id);
 
 export default function SederFilterBar({
   selectedSeder,
@@ -41,6 +45,10 @@ export default function SederFilterBar({
 }: SederFilterBarProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSederFilterBarStyles(theme), [theme]);
+  const { onSwitcherLayout, indicatorStyle, isReady } = useModeSwitcherIndicator(
+    selectedStatus,
+    STATUS_IDS,
+  );
 
   const isFilteringActive = searchQuery.trim().length > 0 || selectedStatus !== 'all';
 
@@ -92,17 +100,19 @@ export default function SederFilterBar({
         {onOpenQuickJump && <QuickJumpButton onPress={onOpenQuickJump} />}
       </View>
 
-      <View style={styles.segmentedControl}>
+      <View style={styles.segmentedControl} onLayout={onSwitcherLayout}>
+        <Animated.View pointerEvents="none" style={[styles.indicator, indicatorStyle]} />
         {STATUS_OPTIONS.map((opt) => {
           const isActive = selectedStatus === opt.id;
           return (
             <TouchableOpacity
               key={opt.id}
-              style={[styles.segment, isActive && styles.segmentActive]}
+              style={[styles.segment, isActive && !isReady && styles.segmentActiveFallback]}
               onPress={() => handleStatusPress(opt.id)}
               activeOpacity={0.75}
               accessibilityRole="button"
               accessibilityLabel={opt.label}
+              accessibilityState={{ selected: isActive }}
             >
               <Text
                 style={[

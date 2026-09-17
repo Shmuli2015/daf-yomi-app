@@ -49,9 +49,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     container: {
       flexDirection: 'row',
       backgroundColor: theme.colors.tabBar,
-      borderTopWidth: 1,
+      borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.colors.border,
-      paddingTop: 12,
+      paddingTop: 8,
       ...theme.shadow.tabBar,
     },
   });

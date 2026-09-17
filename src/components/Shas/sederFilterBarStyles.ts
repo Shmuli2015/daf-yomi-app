@@ -46,8 +46,18 @@ export function createSederFilterBarStyles(theme: Theme) {
       padding: 3,
       borderWidth: 1,
       borderColor: theme.colors.border,
-      gap: 3,
+      overflow: 'hidden',
+      direction: 'ltr',
       ...theme.shadow.card,
+    },
+    indicator: {
+      position: 'absolute',
+      top: 3,
+      bottom: 3,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.accentLight,
+      borderWidth: 1,
+      borderColor: theme.colors.accentBorder,
     },
     segment: {
       flex: 1,
@@ -55,8 +65,9 @@ export function createSederFilterBarStyles(theme: Theme) {
       justifyContent: 'center',
       paddingVertical: 8,
       borderRadius: theme.radius.sm,
+      zIndex: 1,
     },
-    segmentActive: {
+    segmentActiveFallback: {
       backgroundColor: theme.colors.accentLight,
       borderWidth: 1,
       borderColor: theme.colors.accentBorder,
