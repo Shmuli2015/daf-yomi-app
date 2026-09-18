@@ -2,9 +2,9 @@ import { registerRootComponent } from 'expo';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as TaskManager from 'expo-task-manager';
 import * as Notifications from 'expo-notifications';
-import { initDB } from './src/db/database';
+import { initDB, getSettings } from './src/db/database';
 import { useAppStore } from './src/store/useAppStore';
-import { getSnoozeReminderCopy } from './src/utils/notificationCopy';
+import { scheduleSnoozeReminder } from './src/utils/scheduleSnoozeReminder';
 import {
   dismissReminderFromTray,
   getNotificationIdFromActionData,
@@ -37,22 +37,8 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error }) => 
       await dismissReminderFromTray(notificationId);
     } else if (actionIdentifier === 'later') {
       await dismissReminderFromTray(notificationId);
-
-      const snoozeCopy = getSnoozeReminderCopy(new Date());
-      await Notifications.scheduleNotificationAsync({
-        identifier: 'later-reminder',
-        content: {
-          title: snoozeCopy.title,
-          body: snoozeCopy.body,
-          sound: true,
-          categoryIdentifier: 'study-reminder',
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-          seconds: 3600,
-          repeats: false,
-        },
-      }).catch(() => {});
+      const settings = getSettings();
+      await scheduleSnoozeReminder(settings.notification_sound_enabled !== 0).catch(() => {});
     }
   }
 });
