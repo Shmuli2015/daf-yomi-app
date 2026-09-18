@@ -3,6 +3,7 @@ import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
+import { useKeepAwake } from 'expo-keep-awake';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import TzuratHeader from '../components/TzuratHadaf/TzuratHeader';
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
@@ -37,6 +38,7 @@ function getMasechetHe(masechetEn: string, fallback?: string): string | undefine
 }
 
 export default function TzuratHadafScreen() {
+  useKeepAwake();
   const theme = useTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
