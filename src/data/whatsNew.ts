@@ -8,6 +8,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.1.4',
+    highlights: [
+      'המסך לא נכבה בזמן קריאת הגמרא',
+      'תיקון כפתורי דחייה וביטול בהתראות',
+    ],
+  },
+  {
     version: '1.1.3',
     highlights: [
       'פירושי רש״י ותוספות נפתחים מתחת לקטע בגמרא',
