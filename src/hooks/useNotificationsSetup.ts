@@ -6,7 +6,7 @@ import { getDailyRecord, getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
 import { useAppStore } from '../store/useAppStore';
 import { getNotificationPermissionStatus } from '../utils/notificationPermission';
-import { getSnoozeReminderCopy } from '../utils/notificationCopy';
+import { scheduleSnoozeReminder } from '../utils/scheduleSnoozeReminder';
 import { requestHomeTabFocus } from '../utils/homeTabFocus';
 import { getDateStr } from '../utils/dafYomi';
 import { dismissReminderFromTray } from '../utils/dismissReminderFromTray';
@@ -82,29 +82,17 @@ export function useNotificationsSetup() {
           const notificationId = response.notification.request.identifier;
 
           if (actionIdentifier === 'finish-daf') {
-            void dismissReminderFromTray(notificationId);
-            const { markTodayAsLearned, loadInitialData } = useAppStore.getState();
-            loadInitialData();
-            markTodayAsLearned();
-          } else if (actionIdentifier === 'later') {
-            const settings = getSettings();
-            const snoozeCopy = getSnoozeReminderCopy(new Date());
             void (async () => {
               await dismissReminderFromTray(notificationId);
-              await Notifications.scheduleNotificationAsync({
-                identifier: 'later-reminder',
-                content: {
-                  title: snoozeCopy.title,
-                  body: snoozeCopy.body,
-                  sound: settings.notification_sound_enabled !== 0,
-                  categoryIdentifier: 'study-reminder',
-                },
-                trigger: {
-                  type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-                  seconds: 3600,
-                  repeats: false,
-                },
-              });
+              const { markTodayAsLearned, loadInitialData } = useAppStore.getState();
+              loadInitialData();
+              markTodayAsLearned();
+            })();
+          } else if (actionIdentifier === 'later') {
+            const settings = getSettings();
+            void (async () => {
+              await dismissReminderFromTray(notificationId);
+              await scheduleSnoozeReminder(settings.notification_sound_enabled !== 0);
             })();
           } else if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
             const { loadInitialData } = useAppStore.getState();
