@@ -1,9 +1,11 @@
 import {
   APP_NOTES_END_MARKER,
+  filterReleaseHighlightsForUpdateFromEntries,
   formatWhatsNewReleaseBodyFrom,
   getAllReleaseHighlightsFromEntries,
   getHighlightsFromEntries,
   getHighlightsSinceFromEntries,
+  getKnownHighlightsUpToVersionFromEntries,
   parseReleaseNotesBody,
   shouldShowWhatsNewOnLaunch,
   type WhatsNewEntry,
@@ -55,6 +57,34 @@ describe('whatsNew', () => {
       'חלון מה חדש אחרי ההתקנה',
       'נקודה אחת',
     ]);
+  });
+
+  it('collects local highlights already known up to the installed version', () => {
+    expect(getKnownHighlightsUpToVersionFromEntries(sampleEntries, '1.1.1')).toEqual(['נקודה אחת']);
+    expect(getKnownHighlightsUpToVersionFromEntries(sampleEntries, '1.1.2')).toEqual([
+      'חלון מה חדש אחרי ההתקנה',
+      'נקודה אחת',
+    ]);
+  });
+
+  it('filters merged release notes down to only bullets newer than installed', () => {
+    const remote = getAllReleaseHighlightsFromEntries(sampleEntries);
+    expect(filterReleaseHighlightsForUpdateFromEntries(remote, sampleEntries, '1.1.1')).toEqual([
+      'תיקון סימון חצי דף',
+      'שיפור יציבות בהורדת עדכונים',
+      'חלון מה חדש אחרי ההתקנה',
+    ]);
+    expect(filterReleaseHighlightsForUpdateFromEntries(remote, sampleEntries, '1.2.0')).toEqual([]);
+  });
+
+  it('keeps remote-only bullets that are not in local WHATS_NEW', () => {
+    expect(
+      filterReleaseHighlightsForUpdateFromEntries(
+        ['תיקון סימון חצי דף', 'שיפור מהשרת בלבד'],
+        sampleEntries,
+        '1.1.2',
+      ),
+    ).toEqual(['תיקון סימון חצי דף', 'שיפור מהשרת בלבד']);
   });
 
   it('formats a GitHub body that the parser can read back', () => {
