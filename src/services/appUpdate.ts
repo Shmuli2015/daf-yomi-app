@@ -1,5 +1,5 @@
 import Constants from 'expo-constants';
-import { parseReleaseNotesBody } from '../data/whatsNew';
+import { filterReleaseHighlightsForUpdate, parseReleaseNotesBody } from '../data/whatsNew';
 
 export type AppExtraConfig = {
   githubOwner?: string;
@@ -161,7 +161,10 @@ export async function resolveUpdateOfferIfAny(installedVersion: string): Promise
     releasePageUrl,
     rawTag: tag,
     apkFileName,
-    highlights: parseReleaseNotesBody(release.body),
+    highlights: filterReleaseHighlightsForUpdate(
+      parseReleaseNotesBody(release.body),
+      installedVersion,
+    ),
   };
 }
 

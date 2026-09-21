@@ -115,6 +115,42 @@ export function getAllReleaseHighlightsFromEntries(entries: WhatsNewEntry[]): st
   return collectUniqueHighlights(entries);
 }
 
+export function getKnownHighlightsUpToVersionFromEntries(
+  entries: WhatsNewEntry[],
+  installedVersion: string,
+): string[] {
+  const upToInstalled = entries.filter(
+    entry => compareWhatsNewVersions(entry.version, installedVersion) <= 0,
+  );
+  return collectUniqueHighlights(upToInstalled);
+}
+
+export function getKnownHighlightsUpToVersion(installedVersion: string): string[] {
+  return getKnownHighlightsUpToVersionFromEntries(WHATS_NEW, installedVersion);
+}
+
+export function filterReleaseHighlightsForUpdateFromEntries(
+  remoteHighlights: string[],
+  entries: WhatsNewEntry[],
+  installedVersion: string,
+): string[] {
+  const known = new Set(getKnownHighlightsUpToVersionFromEntries(entries, installedVersion));
+  const filtered: string[] = [];
+  for (const item of remoteHighlights.map(text => text.trim()).filter(Boolean)) {
+    if (known.has(item)) continue;
+    filtered.push(item);
+    if (filtered.length >= MAX_WHATS_NEW_HIGHLIGHTS) break;
+  }
+  return filtered;
+}
+
+export function filterReleaseHighlightsForUpdate(
+  remoteHighlights: string[],
+  installedVersion: string,
+): string[] {
+  return filterReleaseHighlightsForUpdateFromEntries(remoteHighlights, WHATS_NEW, installedVersion);
+}
+
 export function getHighlightsForVersion(version: string): string[] {
   return getHighlightsFromEntries(WHATS_NEW, version);
 }
