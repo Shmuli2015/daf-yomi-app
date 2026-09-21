@@ -2,13 +2,9 @@ import { registerRootComponent } from 'expo';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as TaskManager from 'expo-task-manager';
 import * as Notifications from 'expo-notifications';
-import { initDB, getSettings } from './src/db/database';
-import { useAppStore } from './src/store/useAppStore';
-import { scheduleSnoozeReminder } from './src/utils/scheduleSnoozeReminder';
-import {
-  dismissReminderFromTray,
-  getNotificationIdFromActionData,
-} from './src/utils/dismissReminderFromTray';
+import { initDB } from './src/db/database';
+import { getNotificationIdFromActionData } from './src/utils/dismissReminderFromTray';
+import { handleStudyReminderResponse } from './src/utils/handleStudyReminderResponse';
 
 import App from './App';
 
@@ -30,16 +26,11 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error }) => 
       console.warn('DB init error in background task:', e);
     }
 
-    if (actionIdentifier === 'finish-daf') {
-      const { markTodayAsLearned, loadInitialData } = useAppStore.getState();
-      loadInitialData();
-      markTodayAsLearned();
-      await dismissReminderFromTray(notificationId);
-    } else if (actionIdentifier === 'later') {
-      await dismissReminderFromTray(notificationId);
-      const settings = getSettings();
-      await scheduleSnoozeReminder(settings.notification_sound_enabled !== 0).catch(() => {});
+    if (!actionIdentifier) {
+      return;
     }
+
+    await handleStudyReminderResponse({ actionIdentifier, notificationId });
   }
 });
 

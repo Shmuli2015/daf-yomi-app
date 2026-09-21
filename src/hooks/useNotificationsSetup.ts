@@ -2,33 +2,29 @@ import { useEffect, useRef } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import { getDailyRecord, getSettings } from '../db/database';
+import { getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
-import { useAppStore } from '../store/useAppStore';
 import { getNotificationPermissionStatus } from '../utils/notificationPermission';
-import { scheduleSnoozeReminder } from '../utils/scheduleSnoozeReminder';
-import { requestHomeTabFocus } from '../utils/homeTabFocus';
-import { getDateStr } from '../utils/dafYomi';
-import { dismissReminderFromTray } from '../utils/dismissReminderFromTray';
+import { dismissStuckStudyReminders } from '../utils/dismissStuckStudyReminders';
+import { handleStudyReminderResponse } from '../utils/handleStudyReminderResponse';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
-
-function dismissStuckRemindersIfTodayLearned(): void {
-  try {
-    const record = getDailyRecord(getDateStr(new Date()));
-    if (record?.status === 'learned') {
-      void dismissReminderFromTray();
-    }
-  } catch (e) {
-    console.warn('Dismiss stuck reminders error:', e);
-  }
-}
 
 export function useNotificationsSetup() {
   const responseSubRef = useRef<Notifications.Subscription | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
+
+    const onResponse = (response: Notifications.NotificationResponse) => {
+      void handleStudyReminderResponse({
+        actionIdentifier: response.actionIdentifier,
+        notificationId: response.notification.request.identifier,
+      });
+    };
+
+    responseSubRef.current?.remove();
+    responseSubRef.current = Notifications.addNotificationResponseReceivedListener(onResponse);
 
     void (async () => {
       try {
@@ -74,32 +70,7 @@ export function useNotificationsSetup() {
 
         if (cancelled) return;
 
-        dismissStuckRemindersIfTodayLearned();
-
-        responseSubRef.current?.remove();
-        responseSubRef.current = Notifications.addNotificationResponseReceivedListener(response => {
-          const { actionIdentifier } = response;
-          const notificationId = response.notification.request.identifier;
-
-          if (actionIdentifier === 'finish-daf') {
-            void (async () => {
-              await dismissReminderFromTray(notificationId);
-              const { markTodayAsLearned, loadInitialData } = useAppStore.getState();
-              loadInitialData();
-              markTodayAsLearned();
-            })();
-          } else if (actionIdentifier === 'later') {
-            const settings = getSettings();
-            void (async () => {
-              await dismissReminderFromTray(notificationId);
-              await scheduleSnoozeReminder(settings.notification_sound_enabled !== 0);
-            })();
-          } else if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
-            const { loadInitialData } = useAppStore.getState();
-            loadInitialData();
-            requestHomeTabFocus();
-          }
-        });
+        await dismissStuckStudyReminders();
       } catch (e) {
         console.warn('Notification setup error:', e);
       }
@@ -107,7 +78,7 @@ export function useNotificationsSetup() {
 
     const onAppStateChange = (nextState: AppStateStatus) => {
       if (nextState === 'active') {
-        dismissStuckRemindersIfTodayLearned();
+        void dismissStuckStudyReminders();
       }
     };
     const appStateSub = AppState.addEventListener('change', onAppStateChange);
