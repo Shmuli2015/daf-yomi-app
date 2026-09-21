@@ -84,11 +84,15 @@ const CalendarDay = React.memo(
         ? theme.colors.accent
         : theme.colors.textPrimary;
 
-    const subColor = learned
+    const gregColor = learned
+      ? theme.colors.white
+      : theme.colors.textMuted;
+
+    const dafColor = learned
       ? theme.colors.white
       : isToday
-        ? theme.colors.accent
-        : theme.colors.textMuted;
+        ? theme.colors.textPrimary
+        : theme.colors.accent;
 
     const borderColor = isSelected
       ? theme.colors.accent
@@ -119,12 +123,14 @@ const CalendarDay = React.memo(
             {partial && !learned && (
               <View style={partialAmud === 'b' ? styles.halfFillLeft : styles.halfFillRight} />
             )}
-            <Animated.Text style={[styles.dayText, { color: textColor }]}>{gematriya}</Animated.Text>
+            <Animated.Text style={[styles.dayText, dafLabel ? styles.dayTextWithDaf : null, { color: textColor }]}>
+              {gematriya}
+            </Animated.Text>
             {showSecularDate && (
-              <Animated.Text style={[styles.gregText, { color: subColor }]}>{gregDay}</Animated.Text>
+              <Animated.Text style={[styles.gregText, { color: gregColor, opacity: learned ? 0.75 : 1 }]}>{gregDay}</Animated.Text>
             )}
             {dafLabel ? (
-              <Animated.Text style={[styles.dafText, { color: subColor }]}>{dafLabel}</Animated.Text>
+              <Animated.Text style={[styles.dafText, { color: dafColor }]}>{dafLabel}</Animated.Text>
             ) : null}
           </Animated.View>
         </Animated.View>
