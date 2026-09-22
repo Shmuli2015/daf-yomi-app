@@ -10,42 +10,16 @@ import type { SettingsSectionChrome } from './settingsSection.types';
 import type { ExactAlarmStatus } from '../../utils/exactAlarm';
 import type { NotificationPermissionStatus } from '../../utils/notificationPermission';
 import { formatNotificationTime } from '../../utils/settingsScreen';
-import { isLastVisible, matchesAnySetting, matchesSetting, type SearchableSetting } from '../../utils/settingsSearch';
-
-const DAILY_ITEM: SearchableSetting = {
-  title: 'תזכורת יומית',
-  description: 'קבל התראה בשעה היעודה',
-  synonyms: ['התראה', 'תזכורת', 'נוטיפיקציה', 'רימיינדר'],
-};
-
-const MODE_ITEM: SearchableSetting = {
-  title: 'לפי ימים',
-  description: 'כל יום או לפי ימים',
-  synonyms: ['כל יום', 'ימים', 'לוח', 'שבת', 'שישי'],
-};
-
-const TIME_ITEM: SearchableSetting = {
-  title: 'זמן ההתראה',
-  description: 'מתי תרצה ללמוד כל יום?',
-  synonyms: ['שעה', 'זמן', 'בוקר'],
-};
-
-const SOUND_ITEM: SearchableSetting = {
-  title: 'צליל התראה',
-  description: 'השמעת צליל עם התזכורת היומית',
-  synonyms: ['סאונד', 'שקט', 'קול'],
-};
-
-const EXACT_ITEM: SearchableSetting = {
-  title: 'תזכורות מדויקות',
-  synonyms: ['מדויק', 'אנדרואיד', 'אלרם'],
-};
-
-const PERMISSION_ITEM: SearchableSetting = {
-  title: 'הרשאת התראות במכשיר',
-  description: 'יש לאשר התראות בהגדרות המערכת',
-  synonyms: ['הרשאה', 'מערכת', 'נדחה'],
-};
+import { isLastVisible, matchesSetting } from '../../utils/settingsSearch';
+import {
+  DAILY_ITEM,
+  EXACT_ITEM,
+  MODE_ITEM,
+  NOTIFICATIONS_SEARCH_ITEMS,
+  PERMISSION_ITEM,
+  SOUND_ITEM,
+  TIME_ITEM,
+} from '../../utils/settingsSearchCatalog';
 
 type SettingsNotificationsSectionProps = SettingsSectionChrome & {
   notificationsEnabled: boolean;
@@ -66,14 +40,7 @@ type SettingsNotificationsSectionProps = SettingsSectionChrome & {
   onSoundToggle: (enabled: boolean) => void;
 };
 
-export const NOTIFICATIONS_SEARCH_ITEMS: SearchableSetting[] = [
-  DAILY_ITEM,
-  MODE_ITEM,
-  TIME_ITEM,
-  SOUND_ITEM,
-  EXACT_ITEM,
-  PERMISSION_ITEM,
-];
+export { NOTIFICATIONS_SEARCH_ITEMS };
 
 export default function SettingsNotificationsSection({
   styles,
@@ -130,17 +97,6 @@ export default function SettingsNotificationsSection({
   const showDays = notificationsEnabled && notifMode === 'custom' && matchesSetting(searchQuery, MODE_ITEM);
   const showSound = notificationsEnabled && matchesSetting(searchQuery, SOUND_ITEM);
 
-  const sectionVisible = matchesAnySetting(searchQuery, [
-    DAILY_ITEM,
-    MODE_ITEM,
-    TIME_ITEM,
-    SOUND_ITEM,
-    { ...EXACT_ITEM, description: exactDescription },
-    PERMISSION_ITEM,
-  ]);
-
-  if (!sectionVisible) return null;
-
   const flags = [
     showDaily,
     showMode,
@@ -150,6 +106,8 @@ export default function SettingsNotificationsSection({
     showExactAlarmRow,
     showPermissionRow,
   ];
+
+  if (!flags.some(Boolean)) return null;
 
   return (
     <>

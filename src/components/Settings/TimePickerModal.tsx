@@ -15,6 +15,7 @@ interface TimePickerModalProps {
   title?: string;
   onDisable?: () => void;
   onApplyToActiveDays?: (h: number, m: number) => void;
+  applyToAllDaysLabel?: string;
   minHour?: number;
   maxHour?: number;
 }
@@ -31,6 +32,7 @@ export const TimePickerModal = ({
   title = 'בחר שעת התראה',
   onDisable,
   onApplyToActiveDays,
+  applyToAllDaysLabel = 'החל על כל הימים הפעילים',
   minHour = 0,
   maxHour = 23,
 }: TimePickerModalProps) => {
@@ -113,7 +115,7 @@ export const TimePickerModal = ({
             onPress={() => onApplyToActiveDays(selectedHour, selectedMinuteIndex * 5)}
             activeOpacity={0.8}
           >
-            <Text style={styles.secondaryBtnText}>החל על כל הימים הפעילים</Text>
+            <Text style={styles.secondaryBtnText}>{applyToAllDaysLabel}</Text>
           </TouchableOpacity>
         ) : null}
         {onDisable ? (

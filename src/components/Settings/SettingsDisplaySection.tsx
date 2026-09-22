@@ -11,49 +11,18 @@ import {
   getDafDayStartModeDisplay,
   getThemeModeSettingDisplay,
 } from '../../utils/settingsScreen';
-import { isLastVisible, matchesAnySetting, matchesSetting, type SearchableSetting } from '../../utils/settingsSearch';
-
-const THEME_ITEM: SearchableSetting = {
-  title: 'מצב תצוגה',
-  description: 'בחר מצב בהיר/כהה או לפי המערכת',
-  synonyms: ['ערכת נושא', 'כהה', 'בהיר', 'דארק', 'לייט', 'מערכת', 'תמה'],
-};
-
-const DAF_DAY_START_ITEM: SearchableSetting = {
-  title: 'מתי מתחלף הדף היומי',
-  description: 'בחצות, שעה קבועה, או לפי ימי השבוע',
-  synonyms: ['חצות', 'שקיעה', 'ערב', 'החלפת דף', 'תחילת יום', 'שעה', 'שישי', 'שבת', 'ימים'],
-};
-
-const DAF_DAY_START_TIME_ITEM: SearchableSetting = {
-  title: 'שעת החלפת הדף',
-  description: 'השעה בערב שבה מתחלף הדף היומי',
-  synonyms: ['שעה', 'ערב', 'החלפה'],
-};
-
-const DAF_DAY_START_WEEKLY_ITEM: SearchableSetting = {
-  title: 'שעת החלפה לפי ימים',
-  description: 'שעה שונה לכל יום בשבוע',
-  synonyms: ['שישי', 'שבת', 'מוצאי שבת', 'ימים', 'שבוע'],
-};
-
-const SECULAR_ITEM: SearchableSetting = {
-  title: 'הצג תאריך לועזי',
-  description: 'הצגת התאריך הלועזי לצד העברי',
-  synonyms: ['גרגוריאני', 'לועזי', 'תאריך'],
-};
-
-const CALENDAR_ITEM: SearchableSetting = {
-  title: 'הצג דף בלוח שנה',
-  description: 'הצגת מספר הדף היומי בכל תא בלוח השנה',
-  synonyms: ['לוח', 'מספר דף', 'תא'],
-};
-
-const CONFETTI_ITEM: SearchableSetting = {
-  title: 'אפקטים חגיגיים',
-  description: 'הצגת קונפטי בסיום לימוד דף',
-  synonyms: ['קונפטי', 'חגיגה', 'אנימציה'],
-};
+import { isLastVisible, matchesSetting } from '../../utils/settingsSearch';
+import {
+  CALENDAR_ITEM,
+  CONFETTI_ITEM,
+  DAF_DAY_START_ITEM,
+  DAF_DAY_START_TIME_ITEM,
+  DAF_DAY_START_WEEKLY_ITEM,
+  DISPLAY_SEARCH_ITEMS,
+  SECULAR_ITEM,
+  THEME_ITEM,
+  TRACK_ITEM,
+} from '../../utils/settingsSearchCatalog';
 
 type SettingsDisplaySectionProps = SettingsSectionChrome & {
   themeMode: ThemeMode;
@@ -71,17 +40,11 @@ type SettingsDisplaySectionProps = SettingsSectionChrome & {
   onCalendarDafToggle: (value: boolean) => void;
   showConfettiPref: boolean;
   onConfettiToggle: (value: boolean) => void;
+  showPersonalTrackBannerPref?: boolean;
+  onPersonalTrackBannerToggle?: (value: boolean) => void;
 };
 
-export const DISPLAY_SEARCH_ITEMS: SearchableSetting[] = [
-  THEME_ITEM,
-  DAF_DAY_START_ITEM,
-  DAF_DAY_START_TIME_ITEM,
-  DAF_DAY_START_WEEKLY_ITEM,
-  SECULAR_ITEM,
-  CALENDAR_ITEM,
-  CONFETTI_ITEM,
-];
+export { DISPLAY_SEARCH_ITEMS };
 
 export default function SettingsDisplaySection({
   styles,
@@ -102,6 +65,8 @@ export default function SettingsDisplaySection({
   onCalendarDafToggle,
   showConfettiPref,
   onConfettiToggle,
+  showPersonalTrackBannerPref,
+  onPersonalTrackBannerToggle,
 }: SettingsDisplaySectionProps) {
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
   const dafDayDisplay = getDafDayStartModeDisplay(
@@ -118,16 +83,10 @@ export default function SettingsDisplaySection({
   const showSecular = matchesSetting(searchQuery, SECULAR_ITEM);
   const showCalendar = matchesSetting(searchQuery, CALENDAR_ITEM);
   const showConfetti = matchesSetting(searchQuery, CONFETTI_ITEM);
-  const searchable = [THEME_ITEM, DAF_DAY_START_ITEM, SECULAR_ITEM, CALENDAR_ITEM, CONFETTI_ITEM];
-  if (dafDayStartMode === 'custom_hour') {
-    searchable.splice(2, 0, DAF_DAY_START_TIME_ITEM);
-  }
-  if (dafDayStartMode === 'weekly') {
-    searchable.splice(2, 0, DAF_DAY_START_WEEKLY_ITEM);
-  }
-  if (!matchesAnySetting(searchQuery, searchable)) {
-    return null;
-  }
+  const showPersonalTrack =
+    onPersonalTrackBannerToggle != null &&
+    showPersonalTrackBannerPref != null &&
+    matchesSetting(searchQuery, TRACK_ITEM);
   const flags = [
     showTheme,
     showDafDayStart,
@@ -136,7 +95,9 @@ export default function SettingsDisplaySection({
     showSecular,
     showCalendar,
     showConfetti,
+    showPersonalTrack,
   ];
+  if (!flags.some(Boolean)) return null;
 
   return (
     <>
@@ -214,6 +175,18 @@ export default function SettingsDisplaySection({
             value={showConfettiPref}
             onPress={onConfettiToggle}
             isLast={isLastVisible(flags, 6)}
+            highlightText={searchQuery}
+          />
+        ) : null}
+        {showPersonalTrack ? (
+          <SettingItem
+            icon="bookmark-outline"
+            title={TRACK_ITEM.title}
+            description={TRACK_ITEM.description}
+            type="switch"
+            value={showPersonalTrackBannerPref}
+            onPress={onPersonalTrackBannerToggle}
+            isLast={isLastVisible(flags, 7)}
             highlightText={searchQuery}
           />
         ) : null}

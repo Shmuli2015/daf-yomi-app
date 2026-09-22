@@ -18,7 +18,7 @@ interface WheelPickerProps {
 
 const ITEM_HEIGHT = 48;
 const VISIBLE_ITEMS = 5;
-const MULTIPLIER = 100;
+const MULTIPLIER = 5;
 const SNAP_THRESHOLD = 2;
 const VELOCITY_THRESHOLD = 0.1;
 

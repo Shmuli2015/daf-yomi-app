@@ -32,6 +32,7 @@ export type SettingsModalsProps = {
   dafDayStartMinute: number;
   dafDayStartTimePickerTitle?: string;
   onDafDayStartTimeSave: (hour: number, minute: number) => void;
+  onDafDayStartApplyToAllDays?: (hour: number, minute: number) => void;
   showGuideModal: boolean;
   onGuideModalClose: () => void;
   showTimePicker: boolean;
@@ -85,6 +86,7 @@ export default function SettingsModals({
   dafDayStartMinute,
   dafDayStartTimePickerTitle = 'בחר שעת החלפת הדף',
   onDafDayStartTimeSave,
+  onDafDayStartApplyToAllDays,
   showGuideModal,
   onGuideModalClose,
   showTimePicker,
@@ -144,7 +146,7 @@ export default function SettingsModals({
         value={dafDayStartMode}
         options={[
           { value: 'midnight', label: 'בחצות (12:00 בלילה)', icon: 'moon-outline' },
-          { value: 'custom_hour', label: 'בשעה קבועה בערב', icon: 'time-outline' },
+          { value: 'custom_hour', label: 'בשעה קבועה (מ-14:00)', icon: 'time-outline' },
           { value: 'weekly', label: 'לפי ימי השבוע', icon: 'calendar-outline' },
         ]}
         onClose={onDafDayStartModeModalClose}
@@ -183,6 +185,8 @@ export default function SettingsModals({
         title={dafDayStartTimePickerTitle}
         minHour={DAF_DAY_START_HOUR_MIN}
         maxHour={DAF_DAY_START_HOUR_MAX}
+        onApplyToActiveDays={onDafDayStartApplyToAllDays}
+        applyToAllDaysLabel="החל על כל הימים"
       />
       <ResetOptionsModal
         visible={showResetModal}

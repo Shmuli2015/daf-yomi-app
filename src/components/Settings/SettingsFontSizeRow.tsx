@@ -3,12 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../theme';
 import { READER_FONT_SIZE_MAX, READER_FONT_SIZE_MIN } from '../../utils/readerFontSize';
 import { matchesSetting } from '../../utils/settingsSearch';
+import { FONT_SIZE_SETTING } from '../../utils/settingsSearchCatalog';
 
-export const FONT_SIZE_SETTING = {
-  title: 'גודל גופן בקורא',
-  description: 'ברירת המחדל לטקסט הגמרא והפירושים',
-  synonyms: ['פונט', 'אותיות', 'הגדל', 'הקטן', 'a+', 'a-'],
-};
+export { FONT_SIZE_SETTING };
 
 type SettingsFontSizeRowProps = {
   searchQuery: string;

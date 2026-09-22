@@ -25,9 +25,16 @@ export function SettingsSearchBar({ value, onChangeText, onClear }: SettingsSear
         returnKeyType="search"
         autoCapitalize="none"
         autoCorrect={false}
+        accessibilityLabel="חפש בהגדרות"
       />
       {value.length > 0 ? (
-        <TouchableOpacity onPress={onClear} style={styles.clearBtn} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={onClear}
+          style={styles.clearBtn}
+          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="נקה חיפוש"
+        >
           <Ionicons name="close-circle" size={18} color={theme.colors.textMuted} />
         </TouchableOpacity>
       ) : null}
