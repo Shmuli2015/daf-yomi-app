@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppStore } from '../../store/useAppStore';
 import { getStudyStatus, getPartialAmud } from '../../utils/dafStatus';
+import { getDafDayDate } from '../../utils/dafDayBoundary';
 import { getDafByDate, getDateStr } from '../../utils/dafYomi';
 import type { RootStackParamList } from '../../navigation/types';
 import type { CatchUpItem } from './CatchUpModal';
@@ -101,7 +102,8 @@ export function useCalendarActions({
   const missedDaysUpToSelected = useMemo(() => {
     if (!selectedDate) return [];
     const selectedGreg = selectedDate.greg();
-    const today = new Date();
+    const settings = useAppStore.getState().settings ?? {};
+    const today = getDafDayDate(new Date(), settings);
     today.setHours(23, 59, 59, 999);
     if (selectedGreg > today) return [];
 

@@ -1,5 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { getSettings } from '../db/database';
+import { getDafDayDate } from './dafDayBoundary';
 import { hasExactAlarmPermission, promptForExactAlarmPermission } from './exactAlarm';
 import { getStudyReminderCopy } from './notificationCopy';
 
@@ -43,6 +45,7 @@ export async function scheduleNotifications(
     const DAYS_TO_SCHEDULE = 30;
     const notificationPromises: Promise<string>[] = [];
     const sound = options?.sound !== false;
+    const settings = getSettings();
 
     if (mode === 'daily') {
       for (let dayOffset = 0; dayOffset < DAYS_TO_SCHEDULE; dayOffset++) {
@@ -55,7 +58,7 @@ export async function scheduleNotifications(
           continue;
         }
 
-        const copy = getStudyReminderCopy(targetDate);
+        const copy = getStudyReminderCopy(getDafDayDate(targetDate, settings));
         
         const content: Notifications.NotificationContentInput = {
           title: copy.title,
@@ -99,7 +102,7 @@ export async function scheduleNotifications(
           continue;
         }
         
-        const copy = getStudyReminderCopy(targetDate);
+        const copy = getStudyReminderCopy(getDafDayDate(targetDate, settings));
         
         const content: Notifications.NotificationContentInput = {
           title: copy.title,
@@ -158,7 +161,7 @@ export async function sendTestNotification(sound = true) {
   try {
     await promptForExactAlarmPermission({ force: true });
 
-    const copy = getStudyReminderCopy(new Date());
+    const copy = getStudyReminderCopy(getDafDayDate(new Date(), getSettings()));
     const isAndroid = Platform.OS === 'android';
     
     await Notifications.scheduleNotificationAsync({

@@ -3,7 +3,7 @@ import { ScrollView, View, StyleSheet, useWindowDimensions } from "react-native"
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useShallow } from "zustand/react/shallow";
 import { HDate } from "@hebcal/core";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
 import { he } from "date-fns/locale/he";
 import ConfettiCannon from "react-native-confetti-cannon";
 import { useNavigation } from "@react-navigation/native";
@@ -20,6 +20,7 @@ import GuideModal from "../components/Settings/GuideModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import YesterdayNudge from "../components/Home/YesterdayNudge";
 import { useAppStore } from "../store/useAppStore";
+import { getDafDayDate, getDafDayYesterday } from "../utils/dafDayBoundary";
 import { buildLast7Days, buildRecentHistoryKey } from "../utils/last7Days";
 import { dafYomiDisplayMasechetHe, kinnimTamidCalendarDisplay } from "../utils/mishnahOnlySefaria";
 import { SHAS_MASECHTOT } from "../data/shas";
@@ -177,14 +178,20 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   }, [progressCache]);
 
   const last7Days = useMemo(
-    () => buildLast7Days(useAppStore.getState().history, new Date()),
+    () => {
+      const settings = useAppStore.getState().settings ?? {};
+      return buildLast7Days(useAppStore.getState().history, getDafDayDate(new Date(), settings));
+    },
     [recentHistoryKey, todayStr],
   );
 
   const showYesterdayNudge =
     isToday &&
     nudgeDismissedFor !== todayStr &&
-    shouldShowYesterdayNudge(useAppStore.getState().history, new Date());
+    shouldShowYesterdayNudge(
+      useAppStore.getState().history,
+      getDafDayDate(new Date(), useAppStore.getState().settings ?? {}),
+    );
 
   const handleOpenTzuratHadaf = useCallback(() => {
     rootNavigation.navigate("TzuratHadaf", {
@@ -213,7 +220,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   }, [navigation, todayMasechetEn]);
 
   const handleOpenYesterday = useCallback(() => {
-    useAppStore.getState().setCurrentDate(subDays(new Date(), 1));
+    const settings = useAppStore.getState().settings ?? {};
+    useAppStore.getState().setCurrentDate(getDafDayYesterday(new Date(), settings));
   }, []);
 
   const handlePressShas = useCallback(() => {

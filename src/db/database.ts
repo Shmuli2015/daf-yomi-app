@@ -1,5 +1,14 @@
 import * as SQLite from 'expo-sqlite';
 import { HALF_DAF_TIP_VERSION } from '../constants/halfDafTip';
+import {
+  clampDafDayStartTime,
+  DAF_DAY_START_DEFAULT_HOUR,
+  DAF_DAY_START_DEFAULT_MINUTE,
+  normalizeDafDayStartMode,
+  parseDafDayStartSchedules,
+  schedulesFromSingleTime,
+  type DafDayStartDaySchedule,
+} from '../utils/dafDayBoundary';
 import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
 import { clampReaderViewMode, READER_VIEW_MODE_DEFAULT } from '../utils/readerViewMode';
 
@@ -50,6 +59,10 @@ export interface SettingsRecord {
   haptics_enabled: number;
   last_backup_at: string | null;
   notification_sound_enabled: number;
+  daf_day_start_mode: string;
+  daf_day_start_hour: number;
+  daf_day_start_minute: number;
+  daf_day_start_schedules: string | null;
 }
 
 function migrateDailyDafColumns() {
@@ -183,6 +196,18 @@ export function initDB() {
   if (!columns.includes('notification_sound_enabled')) {
     db.execSync('ALTER TABLE settings ADD COLUMN notification_sound_enabled INTEGER DEFAULT 1;');
   }
+  if (!columns.includes('daf_day_start_mode')) {
+    db.execSync("ALTER TABLE settings ADD COLUMN daf_day_start_mode TEXT DEFAULT 'midnight';");
+  }
+  if (!columns.includes('daf_day_start_hour')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN daf_day_start_hour INTEGER DEFAULT 20;');
+  }
+  if (!columns.includes('daf_day_start_minute')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN daf_day_start_minute INTEGER DEFAULT 0;');
+  }
+  if (!columns.includes('daf_day_start_schedules')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN daf_day_start_schedules TEXT DEFAULT NULL;');
+  }
 
   db.execSync(`
     INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)
@@ -306,10 +331,23 @@ function createDefaultSettingsRecord(): SettingsRecord {
     haptics_enabled: 1,
     last_backup_at: null,
     notification_sound_enabled: 1,
+    daf_day_start_mode: 'midnight',
+    daf_day_start_hour: DAF_DAY_START_DEFAULT_HOUR,
+    daf_day_start_minute: DAF_DAY_START_DEFAULT_MINUTE,
+    daf_day_start_schedules: null,
   };
 }
 
 function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
+  const clampedStart = clampDafDayStartTime(
+    Number(row.daf_day_start_hour),
+    Number(row.daf_day_start_minute),
+  );
+  const schedules = parseDafDayStartSchedules(
+    row.daf_day_start_schedules,
+    clampedStart.hour,
+    clampedStart.minute,
+  );
   return {
     ...createDefaultSettingsRecord(),
     ...row,
@@ -318,6 +356,10 @@ function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
     show_chavruta_notes: row.show_chavruta_notes === 0 ? 0 : 1,
     haptics_enabled: row.haptics_enabled === 0 ? 0 : 1,
     notification_sound_enabled: row.notification_sound_enabled === 0 ? 0 : 1,
+    daf_day_start_mode: normalizeDafDayStartMode(row.daf_day_start_mode),
+    daf_day_start_hour: clampedStart.hour,
+    daf_day_start_minute: clampedStart.minute,
+    daf_day_start_schedules: JSON.stringify(schedules),
   };
 }
 
@@ -402,6 +444,46 @@ export function setLastBackupAt(iso: string) {
 
 export function setNotificationSoundEnabled(enabled: boolean) {
   db.runSync('UPDATE settings SET notification_sound_enabled = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
+export function setDafDayStartMode(mode: string) {
+  db.runSync('UPDATE settings SET daf_day_start_mode = ? WHERE id = 1', [
+    normalizeDafDayStartMode(mode),
+  ]);
+}
+
+export function setDafDayStartTime(hour: number, minute: number) {
+  const clamped = clampDafDayStartTime(hour, minute);
+  db.runSync(
+    'UPDATE settings SET daf_day_start_hour = ?, daf_day_start_minute = ? WHERE id = 1',
+    [clamped.hour, clamped.minute],
+  );
+}
+
+export function setDafDayStartSchedules(schedules: DafDayStartDaySchedule[]) {
+  const current = getSettings();
+  const normalized = parseDafDayStartSchedules(
+    schedules,
+    current.daf_day_start_hour,
+    current.daf_day_start_minute,
+  );
+  db.runSync('UPDATE settings SET daf_day_start_schedules = ? WHERE id = 1', [
+    JSON.stringify(normalized),
+  ]);
+}
+
+export function ensureDafDayStartSchedulesFromCurrentHour() {
+  const raw = db.getFirstSync('SELECT daf_day_start_schedules, daf_day_start_hour, daf_day_start_minute FROM settings WHERE id = 1') as {
+    daf_day_start_schedules: string | null;
+    daf_day_start_hour: number;
+    daf_day_start_minute: number;
+  } | null;
+  if (raw?.daf_day_start_schedules) return;
+  const hour = raw?.daf_day_start_hour ?? DAF_DAY_START_DEFAULT_HOUR;
+  const minute = raw?.daf_day_start_minute ?? DAF_DAY_START_DEFAULT_MINUTE;
+  db.runSync('UPDATE settings SET daf_day_start_schedules = ? WHERE id = 1', [
+    JSON.stringify(schedulesFromSingleTime(hour, minute)),
+  ]);
 }
 
 export function setDismissedHalfDafTip(version: number = HALF_DAF_TIP_VERSION) {
@@ -498,6 +580,10 @@ export function importRecords(records: DailyRecordInput[]) {
 }
 
 export function importSettingsFromBackup(settings: SettingsInput) {
+  const clampedStart = clampDafDayStartTime(
+    settings.daf_day_start_hour,
+    settings.daf_day_start_minute,
+  );
   db.runSync(
     `UPDATE settings SET
       notification_hour = ?,
@@ -521,7 +607,11 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       reader_view_mode = ?,
       show_chavruta_notes = ?,
       haptics_enabled = ?,
-      notification_sound_enabled = ?
+      notification_sound_enabled = ?,
+      daf_day_start_mode = ?,
+      daf_day_start_hour = ?,
+      daf_day_start_minute = ?,
+      daf_day_start_schedules = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -546,6 +636,16 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.show_chavruta_notes === 0 ? 0 : 1,
       settings.haptics_enabled === 0 ? 0 : 1,
       settings.notification_sound_enabled === 0 ? 0 : 1,
+      normalizeDafDayStartMode(settings.daf_day_start_mode),
+      clampedStart.hour,
+      clampedStart.minute,
+      JSON.stringify(
+        parseDafDayStartSchedules(
+          settings.daf_day_start_schedules,
+          clampedStart.hour,
+          clampedStart.minute,
+        ),
+      ),
     ]
   );
 }

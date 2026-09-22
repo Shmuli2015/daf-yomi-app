@@ -1,11 +1,13 @@
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { getSettings } from '../db/database';
+import { getDafDayDate } from './dafDayBoundary';
 import { getSnoozeReminderCopy } from './notificationCopy';
 
 const SNOOZE_SECONDS = 3600;
 
 export async function scheduleSnoozeReminder(soundEnabled: boolean): Promise<void> {
-  const snoozeCopy = getSnoozeReminderCopy(new Date());
+  const snoozeCopy = getSnoozeReminderCopy(getDafDayDate(new Date(), getSettings()));
   const isAndroid = Platform.OS === 'android';
 
   const trigger: Notifications.NotificationTriggerInput = isAndroid

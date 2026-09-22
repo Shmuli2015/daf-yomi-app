@@ -1,6 +1,8 @@
 import { create } from 'zustand';
-import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setHapticsEnabled as persistHapticsEnabled, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
+import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setHapticsEnabled as persistHapticsEnabled, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, setDafDayStartMode as persistDafDayStartMode, setDafDayStartTime as persistDafDayStartTime, setDafDayStartSchedules as persistDafDayStartSchedules, ensureDafDayStartSchedulesFromCurrentHour as persistEnsureDafDayStartSchedules, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
+import { getDafDayDate } from '../utils/dafDayBoundary';
+import type { DafDayStartDaySchedule } from '../utils/dafDayBoundary';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from '../utils/progressCache';
 import { resolveAmudMark, type AmudSide } from '../utils/dafStatus';
@@ -78,6 +80,9 @@ interface AppState {
   setShowChavrutaNotesEnabled: (enabled: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
   setNotificationSoundEnabled: (enabled: boolean) => void;
+  setDafDayStartMode: (mode: string) => void;
+  setDafDayStartTime: (hour: number, minute: number) => void;
+  setDafDayStartSchedules: (schedules: DafDayStartDaySchedule[]) => void;
   markBackupExported: () => void;
   dismissHalfDafTip: () => void;
   setCurrentDate: (date: Date) => void;
@@ -109,8 +114,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   setAppReady: (ready) => set({ isAppReady: ready }),
 
   loadInitialData: () => {
-    const today = new Date();
-    get().setCurrentDate(today);
+    const settings = getSettings();
+    get().setCurrentDate(getDafDayDate(new Date(), settings));
   },
 
   setCurrentDate: (date: Date) => {
@@ -374,6 +379,45 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().refreshSettings();
   },
 
+  setDafDayStartMode: (mode: string) => {
+    const previousSettings = get().settings ?? getSettings();
+    const wasOnToday =
+      getDateStr(get().currentDate) ===
+      getDateStr(getDafDayDate(new Date(), previousSettings));
+    persistDafDayStartMode(mode);
+    if (mode === 'weekly') {
+      persistEnsureDafDayStartSchedules();
+    }
+    get().refreshSettings();
+    if (wasOnToday) {
+      get().setCurrentDate(getDafDayDate(new Date(), get().settings ?? getSettings()));
+    }
+  },
+
+  setDafDayStartTime: (hour: number, minute: number) => {
+    const previousSettings = get().settings ?? getSettings();
+    const wasOnToday =
+      getDateStr(get().currentDate) ===
+      getDateStr(getDafDayDate(new Date(), previousSettings));
+    persistDafDayStartTime(hour, minute);
+    get().refreshSettings();
+    if (wasOnToday) {
+      get().setCurrentDate(getDafDayDate(new Date(), get().settings ?? getSettings()));
+    }
+  },
+
+  setDafDayStartSchedules: (schedules) => {
+    const previousSettings = get().settings ?? getSettings();
+    const wasOnToday =
+      getDateStr(get().currentDate) ===
+      getDateStr(getDafDayDate(new Date(), previousSettings));
+    persistDafDayStartSchedules(schedules);
+    get().refreshSettings();
+    if (wasOnToday) {
+      get().setCurrentDate(getDafDayDate(new Date(), get().settings ?? getSettings()));
+    }
+  },
+
   markBackupExported: () => {
     persistLastBackupAt(new Date().toISOString());
     get().refreshSettings();
@@ -427,9 +471,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   resetAllState: () => {
     resetDB();
-    const today = new Date();
-    const dafInfo = getDafByDate(today);
     const settings = getSettings();
+    const today = getDafDayDate(new Date(), settings);
+    const dafInfo = getDafByDate(today);
     const cache = buildProgressCache([], []);
     set({
       currentDate: today,

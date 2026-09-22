@@ -1,7 +1,8 @@
 import { subDays } from 'date-fns';
-import { DailyRecord, PersonalTrackRecord } from '../db/database';
+import { DailyRecord, PersonalTrackRecord, getSettings } from '../db/database';
 import { SHAS_MASECHTOT, Seder, SEDARIM } from '../data/shas';
 import { getMasechetDafim, getDafDateStr, stripNiqqud } from './shas';
+import { getDafDayDate } from './dafDayBoundary';
 import { getDateStr } from './dafYomi';
 import { getRecordProgress } from './dafStatus';
 
@@ -83,10 +84,12 @@ function calculateStreak(recordsOrMap: DailyRecord[] | Map<string, DailyRecord>)
   const recordByDate = recordsOrMap instanceof Map
     ? recordsOrMap
     : new Map(recordsOrMap.map(r => [r.date, r]));
-  const todayStr = getDateStr(new Date());
-  const yesterdayStr = getDateStr(subDays(new Date(), 1));
+  const settings = getSettings();
+  const dafToday = getDafDayDate(new Date(), settings);
+  const todayStr = getDateStr(dafToday);
+  const yesterdayStr = getDateStr(subDays(dafToday, 1));
 
-  let current = new Date();
+  let current = new Date(dafToday);
   current.setHours(0, 0, 0, 0);
 
   let streak = 0;

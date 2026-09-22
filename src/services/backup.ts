@@ -134,6 +134,10 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     haptics_enabled: num('haptics_enabled', 1),
     last_backup_at: nullableStr('last_backup_at'),
     notification_sound_enabled: num('notification_sound_enabled', 1),
+    daf_day_start_mode: str('daf_day_start_mode', 'midnight'),
+    daf_day_start_hour: num('daf_day_start_hour', 20),
+    daf_day_start_minute: num('daf_day_start_minute', 0),
+    daf_day_start_schedules: nullableStr('daf_day_start_schedules'),
   };
 }
 

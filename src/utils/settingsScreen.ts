@@ -18,6 +18,23 @@ export function getThemeModeSettingDisplay(mode: ThemeMode): {
   return { icon: 'contrast-outline', label: 'מערכת' };
 }
 
+export function getDafDayStartModeDisplay(
+  mode: string,
+  hour: number,
+  minute: number,
+): { icon: IoniconName; label: string } {
+  if (mode === 'custom_hour') {
+    return {
+      icon: 'time-outline',
+      label: `שעה בערב (${formatNotificationTime(hour, minute)})`,
+    };
+  }
+  if (mode === 'weekly') {
+    return { icon: 'calendar-outline', label: 'לפי ימים' };
+  }
+  return { icon: 'moon-outline', label: 'בחצות' };
+}
+
 export function parseDaySchedulesJson(json: string | null | undefined): DaySchedule[] {
   if (!json) return DEFAULT_SCHEDULES;
   try {
