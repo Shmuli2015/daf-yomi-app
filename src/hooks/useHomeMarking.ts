@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
+import { getDafDayYesterday } from '../utils/dafDayBoundary';
 import { getDateStr, getDafByDate } from '../utils/dafYomi';
 import { triggerImpact } from '../utils/haptics';
-import { subDays } from 'date-fns';
 
 type UseHomeMarkingParams = {
   currentDate: Date;
@@ -86,7 +86,8 @@ export function useHomeMarking({
 
   const handleMarkYesterday = useCallback(() => {
     void triggerImpact('medium');
-    const yesterday = subDays(new Date(), 1);
+    const settings = useAppStore.getState().settings ?? {};
+    const yesterday = getDafDayYesterday(new Date(), settings);
     const dafInfo = getDafByDate(yesterday);
     setDafStudyStatus(getDateStr(yesterday), dafInfo.masechet, dafInfo.daf, 'learned');
   }, [setDafStudyStatus]);

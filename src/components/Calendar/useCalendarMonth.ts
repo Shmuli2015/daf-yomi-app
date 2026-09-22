@@ -1,7 +1,9 @@
 import { useState, useMemo, useRef, useCallback } from 'react';
 import { Animated, Easing, PanResponder } from 'react-native';
 import { HDate, Locale } from '@hebcal/core';
+import { useAppStore } from '../../store/useAppStore';
 import { getPartialAmud, getStudyStatus, type AmudSide } from '../../utils/dafStatus';
+import { getDafDayDate } from '../../utils/dafDayBoundary';
 import { getDafByDate, getDateStr } from '../../utils/dafYomi';
 import { getHebrewDayEventInfo } from '../../utils/hebrewCalendarEvents';
 import { getMonthTractates, formatMonthTractatesSummary, formatMonthTractatesShort } from '../../utils/monthTractates';
@@ -30,8 +32,17 @@ interface UseCalendarMonthProps {
 
 const SLIDE_PX = 40;
 
+function resolveDafTodayHDate() {
+  const settings = useAppStore.getState().settings ?? {};
+  return new HDate(getDafDayDate(new Date(), settings));
+}
+
 export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarMonthProps) {
-  const [currentHDate, setCurrentHDate] = useState(() => new HDate(new Date()));
+  const [currentHDate, setCurrentHDate] = useState(() => resolveDafTodayHDate());
+  const dafDayStartMode = useAppStore((s) => s.settings?.daf_day_start_mode);
+  const dafDayStartHour = useAppStore((s) => s.settings?.daf_day_start_hour);
+  const dafDayStartMinute = useAppStore((s) => s.settings?.daf_day_start_minute);
+  const dafDayStartSchedules = useAppStore((s) => s.settings?.daf_day_start_schedules);
 
   const gridTranslateX = useRef(new Animated.Value(0)).current;
   const gridOpacity = useRef(new Animated.Value(1)).current;
@@ -69,7 +80,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
   }, [animateGridChange, currentHDate]);
 
   const goToToday = useCallback(() => {
-    const today = new HDate(new Date());
+    const today = resolveDafTodayHDate();
     if (currentHDate.getMonth() === today.getMonth() && currentHDate.getFullYear() === today.getFullYear()) return;
 
     const direction = (today.getFullYear() > currentHDate.getFullYear() || 
@@ -106,7 +117,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
     const dayOfWeek = firstDayOfMonth.getDay();
     const days: DayData[] = [];
 
-    const todayHd = new HDate(new Date());
+    const todayHd = resolveDafTodayHDate();
     const prevMonth = firstDayOfMonth.prev();
     for (let i = dayOfWeek - 1; i >= 0; i--) {
       const d = new HDate(prevMonth.getDate() - i, prevMonth.getMonth(), prevMonth.getFullYear());
@@ -159,7 +170,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
         learned: studyStatus === 'learned',
         partial: studyStatus === 'partial',
         partialAmud: getPartialAmud(record),
-        isToday: isSameDay(d, new HDate()),
+        isToday: isSameDay(d, todayHd),
         dateKey,
         dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
         hasSpecialEvent: evt.isShabbat || evt.isRoshChodesh || evt.isHoliday,
@@ -167,7 +178,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
       d = d.next();
     }
     return days;
-  }, [currentHDate, recordByDate, showCalendarDaf]);
+  }, [currentHDate, recordByDate, showCalendarDaf, dafDayStartMode, dafDayStartHour, dafDayStartMinute, dafDayStartSchedules]);
 
   const monthName = useMemo(() => {
     return Locale.gettext(HDate.getMonthName(currentHDate.getMonth(), currentHDate.getFullYear()), 'he').replace(/[\u0591-\u05C7]/g, '');
@@ -178,11 +189,11 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
   }, [currentHDate]);
 
   const isViewingTodayMonth = useMemo(() => {
-    const today = new HDate(new Date());
+    const today = resolveDafTodayHDate();
     return (
       currentHDate.getMonth() === today.getMonth() && currentHDate.getFullYear() === today.getFullYear()
     );
-  }, [currentHDate]);
+  }, [currentHDate, dafDayStartMode, dafDayStartHour, dafDayStartMinute, dafDayStartSchedules]);
 
   const monthlyStats = useMemo(() => {
     const currentMonthDays = calendarData.filter((d) => d.isCurrentMonth);

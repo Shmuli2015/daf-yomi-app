@@ -7,6 +7,7 @@ jest.mock('../dismissReminderFromTray', () => ({
 }));
 jest.mock('../../db/database', () => ({
   getDailyRecord: mockGetDailyRecord,
+  getSettings: () => ({ daf_day_start_mode: 'midnight' }),
 }));
 jest.mock('../dafYomi', () => ({
   getDateStr: () => '2026-09-22',

@@ -15,9 +15,11 @@ interface TimePickerModalProps {
   title?: string;
   onDisable?: () => void;
   onApplyToActiveDays?: (h: number, m: number) => void;
+  minHour?: number;
+  maxHour?: number;
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+const ALL_HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
 const MINUTES = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
 
 export const TimePickerModal = ({
@@ -29,21 +31,36 @@ export const TimePickerModal = ({
   title = 'בחר שעת התראה',
   onDisable,
   onApplyToActiveDays,
+  minHour = 0,
+  maxHour = 23,
 }: TimePickerModalProps) => {
   const theme = useTheme();
   const styles = useMemo(() => createTimePickerModalStyles(theme), [theme]);
-  const [selectedHour, setSelectedHour] = useState(hour);
+  const hours = useMemo(
+    () => ALL_HOURS.slice(Math.max(0, minHour), Math.min(24, maxHour + 1)),
+    [minHour, maxHour],
+  );
+  const [selectedHourIndex, setSelectedHourIndex] = useState(() =>
+    Math.max(0, hours.indexOf(hour.toString().padStart(2, '0'))),
+  );
   const [selectedMinuteIndex, setSelectedMinuteIndex] = useState(Math.round(minute / 5) % 12);
 
   useEffect(() => {
     if (visible) {
-      setSelectedHour(hour);
+      const idx = hours.indexOf(hour.toString().padStart(2, '0'));
+      setSelectedHourIndex(idx >= 0 ? idx : 0);
       setSelectedMinuteIndex(Math.round(minute / 5) % 12);
     }
-  }, [visible, hour, minute]);
+  }, [visible, hour, minute, hours]);
+
+  const selectedHour = Number(hours[selectedHourIndex] ?? minHour);
 
   const handleSave = () => {
-    onSave(selectedHour, selectedMinuteIndex * 5);
+    let nextMinute = selectedMinuteIndex * 5;
+    if (selectedHour === 23 && minHour >= 14 && nextMinute > 30) {
+      nextMinute = 30;
+    }
+    onSave(selectedHour, nextMinute);
   };
 
   return (
@@ -69,9 +86,9 @@ export const TimePickerModal = ({
           <View style={styles.wheelColumn}>
             <Text style={styles.wheelLabel}>שעה</Text>
             <WheelPicker
-              items={HOURS}
-              selectedIndex={selectedHour}
-              onIndexChange={setSelectedHour}
+              items={hours}
+              selectedIndex={selectedHourIndex}
+              onIndexChange={setSelectedHourIndex}
             />
           </View>
           <Text style={styles.colon}>:</Text>

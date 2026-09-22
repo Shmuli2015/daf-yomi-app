@@ -35,6 +35,9 @@ export default function SettingsScreen() {
     setShowSecularDateEnabled,
     setShowConfettiEnabled,
     setNotificationSoundEnabled,
+    setDafDayStartMode,
+    setDafDayStartTime,
+    setDafDayStartSchedules,
     markBackupExported,
     importBackup,
     resetDafYomiState,
@@ -51,6 +54,9 @@ export default function SettingsScreen() {
       setShowSecularDateEnabled: s.setShowSecularDateEnabled,
       setShowConfettiEnabled: s.setShowConfettiEnabled,
       setNotificationSoundEnabled: s.setNotificationSoundEnabled,
+      setDafDayStartMode: s.setDafDayStartMode,
+      setDafDayStartTime: s.setDafDayStartTime,
+      setDafDayStartSchedules: s.setDafDayStartSchedules,
       markBackupExported: s.markBackupExported,
       importBackup: s.importBackup,
       resetDafYomiState: s.resetDafYomiState,
@@ -80,11 +86,27 @@ export default function SettingsScreen() {
     showPersonalTrackBannerPref,
     showConfettiPref,
     themeMode,
+    dafDayStartMode,
+    dafDayStartHour,
+    dafDayStartMinute,
+    dafDayStartSchedules,
+    showDafDayStartModeModal,
+    showDafDayStartTimePicker,
+    dafDayStartTimePickerHour,
+    dafDayStartTimePickerMinute,
+    dafDayStartTimePickerTitle,
+    openDafDayStartModeModal,
+    closeDafDayStartModeModal,
+    openDafDayStartTimePicker,
+    closeDafDayStartTimePicker,
     handleSecularDateToggle,
     handleConfettiToggle,
     handleCalendarDafToggle,
     handlePersonalTrackBannerToggle,
     handleThemeModeSelect,
+    handleDafDayStartModeSelect,
+    handleDafDayStartTimeSave,
+    handleEditDafDayStartDay,
   } = useSettingsDisplayPrefs({
     settings,
     updateThemeMode,
@@ -92,6 +114,9 @@ export default function SettingsScreen() {
     setShowPersonalTrackBannerEnabled,
     setShowSecularDateEnabled,
     setShowConfettiEnabled,
+    setDafDayStartMode,
+    setDafDayStartTime,
+    setDafDayStartSchedules,
   });
 
   const {
@@ -215,6 +240,13 @@ export default function SettingsScreen() {
             onSoundToggle={handleSoundToggle}
             themeMode={themeMode}
             onThemeModalOpen={() => setShowThemeModal(true)}
+            dafDayStartMode={dafDayStartMode}
+            dafDayStartHour={dafDayStartHour}
+            dafDayStartMinute={dafDayStartMinute}
+            dafDayStartSchedules={dafDayStartSchedules}
+            onDafDayStartModeOpen={openDafDayStartModeModal}
+            onDafDayStartTimeOpen={openDafDayStartTimePicker}
+            onEditDafDayStartDay={handleEditDafDayStartDay}
             readerViewMode={readerViewMode}
             onReaderViewModePress={() => setShowReaderViewModal(true)}
             showChavrutaNotes={showChavrutaNotes}
@@ -267,6 +299,16 @@ export default function SettingsScreen() {
           showThemeModal={showThemeModal}
           onThemeModalClose={() => setShowThemeModal(false)}
           onThemeModeSelect={handleThemeModeSelect}
+          dafDayStartMode={dafDayStartMode}
+          showDafDayStartModeModal={showDafDayStartModeModal}
+          onDafDayStartModeModalClose={closeDafDayStartModeModal}
+          onDafDayStartModeSelect={handleDafDayStartModeSelect}
+          showDafDayStartTimePicker={showDafDayStartTimePicker}
+          onDafDayStartTimePickerClose={closeDafDayStartTimePicker}
+          dafDayStartHour={dafDayStartTimePickerHour}
+          dafDayStartMinute={dafDayStartTimePickerMinute}
+          dafDayStartTimePickerTitle={dafDayStartTimePickerTitle}
+          onDafDayStartTimeSave={handleDafDayStartTimeSave}
           showGuideModal={showGuideModal}
           onGuideModalClose={() => setShowGuideModal(false)}
           showTimePicker={showTimePicker}

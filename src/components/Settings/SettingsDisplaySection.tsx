@@ -2,15 +2,39 @@ import React from 'react';
 import { View } from 'react-native';
 import { SettingItem } from './SettingItem';
 import { SectionHeader } from './SectionHeader';
+import DafDayStartScheduleList from './DafDayStartScheduleList';
 import type { SettingsSectionChrome } from './settingsSection.types';
 import { ThemeMode } from '../../theme';
-import { getThemeModeSettingDisplay } from '../../utils/settingsScreen';
+import type { DafDayStartDaySchedule, DafDayStartMode } from '../../utils/dafDayBoundary';
+import {
+  formatNotificationTime,
+  getDafDayStartModeDisplay,
+  getThemeModeSettingDisplay,
+} from '../../utils/settingsScreen';
 import { isLastVisible, matchesAnySetting, matchesSetting, type SearchableSetting } from '../../utils/settingsSearch';
 
 const THEME_ITEM: SearchableSetting = {
   title: 'מצב תצוגה',
   description: 'בחר מצב בהיר/כהה או לפי המערכת',
   synonyms: ['ערכת נושא', 'כהה', 'בהיר', 'דארק', 'לייט', 'מערכת', 'תמה'],
+};
+
+const DAF_DAY_START_ITEM: SearchableSetting = {
+  title: 'מתי מתחלף הדף היומי',
+  description: 'בחצות, שעה קבועה, או לפי ימי השבוע',
+  synonyms: ['חצות', 'שקיעה', 'ערב', 'החלפת דף', 'תחילת יום', 'שעה', 'שישי', 'שבת', 'ימים'],
+};
+
+const DAF_DAY_START_TIME_ITEM: SearchableSetting = {
+  title: 'שעת החלפת הדף',
+  description: 'השעה בערב שבה מתחלף הדף היומי',
+  synonyms: ['שעה', 'ערב', 'החלפה'],
+};
+
+const DAF_DAY_START_WEEKLY_ITEM: SearchableSetting = {
+  title: 'שעת החלפה לפי ימים',
+  description: 'שעה שונה לכל יום בשבוע',
+  synonyms: ['שישי', 'שבת', 'מוצאי שבת', 'ימים', 'שבוע'],
 };
 
 const SECULAR_ITEM: SearchableSetting = {
@@ -34,6 +58,13 @@ const CONFETTI_ITEM: SearchableSetting = {
 type SettingsDisplaySectionProps = SettingsSectionChrome & {
   themeMode: ThemeMode;
   onThemeModalOpen: () => void;
+  dafDayStartMode: DafDayStartMode;
+  dafDayStartHour: number;
+  dafDayStartMinute: number;
+  dafDayStartSchedules: DafDayStartDaySchedule[];
+  onDafDayStartModeOpen: () => void;
+  onDafDayStartTimeOpen: () => void;
+  onEditDafDayStartDay: (index: number) => void;
   showSecularDate: boolean;
   onSecularDateToggle: (value: boolean) => void;
   showCalendarDaf: boolean;
@@ -44,6 +75,9 @@ type SettingsDisplaySectionProps = SettingsSectionChrome & {
 
 export const DISPLAY_SEARCH_ITEMS: SearchableSetting[] = [
   THEME_ITEM,
+  DAF_DAY_START_ITEM,
+  DAF_DAY_START_TIME_ITEM,
+  DAF_DAY_START_WEEKLY_ITEM,
   SECULAR_ITEM,
   CALENDAR_ITEM,
   CONFETTI_ITEM,
@@ -55,6 +89,13 @@ export default function SettingsDisplaySection({
   isFirst,
   themeMode,
   onThemeModalOpen,
+  dafDayStartMode,
+  dafDayStartHour,
+  dafDayStartMinute,
+  dafDayStartSchedules,
+  onDafDayStartModeOpen,
+  onDafDayStartTimeOpen,
+  onEditDafDayStartDay,
   showSecularDate,
   onSecularDateToggle,
   showCalendarDaf,
@@ -63,14 +104,39 @@ export default function SettingsDisplaySection({
   onConfettiToggle,
 }: SettingsDisplaySectionProps) {
   const themeDisplay = getThemeModeSettingDisplay(themeMode);
+  const dafDayDisplay = getDafDayStartModeDisplay(
+    dafDayStartMode,
+    dafDayStartHour,
+    dafDayStartMinute,
+  );
   const showTheme = matchesSetting(searchQuery, THEME_ITEM);
+  const showDafDayStart = matchesSetting(searchQuery, DAF_DAY_START_ITEM);
+  const showDafDayStartTime =
+    dafDayStartMode === 'custom_hour' && matchesSetting(searchQuery, DAF_DAY_START_TIME_ITEM);
+  const showDafDayStartWeekly =
+    dafDayStartMode === 'weekly' && matchesSetting(searchQuery, DAF_DAY_START_WEEKLY_ITEM);
   const showSecular = matchesSetting(searchQuery, SECULAR_ITEM);
   const showCalendar = matchesSetting(searchQuery, CALENDAR_ITEM);
   const showConfetti = matchesSetting(searchQuery, CONFETTI_ITEM);
-  if (!matchesAnySetting(searchQuery, [THEME_ITEM, SECULAR_ITEM, CALENDAR_ITEM, CONFETTI_ITEM])) {
+  const searchable = [THEME_ITEM, DAF_DAY_START_ITEM, SECULAR_ITEM, CALENDAR_ITEM, CONFETTI_ITEM];
+  if (dafDayStartMode === 'custom_hour') {
+    searchable.splice(2, 0, DAF_DAY_START_TIME_ITEM);
+  }
+  if (dafDayStartMode === 'weekly') {
+    searchable.splice(2, 0, DAF_DAY_START_WEEKLY_ITEM);
+  }
+  if (!matchesAnySetting(searchQuery, searchable)) {
     return null;
   }
-  const flags = [showTheme, showSecular, showCalendar, showConfetti];
+  const flags = [
+    showTheme,
+    showDafDayStart,
+    showDafDayStartTime,
+    showDafDayStartWeekly,
+    showSecular,
+    showCalendar,
+    showConfetti,
+  ];
 
   return (
     <>
@@ -87,6 +153,34 @@ export default function SettingsDisplaySection({
             highlightText={searchQuery}
           />
         ) : null}
+        {showDafDayStart ? (
+          <SettingItem
+            icon={dafDayDisplay.icon}
+            title={DAF_DAY_START_ITEM.title}
+            description={DAF_DAY_START_ITEM.description}
+            value={dafDayDisplay.label}
+            onPress={onDafDayStartModeOpen}
+            isLast={isLastVisible(flags, 1) && !showDafDayStartWeekly}
+            highlightText={searchQuery}
+          />
+        ) : null}
+        {showDafDayStartTime ? (
+          <SettingItem
+            icon="time-outline"
+            title={DAF_DAY_START_TIME_ITEM.title}
+            description={DAF_DAY_START_TIME_ITEM.description}
+            value={formatNotificationTime(dafDayStartHour, dafDayStartMinute)}
+            onPress={onDafDayStartTimeOpen}
+            isLast={isLastVisible(flags, 2)}
+            highlightText={searchQuery}
+          />
+        ) : null}
+        {showDafDayStartWeekly ? (
+          <DafDayStartScheduleList
+            schedules={dafDayStartSchedules}
+            onEditDay={onEditDafDayStartDay}
+          />
+        ) : null}
         {showSecular ? (
           <SettingItem
             icon="calendar-outline"
@@ -95,7 +189,7 @@ export default function SettingsDisplaySection({
             type="switch"
             value={showSecularDate}
             onPress={onSecularDateToggle}
-            isLast={isLastVisible(flags, 1)}
+            isLast={isLastVisible(flags, 4)}
             highlightText={searchQuery}
           />
         ) : null}
@@ -107,7 +201,7 @@ export default function SettingsDisplaySection({
             type="switch"
             value={showCalendarDaf}
             onPress={onCalendarDafToggle}
-            isLast={isLastVisible(flags, 2)}
+            isLast={isLastVisible(flags, 5)}
             highlightText={searchQuery}
           />
         ) : null}
@@ -119,7 +213,7 @@ export default function SettingsDisplaySection({
             type="switch"
             value={showConfettiPref}
             onPress={onConfettiToggle}
-            isLast={isLastVisible(flags, 3)}
+            isLast={isLastVisible(flags, 6)}
             highlightText={searchQuery}
           />
         ) : null}

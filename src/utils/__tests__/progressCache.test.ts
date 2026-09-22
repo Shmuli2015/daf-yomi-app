@@ -1,3 +1,7 @@
+jest.mock('../../db/database', () => ({
+  getSettings: () => ({ daf_day_start_mode: 'midnight' }),
+}));
+
 import { buildProgressCache, updateMasechetProgressInCache, invalidateProgressCache } from '../progressCache';
 import type { DailyRecord, PersonalTrackRecord } from '../../db/database';
 

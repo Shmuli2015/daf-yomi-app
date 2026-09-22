@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { ThemeMode, useTheme } from '../../theme';
 import type { ViewMode } from '../SefariaReader/ReaderToolbar';
+import type { DafDayStartDaySchedule, DafDayStartMode } from '../../utils/dafDayBoundary';
 import { SettingsSearchBar } from './SettingsSearchBar';
 import { SettingsFooter } from './SettingsFooter';
 import SettingsNotificationsSection, {
@@ -48,6 +49,13 @@ export type SettingsScrollContentProps = {
   onSoundToggle: (enabled: boolean) => void;
   themeMode: ThemeMode;
   onThemeModalOpen: () => void;
+  dafDayStartMode: DafDayStartMode;
+  dafDayStartHour: number;
+  dafDayStartMinute: number;
+  dafDayStartSchedules: DafDayStartDaySchedule[];
+  onDafDayStartModeOpen: () => void;
+  onDafDayStartTimeOpen: () => void;
+  onEditDafDayStartDay: (index: number) => void;
   readerViewMode: ViewMode;
   onReaderViewModePress: () => void;
   showChavrutaNotes: boolean;
@@ -106,6 +114,13 @@ export default function SettingsScrollContent({
   onSoundToggle,
   themeMode,
   onThemeModalOpen,
+  dafDayStartMode,
+  dafDayStartHour,
+  dafDayStartMinute,
+  dafDayStartSchedules,
+  onDafDayStartModeOpen,
+  onDafDayStartTimeOpen,
+  onEditDafDayStartDay,
   readerViewMode,
   onReaderViewModePress,
   showChavrutaNotes,
@@ -245,6 +260,13 @@ export default function SettingsScrollContent({
                 isFirst={false}
                 themeMode={themeMode}
                 onThemeModalOpen={onThemeModalOpen}
+                dafDayStartMode={dafDayStartMode}
+                dafDayStartHour={dafDayStartHour}
+                dafDayStartMinute={dafDayStartMinute}
+                dafDayStartSchedules={dafDayStartSchedules}
+                onDafDayStartModeOpen={onDafDayStartModeOpen}
+                onDafDayStartTimeOpen={onDafDayStartTimeOpen}
+                onEditDafDayStartDay={onEditDafDayStartDay}
                 showSecularDate={showSecularDate}
                 onSecularDateToggle={onSecularDateToggle}
                 showCalendarDaf={showCalendarDaf}

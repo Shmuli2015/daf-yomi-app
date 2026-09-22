@@ -1,5 +1,10 @@
 import React from 'react';
 import { ThemeMode } from '../../theme';
+import type { DafDayStartMode } from '../../utils/dafDayBoundary';
+import {
+  DAF_DAY_START_HOUR_MAX,
+  DAF_DAY_START_HOUR_MIN,
+} from '../../utils/dafDayBoundary';
 import SettingsChoiceModal from './SettingsChoiceModal';
 import { GuideModal } from './GuideModal';
 import { TimePickerModal } from './TimePickerModal';
@@ -17,6 +22,16 @@ export type SettingsModalsProps = {
   showThemeModal: boolean;
   onThemeModalClose: () => void;
   onThemeModeSelect: (mode: ThemeMode) => void;
+  dafDayStartMode: DafDayStartMode;
+  showDafDayStartModeModal: boolean;
+  onDafDayStartModeModalClose: () => void;
+  onDafDayStartModeSelect: (mode: DafDayStartMode) => void;
+  showDafDayStartTimePicker: boolean;
+  onDafDayStartTimePickerClose: () => void;
+  dafDayStartHour: number;
+  dafDayStartMinute: number;
+  dafDayStartTimePickerTitle?: string;
+  onDafDayStartTimeSave: (hour: number, minute: number) => void;
   showGuideModal: boolean;
   onGuideModalClose: () => void;
   showTimePicker: boolean;
@@ -60,6 +75,16 @@ export default function SettingsModals({
   showThemeModal,
   onThemeModalClose,
   onThemeModeSelect,
+  dafDayStartMode,
+  showDafDayStartModeModal,
+  onDafDayStartModeModalClose,
+  onDafDayStartModeSelect,
+  showDafDayStartTimePicker,
+  onDafDayStartTimePickerClose,
+  dafDayStartHour,
+  dafDayStartMinute,
+  dafDayStartTimePickerTitle = 'בחר שעת החלפת הדף',
+  onDafDayStartTimeSave,
   showGuideModal,
   onGuideModalClose,
   showTimePicker,
@@ -113,6 +138,19 @@ export default function SettingsModals({
         onSelect={onThemeModeSelect}
       />
       <SettingsChoiceModal
+        visible={showDafDayStartModeModal}
+        title="מתי מתחלף הדף היומי"
+        headerIcon="time-outline"
+        value={dafDayStartMode}
+        options={[
+          { value: 'midnight', label: 'בחצות (12:00 בלילה)', icon: 'moon-outline' },
+          { value: 'custom_hour', label: 'בשעה קבועה בערב', icon: 'time-outline' },
+          { value: 'weekly', label: 'לפי ימי השבוע', icon: 'calendar-outline' },
+        ]}
+        onClose={onDafDayStartModeModalClose}
+        onSelect={onDafDayStartModeSelect}
+      />
+      <SettingsChoiceModal
         visible={showReaderViewModal}
         title="בחירת מצב קורא"
         headerIcon="reader-outline"
@@ -135,6 +173,16 @@ export default function SettingsModals({
         title={timePickerTitle}
         onDisable={onTimePickerDisable}
         onApplyToActiveDays={onTimePickerApplyToActiveDays}
+      />
+      <TimePickerModal
+        visible={showDafDayStartTimePicker}
+        onClose={onDafDayStartTimePickerClose}
+        hour={dafDayStartHour}
+        minute={dafDayStartMinute}
+        onSave={onDafDayStartTimeSave}
+        title={dafDayStartTimePickerTitle}
+        minHour={DAF_DAY_START_HOUR_MIN}
+        maxHour={DAF_DAY_START_HOUR_MAX}
       />
       <ResetOptionsModal
         visible={showResetModal}
