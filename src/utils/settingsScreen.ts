@@ -26,7 +26,7 @@ export function getDafDayStartModeDisplay(
   if (mode === 'custom_hour') {
     return {
       icon: 'time-outline',
-      label: `שעה בערב (${formatNotificationTime(hour, minute)})`,
+      label: `שעה קבועה (${formatNotificationTime(hour, minute)})`,
     };
   }
   if (mode === 'weekly') {

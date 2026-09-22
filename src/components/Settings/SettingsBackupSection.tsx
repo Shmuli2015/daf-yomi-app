@@ -4,25 +4,13 @@ import { SettingItem } from './SettingItem';
 import { SectionHeader } from './SectionHeader';
 import type { SettingsSectionChrome } from './settingsSection.types';
 import { formatLastBackupAt, getBackupReminderText } from '../../utils/backupReminder';
-import { isLastVisible, matchesAnySetting, matchesSetting, type SearchableSetting } from '../../utils/settingsSearch';
-
-const SAVE_ITEM: SearchableSetting = {
-  title: 'שמור גיבוי לקובץ',
-  description: 'בחר תיקייה (למשל הורדות) ושמור קובץ JSON במכשיר',
-  synonyms: ['גיבוי', 'קובץ', 'json', 'שמירה'],
-};
-
-const SHARE_ITEM: SearchableSetting = {
-  title: 'שתף גיבוי',
-  description: 'שלח את קובץ הגיבוי בוואטסאפ, דרייב או אפליקציה אחרת',
-  synonyms: ['שיתוף', 'וואטסאפ', 'דרייב'],
-};
-
-const IMPORT_ITEM: SearchableSetting = {
-  title: 'ייבא גיבוי',
-  description: 'שחזור נתונים מקובץ גיבוי קודם',
-  synonyms: ['שחזור', 'ייבוא', 'מיזוג', 'החלפה'],
-};
+import { isLastVisible, matchesSetting } from '../../utils/settingsSearch';
+import {
+  BACKUP_SEARCH_ITEMS,
+  IMPORT_ITEM,
+  SAVE_ITEM,
+  SHARE_BACKUP_ITEM,
+} from '../../utils/settingsSearchCatalog';
 
 type SettingsBackupSectionProps = SettingsSectionChrome & {
   lastBackupAt: string | null;
@@ -31,7 +19,7 @@ type SettingsBackupSectionProps = SettingsSectionChrome & {
   onImportBackup?: () => void;
 };
 
-export const BACKUP_SEARCH_ITEMS: SearchableSetting[] = [SAVE_ITEM, SHARE_ITEM, IMPORT_ITEM];
+export { BACKUP_SEARCH_ITEMS };
 
 export default function SettingsBackupSection({
   styles,
@@ -47,11 +35,13 @@ export default function SettingsBackupSection({
   const saveDescription = lastLabel
     ? `${SAVE_ITEM.description}. גובה לאחרונה ב-${lastLabel}`
     : SAVE_ITEM.description;
-  const showSave = onSaveBackupToFile != null && matchesSetting(searchQuery, { ...SAVE_ITEM, description: saveDescription });
-  const showShare = onShareBackup != null && matchesSetting(searchQuery, SHARE_ITEM);
+  const showSave =
+    onSaveBackupToFile != null &&
+    matchesSetting(searchQuery, { ...SAVE_ITEM, description: saveDescription });
+  const showShare = onShareBackup != null && matchesSetting(searchQuery, SHARE_BACKUP_ITEM);
   const showImport = onImportBackup != null && matchesSetting(searchQuery, IMPORT_ITEM);
-  if (!matchesAnySetting(searchQuery, [SAVE_ITEM, SHARE_ITEM, IMPORT_ITEM])) return null;
   const flags = [showSave, showShare, showImport];
+  if (!flags.some(Boolean)) return null;
 
   return (
     <>
@@ -70,8 +60,8 @@ export default function SettingsBackupSection({
         {showShare ? (
           <SettingItem
             icon="share-outline"
-            title={SHARE_ITEM.title}
-            description={SHARE_ITEM.description}
+            title={SHARE_BACKUP_ITEM.title}
+            description={SHARE_BACKUP_ITEM.description}
             onPress={onShareBackup}
             isLast={isLastVisible(flags, 1)}
             highlightText={searchQuery}

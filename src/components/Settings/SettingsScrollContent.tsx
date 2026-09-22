@@ -8,18 +8,14 @@ import type { ViewMode } from '../SefariaReader/ReaderToolbar';
 import type { DafDayStartDaySchedule, DafDayStartMode } from '../../utils/dafDayBoundary';
 import { SettingsSearchBar } from './SettingsSearchBar';
 import { SettingsFooter } from './SettingsFooter';
-import SettingsNotificationsSection, {
-  NOTIFICATIONS_SEARCH_ITEMS,
-} from './SettingsNotificationsSection';
-import SettingsDisplaySection, { DISPLAY_SEARCH_ITEMS } from './SettingsDisplaySection';
-import SettingsReaderSection, { READER_SEARCH_ITEMS } from './SettingsReaderSection';
-import SettingsPersonalTrackSection, {
-  PERSONAL_TRACK_SEARCH_ITEMS,
-} from './SettingsPersonalTrackSection';
-import SettingsBackupSection, { BACKUP_SEARCH_ITEMS } from './SettingsBackupSection';
-import SettingsDataSection, { DATA_SEARCH_ITEMS } from './SettingsDataSection';
-import SettingsAboutSection, { ABOUT_SEARCH_ITEMS } from './SettingsAboutSection';
-import SettingsDevSection, { DEV_SEARCH_ITEMS } from './SettingsDevSection';
+import SettingsNotificationsSection from './SettingsNotificationsSection';
+import SettingsDisplaySection from './SettingsDisplaySection';
+import SettingsReaderSection from './SettingsReaderSection';
+import SettingsBackupSection from './SettingsBackupSection';
+import SettingsDataSection from './SettingsDataSection';
+import SettingsHelpSection from './SettingsHelpSection';
+import SettingsUpdatesSection from './SettingsUpdatesSection';
+import SettingsDevSection from './SettingsDevSection';
 import InfoModal from '../InfoModal';
 import ContentLicensesModal from './ContentLicensesModal';
 import type { SettingsScreenStyles } from './settingsScreenStyles';
@@ -27,7 +23,7 @@ import type { DaySchedule } from './DayScheduleList';
 import type { ExactAlarmStatus } from '../../utils/exactAlarm';
 import type { NotificationPermissionStatus } from '../../utils/notificationPermission';
 import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
-import { matchesAnySetting } from '../../utils/settingsSearch';
+import { hasVisibleSettingsMatch } from '../../utils/settingsVisibleSearch';
 
 export type SettingsScrollContentProps = {
   styles: SettingsScreenStyles;
@@ -180,17 +176,25 @@ export default function SettingsScrollContent({
     }
   }, []);
 
-  const searchItems = [
-    ...NOTIFICATIONS_SEARCH_ITEMS,
-    ...DISPLAY_SEARCH_ITEMS,
-    ...READER_SEARCH_ITEMS,
-    ...PERSONAL_TRACK_SEARCH_ITEMS,
-    ...BACKUP_SEARCH_ITEMS,
-    ...DATA_SEARCH_ITEMS,
-    ...ABOUT_SEARCH_ITEMS,
-    ...(showDevSection ? DEV_SEARCH_ITEMS : []),
-  ];
-  const hasAnyMatch = matchesAnySetting(searchQuery, searchItems);
+  const hasAnyMatch = hasVisibleSettingsMatch(searchQuery, {
+    notificationsEnabled,
+    notifMode,
+    exactAlarmStatus,
+    hasExactAlarmHandler: onExactAlarmSettingsPress != null,
+    permissionStatus,
+    dafDayStartMode,
+    hasPersonalTrack:
+      onPersonalTrackBannerToggle != null && showPersonalTrackBannerPref != null,
+    hasSaveBackup: onSaveBackupToFile != null,
+    hasShareBackup: onShareBackup != null,
+    hasImportBackup: onImportBackup != null,
+    hasClearCache: onClearCacheOpen != null,
+    hasAutoUpdate: updateAutoPromptEnabled != null && onUpdateAutoPromptToggle != null,
+    hasCheckUpdate: onCheckAppUpdate != null,
+    hasWhatsNew: onShowWhatsNew != null,
+    hasShareDownload: onShareDownloadLink != null,
+    showDevSection,
+  });
 
   return (
     <>
@@ -273,6 +277,8 @@ export default function SettingsScrollContent({
                 onCalendarDafToggle={onCalendarDafToggle}
                 showConfettiPref={showConfettiPref}
                 onConfettiToggle={onConfettiToggle}
+                showPersonalTrackBannerPref={showPersonalTrackBannerPref}
+                onPersonalTrackBannerToggle={onPersonalTrackBannerToggle}
               />
               <SettingsReaderSection
                 styles={styles}
@@ -288,15 +294,6 @@ export default function SettingsScrollContent({
                 onIncreaseFontSize={onIncreaseFontSize}
                 onDecreaseFontSize={onDecreaseFontSize}
               />
-              {onPersonalTrackBannerToggle != null && showPersonalTrackBannerPref != null ? (
-                <SettingsPersonalTrackSection
-                  styles={styles}
-                  searchQuery={searchQuery}
-                  isFirst={false}
-                  showPersonalTrackBannerPref={showPersonalTrackBannerPref}
-                  onPersonalTrackBannerToggle={onPersonalTrackBannerToggle}
-                />
-              ) : null}
               <SettingsBackupSection
                 styles={styles}
                 searchQuery={searchQuery}
@@ -314,7 +311,7 @@ export default function SettingsScrollContent({
                 onClearCacheOpen={onClearCacheOpen}
                 onResetModalOpen={onResetModalOpen}
               />
-              <SettingsAboutSection
+              <SettingsHelpSection
                 styles={styles}
                 searchQuery={searchQuery}
                 isFirst={false}
@@ -322,6 +319,11 @@ export default function SettingsScrollContent({
                 onSupportPress={openSupportEmail}
                 onSupportLongPress={copySupportEmail}
                 onLicensesPress={() => setLicensesVisible(true)}
+              />
+              <SettingsUpdatesSection
+                styles={styles}
+                searchQuery={searchQuery}
+                isFirst={false}
                 updateAutoPromptEnabled={updateAutoPromptEnabled}
                 onUpdateAutoPromptToggle={onUpdateAutoPromptToggle}
                 onCheckAppUpdate={onCheckAppUpdate}

@@ -3,19 +3,8 @@ import { View } from 'react-native';
 import { SettingItem } from './SettingItem';
 import { SectionHeader } from './SectionHeader';
 import type { SettingsSectionChrome } from './settingsSection.types';
-import { isLastVisible, matchesAnySetting, matchesSetting, type SearchableSetting } from '../../utils/settingsSearch';
-
-const CACHE_ITEM: SearchableSetting = {
-  title: 'ניקוי קבצים שמורים',
-  description: 'מחיקת טקסטים שמורים',
-  synonyms: ['מטמון', 'קאש', 'אחסון', 'זיכרון'],
-};
-
-const RESET_ITEM: SearchableSetting = {
-  title: 'איפוס נתונים',
-  description: 'מחיקת נתוני דף יומי, מסלול אישי או איפוס כללי',
-  synonyms: ['מחיקה', 'איפוס', 'אתחול'],
-};
+import { isLastVisible, matchesSetting } from '../../utils/settingsSearch';
+import { CACHE_ITEM, DATA_SEARCH_ITEMS, RESET_ITEM } from '../../utils/settingsSearchCatalog';
 
 type SettingsDataSectionProps = SettingsSectionChrome & {
   storageSizeFormatted: string;
@@ -23,7 +12,7 @@ type SettingsDataSectionProps = SettingsSectionChrome & {
   onResetModalOpen: () => void;
 };
 
-export const DATA_SEARCH_ITEMS: SearchableSetting[] = [CACHE_ITEM, RESET_ITEM];
+export { DATA_SEARCH_ITEMS };
 
 export default function SettingsDataSection({
   styles,
@@ -35,10 +24,11 @@ export default function SettingsDataSection({
 }: SettingsDataSectionProps) {
   const cacheDescription = `מחיקת טקסטים שהורדו (${storageSizeFormatted}). אינו מוחק סימוני לימוד`;
   const showCache =
-    onClearCacheOpen != null && matchesSetting(searchQuery, { ...CACHE_ITEM, description: cacheDescription });
+    onClearCacheOpen != null &&
+    matchesSetting(searchQuery, { ...CACHE_ITEM, description: cacheDescription });
   const showReset = matchesSetting(searchQuery, RESET_ITEM);
-  if (!matchesAnySetting(searchQuery, [CACHE_ITEM, RESET_ITEM])) return null;
   const flags = [showCache, showReset];
+  if (!flags.some(Boolean)) return null;
 
   return (
     <>

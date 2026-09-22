@@ -95,6 +95,7 @@ export default function SettingsScreen() {
     dafDayStartTimePickerHour,
     dafDayStartTimePickerMinute,
     dafDayStartTimePickerTitle,
+    canApplyDafDayStartToAllDays,
     openDafDayStartModeModal,
     closeDafDayStartModeModal,
     openDafDayStartTimePicker,
@@ -106,6 +107,7 @@ export default function SettingsScreen() {
     handleThemeModeSelect,
     handleDafDayStartModeSelect,
     handleDafDayStartTimeSave,
+    handleApplyDafDayStartTimeToAllDays,
     handleEditDafDayStartDay,
   } = useSettingsDisplayPrefs({
     settings,
@@ -309,6 +311,9 @@ export default function SettingsScreen() {
           dafDayStartMinute={dafDayStartTimePickerMinute}
           dafDayStartTimePickerTitle={dafDayStartTimePickerTitle}
           onDafDayStartTimeSave={handleDafDayStartTimeSave}
+          onDafDayStartApplyToAllDays={
+            canApplyDafDayStartToAllDays ? handleApplyDafDayStartTimeToAllDays : undefined
+          }
           showGuideModal={showGuideModal}
           onGuideModalClose={() => setShowGuideModal(false)}
           showTimePicker={showTimePicker}

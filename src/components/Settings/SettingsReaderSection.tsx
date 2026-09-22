@@ -2,29 +2,18 @@ import React from 'react';
 import { View } from 'react-native';
 import { SettingItem } from './SettingItem';
 import { SectionHeader } from './SectionHeader';
-import SettingsFontSizeRow, { FONT_SIZE_SETTING } from './SettingsFontSizeRow';
+import SettingsFontSizeRow from './SettingsFontSizeRow';
 import type { SettingsSectionChrome } from './settingsSection.types';
 import type { ViewMode } from '../SefariaReader/ReaderToolbar';
 import { getReaderViewModeLabel } from '../../utils/readerViewMode';
-import { isLastVisible, matchesAnySetting, matchesSetting, type SearchableSetting } from '../../utils/settingsSearch';
-
-export const READER_MODE_ITEM: SearchableSetting = {
-  title: 'מצב קורא',
-  description: 'גמרא, שטיינזלץ או חברותא בפתיחת הדף',
-  synonyms: ['גמרא', 'שטיינזלץ', 'חברותא', 'קורא', 'טקסט', 'ברירת מחדל'],
-};
-
-const NOTES_ITEM: SearchableSetting = {
-  title: 'הערות בחברותא',
-  description: 'הצגת הערות כשקוראים במצב חברותא',
-  synonyms: ['הערות', 'פירוש', 'חברותא'],
-};
-
-const HAPTICS_ITEM: SearchableSetting = {
-  title: 'רטט',
-  description: 'משוב מגע במעברים ובסימון דף',
-  synonyms: ['הפטיק', 'ויברציה', 'מגע'],
-};
+import { isLastVisible, matchesSetting } from '../../utils/settingsSearch';
+import {
+  FONT_SIZE_SETTING,
+  HAPTICS_ITEM,
+  NOTES_ITEM,
+  READER_MODE_ITEM,
+  READER_SEARCH_ITEMS,
+} from '../../utils/settingsSearchCatalog';
 
 type SettingsReaderSectionProps = SettingsSectionChrome & {
   readerViewMode: ViewMode;
@@ -38,12 +27,7 @@ type SettingsReaderSectionProps = SettingsSectionChrome & {
   onDecreaseFontSize: () => void;
 };
 
-export const READER_SEARCH_ITEMS: SearchableSetting[] = [
-  READER_MODE_ITEM,
-  NOTES_ITEM,
-  HAPTICS_ITEM,
-  FONT_SIZE_SETTING,
-];
+export { READER_SEARCH_ITEMS, READER_MODE_ITEM };
 
 export default function SettingsReaderSection({
   styles,
@@ -63,10 +47,8 @@ export default function SettingsReaderSection({
   const showNotes = matchesSetting(searchQuery, NOTES_ITEM);
   const showHaptics = matchesSetting(searchQuery, HAPTICS_ITEM);
   const showFont = matchesSetting(searchQuery, FONT_SIZE_SETTING);
-  if (!matchesAnySetting(searchQuery, [READER_MODE_ITEM, NOTES_ITEM, HAPTICS_ITEM, FONT_SIZE_SETTING])) {
-    return null;
-  }
   const flags = [showMode, showNotes, showHaptics, showFont];
+  if (!flags.some(Boolean)) return null;
 
   return (
     <>

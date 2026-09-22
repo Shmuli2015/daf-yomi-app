@@ -1,4 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
+import { InteractionManager } from 'react-native';
 import type { SettingsRecord } from '../db/database';
 import { getSettings } from '../db/database';
 import { ThemeMode } from '../theme';
@@ -136,11 +137,17 @@ export function useSettingsDisplayPrefs({
         setShowDafDayStartTimePicker(false);
         setEditingDafDayIndex(null);
       }
-      void rescheduleStudyReminders();
       if (switchingToCustom) {
-        setTimeout(() => {
-          setShowDafDayStartTimePicker(true);
-        }, 320);
+        InteractionManager.runAfterInteractions(() => {
+          setTimeout(() => {
+            setShowDafDayStartTimePicker(true);
+            InteractionManager.runAfterInteractions(() => {
+              void rescheduleStudyReminders();
+            });
+          }, 320);
+        });
+      } else {
+        void rescheduleStudyReminders();
       }
     },
     [dafDayStartMode, setDafDayStartMode],
@@ -171,6 +178,18 @@ export function useSettingsDisplayPrefs({
     [dafDayStartSchedules, editingDafDayIndex, setDafDayStartSchedules, setDafDayStartTime],
   );
 
+  const handleApplyDafDayStartTimeToAllDays = useCallback(
+    (hour: number, minute: number) => {
+      const next = dafDayStartSchedules.map(() => ({ hour, minute }));
+      setDafDayStartSchedulesState(next);
+      setDafDayStartSchedules(next);
+      setEditingDafDayIndex(null);
+      setShowDafDayStartTimePicker(false);
+      void rescheduleStudyReminders();
+    },
+    [dafDayStartSchedules, setDafDayStartSchedules],
+  );
+
   const closeDafDayStartTimePicker = useCallback(() => {
     setShowDafDayStartTimePicker(false);
     setEditingDafDayIndex(null);
@@ -188,6 +207,7 @@ export function useSettingsDisplayPrefs({
     editingDafDayIndex !== null
       ? `שעת החלפה ביום ${DAY_LABELS[editingDafDayIndex]}`
       : 'בחר שעת החלפת הדף';
+  const canApplyDafDayStartToAllDays = editingDafDayIndex !== null;
 
   return {
     showSecularDate,
@@ -204,6 +224,7 @@ export function useSettingsDisplayPrefs({
     dafDayStartTimePickerHour,
     dafDayStartTimePickerMinute,
     dafDayStartTimePickerTitle,
+    canApplyDafDayStartToAllDays,
     openDafDayStartModeModal: () => setShowDafDayStartModeModal(true),
     closeDafDayStartModeModal: () => setShowDafDayStartModeModal(false),
     openDafDayStartTimePicker: () => {
@@ -218,6 +239,7 @@ export function useSettingsDisplayPrefs({
     handleThemeModeSelect,
     handleDafDayStartModeSelect,
     handleDafDayStartTimeSave,
+    handleApplyDafDayStartTimeToAllDays,
     handleEditDafDayStartDay,
   };
 }

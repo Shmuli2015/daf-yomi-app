@@ -3,24 +3,13 @@ import { View } from 'react-native';
 import { SettingItem } from './SettingItem';
 import { SectionHeader } from './SectionHeader';
 import type { SettingsSectionChrome } from './settingsSection.types';
-import { isLastVisible, matchesAnySetting, matchesSetting, type SearchableSetting } from '../../utils/settingsSearch';
-
-const TEST_ITEM: SearchableSetting = {
-  title: 'שלח התראת בדיקה',
-  description: 'בדוק שההתראות עובדות (תגיע בעוד 5 שניות)',
-  synonyms: ['טסט', 'דיבאג'],
-};
-
-const SCHEDULED_ITEM: SearchableSetting = {
-  title: 'בדוק התראות מתוזמנות',
-  synonyms: ['מתוזמן', 'רשימה'],
-};
-
-const GITHUB_ITEM: SearchableSetting = {
-  title: 'בדוק תגובת GitHub',
-  description: 'מציג טאג ושם APK מהפרסום האחרון',
-  synonyms: ['גיטהאב', 'apk'],
-};
+import { isLastVisible, matchesSetting } from '../../utils/settingsSearch';
+import {
+  DEV_SEARCH_ITEMS,
+  GITHUB_ITEM,
+  SCHEDULED_ITEM,
+  TEST_ITEM,
+} from '../../utils/settingsSearchCatalog';
 
 type SettingsDevSectionProps = SettingsSectionChrome & {
   scheduledCount: number;
@@ -29,7 +18,7 @@ type SettingsDevSectionProps = SettingsSectionChrome & {
   onProbeGithubRelease?: () => void;
 };
 
-export const DEV_SEARCH_ITEMS: SearchableSetting[] = [TEST_ITEM, SCHEDULED_ITEM, GITHUB_ITEM];
+export { DEV_SEARCH_ITEMS };
 
 export default function SettingsDevSection({
   styles,
@@ -42,10 +31,13 @@ export default function SettingsDevSection({
 }: SettingsDevSectionProps) {
   const scheduledDescription = `${scheduledCount} התראות מתוזמנות`;
   const showTest = matchesSetting(searchQuery, TEST_ITEM);
-  const showScheduled = matchesSetting(searchQuery, { ...SCHEDULED_ITEM, description: scheduledDescription });
+  const showScheduled = matchesSetting(searchQuery, {
+    ...SCHEDULED_ITEM,
+    description: scheduledDescription,
+  });
   const showGithub = onProbeGithubRelease != null && matchesSetting(searchQuery, GITHUB_ITEM);
-  if (!matchesAnySetting(searchQuery, [TEST_ITEM, SCHEDULED_ITEM, GITHUB_ITEM])) return null;
   const flags = [showTest, showScheduled, showGithub];
+  if (!flags.some(Boolean)) return null;
 
   return (
     <>

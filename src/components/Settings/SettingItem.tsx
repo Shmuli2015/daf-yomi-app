@@ -36,7 +36,10 @@ export const SettingItem = React.memo(function SettingItem({
   const iconBg = isDestructive ? theme.colors.dangerLight : theme.colors.accentLight;
   const iconColor = isDestructive ? theme.colors.danger : theme.colors.accent;
   const titleColor = isDestructive ? theme.colors.danger : theme.colors.textPrimary;
-  const accessibilityLabel = description ? `${title}. ${description}` : title;
+  const accessibilityLabelParts = [title];
+  if (description) accessibilityLabelParts.push(description);
+  if (typeof value === 'string' && value.length > 0) accessibilityLabelParts.push(value);
+  const accessibilityLabel = accessibilityLabelParts.join('. ');
   const isSwitch = type === 'switch';
   const switchValue = Boolean(value);
 

@@ -272,6 +272,10 @@ export function useSettingsNotifications({
             message: 'כדי לקבל תזכורת יומית יש לאשר התראות בהגדרות המכשיר.',
             iconName: 'notifications-outline',
             compact: true,
+            secondaryLabel: 'פתח הגדרות המכשיר',
+            onSecondary: () => {
+              void openNotificationSettings();
+            },
           });
           return;
         }
