@@ -15,7 +15,7 @@ import {
 import { getNotificationPermissionStatus } from '../utils/notificationPermission';
 import { parseDaySchedulesJson } from '../utils/settingsScreen';
 import { scheduleNotifications } from '../utils/notifications';
-import { DAY_LABELS } from '../components/Settings/DayScheduleList.constants';
+import { DAY_LABELS } from '../components/Settings/Schedule/DayScheduleList.constants';
 
 interface UseSettingsDisplayPrefsParams {
   settings: SettingsRecord | null;

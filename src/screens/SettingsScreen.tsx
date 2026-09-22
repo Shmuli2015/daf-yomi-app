@@ -6,7 +6,7 @@ import { useShallow } from 'zustand/react/shallow';
 import ScreenTopGradient from '../components/ScreenTopGradient';
 import SettingsLoadingView from '../components/Settings/SettingsLoadingView';
 import SettingsScrollContent from '../components/Settings/SettingsScrollContent';
-import SettingsModals from '../components/Settings/SettingsModals';
+import SettingsModals from '../components/Settings/Modals/SettingsModals';
 import InfoModal from '../components/InfoModal';
 import Toast from '../components/Toast';
 import { createSettingsScreenStyles } from '../components/Settings/settingsScreenStyles';

@@ -12,7 +12,7 @@ import { createPersonalTrackBannerStyles } from './PersonalTrack/PersonalTrackBa
 import PersonalTrackOverviewCard from './PersonalTrack/PersonalTrackOverviewCard';
 import AccordionSlideContent from './AccordionSlideContent';
 import DafMarkMenuModal from './DafMarkMenuModal';
-import { useGuideSectionAnimation } from './Settings/useGuideSectionAnimation';
+import { useGuideSectionAnimation } from './Guide/useGuideSectionAnimation';
 import type { PersonalTrackRecord } from '../db/database';
 
 interface PersonalTrackBannerProps {

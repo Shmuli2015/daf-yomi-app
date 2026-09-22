@@ -1,4 +1,4 @@
-import type { ResetOptionType } from '../components/Settings/ResetOptionsModal.types';
+import type { ResetOptionType } from '../components/Settings/Modals/ResetOptionsModal.types';
 
 export interface ResetTexts {
   title: string;
