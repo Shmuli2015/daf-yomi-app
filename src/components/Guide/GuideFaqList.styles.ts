@@ -60,5 +60,23 @@ export function createGuideFaqListStyles(theme: Theme) {
       fontWeight: '700',
       color: theme.colors.accent,
     },
+    switchTabResultBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      backgroundColor: theme.colors.accentLight,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      borderWidth: 1,
+      borderColor: theme.colors.accent,
+      marginTop: 8,
+    },
+    switchTabResultBtnText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: theme.colors.accent,
+    },
   });
 }

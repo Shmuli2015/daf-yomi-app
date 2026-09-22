@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { Text, type StyleProp, type TextStyle } from 'react-native';
 import { useTheme } from '../../theme';
-import { guideBadgeStyles } from './GuideModal.styles';
 
 interface GuideItemTextProps {
   text: string;
@@ -28,10 +27,18 @@ const GuideItemText = React.memo(function GuideItemText({
 
   const highlightStyle = useMemo(
     () => ({
-      backgroundColor: theme.colors.accentBorder,
+      backgroundColor: theme.colors.accentLight,
       color: theme.colors.accent,
       fontWeight: '900' as const,
-      borderRadius: 4,
+      borderRadius: 3,
+    }),
+    [theme],
+  );
+
+  const actionTextStyle = useMemo(
+    () => ({
+      color: theme.colors.accent,
+      fontWeight: '800' as const,
     }),
     [theme],
   );
@@ -85,44 +92,11 @@ const GuideItemText = React.memo(function GuideItemText({
       }
       if (part.startsWith('[[') && part.endsWith(']]')) {
         const badgeContent = part.slice(2, -2);
-        const isGold =
-          badgeContent.includes('סמן') ||
-          badgeContent.includes('סיימתי') ||
-          badgeContent.includes('נלמד') ||
-          badgeContent.includes('אשריך');
-        const isPrimary =
-          badgeContent.includes('לימוד הדף') ||
-          badgeContent.includes('גיבוי');
-
-        const isMatchedByQuery =
-          q.length > 0 && badgeContent.toLowerCase().includes(q);
-
-        const badgeStyle = [
-          guideBadgeStyles.badgeInline,
-          {
-            backgroundColor: isMatchedByQuery
-              ? theme.colors.accentBorder
-              : isGold
-              ? theme.colors.accentLight
-              : theme.colors.surface,
-            color: isGold || isMatchedByQuery
-              ? theme.colors.accent
-              : isPrimary
-              ? theme.colors.primary
-              : theme.colors.textPrimary,
-            borderColor: isMatchedByQuery
-              ? theme.colors.accent
-              : isGold
-              ? theme.colors.accentBorder
-              : theme.colors.border,
-          },
-        ];
-
-        return renderPartWithHighlight(` ${badgeContent} `, badgeStyle, index);
+        return renderPartWithHighlight(badgeContent, [baseStyle, actionTextStyle], index);
       }
       return renderPartWithHighlight(part, baseStyle, index);
     });
-  }, [baseStyle, boldStyle, highlightStyle, q, text, theme]);
+  }, [actionTextStyle, baseStyle, boldStyle, highlightStyle, q, text]);
 
   return <Text style={baseStyle}>{content}</Text>;
 });
