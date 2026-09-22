@@ -6,7 +6,7 @@ import type { SefariaCommentaryItem, SefariaSegment } from '../../services/sefar
 import { useTheme } from '../../theme';
 import { triggerImpact } from '../../utils/haptics';
 import { formatCommentaryBadgeLabel } from '../../utils/commentaryFilters';
-import { useGuideSectionAnimation } from '../Settings/useGuideSectionAnimation';
+import { useGuideSectionAnimation } from '../Guide/useGuideSectionAnimation';
 import AccordionSlideContent from '../AccordionSlideContent';
 import type { AccordionCollapseScroll } from '../../hooks/useAccordionSlide';
 import CommentaryBodyText from './CommentaryBodyText';

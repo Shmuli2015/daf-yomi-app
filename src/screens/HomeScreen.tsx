@@ -16,7 +16,7 @@ import PersonalMasechetPickerModal from "../components/PersonalMasechetPickerMod
 import PersonalMasechetDetailModal from "../components/PersonalMasechetDetailModal";
 import QuickJumpModal from "../components/QuickJump/QuickJumpModal";
 import SiyumModal from "../components/Siyum/SiyumModal";
-import GuideModal from "../components/Settings/GuideModal";
+import GuideModal from "../components/Guide/GuideModal";
 import ScreenTopGradient from "../components/ScreenTopGradient";
 import YesterdayNudge from "../components/Home/YesterdayNudge";
 import { useAppStore } from "../store/useAppStore";

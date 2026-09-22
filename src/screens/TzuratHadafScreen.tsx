@@ -12,7 +12,7 @@ import TzuratMarkTrackModal from '../components/TzuratHadaf/TzuratMarkTrackModal
 import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
-import GuideModal from '../components/Settings/GuideModal';
+import GuideModal from '../components/Guide/GuideModal';
 import ReaderToolbar, { type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
 import ReaderModePane from '../components/SefariaReader/ReaderModePane';
 import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';

@@ -19,8 +19,8 @@ import {
   type NotificationPermissionStatus,
 } from '../utils/notificationPermission';
 import { parseDaySchedulesJson, schedulesUseDefaultTimes } from '../utils/settingsScreen';
-import type { DaySchedule } from '../components/Settings/DayScheduleList';
-import { DAY_LABELS } from '../components/Settings/DayScheduleList.constants';
+import type { DaySchedule } from '../components/Settings/Schedule/DayScheduleList';
+import { DAY_LABELS } from '../components/Settings/Schedule/DayScheduleList.constants';
 import type { SettingsRecord } from '../db/database';
 import type { SettingsFeedback } from './useSettingsFeedback';
 

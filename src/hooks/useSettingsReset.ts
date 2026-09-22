@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import type { ResetOptionType } from '../components/Settings/ResetOptionsModal.types';
+import type { ResetOptionType } from '../components/Settings/Modals/ResetOptionsModal.types';
 import { getResetConfirmTexts, getResetSuccessFeedback, type ResetTexts } from '../utils/settingsReset';
 
 interface UseSettingsResetParams {

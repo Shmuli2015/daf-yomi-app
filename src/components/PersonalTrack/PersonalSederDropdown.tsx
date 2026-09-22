@@ -3,7 +3,7 @@ import { Text, TouchableOpacity, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
-import { useGuideSectionAnimation } from '../Settings/useGuideSectionAnimation';
+import { useGuideSectionAnimation } from '../Guide/useGuideSectionAnimation';
 import { createPersonalSederDropdownStyles } from './personalSederDropdownStyles';
 import AccordionSlideContent from '../AccordionSlideContent';
 
