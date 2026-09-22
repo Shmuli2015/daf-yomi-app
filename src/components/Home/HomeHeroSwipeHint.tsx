@@ -14,18 +14,21 @@ const HomeHeroSwipeHint = React.memo(function HomeHeroSwipeHint() {
       pointerEvents="none"
       accessible
       accessibilityRole="text"
-      accessibilityLabel="החלק ימינה או שמאלה למעבר בין ימים"
+      accessibilityLabel="החלקה למעבר בין ימים"
     >
-      <View style={styles.row}>
-        <Ionicons name="chevron-forward" size={14} color={theme.colors.textSecondary} />
-        <View style={styles.dots}>
-          <View style={styles.dot} />
-          <View style={styles.activeDot} />
-          <View style={styles.dot} />
-        </View>
-        <Ionicons name="chevron-back" size={14} color={theme.colors.textSecondary} />
-      </View>
-      <Text style={styles.label}>החלק ליום אחר</Text>
+      <Ionicons
+        name="chevron-forward"
+        size={13}
+        color={theme.colors.textMuted}
+        style={styles.chevron}
+      />
+      <Text style={styles.label}>החלקה למעבר בין ימים</Text>
+      <Ionicons
+        name="chevron-back"
+        size={13}
+        color={theme.colors.textMuted}
+        style={styles.chevron}
+      />
     </View>
   );
 });
