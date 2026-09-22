@@ -257,12 +257,13 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
               {canMark && !showHalfDafTip && (
                 <TouchableOpacity
                   onPress={onOpenMarkMenu}
-                  style={styles.halfDafLink}
+                  style={styles.halfDafPill}
                   activeOpacity={0.7}
                   accessibilityRole="button"
                   accessibilityLabel="סימון חצי דף"
                 >
-                  <Text style={styles.halfDafLinkText}>סימון חצי דף</Text>
+                  <Ionicons name="options-outline" size={14} color={theme.colors.accent} />
+                  <Text style={styles.halfDafPillText}>סימון חצי דף</Text>
                 </TouchableOpacity>
               )}
             </>

@@ -4,38 +4,20 @@ import { useTheme } from '../../theme';
 export const createHomeHeroSwipeHintStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     container: {
-      alignItems: 'center',
-      marginTop: 14,
-      gap: 6,
-    },
-    row: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 8,
-    },
-    dots: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
+      marginTop: 12,
+      paddingVertical: 2,
     },
-    dot: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.colors.textSecondary,
-    },
-    activeDot: {
-      width: 14,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: theme.colors.accent,
+    chevron: {
+      opacity: 0.65,
     },
     label: {
       fontSize: 11,
-      fontWeight: '600',
-      color: theme.colors.textSecondary,
+      fontWeight: '500',
+      color: theme.colors.textMuted,
       textAlign: Platform.OS === 'web' ? 'right' : 'left',
       writingDirection: 'rtl',
     },

@@ -235,11 +235,20 @@ export const createHomeHeroCardStyles = (theme: ReturnType<typeof useTheme>) =>
     halfDafTipDismiss: {
       padding: 4,
     },
-    halfDafLink: {
+    halfDafPill: {
       alignSelf: 'center',
-      paddingVertical: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 7,
+      paddingHorizontal: 14,
+      borderRadius: 18,
+      backgroundColor: theme.colors.accentLight,
+      borderWidth: 1,
+      borderColor: theme.colors.accentBorder,
     },
-    halfDafLinkText: {
+    halfDafPillText: {
       color: theme.colors.accent,
       fontSize: 13,
       fontWeight: '700',
