@@ -9,7 +9,6 @@
       "esnext"
     ],
     "types": [
-      "nativewind/types",
       "jest"
     ],
     "jsx": "react-jsx"

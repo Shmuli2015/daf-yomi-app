@@ -25,6 +25,13 @@ function withAndroidBuildOptimization(config) {
         "defaultConfig {\n        ndk {\n            abiFilters (*(findProperty('reactNativeArchitectures')?.split(',') ?: ['armeabi-v7a', 'arm64-v8a']))\n        }",
       );
     }
+    const unusedFonts = ':AntDesign.ttf:Entypo.ttf:EvilIcons.ttf:Feather.ttf:FontAwesome*.ttf:Fontisto.ttf:Foundation.ttf:MaterialCommunityIcons.ttf:MaterialIcons.ttf:Octicons.ttf:SimpleLineIcons.ttf:Zocial.ttf';
+    if (mod.modResults.contents.includes('ignoreAssetsPattern') && !mod.modResults.contents.includes('MaterialCommunityIcons.ttf')) {
+      mod.modResults.contents = mod.modResults.contents.replace(
+        /ignoreAssetsPattern '([^']+)'/,
+        `ignoreAssetsPattern '$1${unusedFonts}'`,
+      );
+    }
     return mod;
   });
 
