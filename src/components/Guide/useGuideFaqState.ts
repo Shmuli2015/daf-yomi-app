@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { GuideFaqItemData } from './guideFaqData';
 
-const DEFAULT_EXPANDED_FAQ: Record<string, boolean> = { 'half-page': true };
+const DEFAULT_EXPANDED_FAQ: Record<string, boolean> = { 'daf-day-start': true };
 
 export function useGuideFaqState(
   faqItems: GuideFaqItemData[],

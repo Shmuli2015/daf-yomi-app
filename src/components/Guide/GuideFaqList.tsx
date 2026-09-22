@@ -12,6 +12,8 @@ interface GuideFaqListProps {
   hasSearch: boolean;
   searchQuery: string;
   onClearSearch: () => void;
+  guideResultCount?: number;
+  onSwitchToGuide?: () => void;
 }
 
 export function GuideFaqList({
@@ -19,6 +21,8 @@ export function GuideFaqList({
   hasSearch,
   searchQuery,
   onClearSearch,
+  guideResultCount = 0,
+  onSwitchToGuide,
 }: GuideFaqListProps) {
   const theme = useTheme();
   const styles = useMemo(() => createGuideFaqListStyles(theme), [theme]);
@@ -42,8 +46,24 @@ export function GuideFaqList({
         />
         <Text style={styles.emptyTitle}>לא נמצאו שאלות מתאימות</Text>
         <Text style={styles.emptySubtitle}>
-          לא מצאנו שאלות ותשובות המתאימות לחיפוש "{searchQuery}". נסה לחפש במילים אחרות או לעבור ללשונית "מדריך מפורט".
+          לא מצאנו שאלות ותשובות המתאימות לחיפוש "{searchQuery}".
         </Text>
+        {guideResultCount > 0 && onSwitchToGuide && (
+          <TouchableOpacity
+            onPress={onSwitchToGuide}
+            style={styles.switchTabResultBtn}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="swap-horizontal-outline"
+              size={16}
+              color={theme.colors.accent}
+            />
+            <Text style={styles.switchTabResultBtnText}>
+              מעבר ל-{guideResultCount} תוצאות ב"מדריך מפורט"
+            </Text>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           onPress={onClearSearch}
           style={styles.clearSearchBtn}
