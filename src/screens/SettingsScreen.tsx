@@ -195,7 +195,6 @@ export default function SettingsScreen() {
     probeGithubRelease,
     handleUpdateAutoPromptToggle,
     handleCheckAppUpdates,
-    handleShareDownloadLink,
     handleShowWhatsNew,
   } = useSettingsAppUpdates({
     onFeedback: showFeedback,
@@ -281,7 +280,6 @@ export default function SettingsScreen() {
             onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
             onShowWhatsNew={handleShowWhatsNew}
             onProbeGithubRelease={__DEV__ ? probeGithubRelease : undefined}
-            onShareDownloadLink={handleShareDownloadLink}
             storageSizeFormatted={storageSizeFormatted}
             onClearCacheOpen={openClearCacheModal}
             onEmailCopied={() =>

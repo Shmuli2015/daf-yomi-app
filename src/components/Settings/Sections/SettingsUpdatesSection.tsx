@@ -44,7 +44,7 @@ export default function SettingsUpdatesSection({
 
   return (
     <>
-      <SectionHeader title="עדכונים ושיתוף" icon="download-outline" isFirst={isFirst} />
+      <SectionHeader title="עדכונים" icon="sparkles-outline" isFirst={isFirst} />
       <View style={styles.card}>
         {showAuto ? (
           <SettingItem
