@@ -8,6 +8,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.1.6',
+    highlights: [
+      'לחיצה ארוכה על מסכת לסימון או ביטול של כל הדפים',
+      'סימון מסכת שלמה גם במסלול האישי',
+      'גיבוי ושחזור כוללים את המסלול האישי והמסכת הפעילה',
+    ],
+  },
+  {
     version: '1.1.5',
     highlights: [
       'הגדרת מתי מתחיל יום הדף היומי',
