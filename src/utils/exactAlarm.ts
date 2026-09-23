@@ -30,7 +30,7 @@ export async function hasExactAlarmPermission(): Promise<boolean> {
 export async function openExactAlarmSettings(): Promise<void> {
   if (Platform.OS !== 'android') return;
 
-  const pkg = Constants.expoConfig?.android?.package ?? 'com.shmuli.dafyomi';
+  const pkg = Constants.expoConfig?.android?.package ?? 'com.masadaf.app';
   try {
     await IntentLauncher.startActivityAsync('android.settings.REQUEST_SCHEDULE_EXACT_ALARM', {
       data: `package:${pkg}`,

@@ -118,7 +118,7 @@ export async function installDownloadedApk(localUri: string): Promise<void> {
 
 export async function openUnknownSourcesSettings(): Promise<void> {
   if (Platform.OS !== 'android') return;
-  const pkg = Constants.expoConfig?.android?.package ?? 'com.shmuli.dafyomi';
+  const pkg = Constants.expoConfig?.android?.package ?? 'com.masadaf.app';
   try {
     await IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.MANAGE_UNKNOWN_APP_SOURCES, {
       data: `package:${pkg}`,

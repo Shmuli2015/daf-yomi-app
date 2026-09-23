@@ -6,8 +6,8 @@ import {
 import * as FileSystem from 'expo-file-system/legacy';
 
 jest.mock('expo-file-system/legacy', () => ({
-  documentDirectory: 'file:///data/user/0/com.shmuli.dafyomi/files/',
-  cacheDirectory: 'file:///data/user/0/com.shmuli.dafyomi/cache/',
+  documentDirectory: 'file:///data/user/0/com.masadaf.app/files/',
+  cacheDirectory: 'file:///data/user/0/com.masadaf.app/cache/',
   getInfoAsync: jest.fn(),
   readDirectoryAsync: jest.fn(),
   deleteAsync: jest.fn(),
@@ -58,13 +58,13 @@ describe('storageManager', () => {
       });
 
       mockReadDir.mockImplementation(async (path: string) => {
-        if (path === 'file:///data/user/0/com.shmuli.dafyomi/files/sefaria-text/') {
+        if (path === 'file:///data/user/0/com.masadaf.app/files/sefaria-text/') {
           return ['berakhot_2.json'];
         }
-        if (path === 'file:///data/user/0/com.shmuli.dafyomi/files/chavruta/') {
+        if (path === 'file:///data/user/0/com.masadaf.app/files/chavruta/') {
           return ['Berachot.json'];
         }
-        if (path === 'file:///data/user/0/com.shmuli.dafyomi/cache/updates/') {
+        if (path === 'file:///data/user/0/com.masadaf.app/cache/updates/') {
           return ['update.apk'];
         }
         return [];

@@ -18,13 +18,13 @@ module.exports = {
       supportsTablet: true,
     },
     android: {
-      package: 'com.shmuli.dafyomi',
+      package: 'com.masadaf.app',
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#ffffff',
       },
       predictiveBackGestureEnabled: false,
-      permissions: ['USE_EXACT_ALARM', 'SCHEDULE_EXACT_ALARM', 'REQUEST_INSTALL_PACKAGES'],
+      permissions: ['USE_EXACT_ALARM', 'SCHEDULE_EXACT_ALARM'],
     },
     web: {
       favicon: './assets/favicon.png',
@@ -54,10 +54,9 @@ module.exports = {
       githubRepo: 'daf-yomi-app',
       /** APK asset prefix on releases (מסע דף → masa-daf-1.2.3.apk) */
       releaseApkBasename: 'masa-daf',
-      /** Set false to disable automatic update checks */
-      updateCheckEnabled: true,
-      /** Public download page (GitHub Pages): share link for first install */
+      updateCheckEnabled: false,
       downloadPageUrl: 'https://shmuli2015.github.io/daf-yomi-app/',
+      privacyPolicyUrl: 'https://shmuli2015.github.io/daf-yomi-app/privacy.html',
     },
   },
 };

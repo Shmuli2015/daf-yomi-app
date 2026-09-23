@@ -190,7 +190,18 @@ export const LICENSES_ITEM: SearchableSetting = {
   synonyms: ['ספריא', 'רישיון', 'קרדיט'],
 };
 
-export const HELP_SEARCH_ITEMS: SearchableSetting[] = [GUIDE_ITEM, SUPPORT_ITEM, LICENSES_ITEM];
+export const PRIVACY_POLICY_ITEM: SearchableSetting = {
+  title: 'מדיניות פרטיות',
+  description: 'איך האפליקציה מתייחסת לנתונים ולהרשאות',
+  synonyms: ['פרטיות', 'מדיניות', 'נתונים'],
+};
+
+export const HELP_SEARCH_ITEMS: SearchableSetting[] = [
+  GUIDE_ITEM,
+  SUPPORT_ITEM,
+  PRIVACY_POLICY_ITEM,
+  LICENSES_ITEM,
+];
 
 export const AUTO_UPDATE_ITEM: SearchableSetting = {
   title: 'התראות עדכון אוטומטיות',

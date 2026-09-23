@@ -22,7 +22,7 @@ import type { SettingsScreenStyles } from './settingsScreenStyles';
 import type { DaySchedule } from './Schedule/DayScheduleList';
 import type { ExactAlarmStatus } from '../../utils/exactAlarm';
 import type { NotificationPermissionStatus } from '../../utils/notificationPermission';
-import { SUPPORT_EMAIL, getSupportMailtoUrl } from '../../supportContact';
+import { SUPPORT_EMAIL, PRIVACY_POLICY_URL, getSupportMailtoUrl } from '../../supportContact';
 import { hasVisibleSettingsMatch } from '../../utils/settingsVisibleSearch';
 
 export type SettingsScrollContentProps = {
@@ -176,6 +176,10 @@ export default function SettingsScrollContent({
     }
   }, []);
 
+  const openPrivacyPolicy = useCallback(() => {
+    void Linking.openURL(PRIVACY_POLICY_URL);
+  }, []);
+
   const hasAnyMatch = hasVisibleSettingsMatch(searchQuery, {
     notificationsEnabled,
     notifMode,
@@ -318,6 +322,7 @@ export default function SettingsScrollContent({
                 onGuideModalOpen={onGuideModalOpen}
                 onSupportPress={openSupportEmail}
                 onSupportLongPress={copySupportEmail}
+                onPrivacyPolicyPress={openPrivacyPolicy}
                 onLicensesPress={() => setLicensesVisible(true)}
               />
               <SettingsUpdatesSection
@@ -345,7 +350,7 @@ export default function SettingsScrollContent({
           )}
 
           <Text style={styles.privacyNote}>
-            הנתונים שלך נשמרים באופן מקומי בלבד על המכשיר שלך.
+            הנתונים שלך נשמרים באופן מקומי בלבד על המכשיר שלך. מדיניות הפרטיות המלאה זמינה בהגדרות תחת עזרה.
           </Text>
 
           <SettingsFooter />
