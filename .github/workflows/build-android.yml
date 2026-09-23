@@ -1,7 +1,17 @@
-name: Build Android APK
+name: Build Android Release
 
 on:
   workflow_dispatch:
+    inputs:
+      target:
+        description: 'Build target'
+        required: true
+        default: 'aab'
+        type: choice
+        options:
+          - 'aab'
+          - 'apk'
+          - 'both'
   push:
     branches:
       - 'release/**'
@@ -35,8 +45,10 @@ jobs:
         run: |
           VER=$(node -p "require('./package.json').version")
           TAG="v${VER}"
+          TARGET="${{ github.event.inputs.target || 'both' }}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Triggered manually via workflow_dispatch: building."
@@ -85,14 +97,14 @@ jobs:
         run: npm run ci
 
       - name: Build APK
-        if: steps.check_release.outputs.should_build == 'true'
+        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'apk')
         run: npx --yes eas-cli@16 build --platform android --profile preview --local --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
       - name: Rename APK for GitHub Release
         id: release_apk
-        if: steps.check_release.outputs.should_build == 'true'
+        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'apk')
         shell: bash
         run: |
           set -euo pipefail
@@ -109,6 +121,31 @@ jobs:
           mv "$SRC" "$DEST"
           echo "filename=$DEST" >> "$GITHUB_OUTPUT"
 
+      - name: Build AAB
+        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'aab')
+        run: npx --yes eas-cli@16 build --platform android --profile production --local --non-interactive
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Rename AAB for GitHub Release
+        id: release_aab
+        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'aab')
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=$(node -p "require('./app.config.js').expo.extra.releaseApkBasename")
+          VER="${{ steps.check_release.outputs.version }}"
+          shopt -s nullglob
+          files=(./*.aab)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo 'No AAB found in repo root'
+            exit 1
+          fi
+          SRC="${files[0]}"
+          DEST="${BASE}-${VER}.aab"
+          mv "$SRC" "$DEST"
+          echo "filename=$DEST" >> "$GITHUB_OUTPUT"
+
       - name: Write Whats New release body
         if: steps.check_release.outputs.should_build == 'true'
         run: node scripts/writeWhatsNewReleaseBody.js
@@ -119,7 +156,9 @@ jobs:
         with:
           tag_name: ${{ steps.check_release.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          files: ${{ steps.release_apk.outputs.filename }}
+          files: |
+            *.apk
+            *.aab
           body_path: whats-new-release-body.md
           generate_release_notes: true
         env:
@@ -139,9 +178,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload APK artifact
+      - name: Upload Build Artifacts
         if: steps.check_release.outputs.should_build == 'true'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
-          name: android-apk
-          path: ./*.apk
+          name: android-build-artifacts
+          path: |
+            *.apk
+            *.aab
