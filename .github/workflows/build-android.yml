@@ -31,7 +31,7 @@ on:
 permissions:
   contents: write
 
-  concurrency:
+concurrency:
   group: release-android-${{ github.ref }}
   cancel-in-progress: true
 
