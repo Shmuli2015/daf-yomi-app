@@ -75,5 +75,5 @@ try {
 }
 
 console.log(`\n\x1b[32m✨ Release ${version} initiated!\x1b[0m`);
-console.log(`Branch ${branch} was pushed. The APK build and GitHub Release are now running in GitHub Actions.`);
+console.log(`Branch ${branch} was pushed. The Play Store AAB build and GitHub Release are now running in GitHub Actions.`);
 console.log(`Once built, merge the PR to keep master updated.\n`);

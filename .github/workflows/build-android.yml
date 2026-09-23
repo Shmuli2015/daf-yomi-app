@@ -31,8 +31,8 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: release-apk-${{ github.ref }}
+  concurrency:
+  group: release-android-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -55,7 +55,7 @@ jobs:
         run: |
           VER=$(node -p "require('./package.json').version")
           TAG="v${VER}"
-          TARGET="${{ github.event.inputs.target || 'both' }}"
+          TARGET="${{ github.event.inputs.target || 'aab' }}"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           echo "target=$TARGET" >> "$GITHUB_OUTPUT"
@@ -177,8 +177,9 @@ jobs:
           tag_name: ${{ steps.check_release.outputs.tag }}
           target_commitish: ${{ github.sha }}
           files: |
-            *.apk
             *.aab
+            *.apk
+          fail_on_unmatched_files: false
           body_path: whats-new-release-body.md
           generate_release_notes: true
         env:
@@ -204,5 +205,6 @@ jobs:
         with:
           name: android-build-artifacts
           path: |
-            *.apk
             *.aab
+            *.apk
+          if-no-files-found: error
