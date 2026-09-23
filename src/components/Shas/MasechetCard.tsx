@@ -17,11 +17,13 @@ interface MasechetCardProps {
   data: MasechetData;
   index: number;
   onPress: (masechetEn: string) => void;
+  onLongPress: (masechetEn: string) => void;
 }
 
 const MasechetCard = React.memo(function MasechetCard({
   data,
   onPress,
+  onLongPress,
 }: MasechetCardProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -47,6 +49,11 @@ const MasechetCard = React.memo(function MasechetCard({
       <TouchableOpacity
         activeOpacity={0.82}
         onPress={() => onPress(data.m.en)}
+        onLongPress={() => onLongPress(data.m.en)}
+        delayLongPress={400}
+        accessibilityRole="button"
+        accessibilityLabel={stripNiqqud(data.m.he)}
+        accessibilityHint="לחיצה קצרה פותחת את רשת הדפים. לחיצה ארוכה מסמנת או מבטלת את כל המסכת"
         style={[styles.card, data.isCompleted ? styles.cardCompleted : styles.cardDefault]}
       >
         <View style={styles.cardHeader}>
