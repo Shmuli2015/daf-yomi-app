@@ -5,13 +5,42 @@ import { useTheme } from '../../theme';
 import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
 import SheetDragHandle from '../SheetDragHandle';
 
-export type BulkConfirmVariant = 'markAll' | 'unmarkAll';
+export type BulkConfirmVariant =
+  | 'markAll'
+  | 'unmarkAll'
+  | 'markAllPersonal'
+  | 'unmarkAllPersonal';
 
 interface BulkActionConfirmOverlayProps {
   variant: BulkConfirmVariant | null;
   dafCount: number;
   onConfirm: () => void;
   onCancel: () => void;
+}
+
+function getBulkConfirmCopy(variant: BulkConfirmVariant, dafCount: number) {
+  if (variant === 'markAll') {
+    return {
+      title: 'סמן את כל המסכת?',
+      message: `פעולה זו תסמן את כל ${dafCount} הדפים במסכת זו כנלמדו בדף יומי`,
+    };
+  }
+  if (variant === 'unmarkAll') {
+    return {
+      title: 'בטל סימון כל המסכת?',
+      message: `פעולה זו תבטל את הסימון של כל ${dafCount} הדפים במסכת זו בדף יומי`,
+    };
+  }
+  if (variant === 'markAllPersonal') {
+    return {
+      title: 'סמן את כל המסכת באישי?',
+      message: `פעולה זו תסמן את כל ${dafCount} הדפים במסכת זו כנלמדו במסלול האישי`,
+    };
+  }
+  return {
+    title: 'בטל סימון כל המסכת באישי?',
+    message: `פעולה זו תבטל את הסימון של כל ${dafCount} הדפים במסכת זו במסלול האישי`,
+  };
 }
 
 export default function BulkActionConfirmOverlay({
@@ -29,6 +58,8 @@ export default function BulkActionConfirmOverlay({
 
   if (!variant) return null;
 
+  const copy = getBulkConfirmCopy(variant, dafCount);
+
   return (
     <View style={styles.overlay}>
       <Animated.View
@@ -40,14 +71,8 @@ export default function BulkActionConfirmOverlay({
       <Animated.View pointerEvents="auto" style={[styles.sheet, sheetAnimatedStyle]}>
         <SafeAreaView edges={['bottom']}>
           <SheetDragHandle panHandlers={panHandlers} />
-          <Text style={styles.title}>
-            {variant === 'markAll' ? 'סמן את כל המסכת?' : 'בטל סימון כל המסכת?'}
-          </Text>
-          <Text style={styles.message}>
-            {variant === 'markAll'
-              ? `פעולה זו תסמן את כל ${dafCount} הדפים במסכת זו כנלמדו`
-              : `פעולה זו תבטל את הסימון של כל ${dafCount} הדפים במסכת זו`}
-          </Text>
+          <Text style={styles.title}>{copy.title}</Text>
+          <Text style={styles.message}>{copy.message}</Text>
           <View style={styles.buttons}>
             <TouchableOpacity onPress={onCancel} style={styles.cancelBtn} activeOpacity={0.7}>
               <Text style={styles.cancelBtnText}>ביטול</Text>

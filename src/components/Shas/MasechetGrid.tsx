@@ -1,13 +1,19 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Modal } from 'react-native';
 import { useAppStore } from '../../store/useAppStore';
 import { SHAS_MASECHTOT, SEDARIM, type Seder } from '../../data/shas';
 import { getSederProgressFromCache } from '../../utils/progressCache';
+import { stripNiqqud } from '../../utils/shas';
 import MasechetModal from './MasechetModal';
 import MasechetCard from './MasechetCard';
+import MasechetCardBulkMenu from './MasechetCardBulkMenu';
+import BulkActionConfirmOverlay from './BulkActionConfirmOverlay';
+import FullscreenLoadingOverlay from './FullscreenLoadingOverlay';
 import SederSection from './SederSection';
 import SederFilterBar from './SederFilterBar';
 import { useShasFilter } from '../../hooks/useShasFilter';
+import { useMasechetCardBulk } from './useMasechetCardBulk';
+import MasechetBulkTip from './MasechetBulkTip';
 
 interface MasechetGridProps {
   openMasechetEn?: string;
@@ -89,6 +95,26 @@ export default function MasechetGrid({
     }
   }, []);
 
+  const {
+    menuMasechet,
+    pendingAction,
+    isLoading,
+    dafCount,
+    isPersonalEnabled,
+    showMark,
+    showUnmark,
+    showMarkPersonal,
+    showUnmarkPersonal,
+    handleLongPress,
+    handleCloseMenu,
+    handleSelectMarkAll,
+    handleSelectUnmarkAll,
+    handleSelectMarkAllPersonal,
+    handleSelectUnmarkAllPersonal,
+    handleCancelConfirm,
+    handleConfirm,
+  } = useMasechetCardBulk();
+
   const isFilteringActive = selectedSeder !== null || searchQuery.trim().length > 0 || selectedStatus !== 'all';
 
   return (
@@ -104,6 +130,8 @@ export default function MasechetGrid({
         totalCount={totalCount}
         onOpenQuickJump={onOpenQuickJump}
       />
+
+      <MasechetBulkTip />
 
       {SEDARIM.map((seder) => {
         const masechetData = filteredSedarimData.get(seder.id) || [];
@@ -141,6 +169,7 @@ export default function MasechetGrid({
                   data={data}
                   index={index}
                   onPress={handlePressMasechet}
+                  onLongPress={handleLongPress}
                 />
               ))}
             </View>
@@ -151,6 +180,38 @@ export default function MasechetGrid({
       {selectedMasechet && (
         <MasechetModal masechet={selectedMasechet} onClose={handleCloseModal} />
       )}
+
+      <MasechetCardBulkMenu
+        visible={menuMasechet !== null && pendingAction === null && !isLoading}
+        masechetHe={menuMasechet ? stripNiqqud(menuMasechet.he) : ''}
+        isPersonalEnabled={isPersonalEnabled}
+        showMark={showMark}
+        showUnmark={showUnmark}
+        showMarkPersonal={showMarkPersonal}
+        showUnmarkPersonal={showUnmarkPersonal}
+        onMarkAll={handleSelectMarkAll}
+        onUnmarkAll={handleSelectUnmarkAll}
+        onMarkAllPersonal={handleSelectMarkAllPersonal}
+        onUnmarkAllPersonal={handleSelectUnmarkAllPersonal}
+        onCancel={handleCloseMenu}
+      />
+
+      <Modal
+        visible={pendingAction !== null || isLoading}
+        transparent
+        animationType="fade"
+        onRequestClose={handleCancelConfirm}
+      >
+        <View style={styles.bulkOverlayRoot}>
+          <BulkActionConfirmOverlay
+            variant={pendingAction}
+            dafCount={dafCount}
+            onConfirm={handleConfirm}
+            onCancel={handleCancelConfirm}
+          />
+          <FullscreenLoadingOverlay visible={isLoading} />
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -163,5 +224,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     gap: 12,
     marginTop: 12,
+  },
+  bulkOverlayRoot: {
+    flex: 1,
   },
 });

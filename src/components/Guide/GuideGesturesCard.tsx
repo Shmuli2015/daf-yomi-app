@@ -40,9 +40,16 @@ const GESTURES: GestureItem[] = [
   {
     id: 'masechet-tap',
     icon: 'grid-outline',
-    title: 'הקשה על שם המסכת',
+    title: 'הקשה על כרטיס מסכת',
     badge: 'רשת הדפים',
     desc: 'פותחת את רשת כל דפי המסכת לצפייה בהתקדמות, סימון מהיר ומעבר לכל דף.',
+  },
+  {
+    id: 'masechet-long-press',
+    icon: 'checkmark-done-outline',
+    title: 'לחיצה ארוכה על כרטיס מסכת',
+    badge: 'סמן הכל',
+    desc: 'פותחת תפריט לסימון או ביטול של כל דפי המסכת בבת אחת, בדף יומי או במסלול אישי.',
   },
 ];
 

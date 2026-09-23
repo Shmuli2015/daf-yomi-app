@@ -5,10 +5,15 @@ import { SHAS_MASECHTOT, numberToGematria } from '../../data/shas';
 import { getDafDateStr, getMasechetDafim } from '../../utils/shas';
 import { getStudyStatus, getPartialAmud, type AmudSide } from '../../utils/dafStatus';
 import { getMasechetProgressFromCache } from '../../utils/progressCache';
+import {
+  buildMasechetMarkAllUpdates,
+  buildMasechetRecordByDate,
+  buildMasechetUnmarkAllUpdates,
+} from '../../utils/masechetBulkMark';
 import { isPersonalTrackEnabled } from '../../utils/personalTrack';
 import { useSheetDismissGesture } from '../../hooks/useSheetDismissGesture';
 import { triggerImpact } from '../../utils/haptics';
-import type { DailyRecord, PersonalTrackRecord } from '../../db/database';
+import type { PersonalTrackRecord } from '../../db/database';
 import type { MasechetStudyMode } from './MasechetModalModeToggle';
 
 interface UseMasechetModalProps {
@@ -64,24 +69,10 @@ export function useMasechetModal({
     return Math.max(4, Math.floor((availableWidth + 8) / (48 + 8)));
   }, [windowWidth]);
 
-  const masechetDates = useMemo(() => {
-    const dates = new Set<string>();
-    for (const d of dafimArray) {
-      const dt = getDafDateStr(masechet.he, d);
-      if (dt) dates.add(dt);
-    }
-    return dates;
-  }, [dafimArray, masechet.he]);
-
-  const recordByDate = useMemo(() => {
-    const map = new Map<string, DailyRecord>();
-    for (const r of history) {
-      if (masechetDates.has(r.date)) {
-        map.set(r.date, r);
-      }
-    }
-    return map;
-  }, [history, masechetDates]);
+  const recordByDate = useMemo(
+    () => buildMasechetRecordByDate(history, masechet.he, dafimArray),
+    [history, masechet.he, dafimArray],
+  );
 
   const masechetPersonalRecords = useMemo(() => {
     return personalTrackRecords.filter((r) => r.masechet === masechet.en);
@@ -202,20 +193,7 @@ export function useMasechetModal({
       return;
     }
 
-    const updates = dafimArray
-      .map(dafNum => {
-        const dateStr = getDafDateStr(masechet.he, dafNum);
-        if (!dateStr) return null;
-
-        if (getStudyStatus(recordByDate.get(dateStr)) === 'learned') return null;
-
-        return {
-          dateStr,
-          masechet: masechet.he,
-          daf: `דף ${numberToGematria(dafNum)}`,
-        };
-      })
-      .filter((update): update is { dateStr: string; masechet: string; daf: string } => update !== null);
+    const updates = buildMasechetMarkAllUpdates(masechet.he, dafimArray, recordByDate);
 
     if (updates.length > 0) {
       batchMarkDafim(updates);
@@ -233,21 +211,7 @@ export function useMasechetModal({
       return;
     }
 
-    const updates = dafimArray
-      .map(dafNum => {
-        const dateStr = getDafDateStr(masechet.he, dafNum);
-        if (!dateStr) return null;
-
-        const status = getStudyStatus(recordByDate.get(dateStr));
-        if (status === 'none') return null;
-
-        return {
-          dateStr,
-          masechet: masechet.he,
-          daf: `דף ${numberToGematria(dafNum)}`,
-        };
-      })
-      .filter((update): update is { dateStr: string; masechet: string; daf: string } => update !== null);
+    const updates = buildMasechetUnmarkAllUpdates(masechet.he, dafimArray, recordByDate);
 
     if (updates.length > 0) {
       batchUnmarkDafim(updates);
