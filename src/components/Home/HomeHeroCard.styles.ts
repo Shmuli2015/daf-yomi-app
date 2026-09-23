@@ -204,6 +204,7 @@ export const createHomeHeroCardStyles = (theme: ReturnType<typeof useTheme>) =>
       textAlign: Platform.OS === 'web' ? 'right' : 'left',
       writingDirection: 'rtl',
       alignSelf: 'stretch',
+      marginBottom: 6,
     },
     halfDafTip: {
       backgroundColor: theme.colors.background,

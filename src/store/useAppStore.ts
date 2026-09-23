@@ -432,14 +432,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (mode === 'replace') {
       replaceAllRecords(data.records);
       importSettingsFromBackup(data.settings);
-      if (data.personalTrackRecords) {
-        replaceAllPersonalTrackRecords(data.personalTrackRecords);
-      }
+      replaceAllPersonalTrackRecords(data.personalTrackRecords ?? []);
     } else {
       importRecords(data.records);
       if (data.personalTrackRecords) {
         mergePersonalTrackRecords(data.personalTrackRecords);
       }
+      persistActivePersonalMasechet(data.settings.active_personal_masechet);
+      persistShowPersonalTrackBanner((data.settings.show_personal_track_banner ?? 1) !== 0);
     }
     get().refreshHistory();
     get().refreshSettings();
