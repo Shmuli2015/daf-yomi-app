@@ -12,6 +12,16 @@ on:
           - 'aab'
           - 'apk'
           - 'both'
+      play_track:
+        description: 'Google Play track'
+        required: true
+        default: 'alpha'
+        type: choice
+        options:
+          - 'alpha'
+          - 'production'
+          - 'internal'
+          - 'none'
   push:
     branches:
       - 'release/**'
@@ -145,6 +155,16 @@ jobs:
           DEST="${BASE}-${VER}.aab"
           mv "$SRC" "$DEST"
           echo "filename=$DEST" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to Google Play
+        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'aab') && (github.event.inputs.play_track != 'none')
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.masadaf.app
+          releaseFiles: ${{ steps.release_aab.outputs.filename }}
+          track: ${{ github.event.inputs.play_track || 'alpha' }}
+          status: completed
 
       - name: Write Whats New release body
         if: steps.check_release.outputs.should_build == 'true'
