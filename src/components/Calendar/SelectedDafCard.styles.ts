@@ -99,6 +99,7 @@ export const createSelectedDafCardStyles = (theme: Theme) =>
       textAlign: 'center',
       writingDirection: 'rtl',
       width: '100%',
+      marginBottom: 6,
     },
     toggleBtn: {
       flexDirection: 'row',
