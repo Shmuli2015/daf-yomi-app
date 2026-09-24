@@ -63,7 +63,7 @@ export default function MasechetModal({
     showConfetti,
     setShowConfetti,
     showSiyum,
-    setShowSiyum,
+    closeSiyum,
     selectedDafForMenu,
     handleToggleDafStable,
     handleLongPressDafStable,
@@ -233,7 +233,7 @@ export default function MasechetModal({
                 visible={showSiyum}
                 masechetHe={masechet.he}
                 totalPages={masechet.pages}
-                onClose={() => setShowSiyum(false)}
+                onClose={closeSiyum}
               />
             </SafeAreaView>
           </Animated.View>

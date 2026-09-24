@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
+import { maybeRequestStoreReview, maybeRequestStoreReviewForStreak } from '../services/storeReview';
 import { getDafDayYesterday } from '../utils/dafDayBoundary';
 import { getDateStr, getDafByDate } from '../utils/dafYomi';
 import { triggerImpact } from '../utils/haptics';
@@ -47,14 +48,27 @@ export function useHomeMarking({
     [masechetLearned, masechetTotal, showConfettiPref, todayMasechet],
   );
 
+  const requestReviewIfStreakMilestone = useCallback((learnedNow: boolean) => {
+    if (!learnedNow) return;
+    maybeRequestStoreReviewForStreak(useAppStore.getState().streak);
+  }, []);
+
   const handleToggle = useCallback(() => {
     void triggerImpact('medium');
     const willLearn = studyStatus !== 'learned' && studyStatus !== 'partial';
+    const isCompleting =
+      willLearn && masechetTotal > 0 && masechetLearned + 1 === masechetTotal;
     celebrateIfNeeded(willLearn);
     toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
+    if (!isCompleting) {
+      requestReviewIfStreakMilestone(willLearn);
+    }
   }, [
     celebrateIfNeeded,
     currentDate,
+    masechetLearned,
+    masechetTotal,
+    requestReviewIfStreakMilestone,
     studyStatus,
     todayDafNum,
     todayMasechet,
@@ -63,11 +77,20 @@ export function useHomeMarking({
 
   const handleMarkFull = useCallback(() => {
     void triggerImpact('medium');
-    celebrateIfNeeded(studyStatus !== 'learned');
+    const willLearn = studyStatus !== 'learned';
+    const isCompleting =
+      willLearn && masechetTotal > 0 && masechetLearned + 1 === masechetTotal;
+    celebrateIfNeeded(willLearn);
     setDafStudyStatus(getDateStr(currentDate), todayMasechet, todayDafNum, 'learned');
+    if (!isCompleting) {
+      requestReviewIfStreakMilestone(willLearn);
+    }
   }, [
     celebrateIfNeeded,
     currentDate,
+    masechetLearned,
+    masechetTotal,
+    requestReviewIfStreakMilestone,
     setDafStudyStatus,
     studyStatus,
     todayDafNum,
@@ -90,11 +113,13 @@ export function useHomeMarking({
     const yesterday = getDafDayYesterday(new Date(), settings);
     const dafInfo = getDafByDate(yesterday);
     setDafStudyStatus(getDateStr(yesterday), dafInfo.masechet, dafInfo.daf, 'learned');
+    maybeRequestStoreReviewForStreak(useAppStore.getState().streak);
   }, [setDafStudyStatus]);
 
   const closeSiyum = useCallback(() => {
     setShowSiyumModal(false);
     setSiyumMasechet(null);
+    void maybeRequestStoreReview('siyum');
   }, []);
 
   return {
