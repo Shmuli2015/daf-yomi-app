@@ -54,7 +54,7 @@ module.exports = {
       githubRepo: 'daf-yomi-app',
       /** APK asset prefix on releases (מסע דף → masa-daf-1.2.3.apk) */
       releaseApkBasename: 'masa-daf',
-      updateCheckEnabled: false,
+      updateCheckEnabled: process.env.EAS_BUILD_PROFILE === 'preview',
       downloadPageUrl: 'https://shmuli2015.github.io/daf-yomi-app/',
       privacyPolicyUrl: 'https://shmuli2015.github.io/daf-yomi-app/privacy.html',
     },

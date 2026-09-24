@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 'Build target'
+        description: 'Build target (APK is always built for GitHub; AAB when needed for Play or when selected)'
         required: true
-        default: 'aab'
+        default: 'both'
         type: choice
         options:
           - 'aab'
@@ -28,37 +28,69 @@ on:
     tags:
       - 'v*.*.*'
 
-permissions:
-  contents: write
-
 concurrency:
   group: release-android-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  build:
+  gate:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-    env:
-      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx3500m -Dorg.gradle.vfs.watch=false -Dorg.gradle.project.reactNativeArchitectures=armeabi-v7a,arm64-v8a -Dorg.gradle.project.android.enableMinifyInReleaseBuilds=true -Dorg.gradle.project.android.enableShrinkResourcesInReleaseBuilds=true"
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      tag: ${{ steps.check.outputs.tag }}
+      version: ${{ steps.check.outputs.version }}
+      target: ${{ steps.check.outputs.target }}
+      play_track: ${{ steps.check.outputs.play_track }}
+      needs_apk: ${{ steps.check.outputs.needs_apk }}
+      needs_aab: ${{ steps.check.outputs.needs_aab }}
+      apk_filename: ${{ steps.check.outputs.apk_filename }}
+      aab_filename: ${{ steps.check.outputs.aab_filename }}
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
 
       - name: Check if release is needed
-        id: check_release
+        id: check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
+          set -euo pipefail
           VER=$(node -p "require('./package.json').version")
           TAG="v${VER}"
-          TARGET="${{ github.event.inputs.target || 'aab' }}"
+          BASE=$(node -p "require('./app.config.js').expo.extra.releaseApkBasename")
+
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TARGET="${{ github.event.inputs.target }}"
+            PLAY_TRACK="${{ github.event.inputs.play_track }}"
+          else
+            TARGET="both"
+            PLAY_TRACK="alpha"
+          fi
+
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            if [ "${{ github.ref_name }}" != "$TAG" ]; then
+              echo "::error::Tag ${{ github.ref_name }} does not match package.json version $TAG"
+              exit 1
+            fi
+          fi
+
+          NEEDS_APK=true
+          NEEDS_AAB=false
+          if [ "$PLAY_TRACK" != "none" ] || [ "$TARGET" = "aab" ] || [ "$TARGET" = "both" ]; then
+            NEEDS_AAB=true
+          fi
+
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
           echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          echo "play_track=$PLAY_TRACK" >> "$GITHUB_OUTPUT"
+          echo "needs_apk=$NEEDS_APK" >> "$GITHUB_OUTPUT"
+          echo "needs_aab=$NEEDS_AAB" >> "$GITHUB_OUTPUT"
+          echo "apk_filename=${BASE}-${VER}.apk" >> "$GITHUB_OUTPUT"
+          echo "aab_filename=${BASE}-${VER}.aab" >> "$GITHUB_OUTPUT"
 
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "Triggered manually via workflow_dispatch: building."
@@ -74,137 +106,287 @@ jobs:
             echo "should_build=true" >> "$GITHUB_OUTPUT"
           fi
 
+  quality:
+    needs: gate
+    if: needs.gate.outputs.should_build == 'true'
+    uses: ./.github/workflows/quality.yml
+
+  build-apk:
+    needs: [gate, quality]
+    if: needs.gate.outputs.should_build == 'true' && needs.gate.outputs.needs_apk == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx3500m -Dorg.gradle.vfs.watch=false -Dorg.gradle.project.reactNativeArchitectures=armeabi-v7a,arm64-v8a -Dorg.gradle.project.android.enableMinifyInReleaseBuilds=true -Dorg.gradle.project.android.enableShrinkResourcesInReleaseBuilds=true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+
       - name: Setup Node
-        if: steps.check_release.outputs.should_build == 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 22
           cache: npm
 
       - name: Setup Java
-        if: steps.check_release.outputs.should_build == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
         with:
           distribution: zulu
           java-version: '17'
 
       - name: Setup Android SDK
-        if: steps.check_release.outputs.should_build == 'true'
-        uses: android-actions/setup-android@v4
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
         with:
           packages: 'platform-tools'
 
       - name: Setup Gradle
-        if: steps.check_release.outputs.should_build == 'true'
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
 
       - name: Install dependencies
-        if: steps.check_release.outputs.should_build == 'true'
         run: npm ci
 
-      - name: Run quality checks
-        if: steps.check_release.outputs.should_build == 'true'
-        run: npm run ci
-
       - name: Build APK
-        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'apk')
-        run: npx --yes eas-cli@16 build --platform android --profile preview --local --non-interactive
+        run: npx --yes eas-cli@16.32.0 build --platform android --profile preview --local --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Rename APK for GitHub Release
-        id: release_apk
-        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'apk')
+      - name: Rename APK
         shell: bash
         run: |
           set -euo pipefail
-          BASE=$(node -p "require('./app.config.js').expo.extra.releaseApkBasename")
-          VER="${{ steps.check_release.outputs.version }}"
+          DEST="${{ needs.gate.outputs.apk_filename }}"
           shopt -s nullglob
           files=(./*.apk)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo 'No APK found in repo root'
+          if [ ${#files[@]} -ne 1 ]; then
+            echo "Expected exactly one APK in repo root, found ${#files[@]}"
+            printf '%s\n' "${files[@]}"
             exit 1
           fi
-          SRC="${files[0]}"
-          DEST="${BASE}-${VER}.apk"
-          mv "$SRC" "$DEST"
-          echo "filename=$DEST" >> "$GITHUB_OUTPUT"
+          mv "${files[0]}" "$DEST"
+          echo "Renamed to $DEST"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-apk
+          path: ${{ needs.gate.outputs.apk_filename }}
+          if-no-files-found: error
+          retention-days: 14
+
+  build-aab:
+    needs: [gate, quality]
+    if: needs.gate.outputs.should_build == 'true' && needs.gate.outputs.needs_aab == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx3500m -Dorg.gradle.vfs.watch=false -Dorg.gradle.project.reactNativeArchitectures=armeabi-v7a,arm64-v8a -Dorg.gradle.project.android.enableMinifyInReleaseBuilds=true -Dorg.gradle.project.android.enableShrinkResourcesInReleaseBuilds=true"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@cf277c60eb25467037889841efdb72551f06f6c3 # v4
+        with:
+          distribution: zulu
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4
+        with:
+          packages: 'platform-tools'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build AAB
-        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'aab')
-        run: npx --yes eas-cli@16 build --platform android --profile production --local --non-interactive
+        run: npx --yes eas-cli@16.32.0 build --platform android --profile production --local --non-interactive
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Rename AAB for GitHub Release
-        id: release_aab
-        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'aab')
+      - name: Rename AAB
         shell: bash
         run: |
           set -euo pipefail
-          BASE=$(node -p "require('./app.config.js').expo.extra.releaseApkBasename")
-          VER="${{ steps.check_release.outputs.version }}"
+          DEST="${{ needs.gate.outputs.aab_filename }}"
           shopt -s nullglob
           files=(./*.aab)
-          if [ ${#files[@]} -eq 0 ]; then
-            echo 'No AAB found in repo root'
+          if [ ${#files[@]} -ne 1 ]; then
+            echo "Expected exactly one AAB in repo root, found ${#files[@]}"
+            printf '%s\n' "${files[@]}"
             exit 1
           fi
-          SRC="${files[0]}"
-          DEST="${BASE}-${VER}.aab"
-          mv "$SRC" "$DEST"
-          echo "filename=$DEST" >> "$GITHUB_OUTPUT"
+          mv "${files[0]}" "$DEST"
+          echo "Renamed to $DEST"
 
-      - name: Upload to Google Play
-        if: steps.check_release.outputs.should_build == 'true' && (steps.check_release.outputs.target == 'both' || steps.check_release.outputs.target == 'aab') && (github.event.inputs.play_track != 'none')
-        uses: r0adkll/upload-google-play@v1
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: com.masadaf.app
-          releaseFiles: ${{ steps.release_aab.outputs.filename }}
-          track: ${{ github.event.inputs.play_track || 'alpha' }}
-          status: completed
+          name: android-aab
+          path: ${{ needs.gate.outputs.aab_filename }}
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    needs: [gate, quality, build-apk, build-aab]
+    if: |
+      always() &&
+      !cancelled() &&
+      needs.gate.outputs.should_build == 'true' &&
+      needs.quality.result == 'success' &&
+      (needs.build-apk.result == 'success' || needs.build-apk.result == 'skipped') &&
+      (needs.build-aab.result == 'success' || needs.build-aab.result == 'skipped') &&
+      (needs.gate.outputs.needs_apk != 'true' || needs.build-apk.result == 'success') &&
+      (needs.gate.outputs.needs_aab != 'true' || needs.build-aab.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download APK artifact
+        if: needs.gate.outputs.needs_apk == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: android-apk
+          path: .
+
+      - name: Download AAB artifact
+        if: needs.gate.outputs.needs_aab == 'true'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: android-aab
+          path: .
 
       - name: Write Whats New release body
-        if: steps.check_release.outputs.should_build == 'true'
         run: node scripts/writeWhatsNewReleaseBody.js
 
+      - name: Collect release asset paths
+        id: release_files
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'paths<<EOF'
+            echo '${{ needs.gate.outputs.apk_filename }}'
+            if [ '${{ needs.gate.outputs.needs_aab }}' = 'true' ]; then
+              echo '${{ needs.gate.outputs.aab_filename }}'
+            fi
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
       - name: Publish GitHub Release
-        if: steps.check_release.outputs.should_build == 'true'
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
-          tag_name: ${{ steps.check_release.outputs.tag }}
+          tag_name: ${{ needs.gate.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          files: |
-            *.aab
-            *.apk
-          fail_on_unmatched_files: false
+          files: ${{ steps.release_files.outputs.paths }}
+          fail_on_unmatched_files: true
           body_path: whats-new-release-body.md
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Keep only the latest release
-        if: steps.check_release.outputs.should_build == 'true'
         shell: bash
-        run: |
-          echo "Fetching releases..."
-          gh release list --limit 100 --json tagName --jq '.[1:] | .[].tagName' | while read -r tag; do
-            if [ -n "$tag" ]; then
-              echo "Deleting older release: $tag"
-              gh release delete "$tag" -y
-            fi
-          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KEEP_TAG: ${{ needs.gate.outputs.tag }}
+        run: |
+          set -euo pipefail
+          echo "Fetching releases..."
+          while read -r tag; do
+            if [ -z "$tag" ] || [ "$tag" = "$KEEP_TAG" ]; then
+              continue
+            fi
+            if [[ ! "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Skipping non-semver release tag: $tag"
+              continue
+            fi
+            echo "Deleting older release: $tag"
+            gh release delete "$tag" -y || echo "Warning: failed to delete $tag"
+          done < <(gh release list --limit 100 --json tagName --jq '.[].tagName')
 
-      - name: Upload Build Artifacts
-        if: steps.check_release.outputs.should_build == 'true'
-        uses: actions/upload-artifact@v4
+      - name: Trigger Pages deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run "Deploy GitHub Pages" --ref "${{ github.ref_name }}"
+
+      - name: Write publish summary (GitHub ok)
+        shell: bash
+        run: |
+          {
+            echo "## Publish result"
+            echo "- Version: \`${{ needs.gate.outputs.version }}\`"
+            echo "- Tag: \`${{ needs.gate.outputs.tag }}\`"
+            echo "- Target: \`${{ needs.gate.outputs.target }}\`"
+            echo "- Play track: \`${{ needs.gate.outputs.play_track }}\`"
+            echo "- APK: \`${{ needs.gate.outputs.apk_filename }}\`"
+            if [ "${{ needs.gate.outputs.needs_aab }}" = "true" ]; then
+              echo "- AAB: \`${{ needs.gate.outputs.aab_filename }}\`"
+            fi
+            echo "- GitHub Release: success"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload to Google Play
+        id: play
+        if: needs.gate.outputs.needs_aab == 'true' && needs.gate.outputs.play_track != 'none'
+        continue-on-error: true
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
         with:
-          name: android-build-artifacts
-          path: |
-            *.aab
-            *.apk
-          if-no-files-found: error
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.masadaf.app
+          releaseFiles: ${{ needs.gate.outputs.aab_filename }}
+          track: ${{ needs.gate.outputs.play_track }}
+          status: completed
+
+      - name: Report Play outcome
+        if: needs.gate.outputs.needs_aab == 'true' && needs.gate.outputs.play_track != 'none'
+        shell: bash
+        run: |
+          set -euo pipefail
+          TRACK="${{ needs.gate.outputs.play_track }}"
+          TAG="${{ needs.gate.outputs.tag }}"
+          if [ "${{ steps.play.outcome }}" = "success" ]; then
+            echo "- Google Play (\`${TRACK}\`): success" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          MSG="GitHub Release ${TAG} was published successfully (APK available for download). Google Play upload to track ${TRACK} failed. Fix the issue and re-upload the AAB, or re-run the workflow."
+          echo "::error::${MSG}"
+          {
+            echo "- Google Play (\`${TRACK}\`): **failed**"
+            echo ""
+            echo "${MSG}"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit 1
+
+      - name: Note Play skipped
+        if: needs.gate.outputs.play_track == 'none' || needs.gate.outputs.needs_aab != 'true'
+        shell: bash
+        run: |
+          echo "- Google Play: skipped" >> "$GITHUB_STEP_SUMMARY"
