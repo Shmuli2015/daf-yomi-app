@@ -73,8 +73,38 @@ function formatWhatsNewReleaseBody(_version) {
   return `## מה חדש\n${bullets}\n\n${MARKER}\n`;
 }
 
+const PLAY_WHATS_NEW_MAX_CHARS = 500;
+
+function getHighlightsForVersion(version) {
+  const normalized = String(version).trim().replace(/^v/i, '');
+  const entries = loadWhatsNewEntries();
+  const entry = entries.find(item => item && item.version === normalized);
+  return (entry?.highlights ?? []).map(text => String(text).trim()).filter(Boolean);
+}
+
+function formatPlayWhatsNewText(version) {
+  const highlights = getHighlightsForVersion(version);
+  if (!highlights.length) {
+    return '';
+  }
+  const lines = [];
+  let length = 0;
+  for (const item of highlights) {
+    const line = `• ${item}`;
+    const nextLength = length === 0 ? line.length : length + 1 + line.length;
+    if (nextLength > PLAY_WHATS_NEW_MAX_CHARS) {
+      break;
+    }
+    lines.push(line);
+    length = nextLength;
+  }
+  return lines.join('\n');
+}
+
 module.exports = {
   loadWhatsNewEntries,
   hasWhatsNewEntry,
   formatWhatsNewReleaseBody,
+  formatPlayWhatsNewText,
+  PLAY_WHATS_NEW_MAX_CHARS,
 };

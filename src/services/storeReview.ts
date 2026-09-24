@@ -4,6 +4,7 @@ import {
   getSettings,
   markStoreReviewPrompted,
 } from '../db/database';
+import { isPlayProductionTrack } from './playTrack';
 import {
   shouldRequestStoreReview,
   STORE_REVIEW_STREAK_THRESHOLD,
@@ -19,6 +20,7 @@ export {
 
 export async function maybeRequestStoreReview(reason: StoreReviewReason): Promise<boolean> {
   if (Platform.OS === 'web') return false;
+  if (!isPlayProductionTrack()) return false;
 
   try {
     const settings = getSettings();
