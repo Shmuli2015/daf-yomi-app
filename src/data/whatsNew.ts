@@ -8,6 +8,15 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.1.7',
+    highlights: [
+      'ערכות צבע לקריאה: בהיר, ספיה (דף ישן) וכהה',
+      'כיבוי והדלקת ניקוד בגמרא מהקורא ומההגדרות',
+      'כותרות מתני׳ וגמרא במצב חברותא',
+      'מתג מסך דלוק בהגדרות בזמן קריאה',
+    ],
+  },
+  {
     version: '1.1.6',
     highlights: [
       'לחיצה ארוכה על מסכת לסימון או ביטול של כל הדפים',
@@ -15,6 +24,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
       'גיבוי ושחזור כוללים את המסלול האישי והמסכת הפעילה',
     ],
   },
+
   {
     version: '1.1.5',
     highlights: [
