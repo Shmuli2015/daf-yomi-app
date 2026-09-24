@@ -6,6 +6,7 @@ import type { SefariaCommentaryItem, SefariaSegment } from '../../services/sefar
 import { useTheme } from '../../theme';
 import { triggerImpact } from '../../utils/haptics';
 import { formatCommentaryBadgeLabel } from '../../utils/commentaryFilters';
+import { isMishnahHeading } from '../../utils/commentaryEmphasis';
 import { useGuideSectionAnimation } from '../Guide/useGuideSectionAnimation';
 import AccordionSlideContent from '../AccordionSlideContent';
 import type { AccordionCollapseScroll } from '../../hooks/useAccordionSlide';
@@ -47,8 +48,13 @@ export default function SegmentCard({
   const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
 
   const hasCommentary = commentaries.length > 0;
+  const isMishnah = Boolean(segment.mishnahLabel) || isMishnahHeading(segment.he);
 
-  const textColor = isSepia ? '#2C221E' : theme.colors.textPrimary;
+  const textColor = isSepia
+    ? '#2C221E'
+    : isDark
+    ? '#FFFFFF'
+    : '#0F172A';
 
   const badgeBg = isSepia
     ? 'rgba(180, 83, 9, 0.10)'
@@ -79,7 +85,7 @@ export default function SegmentCard({
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, isMishnah && styles.mishnahCard]}
       onPress={handleToggle}
       onLayout={handleCardLayout}
       activeOpacity={hasCommentary ? 0.75 : 1}
@@ -88,6 +94,10 @@ export default function SegmentCard({
         {segment.mishnahLabel ? (
           <Text style={[styles.mishnahLabel, { color: accentColor }]}>
             {`\u200F${segment.mishnahLabel}`}
+          </Text>
+        ) : isMishnah ? (
+          <Text style={[styles.mishnahLabel, { color: accentColor }]}>
+            {'\u200Fמשנה'}
           </Text>
         ) : null}
 
@@ -132,6 +142,7 @@ export default function SegmentCard({
               fontSize={fontSize}
               accentColor={accentColor}
               isSepia={isSepia}
+              isDark={isDark}
             />
           </View>
         </AccordionSlideContent>

@@ -73,6 +73,14 @@ export function createReaderToolbarStyles(theme: Theme) {
       alignItems: 'center',
       justifyContent: 'center',
     },
+    themeBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: theme.radius.sm,
+      backgroundColor: theme.colors.accentLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     fontControls: {
       flexDirection: 'row',
       alignItems: 'center',

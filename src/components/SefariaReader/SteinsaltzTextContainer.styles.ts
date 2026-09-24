@@ -77,6 +77,11 @@ export function createSteinsaltzTextContainerStyles(theme: Theme) {
       alignSelf: 'stretch',
       width: '100%',
     },
+    mishnahParagraph: {
+      borderRightWidth: 3,
+      borderRightColor: theme.colors.accentBorder,
+      paddingRight: 10,
+    },
     paragraphText: {
       textAlign: textAlignment,
       writingDirection: 'rtl',

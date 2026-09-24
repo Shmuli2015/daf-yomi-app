@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setHapticsEnabled as persistHapticsEnabled, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, setDafDayStartMode as persistDafDayStartMode, setDafDayStartTime as persistDafDayStartTime, setDafDayStartSchedules as persistDafDayStartSchedules, ensureDafDayStartSchedulesFromCurrentHour as persistEnsureDafDayStartSchedules, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
+import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, updateReaderTheme as persistReaderTheme, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setGemaraNikud as persistGemaraNikud, setHapticsEnabled as persistHapticsEnabled, setKeepScreenAwake as persistKeepScreenAwake, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, setDafDayStartMode as persistDafDayStartMode, setDafDayStartTime as persistDafDayStartTime, setDafDayStartSchedules as persistDafDayStartSchedules, ensureDafDayStartSchedulesFromCurrentHour as persistEnsureDafDayStartSchedules, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafDayDate } from '../utils/dafDayBoundary';
 import type { DafDayStartDaySchedule } from '../utils/dafDayBoundary';
@@ -71,6 +71,7 @@ interface AppState {
 
   updateThemeMode: (themeMode: string) => void;
   updateReaderFontSize: (size: number) => void;
+  updateReaderTheme: (theme: string) => void;
   setUpdateAutoPromptEnabled: (enabled: boolean) => void;
   setShowCalendarDafEnabled: (enabled: boolean) => void;
   setShowSecularDateEnabled: (enabled: boolean) => void;
@@ -78,7 +79,9 @@ interface AppState {
   setShowPersonalTrackBannerEnabled: (enabled: boolean) => void;
   setReaderViewMode: (mode: string) => void;
   setShowChavrutaNotesEnabled: (enabled: boolean) => void;
+  setGemaraNikudEnabled: (enabled: boolean) => void;
   setHapticsEnabled: (enabled: boolean) => void;
+  setKeepScreenAwake: (enabled: boolean) => void;
   setNotificationSoundEnabled: (enabled: boolean) => void;
   setDafDayStartMode: (mode: string) => void;
   setDafDayStartTime: (hour: number, minute: number) => void;
@@ -334,6 +337,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().refreshSettings();
   },
 
+  updateReaderTheme: (theme: string) => {
+    persistReaderTheme(theme);
+    const current = get().settings;
+    if (current) {
+      set({ settings: { ...current, reader_theme: theme } });
+    }
+    get().refreshSettings();
+  },
+
   setUpdateAutoPromptEnabled: (enabled: boolean) => {
     persistUpdateAutoPromptSetting(enabled);
     get().refreshSettings();
@@ -369,8 +381,18 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().refreshSettings();
   },
 
+  setGemaraNikudEnabled: (enabled: boolean) => {
+    persistGemaraNikud(enabled);
+    get().refreshSettings();
+  },
+
   setHapticsEnabled: (enabled: boolean) => {
     persistHapticsEnabled(enabled);
+    get().refreshSettings();
+  },
+
+  setKeepScreenAwake: (enabled: boolean) => {
+    persistKeepScreenAwake(enabled);
     get().refreshSettings();
   },
 

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,6 +6,7 @@ import { LIGHT_THEME, useTheme } from '../../theme';
 import { useModeSwitcherIndicator } from '../../hooks/useModeSwitcherIndicator';
 import { READER_FONT_SIZE_MAX, READER_FONT_SIZE_MIN } from '../../utils/readerFontSize';
 import { triggerImpact } from '../../utils/haptics';
+import ReaderThemeModal from './ReaderThemeModal';
 import { createReaderToolbarStyles } from './ReaderToolbar.styles';
 
 export type ReaderTheme = 'light' | 'dark' | 'sepia';
@@ -22,6 +23,9 @@ interface ReaderToolbarProps {
   accentColor: string;
   showNotes?: boolean;
   onToggleNotes?: () => void;
+  gemaraNikud?: boolean;
+  onToggleGemaraNikud?: () => void;
+  nikudAvailable?: boolean;
   chavrutaAvailable?: boolean;
   steinsaltzAvailable?: boolean;
   classicTabLabel?: string;
@@ -40,9 +44,14 @@ export default function ReaderToolbar({
   fontSize,
   onIncreaseFontSize,
   onDecreaseFontSize,
+  readerTheme = 'light',
+  onChangeReaderTheme,
   accentColor,
   showNotes = false,
   onToggleNotes,
+  gemaraNikud = true,
+  onToggleGemaraNikud,
+  nikudAvailable = false,
   chavrutaAvailable = true,
   steinsaltzAvailable = true,
   classicTabLabel = 'גמרא',
@@ -52,6 +61,9 @@ export default function ReaderToolbar({
   const styles = useMemo(() => createReaderToolbarStyles(theme), [theme]);
   const onAccent = LIGHT_THEME.colors.surface;
   const showNotesToggle = viewMode === 'chavruta' && onToggleNotes != null;
+  const showNikudToggle = viewMode === 'classic' && nikudAvailable && onToggleGemaraNikud != null;
+
+  const [showThemeModal, setShowThemeModal] = useState(false);
   const visibleModes = useMemo(
     () =>
       MODES.filter((mode) => {
@@ -139,11 +151,48 @@ export default function ReaderToolbar({
               הערות
             </Text>
           </TouchableOpacity>
+        ) : showNikudToggle ? (
+          <TouchableOpacity
+            style={[styles.notesBtn, gemaraNikud && styles.notesBtnActive]}
+            onPress={onToggleGemaraNikud}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="ניקוד בגמרא"
+            accessibilityState={{ selected: gemaraNikud }}
+          >
+            <Ionicons
+              name="text-outline"
+              size={14}
+              color={gemaraNikud ? onAccent : theme.colors.textMuted}
+            />
+            <Text style={[styles.notesBtnText, gemaraNikud && styles.notesBtnTextActive]}>
+              ניקוד
+            </Text>
+          </TouchableOpacity>
         ) : (
           <View style={styles.controlsSpacer} />
         )}
 
         <View style={styles.actionsRow}>
+          {onChangeReaderTheme && (
+            <TouchableOpacity
+              style={styles.themeBtn}
+              onPress={() => {
+                triggerImpact('light');
+                setShowThemeModal(true);
+              }}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="תצוגת קריאה"
+            >
+              <Ionicons
+                name="contrast-outline"
+                size={17}
+                color={theme.colors.accent}
+              />
+            </TouchableOpacity>
+          )}
+
           {onOpenGuide && (
             <TouchableOpacity
               style={styles.helpBtn}
@@ -183,6 +232,16 @@ export default function ReaderToolbar({
           </View>
         </View>
       </View>
+
+      {onChangeReaderTheme && (
+        <ReaderThemeModal
+          visible={showThemeModal}
+          onClose={() => setShowThemeModal(false)}
+          currentTheme={readerTheme}
+          onSelectTheme={onChangeReaderTheme}
+          accentColor={accentColor}
+        />
+      )}
     </View>
   );
 }

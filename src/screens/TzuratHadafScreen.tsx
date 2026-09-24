@@ -3,7 +3,6 @@ import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { useKeepAwake } from 'expo-keep-awake';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import TzuratHeader from '../components/TzuratHadaf/TzuratHeader';
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
@@ -20,6 +19,9 @@ import SteinsaltzTextContainer from '../components/SefariaReader/SteinsaltzTextC
 import ChavrutaTextContainer from '../components/ChavrutaReader/ChavrutaTextContainer';
 import ReadingProgressBar from '../components/SefariaReader/ReadingProgressBar';
 import { useDafReader } from '../hooks/useDafReader';
+import { useReaderKeepAwake } from '../hooks/useReaderKeepAwake';
+import { useReaderTheme } from '../hooks/useReaderTheme';
+import { getReaderThemePalette } from '../utils/readerTheme';
 import { useTheme } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
 import { normalizeMasechetEn } from '../utils/dafNavigation';
@@ -38,7 +40,7 @@ function getMasechetHe(masechetEn: string, fallback?: string): string | undefine
 }
 
 export default function TzuratHadafScreen() {
-  useKeepAwake();
+  useReaderKeepAwake();
   const theme = useTheme();
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
@@ -49,7 +51,12 @@ export default function TzuratHadafScreen() {
   const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const readerTheme: ReaderTheme = theme.colors.background === '#121212' ? 'dark' : 'light';
+  const isSystemDark = theme.colors.background === '#121212';
+  const { readerTheme, setReaderTheme } = useReaderTheme(isSystemDark);
+  const readerPalette = useMemo(
+    () => getReaderThemePalette(readerTheme, theme.colors.accent),
+    [readerTheme, theme.colors.accent],
+  );
 
   const reader = useDafReader({
     masechetEn: route.params.masechetEn,
@@ -165,8 +172,13 @@ export default function TzuratHadafScreen() {
             onIncreaseFontSize={reader.handleIncreaseFontSize}
             onDecreaseFontSize={reader.handleDecreaseFontSize}
             accentColor={theme.colors.accent}
+            readerTheme={readerTheme}
+            onChangeReaderTheme={setReaderTheme}
             showNotes={reader.showChavrutaNotes}
             onToggleNotes={reader.handleToggleNotes}
+            gemaraNikud={reader.gemaraNikud}
+            onToggleGemaraNikud={reader.handleToggleGemaraNikud}
+            nikudAvailable={reader.nikudAvailable}
             chavrutaAvailable={reader.chavrutaAvailable}
             steinsaltzAvailable={reader.steinsaltzAvailable}
             classicTabLabel={reader.classicTabLabel}
@@ -177,7 +189,10 @@ export default function TzuratHadafScreen() {
         </>
       )}
 
-      <View style={styles.viewerContainer} {...swipeHandlers}>
+      <View
+        style={[styles.viewerContainer, { backgroundColor: readerPalette.backgroundColor }]}
+        {...swipeHandlers}
+      >
         <ReaderModePane
           viewMode={reader.viewMode}
           pageKey={reader.pageKey}
@@ -214,6 +229,8 @@ export default function TzuratHadafScreen() {
               onRetry={reader.chavruta.reload}
               fontSize={reader.fontSize}
               showNotes={reader.showChavrutaNotes}
+              readerTheme={readerTheme}
+              accentColor={theme.colors.accent}
               onScrollProgress={setScrollProgress}
             />
           )}

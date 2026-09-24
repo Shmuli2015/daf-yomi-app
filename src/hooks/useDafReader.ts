@@ -15,6 +15,7 @@ import {
   isMishnahOnlySlot,
   resolveChavrutaLocation,
 } from '../utils/mishnahOnlySefaria';
+import { isShekalimMasechet } from '../utils/shekalimSefaria';
 import { triggerSelection } from '../utils/haptics';
 import { useReaderFontSize } from './useReaderFontSize';
 import { useAppStore } from '../store/useAppStore';
@@ -27,8 +28,10 @@ export function useDafReader(initialLocation: DafLocation) {
   const [navDirection, setNavDirection] = useState<NavDirection>(null);
   const storedViewMode = useAppStore(state => clampReaderViewMode(state.settings?.reader_view_mode));
   const storedShowNotes = useAppStore(state => state.settings?.show_chavruta_notes !== 0);
+  const gemaraNikud = useAppStore(state => state.settings?.gemara_nikud !== 0);
   const persistViewMode = useAppStore(state => state.setReaderViewMode);
   const persistShowNotes = useAppStore(state => state.setShowChavrutaNotesEnabled);
+  const persistGemaraNikud = useAppStore(state => state.setGemaraNikudEnabled);
   const { fontSize, increase: handleIncreaseFontSize, decrease: handleDecreaseFontSize } =
     useReaderFontSize();
   const [sefariaData, setSefariaData] = useState<SefariaPageData | null>(null);
@@ -45,6 +48,7 @@ export function useDafReader(initialLocation: DafLocation) {
   const chavrutaAvailable = hasChavrutaSource(chavrutaLocation.masechetEn);
   const steinsaltzAvailable = !mishnahOnly;
   const classicTabLabel = mishnahOnly ? 'משנה' : 'גמרא';
+  const nikudAvailable = !mishnahOnly && !isShekalimMasechet(normalizedMasechet);
   const viewMode = useMemo<ViewMode>(() => {
     if (storedViewMode === 'chavruta' && !chavrutaAvailable) return 'classic';
     if (storedViewMode === 'steinsaltz' && !steinsaltzAvailable) return 'classic';
@@ -60,7 +64,7 @@ export function useDafReader(initialLocation: DafLocation) {
     setSefariaLoading(true);
     setSefariaError(null);
     try {
-      const data = await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud);
+      const data = await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud);
       setSefariaData(data);
     } catch (err: unknown) {
       const raw = err instanceof Error ? err.message : '';
@@ -68,13 +72,13 @@ export function useDafReader(initialLocation: DafLocation) {
     } finally {
       setSefariaLoading(false);
     }
-  }, []);
+  }, [gemaraNikud]);
 
   const prefetchAdjacentPages = useCallback((loc: DafLocation) => {
     const nextLoc = getNextAmud(loc);
     if (!nextLoc) return;
-    fetchSefariaPageText(nextLoc.masechetEn, nextLoc.dafNum, nextLoc.amud).catch(() => {});
-  }, []);
+    fetchSefariaPageText(nextLoc.masechetEn, nextLoc.dafNum, nextLoc.amud, gemaraNikud).catch(() => {});
+  }, [gemaraNikud]);
 
   useEffect(() => {
     void loadSefariaText(location);
@@ -98,6 +102,10 @@ export function useDafReader(initialLocation: DafLocation) {
   const handleToggleNotes = useCallback(() => {
     persistShowNotes(!showChavrutaNotes);
   }, [persistShowNotes, showChavrutaNotes]);
+
+  const handleToggleGemaraNikud = useCallback(() => {
+    persistGemaraNikud(!gemaraNikud);
+  }, [persistGemaraNikud, gemaraNikud]);
 
   const canPrevAmud = getPrevAmud(location) !== null;
   const canNextAmud = getNextAmud(location) !== null;
@@ -152,6 +160,8 @@ export function useDafReader(initialLocation: DafLocation) {
     sefariaLoading,
     sefariaError,
     showChavrutaNotes,
+    gemaraNikud,
+    nikudAvailable,
     chavrutaAvailable,
     steinsaltzAvailable,
     classicTabLabel,
@@ -161,6 +171,7 @@ export function useDafReader(initialLocation: DafLocation) {
     handleIncreaseFontSize,
     handleDecreaseFontSize,
     handleToggleNotes,
+    handleToggleGemaraNikud,
     canPrevAmud,
     canNextAmud,
     canPrevDaf,

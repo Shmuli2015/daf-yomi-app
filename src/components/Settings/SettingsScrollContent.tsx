@@ -54,10 +54,14 @@ export type SettingsScrollContentProps = {
   onEditDafDayStartDay: (index: number) => void;
   readerViewMode: ViewMode;
   onReaderViewModePress: () => void;
+  gemaraNikud: boolean;
+  onGemaraNikudToggle: (enabled: boolean) => void;
   showChavrutaNotes: boolean;
   onChavrutaNotesToggle: (enabled: boolean) => void;
   hapticsEnabled: boolean;
   onHapticsToggle: (enabled: boolean) => void;
+  keepScreenAwake: boolean;
+  onKeepScreenAwakeToggle: (enabled: boolean) => void;
   fontSize: number;
   onIncreaseFontSize: () => void;
   onDecreaseFontSize: () => void;
@@ -119,10 +123,14 @@ export default function SettingsScrollContent({
   onEditDafDayStartDay,
   readerViewMode,
   onReaderViewModePress,
+  gemaraNikud,
+  onGemaraNikudToggle,
   showChavrutaNotes,
   onChavrutaNotesToggle,
   hapticsEnabled,
   onHapticsToggle,
+  keepScreenAwake,
+  onKeepScreenAwakeToggle,
   fontSize,
   onIncreaseFontSize,
   onDecreaseFontSize,
@@ -290,10 +298,14 @@ export default function SettingsScrollContent({
                 isFirst={false}
                 readerViewMode={readerViewMode}
                 onReaderViewModePress={onReaderViewModePress}
+                gemaraNikud={gemaraNikud}
+                onGemaraNikudToggle={onGemaraNikudToggle}
                 showChavrutaNotes={showChavrutaNotes}
                 onChavrutaNotesToggle={onChavrutaNotesToggle}
                 hapticsEnabled={hapticsEnabled}
                 onHapticsToggle={onHapticsToggle}
+                keepScreenAwake={keepScreenAwake}
+                onKeepScreenAwakeToggle={onKeepScreenAwakeToggle}
                 fontSize={fontSize}
                 onIncreaseFontSize={onIncreaseFontSize}
                 onDecreaseFontSize={onDecreaseFontSize}

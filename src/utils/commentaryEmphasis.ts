@@ -30,6 +30,11 @@ const GEMARA_SECTION_LABEL_RE = new RegExp(
   'g',
 );
 
+export function isMishnahHeading(text: string): boolean {
+  if (!text) return false;
+  return MATNI_LABEL_RE.test(text);
+}
+
 export function stripEmDash(text: string): string {
   if (!text) return '';
   return text
