@@ -44,6 +44,14 @@ module.exports = {
       'expo-status-bar',
       './plugins/withAndroidBuildOptimization.js',
       './plugins/withDismissNotificationOnAction.js',
+      [
+        '@sentry/react-native/expo',
+        {
+          url: 'https://de.sentry.io/',
+          organization: 'shmuli',
+          project: 'react-native',
+        },
+      ],
     ],
     extra: {
       eas: {
@@ -57,6 +65,7 @@ module.exports = {
       updateCheckEnabled: process.env.EAS_BUILD_PROFILE === 'preview',
       downloadPageUrl: 'https://shmuli2015.github.io/daf-yomi-app/',
       privacyPolicyUrl: 'https://shmuli2015.github.io/daf-yomi-app/privacy.html',
+      sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
     },
   },
 };

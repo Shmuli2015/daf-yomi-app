@@ -14,9 +14,13 @@ import { useColorScheme } from 'react-native';
 import SystemChromeThemeSync from './src/components/SystemChromeThemeSync';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { AppUpdateProvider } from './src/context/AppUpdateProvider';
+import AppErrorBoundary from './src/components/AppErrorBoundary';
+import { initSentry, Sentry } from './src/services/sentry';
 
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
+
+initSentry();
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
@@ -44,9 +48,7 @@ if (!isExpoGo) {
   ]).catch(() => {});
 }
 
-
-
-export default function App() {
+function App() {
   const { isReady, showSplash, onSplashFinish } = useAppInitialization();
   const themeMode = (useAppStore(state => state.settings?.theme_mode) || 'system') as ThemeMode;
   const systemScheme = (useColorScheme() || 'dark') as 'dark' | 'light';
@@ -58,25 +60,29 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider mode={themeMode}>
-        <SystemChromeThemeSync themeMode={themeMode} />
-        <AppUpdateProvider>
-          <NavigationContainer
-            theme={{
-              ...navigationTheme,
-              dark: isDark,
-              colors: {
-                ...navigationTheme.colors,
-                ...getNavigationThemeColors(themeMode, systemScheme),
-              },
-            }}
-          >
-            <RootNavigator />
-          </NavigationContainer>
-          {showSplash && (
-            <SplashScreen isReady={isReady} onFinish={onSplashFinish} />
-          )}
-        </AppUpdateProvider>
+        <AppErrorBoundary>
+          <SystemChromeThemeSync themeMode={themeMode} />
+          <AppUpdateProvider>
+            <NavigationContainer
+              theme={{
+                ...navigationTheme,
+                dark: isDark,
+                colors: {
+                  ...navigationTheme.colors,
+                  ...getNavigationThemeColors(themeMode, systemScheme),
+                },
+              }}
+            >
+              <RootNavigator />
+            </NavigationContainer>
+            {showSplash && (
+              <SplashScreen isReady={isReady} onFinish={onSplashFinish} />
+            )}
+          </AppUpdateProvider>
+        </AppErrorBoundary>
       </ThemeProvider>
     </SafeAreaProvider>
   );
 }
+
+export default Sentry.wrap(App);
