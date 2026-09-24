@@ -219,6 +219,8 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          EXPO_PUBLIC_PLAY_TRACK: ${{ needs.gate.outputs.play_track }}
+          EAS_LOCAL_BUILD_SKIP_CLEANUP: '1'
 
       - name: Rename AAB
         shell: bash
@@ -235,11 +237,39 @@ jobs:
           mv "${files[0]}" "$DEST"
           echo "Renamed to $DEST"
 
+      - name: Collect R8 mapping
+        shell: bash
+        run: |
+          set -euo pipefail
+          CANDIDATES=()
+          if [ -f android/app/build/outputs/mapping/release/mapping.txt ]; then
+            CANDIDATES+=("android/app/build/outputs/mapping/release/mapping.txt")
+          fi
+          while IFS= read -r path; do
+            CANDIDATES+=("$path")
+          done < <(find /tmp -path '*/mapping/release/mapping.txt' -type f 2>/dev/null | head -n 20)
+          if [ ${#CANDIDATES[@]} -eq 0 ]; then
+            echo "::error::R8 mapping.txt not found after AAB build"
+            exit 1
+          fi
+          SRC="${CANDIDATES[0]}"
+          cp "$SRC" mapping.txt
+          echo "Collected mapping from $SRC"
+          ls -la mapping.txt
+
       - name: Upload AAB artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: android-aab
           path: ${{ needs.gate.outputs.aab_filename }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload mapping artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: android-mapping
+          path: mapping.txt
           if-no-files-found: error
           retention-days: 14
 
@@ -287,8 +317,19 @@ jobs:
           name: android-aab
           path: .
 
+      - name: Download mapping artifact
+        if: needs.gate.outputs.needs_aab == 'true' && needs.gate.outputs.play_track != 'none'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: android-mapping
+          path: .
+
       - name: Write Whats New release body
         run: node scripts/writeWhatsNewReleaseBody.js
+
+      - name: Write Play whats-new
+        if: needs.gate.outputs.needs_aab == 'true' && needs.gate.outputs.play_track != 'none'
+        run: node scripts/writePlayWhatsNew.js
 
       - name: Collect release asset paths
         id: release_files
@@ -368,6 +409,8 @@ jobs:
           releaseFiles: ${{ needs.gate.outputs.aab_filename }}
           track: ${{ needs.gate.outputs.play_track }}
           status: completed
+          whatsNewDirectory: play-whatsnew
+          mappingFile: mapping.txt
 
       - name: Report Play outcome
         if: needs.gate.outputs.needs_aab == 'true' && needs.gate.outputs.play_track != 'none'

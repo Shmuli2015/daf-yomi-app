@@ -66,6 +66,7 @@ module.exports = {
       downloadPageUrl: 'https://shmuli2015.github.io/daf-yomi-app/',
       privacyPolicyUrl: 'https://shmuli2015.github.io/daf-yomi-app/privacy.html',
       sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
+      playTrack: process.env.EXPO_PUBLIC_PLAY_TRACK || '',
     },
   },
 };
