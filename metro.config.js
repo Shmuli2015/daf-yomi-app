@@ -1,7 +1,7 @@
 const path = require('path');
-const { getDefaultConfig } = require('expo/metro-config');
+const { getSentryExpoConfig } = require('@sentry/react-native/metro');
 
-const config = getDefaultConfig(__dirname);
+const config = getSentryExpoConfig(__dirname);
 
 const pushAutoRegistrationStub = path.resolve(
   __dirname,
@@ -27,8 +27,6 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
       return { filePath: pushAutoRegistrationStub, type: 'sourceFile' };
     }
 
-    // Android resolves ./TopicSubscriptionModule -> TopicSubscriptionModule.android,
-    // which requireNativeModule('ExpoTopicSubscriptionModule') (missing in Expo Go).
     if (
       platform === 'android' &&
       (moduleName === './TopicSubscriptionModule' ||
