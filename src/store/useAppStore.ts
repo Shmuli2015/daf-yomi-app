@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, updateReaderTheme as persistReaderTheme, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setGemaraNikud as persistGemaraNikud, setHapticsEnabled as persistHapticsEnabled, setKeepScreenAwake as persistKeepScreenAwake, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, setDafDayStartMode as persistDafDayStartMode, setDafDayStartTime as persistDafDayStartTime, setDafDayStartSchedules as persistDafDayStartSchedules, ensureDafDayStartSchedulesFromCurrentHour as persistEnsureDafDayStartSchedules, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
+import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, updateReaderTheme as persistReaderTheme, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setGemaraNikud as persistGemaraNikud, setHapticsEnabled as persistHapticsEnabled, setKeepScreenAwake as persistKeepScreenAwake, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, setDafDayStartMode as persistDafDayStartMode, setDafDayStartTime as persistDafDayStartTime, setDafDayStartSchedules as persistDafDayStartSchedules, ensureDafDayStartSchedulesFromCurrentHour as persistEnsureDafDayStartSchedules, importFullBackupTransaction, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafDayDate } from '../utils/dafDayBoundary';
 import type { DafDayStartDaySchedule } from '../utils/dafDayBoundary';
@@ -451,18 +451,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   importBackup: (data, mode) => {
-    if (mode === 'replace') {
-      replaceAllRecords(data.records);
-      importSettingsFromBackup(data.settings);
-      replaceAllPersonalTrackRecords(data.personalTrackRecords ?? []);
-    } else {
-      importRecords(data.records);
-      if (data.personalTrackRecords) {
-        mergePersonalTrackRecords(data.personalTrackRecords);
-      }
-      persistActivePersonalMasechet(data.settings.active_personal_masechet);
-      persistShowPersonalTrackBanner((data.settings.show_personal_track_banner ?? 1) !== 0);
-    }
+    importFullBackupTransaction(data, mode);
     get().refreshHistory();
     get().refreshSettings();
     get().refreshPersonalTrack();
