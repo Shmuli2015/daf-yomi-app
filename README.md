@@ -176,28 +176,37 @@
 
 ## CI/CD
 
-Three GitHub Actions workflows:
+GitHub Actions workflows:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) | Pull requests and pushes to `master` | TypeScript check + Expo validation (`npm run ci`) |
-| [`.github/workflows/build-android.yml`](./.github/workflows/build-android.yml) | Push to `release/**` or manual dispatch | EAS local APK build + GitHub Release |
-| [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) | After successful APK build (`workflow_run`) or manual dispatch | Update [`docs/latest.json`](./docs/latest.json) and deploy [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) |
+| [`.github/workflows/quality.yml`](./.github/workflows/quality.yml) | Called by other workflows | Shared `npm run ci` (typecheck, tests, expo-doctor) |
+| [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) | Pull requests and pushes to `master` | Runs the shared quality workflow |
+| [`.github/workflows/build-android.yml`](./.github/workflows/build-android.yml) | Push to `release/**`, tags `v*.*.*`, or manual dispatch | EAS local APK (+ AAB when needed), GitHub Release, optional Google Play upload |
+| [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) | After Android release or manual dispatch | Update [`docs/latest.json`](./docs/latest.json) and deploy [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) |
 
-**Quality checks** (`ci.yml`): runs `tsc --noEmit` and `expo-doctor` on every PR and `master` push (~2 min). Locally: `npm run ci`.
+**Quality checks** (`quality.yml` via `ci.yml`): runs `tsc --noEmit`, tests, and `expo-doctor` on every PR and `master` push. The same checks run again before a release build. Locally: `npm run ci`.
 
-**APK build** (`build-android.yml`): runs the same quality checks, then a local EAS Android preview APK (`eas build … --profile preview --local`); requires `EXPO_TOKEN` in repository secrets. On `release/**` pushes only: the APK is renamed to `{releaseApkBasename}-{version}.apk` (see `expo.extra.releaseApkBasename` in [`app.config.js`](./app.config.js), default `masa-daf`), published as GitHub Release `vX.Y.Z`, and older releases are removed. Every run uploads `*.apk` as a short-lived workflow artifact.
+**Android release** (`build-android.yml`):
+- Always builds an APK (`preview` profile) for GitHub Releases, the download page, and in-app update checks (sideload builds only; `updateCheckEnabled` is true when `EAS_BUILD_PROFILE=preview`).
+- Builds an AAB (`production` profile) when uploading to Google Play, or when target is `aab` / `both`. APK and AAB run in parallel.
+- Publishes GitHub Release `vX.Y.Z` with the APK (and AAB when built), then uploads to Play if `play_track` is not `none`.
+- On automatic pushes, Play track defaults to `alpha`. Use **Run workflow** with `play_track: none` to skip Play.
+- If Play fails after GitHub succeeds, the APK remains available; the job summary explains what failed.
+- Older GitHub Releases are removed so `/releases/latest` stays a single current release.
+- Requires `EXPO_TOKEN` (and `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` when uploading to Play).
 
-**Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page and in-app updater point at the current APK. Deploys automatically after a successful release-branch APK build (does not run on `master` push because branch protection and merge timing make that unreliable). Use **Run workflow** manually if you change `docs/` without a new APK.
+**Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page points at the current APK. Triggered after a successful GitHub publish from the Android release workflow (also via `workflow_run` when the whole release workflow succeeds). Use **Run workflow** manually if you change `docs/` without a new APK.
 
 **Whats New notes:** Before each release, add an entry for the **next** version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts) (Hebrew bullets). `npm run release` fails without it. The GitHub Release body and the in-app lists (pre-download modal, post-install **מה חדש**, Settings) come from that file. Unique bullets are capped at 8 overall. After install, skipped versions are merged (newest first) up to that cap. Older GitHub Releases are deleted, so the latest body is built from remaining file entries.
 
 **Maintainer checklist for a release**
 
 1. Add a `WHATS_NEW` entry for the next version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts).
-2. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the APK build on that branch).
+2. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the Android release workflow on that branch).
 3. Open a pull request from `release/X.Y.Z` into `master` and merge after the **CI** quality check passes.
-4. Confirm the GitHub Release published with the APK asset named `{releaseApkBasename}-X.Y.Z.apk`, and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
+4. Confirm the GitHub Release published with `{releaseApkBasename}-X.Y.Z.apk` (and `.aab` when Play was targeted), and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
+5. Optional first verification after workflow changes: **Actions → Build Android Release → Run workflow** with `play_track: none`.
 
 ---
 

@@ -8,19 +8,4 @@ on:
 
 jobs:
   quality:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run quality checks
-        run: npm run ci
+    uses: ./.github/workflows/quality.yml

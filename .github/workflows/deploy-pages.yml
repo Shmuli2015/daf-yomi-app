@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   workflow_run:
     workflows:
-      - Build Android APK
+      - Build Android Release
     types:
       - completed
   workflow_dispatch:
@@ -23,18 +23,20 @@ jobs:
     if: >
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' &&
-       (github.event.workflow_run.head_branch == 'master' || startsWith(github.event.workflow_run.head_branch, 'release/')))
+       (github.event.workflow_run.head_branch == 'master' ||
+        startsWith(github.event.workflow_run.head_branch, 'release/') ||
+        startsWith(github.event.workflow_run.head_branch, 'v')))
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.2.2
         with:
           ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || github.ref }}
 
       - name: Setup Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: 22
           cache: npm
@@ -94,13 +96,13 @@ jobs:
           NODE
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: docs
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
