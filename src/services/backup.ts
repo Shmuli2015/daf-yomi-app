@@ -18,6 +18,9 @@ import { toFileSharingUrl } from '../utils/shareProgressImage';
 import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
 
 export const CURRENT_BACKUP_VERSION = 2;
+export const MAX_BACKUP_SIZE_BYTES = 5 * 1024 * 1024;
+
+const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
 export type BackupRecord = Omit<DailyRecord, 'id'>;
 export type BackupSettings = Omit<SettingsRecord, 'id'>;
@@ -72,13 +75,19 @@ function isRecordStatus(value: unknown): value is DailyRecord['status'] {
 function validateBackupRecord(raw: unknown): BackupRecord | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-  if (typeof r.date !== 'string' || !r.date) return null;
+  if (typeof r.date !== 'string' || !ISO_DATE_REGEX.test(r.date)) return null;
   if (!isRecordStatus(r.status)) return null;
-  if (typeof r.learnedAt !== 'string' || !r.learnedAt) return null;
+  if (typeof r.learnedAt !== 'string' || !r.learnedAt || r.learnedAt.length > 100) return null;
+
+  const masechet = typeof r.masechet === 'string' ? r.masechet : '';
+  if (masechet.length > 100) return null;
+
+  const daf = typeof r.daf === 'string' ? r.daf : '';
+  if (daf.length > 50) return null;
 
   const percentage =
-    typeof r.percentage === 'number'
-      ? r.percentage
+    typeof r.percentage === 'number' && Number.isFinite(r.percentage)
+      ? Math.max(0, Math.min(100, Math.round(r.percentage)))
       : r.status === 'learned'
         ? 100
         : r.status === 'partial'
@@ -90,8 +99,8 @@ function validateBackupRecord(raw: unknown): BackupRecord | null {
 
   return {
     date: r.date,
-    masechet: typeof r.masechet === 'string' ? r.masechet : '',
-    daf: typeof r.daf === 'string' ? r.daf : '',
+    masechet,
+    daf,
     status: r.status,
     percentage,
     amud,
@@ -149,10 +158,10 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
 function validatePersonalTrackRecord(raw: unknown): PersonalTrackRecord | null {
   if (!raw || typeof raw !== 'object') return null;
   const r = raw as Record<string, unknown>;
-  if (typeof r.masechet !== 'string' || !r.masechet) return null;
-  if (typeof r.daf_num !== 'number' || !Number.isFinite(r.daf_num)) return null;
+  if (typeof r.masechet !== 'string' || !r.masechet || r.masechet.length > 100) return null;
+  if (typeof r.daf_num !== 'number' || !Number.isInteger(r.daf_num) || r.daf_num < 1 || r.daf_num > 1000) return null;
   if (r.status !== 'learned' && r.status !== 'partial') return null;
-  if (typeof r.learnedAt !== 'string' || !r.learnedAt) return null;
+  if (typeof r.learnedAt !== 'string' || !r.learnedAt || r.learnedAt.length > 100) return null;
 
   return {
     masechet: r.masechet,
@@ -208,6 +217,10 @@ function migrateBackup(raw: Record<string, unknown>): BackupData | null {
 }
 
 export function parseBackupJson(json: string): BackupParseResult {
+  if (typeof json !== 'string' || json.length > MAX_BACKUP_SIZE_BYTES) {
+    return { ok: false, error: 'קובץ הגיבוי גדול מדי (מעל 5MB).' };
+  }
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(json);
@@ -356,7 +369,12 @@ export async function pickAndReadBackupFile(): Promise<
       return 'cancelled';
     }
 
-    const uri = result.assets[0].uri;
+    const asset = result.assets[0];
+    if (typeof asset.size === 'number' && asset.size > MAX_BACKUP_SIZE_BYTES) {
+      return { ok: false, error: 'קובץ הגיבוי גדול מדי (מעל 5MB).' };
+    }
+
+    const uri = asset.uri;
     const json = await FileSystem.readAsStringAsync(uri, {
       encoding: FileSystem.EncodingType.UTF8,
     });

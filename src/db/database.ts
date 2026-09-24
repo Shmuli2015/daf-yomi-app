@@ -565,6 +565,12 @@ export function resetPersonalTrackRecords() {
 export type DailyRecordInput = Omit<DailyRecord, 'id'>;
 export type SettingsInput = Omit<SettingsRecord, 'id'>;
 
+export interface FullBackupInput {
+  records: DailyRecordInput[];
+  settings: SettingsInput;
+  personalTrackRecords?: PersonalTrackRecord[];
+}
+
 function insertDailyRecord(record: DailyRecordInput) {
   db.runSync(
     'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -632,6 +638,93 @@ export function importRecords(records: DailyRecordInput[]) {
             };
 
       updateDailyRecordFromBackup(winner);
+    }
+  });
+}
+
+export function importFullBackupTransaction(data: FullBackupInput, mode: 'replace' | 'merge') {
+  migrateDailyDafColumns();
+  migratePersonalTrackColumns();
+  db.withTransactionSync(() => {
+    if (mode === 'replace') {
+      db.runSync('DELETE FROM daily_daf');
+      for (const record of data.records) {
+        insertDailyRecord(record);
+      }
+      importSettingsFromBackup(data.settings);
+      db.runSync('DELETE FROM personal_track_daf');
+      const now = new Date().toISOString();
+      for (const r of data.personalTrackRecords ?? []) {
+        db.runSync(
+          'INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt) VALUES (?, ?, ?, ?, ?)',
+          [r.masechet, r.daf_num, r.status, r.amud ?? null, r.learnedAt || now]
+        );
+      }
+    } else {
+      for (const incoming of data.records) {
+        const existing = getDailyRecord(incoming.date);
+        if (!existing) {
+          insertDailyRecord(incoming);
+          continue;
+        }
+
+        const existingTime = Date.parse(existing.learnedAt);
+        const incomingTime = Date.parse(incoming.learnedAt);
+        const winner =
+          Number.isFinite(incomingTime) &&
+          (!Number.isFinite(existingTime) || incomingTime >= existingTime)
+            ? incoming
+            : {
+                date: existing.date,
+                masechet: existing.masechet,
+                daf: existing.daf,
+                status: existing.status,
+                percentage: existing.percentage,
+                amud: existing.amud,
+                learnedAt: existing.learnedAt,
+              };
+
+        updateDailyRecordFromBackup(winner);
+      }
+
+      if (data.personalTrackRecords) {
+        const now = new Date().toISOString();
+        for (const r of data.personalTrackRecords) {
+          const existing = db.getFirstSync<{ id: number; status: string; learnedAt: string }>(
+            'SELECT id, status, learnedAt FROM personal_track_daf WHERE masechet = ? AND daf_num = ?',
+            [r.masechet, r.daf_num]
+          );
+          if (!existing) {
+            db.runSync(
+              'INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt) VALUES (?, ?, ?, ?, ?)',
+              [r.masechet, r.daf_num, r.status, r.amud ?? null, r.learnedAt || now]
+            );
+          } else {
+            const existingTime = Date.parse(existing.learnedAt);
+            const incomingTime = Date.parse(r.learnedAt);
+            const incomingWins =
+              Number.isFinite(incomingTime) &&
+              (!Number.isFinite(existingTime) || incomingTime >= existingTime);
+            if (incomingWins) {
+              db.runSync(
+                'UPDATE personal_track_daf SET status = ?, amud = ?, learnedAt = ? WHERE id = ?',
+                [r.status, r.amud ?? null, r.learnedAt || now, existing.id]
+              );
+            }
+          }
+        }
+      }
+
+      if (data.settings.active_personal_masechet !== undefined) {
+        db.runSync('UPDATE settings SET active_personal_masechet = ? WHERE id = 1', [
+          data.settings.active_personal_masechet,
+        ]);
+      }
+      if (data.settings.show_personal_track_banner !== undefined) {
+        db.runSync('UPDATE settings SET show_personal_track_banner = ? WHERE id = 1', [
+          (data.settings.show_personal_track_banner ?? 1) !== 0 ? 1 : 0,
+        ]);
+      }
     }
   });
 }
