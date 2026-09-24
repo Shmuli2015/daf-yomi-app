@@ -131,7 +131,9 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     seen_app_version: nullableStr('seen_app_version'),
     reader_view_mode: str('reader_view_mode', 'classic'),
     show_chavruta_notes: num('show_chavruta_notes', 1),
+    gemara_nikud: num('gemara_nikud', 1),
     haptics_enabled: num('haptics_enabled', 1),
+    keep_screen_awake: num('keep_screen_awake', 1),
     last_backup_at: nullableStr('last_backup_at'),
     notification_sound_enabled: num('notification_sound_enabled', 1),
     daf_day_start_mode: str('daf_day_start_mode', 'midnight'),
@@ -140,6 +142,7 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     daf_day_start_schedules: nullableStr('daf_day_start_schedules'),
     last_store_review_prompt_at: nullableStr('last_store_review_prompt_at'),
     store_review_streak7_prompted: num('store_review_streak7_prompted', 0),
+    reader_theme: str('reader_theme', 'system'),
   };
 }
 

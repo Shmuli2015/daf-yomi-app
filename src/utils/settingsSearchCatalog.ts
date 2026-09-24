@@ -109,6 +109,12 @@ export const READER_MODE_ITEM: SearchableSetting = {
   synonyms: ['גמרא', 'שטיינזלץ', 'חברותא', 'קורא', 'טקסט', 'ברירת מחדל'],
 };
 
+export const GEMARA_NIKUD_ITEM: SearchableSetting = {
+  title: 'ניקוד בגמרא',
+  description: 'הטקסט של הגמרא מספריא, מנוקד או בלי ניקוד',
+  synonyms: ['ניקוד', 'מנוקד', 'לא מנוקד', 'נקודות', 'ספריא'],
+};
+
 export const NOTES_ITEM: SearchableSetting = {
   title: 'הערות בחברותא',
   description: 'הצגת הערות כשקוראים במצב חברותא',
@@ -121,16 +127,31 @@ export const HAPTICS_ITEM: SearchableSetting = {
   synonyms: ['הפטיק', 'ויברציה', 'מגע'],
 };
 
+export const KEEP_SCREEN_AWAKE_ITEM: SearchableSetting = {
+  title: 'מסך דלוק',
+  description: 'מונע כיבוי אוטומטי בזמן קריאה',
+  synonyms: ['כיבוי', 'שינה', 'keep awake', 'דולק'],
+};
+
 export const FONT_SIZE_SETTING: SearchableSetting = {
   title: 'גודל גופן בקורא',
   description: 'ברירת המחדל לטקסט הגמרא והפירושים',
   synonyms: ['פונט', 'אותיות', 'הגדל', 'הקטן', 'a+', 'a-'],
 };
 
+export const READER_THEME_ITEM: SearchableSetting = {
+  title: 'ערכת קריאה',
+  description: 'בהיר, ספיה (דף ישן) או כהה לקריאת הדף',
+  synonyms: ['ספיה', 'רקע', 'צבע', 'קריאה', 'תצוגה', 'קלף', 'דף ישן', 'לילה', 'חושך'],
+};
+
 export const READER_SEARCH_ITEMS: SearchableSetting[] = [
   READER_MODE_ITEM,
+  GEMARA_NIKUD_ITEM,
+  READER_THEME_ITEM,
   NOTES_ITEM,
   HAPTICS_ITEM,
+  KEEP_SCREEN_AWAKE_ITEM,
   FONT_SIZE_SETTING,
 ];
 

@@ -9,10 +9,13 @@ import { Ionicons } from '@expo/vector-icons';
 import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import ReaderSkeleton from '../SefariaReader/ReaderSkeleton';
 import ScrollToTopFab from '../SefariaReader/ScrollToTopFab';
+import type { ReaderTheme } from '../SefariaReader/ReaderToolbar';
+import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useTheme } from '../../theme';
 import type { ChavrutaBlock, ChavrutaFootnote, ChavrutaPageData } from '../../services/chavrutaApi';
 import ChavrutaBodyText from './ChavrutaBodyText';
 import ChavrutaFootnoteSheet from './ChavrutaFootnoteSheet';
+import ChavrutaSectionHeader from './ChavrutaSectionHeader';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { createChavrutaTextContainerStyles } from './ChavrutaTextContainer.styles';
 
@@ -23,6 +26,8 @@ interface ChavrutaTextContainerProps {
   onRetry: () => void;
   fontSize: number;
   showNotes: boolean;
+  readerTheme?: ReaderTheme;
+  accentColor?: string;
   onScrollProgress?: (progress: number) => void;
 }
 
@@ -33,10 +38,19 @@ export default function ChavrutaTextContainer({
   onRetry,
   fontSize,
   showNotes,
+  readerTheme,
+  accentColor,
   onScrollProgress,
 }: ChavrutaTextContainerProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createChavrutaTextContainerStyles(theme), [theme]);
+  const palette = useMemo(
+    () => getReaderThemePalette(readerTheme ?? 'light', accentColor),
+    [readerTheme, accentColor],
+  );
+  const styles = useMemo(
+    () => createChavrutaTextContainerStyles(theme, palette),
+    [theme, palette],
+  );
   const [activeFootnoteIndex, setActiveFootnoteIndex] = useState<number | null>(null);
 
   const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
@@ -56,7 +70,11 @@ export default function ChavrutaTextContainer({
   }, [data?.masechetEn, data?.dafNum, data?.amud, showNotes]);
 
   if (loading) {
-    return <ReaderSkeleton />;
+    return (
+      <View style={styles.container}>
+        <ReaderSkeleton />
+      </View>
+    );
   }
 
   if (!data) {
@@ -91,6 +109,8 @@ export default function ChavrutaTextContainer({
     const index = data.footnotes.findIndex((item) => item.id === footnote.id);
     setActiveFootnoteIndex(index >= 0 ? index : null);
   };
+
+  let currentSection = 'gemara';
 
   return (
     <View style={styles.container}>
@@ -128,19 +148,38 @@ export default function ChavrutaTextContainer({
               />
             );
           }
+          if (block.kind === 'sectionHeader') {
+            const isMishnah =
+              block.titleHe.includes('מתני') || block.titleHe.includes('משנה');
+            currentSection = isMishnah ? 'mishnah' : 'gemara';
+            return (
+              <ChavrutaSectionHeader
+                key={`section-header-${index}`}
+                titleHe={block.titleHe}
+                isSepia={palette.isSepia}
+                isDark={palette.isDark}
+                accentColor={palette.accentColor}
+              />
+            );
+          }
+          const isMishnahParagraph = currentSection === 'mishnah';
           return (
-            <View key={`paragraph-${index}`} style={styles.paragraph}>
+            <View
+              key={`paragraph-${index}`}
+              style={[styles.paragraph, isMishnahParagraph && styles.mishnahParagraph]}
+            >
               <ChavrutaBodyText
                 text={block.text}
                 baseStyle={[
                   styles.paragraphText,
                   {
+                    color: palette.textColor,
                     fontSize,
                     lineHeight: Math.round(fontSize * 1.7),
                   },
                 ]}
                 fontSize={fontSize}
-                accentColor={theme.colors.accent}
+                accentColor={palette.accentColor}
                 showNotes={showNotes}
                 footnotesById={footnotesById}
                 onPressFootnote={openFootnote}
@@ -153,7 +192,7 @@ export default function ChavrutaTextContainer({
       <ScrollToTopFab
         visible={showFab}
         onPress={scrollToTop}
-        accentColor={theme.colors.accent}
+        accentColor={palette.accentColor}
       />
 
       <ChavrutaFootnoteSheet

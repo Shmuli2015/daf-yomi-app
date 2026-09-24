@@ -56,7 +56,9 @@ export interface SettingsRecord {
   seen_app_version: string | null;
   reader_view_mode: string;
   show_chavruta_notes: number;
+  gemara_nikud: number;
   haptics_enabled: number;
+  keep_screen_awake: number;
   last_backup_at: string | null;
   notification_sound_enabled: number;
   daf_day_start_mode: string;
@@ -65,6 +67,7 @@ export interface SettingsRecord {
   daf_day_start_schedules: string | null;
   last_store_review_prompt_at: string | null;
   store_review_streak7_prompted: number;
+  reader_theme: string;
 }
 
 function migrateDailyDafColumns() {
@@ -189,8 +192,14 @@ export function initDB() {
   if (!columns.includes('show_chavruta_notes')) {
     db.execSync('ALTER TABLE settings ADD COLUMN show_chavruta_notes INTEGER DEFAULT 1;');
   }
+  if (!columns.includes('gemara_nikud')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN gemara_nikud INTEGER DEFAULT 1;');
+  }
   if (!columns.includes('haptics_enabled')) {
     db.execSync('ALTER TABLE settings ADD COLUMN haptics_enabled INTEGER DEFAULT 1;');
+  }
+  if (!columns.includes('keep_screen_awake')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN keep_screen_awake INTEGER DEFAULT 1;');
   }
   if (!columns.includes('last_backup_at')) {
     db.execSync('ALTER TABLE settings ADD COLUMN last_backup_at TEXT DEFAULT NULL;');
@@ -215,6 +224,9 @@ export function initDB() {
   }
   if (!columns.includes('store_review_streak7_prompted')) {
     db.execSync('ALTER TABLE settings ADD COLUMN store_review_streak7_prompted INTEGER DEFAULT 0;');
+  }
+  if (!columns.includes('reader_theme')) {
+    db.execSync("ALTER TABLE settings ADD COLUMN reader_theme TEXT DEFAULT 'system';");
   }
 
   db.execSync(`
@@ -336,7 +348,9 @@ function createDefaultSettingsRecord(): SettingsRecord {
     seen_app_version: null,
     reader_view_mode: READER_VIEW_MODE_DEFAULT,
     show_chavruta_notes: 1,
+    gemara_nikud: 1,
     haptics_enabled: 1,
+    keep_screen_awake: 1,
     last_backup_at: null,
     notification_sound_enabled: 1,
     daf_day_start_mode: 'midnight',
@@ -345,6 +359,7 @@ function createDefaultSettingsRecord(): SettingsRecord {
     daf_day_start_schedules: null,
     last_store_review_prompt_at: null,
     store_review_streak7_prompted: 0,
+    reader_theme: 'system',
   };
 }
 
@@ -364,13 +379,16 @@ function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
     reader_font_size: clampReaderFontSize(Number(row.reader_font_size)),
     reader_view_mode: clampReaderViewMode(row.reader_view_mode),
     show_chavruta_notes: row.show_chavruta_notes === 0 ? 0 : 1,
+    gemara_nikud: row.gemara_nikud === 0 ? 0 : 1,
     haptics_enabled: row.haptics_enabled === 0 ? 0 : 1,
+    keep_screen_awake: row.keep_screen_awake === 0 ? 0 : 1,
     notification_sound_enabled: row.notification_sound_enabled === 0 ? 0 : 1,
     daf_day_start_mode: normalizeDafDayStartMode(row.daf_day_start_mode),
     daf_day_start_hour: clampedStart.hour,
     daf_day_start_minute: clampedStart.minute,
     daf_day_start_schedules: JSON.stringify(schedules),
     store_review_streak7_prompted: row.store_review_streak7_prompted === 1 ? 1 : 0,
+    reader_theme: row.reader_theme || 'system',
   };
 }
 
@@ -403,6 +421,13 @@ export function updateReaderFontSize(size: number) {
       [next],
     );
   }
+}
+
+export function updateReaderTheme(theme: string) {
+  if (!getSettingsColumnNames().includes('reader_theme')) {
+    db.execSync("ALTER TABLE settings ADD COLUMN reader_theme TEXT DEFAULT 'system';");
+  }
+  db.runSync('UPDATE settings SET reader_theme = ? WHERE id = 1', [theme]);
 }
 
 export function touchLastUpdateCheckAt() {
@@ -445,8 +470,16 @@ export function setShowChavrutaNotes(enabled: boolean) {
   db.runSync('UPDATE settings SET show_chavruta_notes = ? WHERE id = 1', [enabled ? 1 : 0]);
 }
 
+export function setGemaraNikud(enabled: boolean) {
+  db.runSync('UPDATE settings SET gemara_nikud = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
 export function setHapticsEnabled(enabled: boolean) {
   db.runSync('UPDATE settings SET haptics_enabled = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
+export function setKeepScreenAwake(enabled: boolean) {
+  db.runSync('UPDATE settings SET keep_screen_awake = ? WHERE id = 1', [enabled ? 1 : 0]);
 }
 
 export function setLastBackupAt(iso: string) {
@@ -630,14 +663,17 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       seen_app_version = ?,
       reader_view_mode = ?,
       show_chavruta_notes = ?,
+      gemara_nikud = ?,
       haptics_enabled = ?,
+      keep_screen_awake = ?,
       notification_sound_enabled = ?,
       daf_day_start_mode = ?,
       daf_day_start_hour = ?,
       daf_day_start_minute = ?,
       daf_day_start_schedules = ?,
       last_store_review_prompt_at = ?,
-      store_review_streak7_prompted = ?
+      store_review_streak7_prompted = ?,
+      reader_theme = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -660,7 +696,9 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.seen_app_version,
       clampReaderViewMode(settings.reader_view_mode),
       settings.show_chavruta_notes === 0 ? 0 : 1,
+      settings.gemara_nikud === 0 ? 0 : 1,
       settings.haptics_enabled === 0 ? 0 : 1,
+      settings.keep_screen_awake === 0 ? 0 : 1,
       settings.notification_sound_enabled === 0 ? 0 : 1,
       normalizeDafDayStartMode(settings.daf_day_start_mode),
       clampedStart.hour,
@@ -674,6 +712,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       ),
       settings.last_store_review_prompt_at ?? null,
       settings.store_review_streak7_prompted === 1 ? 1 : 0,
+      settings.reader_theme || 'system',
     ]
   );
 }

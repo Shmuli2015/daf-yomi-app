@@ -10,6 +10,7 @@ interface InlineCommentaryCardProps {
   accentColor: string;
   fontSize: number;
   isSepia?: boolean;
+  isDark?: boolean;
 }
 
 export default function InlineCommentaryCard({
@@ -17,11 +18,12 @@ export default function InlineCommentaryCard({
   accentColor,
   fontSize,
   isSepia,
+  isDark,
 }: InlineCommentaryCardProps) {
   const theme = useTheme();
   const styles = useMemo(() => createInlineCommentaryCardStyles(theme), [theme]);
 
-  const textColor = isSepia ? '#2C221E' : theme.colors.textPrimary;
+  const textColor = isSepia ? '#2C221E' : isDark ? '#FFFFFF' : '#0F172A';
   const commentaryFontSize = Math.max(13, fontSize - 2);
 
   return (

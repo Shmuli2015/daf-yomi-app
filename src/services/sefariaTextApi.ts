@@ -74,9 +74,10 @@ async function ensureCacheDir(): Promise<string> {
   return CACHE_DIR;
 }
 
-function getCacheFilePath(tref: string): string {
+function getCacheFilePath(tref: string, plainGemara: boolean): string {
   const safeTref = tref.replace(/\./g, '_');
-  return `${CACHE_DIR}${safeTref}.json`;
+  const variant = plainGemara ? '.plain' : '';
+  return `${CACHE_DIR}${safeTref}${variant}.json`;
 }
 
 export function cleanHebrewHtml(html: string): string {
@@ -100,17 +101,23 @@ function flattenTextArray(data: any): string[] {
   return [];
 }
 
+const UNVOCALIZED_GEMARA_VERSION = 'William Davidson Edition - Aramaic';
+
 interface FetchFromNetworkOptions {
   displayTitleHe?: string;
   shekalimLocation?: { dafNum: number; amud: Amud; masechetHe: string };
   mishnahLocation?: { masechetEn: string; dafNum: number; amud: Amud };
+  plainGemara?: boolean;
 }
 
 async function fetchFromNetwork(
   tref: string,
   options: FetchFromNetworkOptions = {},
 ): Promise<SefariaPageData> {
-  const mainUrl = `https://www.sefaria.org/api/texts/${encodeURI(tref)}?context=0&commentary=1`;
+  const versionQuery = options.plainGemara
+    ? `&vhe=${encodeURIComponent(UNVOCALIZED_GEMARA_VERSION)}`
+    : '';
+  const mainUrl = `https://www.sefaria.org/api/texts/${encodeURI(tref)}?context=0&commentary=1${versionQuery}`;
   const mainRes = await fetch(mainUrl);
   if (!mainRes.ok) {
     throw new Error(`Failed to fetch text for ${tref}: HTTP ${mainRes.status}`);
@@ -297,7 +304,8 @@ async function fetchFromNetwork(
 export async function fetchSefariaPageText(
   masechetEn: string,
   dafNum: number,
-  amud: Amud
+  amud: Amud,
+  gemaraNikud = true,
 ): Promise<SefariaPageData> {
   const shekalim = isShekalimMasechet(masechetEn);
   const sharedAmud = isKinnimTamidSharedAmud(masechetEn, dafNum, amud);
@@ -312,7 +320,8 @@ export async function fetchSefariaPageText(
   if (!tref) {
     throw new Error(shekalim ? 'לא נמצא טקסט לשקלים לעמוד זה' : 'לא נמצא טקסט לדף זה');
   }
-  const cachePath = getCacheFilePath(tref);
+  const plainGemara = !gemaraNikud && !shekalim && !mishnah;
+  const cachePath = getCacheFilePath(tref, plainGemara);
 
   try {
     const fileInfo = await FileSystem.getInfoAsync(cachePath);
@@ -343,7 +352,7 @@ export async function fetchSefariaPageText(
   const skipIndexChapters = shekalim || mishnah;
 
   const networkOptions = sharedAmud
-    ? { displayTitleHe: `תמיד · ${formatDafLabel(dafNum, amud)}` }
+    ? { displayTitleHe: `תמיד · ${formatDafLabel(dafNum, amud)}`, plainGemara }
     : mishnah
       ? {
           displayTitleHe: `${masechetHe ?? ''} · ${formatDafLabel(dafNum, amud)}`.replace(/^ · /, ''),
@@ -354,7 +363,7 @@ export async function fetchSefariaPageText(
             displayTitleHe: `שקלים · ${formatDafLabel(dafNum, amud)}`,
             shekalimLocation: { dafNum, amud, masechetHe: masechetHe ?? 'שקלים' },
           }
-        : {};
+        : { plainGemara };
 
   const [data, chapters] = await Promise.all([
     fetchFromNetwork(tref, networkOptions),

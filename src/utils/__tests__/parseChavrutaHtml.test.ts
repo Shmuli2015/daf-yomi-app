@@ -315,6 +315,36 @@ describe('parseChavrutaDocument', () => {
       masechetHe: 'ברכות',
     });
   });
+
+  it('captures matnitin and gemara section headers between paragraphs', () => {
+    const html = `
+      <u>דף ה - ב</u>
+      ${bodySpan('סיום סוגיא קודמת שנעשו כולן בעלי קריין.')}
+      <b style='font-size:25px; color:RGB(51,119,204);'>מתניתין:</b>
+      ${bodySpan('פרה שילדה כמין חמור פטורה מן הבכורה.')}
+      <b style='font-size:25px; color:RGB(51,119,204);'>גמרא:</b>
+      ${bodySpan('תנן התם לקמן טז ב.')}
+    `;
+    const parsed = parseChavrutaDocument(html);
+    const amud = findChavrutaAmud(parsed, 5, 'b');
+
+    expect(amud?.blocks.map((block) => block.kind)).toEqual([
+      'paragraph',
+      'sectionHeader',
+      'paragraph',
+      'sectionHeader',
+      'paragraph',
+    ]);
+    expect(amud?.blocks[1]).toEqual({
+      kind: 'sectionHeader',
+      titleHe: 'מתניתין',
+    });
+    expect(amud?.blocks[3]).toEqual({
+      kind: 'sectionHeader',
+      titleHe: 'גמרא',
+    });
+    expect(amud?.paragraphs).toHaveLength(3);
+  });
 });
 
 describe('parseChavrutaBodyParts', () => {

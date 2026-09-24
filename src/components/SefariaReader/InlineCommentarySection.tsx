@@ -13,6 +13,7 @@ interface InlineCommentarySectionProps {
   fontSize: number;
   accentColor: string;
   isSepia?: boolean;
+  isDark?: boolean;
 }
 
 export default function InlineCommentarySection({
@@ -20,6 +21,7 @@ export default function InlineCommentarySection({
   fontSize,
   accentColor,
   isSepia,
+  isDark,
 }: InlineCommentarySectionProps) {
   const theme = useTheme();
   const styles = useMemo(() => createInlineCommentarySectionStyles(theme), [theme]);
@@ -32,8 +34,8 @@ export default function InlineCommentarySection({
     return commentaries.filter((item) => item.commentator === activeTab);
   }, [commentaries, activeTab]);
 
-  const subTextColor = isSepia ? '#8C7462' : theme.colors.textMuted;
-  const guideLineColor = isSepia ? '#D4B996' : `${accentColor}4D`;
+  const subTextColor = isSepia ? '#8C7462' : isDark ? '#A1A1AA' : '#64748B';
+  const guideLineColor = isSepia ? '#D4B996' : isDark ? 'rgba(251, 191, 36, 0.35)' : `${accentColor}4D`;
 
   return (
     <View style={[styles.container, { borderRightColor: guideLineColor }]}>
@@ -62,6 +64,7 @@ export default function InlineCommentarySection({
               accentColor={accentColor}
               fontSize={fontSize}
               isSepia={isSepia}
+              isDark={isDark}
             />
           ))}
         </View>

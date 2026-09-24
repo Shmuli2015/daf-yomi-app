@@ -12,6 +12,7 @@ import SegmentCard from './SegmentCard';
 import ReaderSkeleton from './ReaderSkeleton';
 import ScrollToTopFab from './ScrollToTopFab';
 import type { ReaderTheme } from './ReaderToolbar';
+import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useTheme } from '../../theme';
 import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
 import { classicCommentatorKeysForTref, filterCommentaries } from '../../utils/sefariaCommentators';
@@ -105,26 +106,29 @@ export default function SefariaTextContainer({
     return map;
   }, [blocks]);
 
-  const isDark = readerTheme ? readerTheme === 'dark' : theme.colors.background === '#121212';
-  const isSepia = readerTheme === 'sepia';
-  const bgColor = isSepia ? '#FBF0D9' : theme.colors.background;
-  const textColor = isSepia ? '#2C221E' : theme.colors.textPrimary;
-  const subTextColor = isSepia ? '#8C7462' : theme.colors.textMuted;
+  const palette = useMemo(
+    () => getReaderThemePalette(readerTheme ?? 'light', accentColor),
+    [readerTheme, accentColor],
+  );
 
   if (loading) {
-    return <ReaderSkeleton />;
+    return (
+      <View style={[styles.container, { backgroundColor: palette.backgroundColor }]}>
+        <ReaderSkeleton showCommentaryBadges />
+      </View>
+    );
   }
 
   if (error || !data) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: bgColor }]}>
-        <Ionicons name="cloud-offline-outline" size={48} color={subTextColor} />
-        <Text style={[styles.errorTitle, { color: textColor }]}>לא ניתן לטעון את הטקסט</Text>
-        <Text style={[styles.errorSub, { color: subTextColor }]}>
+      <View style={[styles.centerContainer, { backgroundColor: palette.backgroundColor }]}>
+        <Ionicons name="cloud-offline-outline" size={48} color={palette.subTextColor} />
+        <Text style={[styles.errorTitle, { color: palette.textColor }]}>לא ניתן לטעון את הטקסט</Text>
+        <Text style={[styles.errorSub, { color: palette.subTextColor }]}>
           {error || 'שגיאה בטעינת הטקסט'}
         </Text>
         <TouchableOpacity
-          style={[styles.retryBtn, { backgroundColor: accentColor }]}
+          style={[styles.retryBtn, { backgroundColor: palette.accentColor }]}
           onPress={onRetry}
           activeOpacity={0.8}
         >
@@ -136,10 +140,10 @@ export default function SefariaTextContainer({
 
   if (data.segments.length === 0) {
     return (
-      <View style={[styles.centerContainer, { backgroundColor: bgColor }]}>
-        <Ionicons name="book-outline" size={48} color={subTextColor} />
-        <Text style={[styles.errorTitle, { color: textColor }]}>לא נמצא טקסט גמרא לדף זה</Text>
-        <Text style={[styles.errorSub, { color: subTextColor }]}>
+      <View style={[styles.centerContainer, { backgroundColor: palette.backgroundColor }]}>
+        <Ionicons name="book-outline" size={48} color={palette.subTextColor} />
+        <Text style={[styles.errorTitle, { color: palette.textColor }]}>לא נמצא טקסט גמרא לדף זה</Text>
+        <Text style={[styles.errorSub, { color: palette.subTextColor }]}>
           ניתן לנסות טאב אחר, או דף אחר במסכת.
         </Text>
       </View>
@@ -147,7 +151,7 @@ export default function SefariaTextContainer({
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: bgColor }]}>
+    <View style={[styles.container, { backgroundColor: palette.backgroundColor }]}>
       <Animated.ScrollView
         ref={scrollViewRef}
         style={styles.scrollView}
@@ -156,8 +160,8 @@ export default function SefariaTextContainer({
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
-        <View style={styles.headerBox}>
-          <Text style={[styles.titleHe, { color: accentColor }]}>{data.titleHe}</Text>
+        <View style={[styles.headerBox, { borderBottomColor: palette.borderColor }]}>
+          <Text style={[styles.titleHe, { color: palette.accentColor }]}>{data.titleHe}</Text>
         </View>
 
         {blocks.map((block, index) => {
@@ -193,7 +197,7 @@ export default function SefariaTextContainer({
               segment={segment}
               commentaries={commList}
               fontSize={fontSize}
-              accentColor={accentColor}
+              accentColor={palette.accentColor}
               isExpanded={isExpanded}
               isClosing={closingIndex === segment.index}
               onToggleExpand={() =>
@@ -202,8 +206,8 @@ export default function SefariaTextContainer({
               onCardLayout={(y, height) => registerCardLayout(segment.index, y, height)}
               onCommentaryLayout={(height) => registerCommentaryHeight(segment.index, height)}
               collapseScroll={collapseScroll}
-              isSepia={isSepia}
-              isDark={isDark}
+              isSepia={palette.isSepia}
+              isDark={palette.isDark}
             />
           );
         })}
@@ -212,7 +216,7 @@ export default function SefariaTextContainer({
       <ScrollToTopFab
         visible={showFab}
         onPress={scrollToTop}
-        accentColor={accentColor}
+        accentColor={palette.accentColor}
       />
     </View>
   );

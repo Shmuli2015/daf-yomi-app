@@ -4,51 +4,56 @@ import type { Theme } from '../../theme';
 export function createReaderSkeletonStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
-      flex: 1,
+      ...StyleSheet.absoluteFill,
       paddingHorizontal: 16,
-      paddingVertical: 16,
-      gap: 14,
+      paddingTop: 12,
+      paddingBottom: 16,
+      gap: 16,
+      direction: 'rtl',
+      overflow: 'hidden',
     },
-    headerPlaceholder: {
-      height: 28,
-      width: '40%',
-      alignSelf: 'center',
-      borderRadius: theme.radius.sm,
-      backgroundColor: theme.colors.surface,
-      marginBottom: 8,
+    header: {
+      alignItems: 'center',
+      paddingBottom: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: theme.colors.border,
     },
-    card: {
-      padding: 16,
+    titleLine: {
+      height: 22,
+      width: '46%',
       borderRadius: theme.radius.sm,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      backgroundColor: theme.colors.surface,
-      gap: 10,
+      backgroundColor: theme.colors.border,
+    },
+    paragraph: {
+      alignSelf: 'stretch',
+      width: '100%',
+      gap: 8,
+      alignItems: 'flex-start',
     },
     lineLong: {
-      height: 16,
+      height: 14,
       width: '100%',
       borderRadius: theme.radius.sm,
       backgroundColor: theme.colors.border,
     },
     lineMedium: {
-      height: 16,
-      width: '75%',
+      height: 14,
+      width: '78%',
       borderRadius: theme.radius.sm,
       backgroundColor: theme.colors.border,
     },
     lineShort: {
-      height: 16,
-      width: '45%',
+      height: 14,
+      width: '52%',
       borderRadius: theme.radius.sm,
       backgroundColor: theme.colors.border,
     },
-    badgePlaceholder: {
+    badge: {
       height: 22,
-      width: 90,
+      width: 108,
       borderRadius: theme.radius.sm,
       backgroundColor: theme.colors.border,
-      marginTop: 4,
+      marginTop: 2,
     },
   });
 }

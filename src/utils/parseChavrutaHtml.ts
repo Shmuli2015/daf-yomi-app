@@ -12,10 +12,16 @@ export interface ChavrutaParagraph {
   footnoteRefs: number[];
 }
 
+export interface SectionHeaderBlock {
+  kind: 'sectionHeader';
+  titleHe: string;
+}
+
 export type ChavrutaBlock =
   | ({ kind: 'paragraph' } & ChavrutaParagraph)
   | ChapterStartBlock
-  | ChapterEndBlock;
+  | ChapterEndBlock
+  | SectionHeaderBlock;
 
 export interface ChavrutaAmud {
   dafNum: number;
@@ -40,6 +46,12 @@ const GEMATRIA_VALUES: Record<string, number> = {
 const DAF_HEADING_PATTERN = /<u>\s*דף\s+([^<>\-]+?)\s*-\s*([אב])\s*<\/u>/g;
 
 const SECTION_HEADING_PATTERN = /<u>\s*([^<]{1,100}?)\s*<\/u>/gi;
+
+const SECTION_DELIMITER_PATTERN =
+  /<(?:b|u|span)\b[^>]*>(?:&nbsp;|\s)*(מתניתין|מתני['׳]|משנה|גמרא|גמ['׳]|הלכה)(?:&nbsp;|\s)*:?(?:&nbsp;|\s)*<\/(?:b|u|span)>/gi;
+
+const SECTION_DELIMITER_TEXT_PATTERN =
+  /^(?:מתניתין|מתני['׳]|משנה|גמרא|גמ['׳]|הלכה)\s*:?$/;
 
 const BODY_START_MARKERS = ['<!--BODY_START-->', '<!--END_PARTIAL_PREFIX-->', '<!--_LSTART-->'];
 
@@ -232,6 +244,10 @@ function isDafHeadingTitle(titleHe: string): boolean {
   return /^דף\s+\S+\s*-\s*[אב]\s*$/.test(titleHe);
 }
 
+function isSectionDelimiterTitle(text: string): boolean {
+  return SECTION_DELIMITER_TEXT_PATTERN.test(text.trim());
+}
+
 function cleanSectionHeading(raw: string): string | null {
   const titleHe = cleanMarkerTitle(raw);
   if (!titleHe || isDafHeadingTitle(titleHe)) return null;
@@ -315,7 +331,7 @@ function parseAmudSection(section: string): ParsedSection {
 interface LocatedBoundary {
   index: number;
   end: number;
-  block: ChapterStartBlock | ChapterEndBlock;
+  block: ChapterStartBlock | ChapterEndBlock | SectionHeaderBlock;
 }
 
 function collectBoundaryMarkers(html: string): LocatedBoundary[] {
@@ -326,10 +342,34 @@ function collectBoundaryMarkers(html: string): LocatedBoundary[] {
   while ((startMatch = startPattern.exec(html)) !== null) {
     const titleHe = cleanSectionHeading(startMatch[1] ?? '');
     if (!titleHe) continue;
+    if (isSectionDelimiterTitle(titleHe)) {
+      markers.push({
+        index: startMatch.index,
+        end: startMatch.index + startMatch[0].length,
+        block: { kind: 'sectionHeader', titleHe: cleanMarkerTitle(titleHe) },
+      });
+      continue;
+    }
     markers.push({
       index: startMatch.index,
       end: startMatch.index + startMatch[0].length,
       block: { kind: 'chapterStart', titleHe },
+    });
+  }
+
+  const delimiterPattern = new RegExp(
+    SECTION_DELIMITER_PATTERN.source,
+    SECTION_DELIMITER_PATTERN.flags
+  );
+  let delimMatch: RegExpExecArray | null;
+  while ((delimMatch = delimiterPattern.exec(html)) !== null) {
+    const rawTitle = delimMatch[1] ?? '';
+    const titleHe = cleanMarkerTitle(rawTitle);
+    if (!titleHe) continue;
+    markers.push({
+      index: delimMatch.index,
+      end: delimMatch.index + delimMatch[0].length,
+      block: { kind: 'sectionHeader', titleHe },
     });
   }
 
@@ -381,10 +421,16 @@ function collectBoundaryMarkers(html: string): LocatedBoundary[] {
   return markers.sort((a, b) => a.index - b.index || a.end - b.end);
 }
 
-function classifyLeakedParagraph(text: string): ChapterStartBlock | ChapterEndBlock | 'drop' | null {
+function classifyLeakedParagraph(
+  text: string
+): ChapterStartBlock | ChapterEndBlock | SectionHeaderBlock | 'drop' | null {
   const plain = text.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
   if (!plain) return 'drop';
   if (isDafHeadingTitle(plain)) return 'drop';
+
+  if (isSectionDelimiterTitle(plain)) {
+    return { kind: 'sectionHeader', titleHe: cleanMarkerTitle(plain) };
+  }
 
   if (isLeakedSectionTitle(plain)) {
     return { kind: 'chapterStart', titleHe: plain };
@@ -444,6 +490,9 @@ function dedupeBoundaryBlocks(blocks: ChavrutaBlock[]): ChavrutaBlock[] {
         };
         continue;
       }
+      if (block.kind === 'sectionHeader' && prev.kind === 'sectionHeader') {
+        if (prev.titleHe === block.titleHe) continue;
+      }
     }
     result.push(block);
   }
@@ -489,18 +538,26 @@ function parseSectionWithBoundaries(section: string): ParsedSection {
   };
 }
 
+type PendingBoundaryBlock = ChapterStartBlock | SectionHeaderBlock;
+
 function peelTrailingChapterStarts(blocks: ChavrutaBlock[]): {
   blocks: ChavrutaBlock[];
-  trailingStarts: ChapterStartBlock[];
+  trailingStarts: PendingBoundaryBlock[];
 } {
   let end = blocks.length;
-  while (end > 0 && blocks[end - 1].kind === 'chapterStart') {
+  while (
+    end > 0 &&
+    (blocks[end - 1].kind === 'chapterStart' || blocks[end - 1].kind === 'sectionHeader')
+  ) {
     end -= 1;
   }
 
   const trailingStarts = blocks
     .slice(end)
-    .filter((block): block is ChapterStartBlock => block.kind === 'chapterStart');
+    .filter(
+      (block): block is PendingBoundaryBlock =>
+        block.kind === 'chapterStart' || block.kind === 'sectionHeader'
+    );
 
   return { blocks: blocks.slice(0, end), trailingStarts };
 }
@@ -596,7 +653,7 @@ export function parseChavrutaDocument(html: string): ChavrutaAmud[] {
 
   const order: string[] = [];
   const grouped = new Map<string, GroupedAmud>();
-  let pendingStarts: ChapterStartBlock[] = [];
+  let pendingStarts: PendingBoundaryBlock[] = [];
 
   const prependPending = (blocks: ChavrutaBlock[]): ChavrutaBlock[] => {
     if (pendingStarts.length === 0) return blocks;

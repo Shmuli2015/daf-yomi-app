@@ -74,10 +74,14 @@ export default function SettingsScreen() {
   const {
     readerViewMode,
     showChavrutaNotes,
+    gemaraNikud,
     hapticsEnabled,
+    keepScreenAwake,
     handleReaderViewModeSelect,
+    handleGemaraNikudToggle,
     handleChavrutaNotesToggle,
     handleHapticsToggle,
+    handleKeepScreenAwakeToggle,
   } = useSettingsReaderPrefs();
 
   const {
@@ -250,10 +254,14 @@ export default function SettingsScreen() {
             onEditDafDayStartDay={handleEditDafDayStartDay}
             readerViewMode={readerViewMode}
             onReaderViewModePress={() => setShowReaderViewModal(true)}
+            gemaraNikud={gemaraNikud}
+            onGemaraNikudToggle={handleGemaraNikudToggle}
             showChavrutaNotes={showChavrutaNotes}
             onChavrutaNotesToggle={handleChavrutaNotesToggle}
             hapticsEnabled={hapticsEnabled}
             onHapticsToggle={handleHapticsToggle}
+            keepScreenAwake={keepScreenAwake}
+            onKeepScreenAwakeToggle={handleKeepScreenAwakeToggle}
             fontSize={fontSize}
             onIncreaseFontSize={onIncreaseFontSize}
             onDecreaseFontSize={onDecreaseFontSize}
