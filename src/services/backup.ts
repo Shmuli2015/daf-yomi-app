@@ -138,6 +138,8 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     daf_day_start_hour: num('daf_day_start_hour', 20),
     daf_day_start_minute: num('daf_day_start_minute', 0),
     daf_day_start_schedules: nullableStr('daf_day_start_schedules'),
+    last_store_review_prompt_at: nullableStr('last_store_review_prompt_at'),
+    store_review_streak7_prompted: num('store_review_streak7_prompted', 0),
   };
 }
 

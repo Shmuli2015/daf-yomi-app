@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../../store/useAppStore';
+import { maybeRequestStoreReview, maybeRequestStoreReviewForStreak } from '../../services/storeReview';
 import { SHAS_MASECHTOT, numberToGematria } from '../../data/shas';
 import { getDafDateStr, getMasechetDafim } from '../../utils/shas';
 import { getStudyStatus, getPartialAmud, type AmudSide } from '../../utils/dafStatus';
@@ -158,15 +159,25 @@ export function useMasechetModal({
       toggleAnyDafLearned(dateStr, masechet.he, dafHeStr);
     }
 
-    if (currentStatus !== 'learned' && learnedBefore + 1 === dafimArray.length) {
-      setShowSiyum(true);
-    } else if (currentStatus !== 'learned' && settings?.show_confetti) {
-      setTimeout(() => setShowConfetti(true), 200);
+    if (currentStatus !== 'learned') {
+      if (learnedBefore + 1 === dafimArray.length) {
+        setShowSiyum(true);
+      } else {
+        maybeRequestStoreReviewForStreak(useAppStore.getState().streak);
+        if (settings?.show_confetti) {
+          setTimeout(() => setShowConfetti(true), 200);
+        }
+      }
     }
   }, [effectiveMode, masechet.en, masechet.he, togglePersonalDafLearned, personalLearnedSet, recordByDate, progressCache, dafimArray.length, toggleAnyDafLearned, setDafStudyStatus, settings]);
 
   const handleToggleDafRef = useRef(handleToggleDaf);
   handleToggleDafRef.current = handleToggleDaf;
+
+  const closeSiyum = useCallback(() => {
+    setShowSiyum(false);
+    void maybeRequestStoreReview('siyum');
+  }, []);
 
   const handleToggleDafStable = useCallback((dafNum: number) => {
     handleToggleDafRef.current(dafNum);
@@ -387,7 +398,7 @@ export function useMasechetModal({
     showConfetti,
     setShowConfetti,
     showSiyum,
-    setShowSiyum,
+    closeSiyum,
     selectedDafForMenu,
     handleToggleDafStable,
     handleLongPressDafStable,

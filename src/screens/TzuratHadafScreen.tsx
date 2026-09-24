@@ -102,7 +102,7 @@ export default function TzuratHadafScreen() {
     showConfirm,
     setShowConfirm,
     showSiyumModal,
-    setShowSiyumModal,
+    closeSiyum,
     showConfetti,
     setShowConfetti,
   } = useTzuratLearnedMark({
@@ -297,7 +297,7 @@ export default function TzuratHadafScreen() {
             ? SHAS_MASECHTOT.find((masechet) => masechet.en === 'Kinnim')?.pages ?? 3
             : masechetTotalPages
         }
-        onClose={() => setShowSiyumModal(false)}
+        onClose={closeSiyum}
       />
 
       <GuideModal

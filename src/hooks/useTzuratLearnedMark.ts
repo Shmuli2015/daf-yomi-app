@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../store/useAppStore';
+import { maybeRequestStoreReview, maybeRequestStoreReviewForStreak } from '../services/storeReview';
 import { getPartialAmud, getStudyStatus } from '../utils/dafStatus';
 import { getDafDateStr } from '../utils/shas';
 import { isTamidStartDaf } from '../utils/mishnahOnlySefaria';
@@ -166,6 +167,9 @@ export function useTzuratLearnedMark({
       if (!dateStr || !dafYomiMasechetHe) return;
       celebrateIfNeeded(isCompleting);
       setDafStudyStatus(dateStr, dafYomiMasechetHe, dafHeStr, 'learned');
+      if (!isCompleting) {
+        maybeRequestStoreReviewForStreak(useAppStore.getState().streak);
+      }
     },
     [
       isCompletingMasechet,
@@ -204,6 +208,9 @@ export function useTzuratLearnedMark({
     celebrateIfNeeded(isCompleting);
     if (dateStr && dafYomiMasechetHe) {
       toggleAnyDafLearned(dateStr, dafYomiMasechetHe, dafHeStr);
+      if (!isCompleting) {
+        maybeRequestStoreReviewForStreak(useAppStore.getState().streak);
+      }
     }
   }, [
     canMarkLearned,
@@ -306,6 +313,11 @@ export function useTzuratLearnedMark({
     setShowConfirm(true);
   }, []);
 
+  const closeSiyum = useCallback(() => {
+    setShowSiyumModal(false);
+    void maybeRequestStoreReview('siyum');
+  }, []);
+
   return {
     personalEnabled,
     studyStatus,
@@ -331,7 +343,7 @@ export function useTzuratLearnedMark({
     showConfirm,
     setShowConfirm,
     showSiyumModal,
-    setShowSiyumModal,
+    closeSiyum,
     showConfetti,
     setShowConfetti,
   };

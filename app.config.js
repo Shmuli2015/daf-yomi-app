@@ -24,7 +24,7 @@ module.exports = {
         backgroundColor: '#ffffff',
       },
       predictiveBackGestureEnabled: false,
-      permissions: ['USE_EXACT_ALARM', 'SCHEDULE_EXACT_ALARM'],
+      permissions: ['SCHEDULE_EXACT_ALARM'],
     },
     web: {
       favicon: './assets/favicon.png',

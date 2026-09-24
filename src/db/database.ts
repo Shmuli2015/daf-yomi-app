@@ -63,6 +63,8 @@ export interface SettingsRecord {
   daf_day_start_hour: number;
   daf_day_start_minute: number;
   daf_day_start_schedules: string | null;
+  last_store_review_prompt_at: string | null;
+  store_review_streak7_prompted: number;
 }
 
 function migrateDailyDafColumns() {
@@ -208,6 +210,12 @@ export function initDB() {
   if (!columns.includes('daf_day_start_schedules')) {
     db.execSync('ALTER TABLE settings ADD COLUMN daf_day_start_schedules TEXT DEFAULT NULL;');
   }
+  if (!columns.includes('last_store_review_prompt_at')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN last_store_review_prompt_at TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('store_review_streak7_prompted')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN store_review_streak7_prompted INTEGER DEFAULT 0;');
+  }
 
   db.execSync(`
     INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)
@@ -335,6 +343,8 @@ function createDefaultSettingsRecord(): SettingsRecord {
     daf_day_start_hour: DAF_DAY_START_DEFAULT_HOUR,
     daf_day_start_minute: DAF_DAY_START_DEFAULT_MINUTE,
     daf_day_start_schedules: null,
+    last_store_review_prompt_at: null,
+    store_review_streak7_prompted: 0,
   };
 }
 
@@ -360,6 +370,7 @@ function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
     daf_day_start_hour: clampedStart.hour,
     daf_day_start_minute: clampedStart.minute,
     daf_day_start_schedules: JSON.stringify(schedules),
+    store_review_streak7_prompted: row.store_review_streak7_prompted === 1 ? 1 : 0,
   };
 }
 
@@ -440,6 +451,19 @@ export function setHapticsEnabled(enabled: boolean) {
 
 export function setLastBackupAt(iso: string) {
   db.runSync('UPDATE settings SET last_backup_at = ? WHERE id = 1', [iso]);
+}
+
+export function markStoreReviewPrompted(reason: 'siyum' | 'streak7') {
+  if (reason === 'streak7') {
+    db.runSync(
+      'UPDATE settings SET last_store_review_prompt_at = ?, store_review_streak7_prompted = 1 WHERE id = 1',
+      [new Date().toISOString()],
+    );
+    return;
+  }
+  db.runSync('UPDATE settings SET last_store_review_prompt_at = ? WHERE id = 1', [
+    new Date().toISOString(),
+  ]);
 }
 
 export function setNotificationSoundEnabled(enabled: boolean) {
@@ -611,7 +635,9 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       daf_day_start_mode = ?,
       daf_day_start_hour = ?,
       daf_day_start_minute = ?,
-      daf_day_start_schedules = ?
+      daf_day_start_schedules = ?,
+      last_store_review_prompt_at = ?,
+      store_review_streak7_prompted = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -646,6 +672,8 @@ export function importSettingsFromBackup(settings: SettingsInput) {
           clampedStart.minute,
         ),
       ),
+      settings.last_store_review_prompt_at ?? null,
+      settings.store_review_streak7_prompted === 1 ? 1 : 0,
     ]
   );
 }
