@@ -1,7 +1,15 @@
-jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
-jest.mock('expo-notifications', () => ({}));
+const mockDismissNotificationAsync = jest.fn().mockResolvedValue(undefined);
+const mockDismissAllNotificationsAsync = jest.fn().mockResolvedValue(undefined);
+const mockGetPresentedNotificationsAsync = jest.fn().mockResolvedValue([]);
 
-import { getNotificationIdFromActionData } from '../dismissReminderFromTray';
+jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
+jest.mock('expo-notifications', () => ({
+  dismissNotificationAsync: (...args: unknown[]) => mockDismissNotificationAsync(...args),
+  dismissAllNotificationsAsync: (...args: unknown[]) => mockDismissAllNotificationsAsync(...args),
+  getPresentedNotificationsAsync: (...args: unknown[]) => mockGetPresentedNotificationsAsync(...args),
+}));
+
+import { dismissReminderFromTray, getNotificationIdFromActionData } from '../dismissReminderFromTray';
 
 describe('getNotificationIdFromActionData', () => {
   it('reads the identifier from a notification response payload', () => {
@@ -27,5 +35,48 @@ describe('getNotificationIdFromActionData', () => {
     expect(getNotificationIdFromActionData(undefined)).toBeUndefined();
     expect(getNotificationIdFromActionData({})).toBeUndefined();
     expect(getNotificationIdFromActionData({ notification: { request: { identifier: '' } } })).toBeUndefined();
+  });
+});
+
+describe('dismissReminderFromTray', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('dismisses specific notification and clears tray when notificationId is provided', async () => {
+    mockGetPresentedNotificationsAsync.mockResolvedValueOnce([]);
+
+    await dismissReminderFromTray('test-notif-id');
+
+    expect(mockDismissNotificationAsync).toHaveBeenCalledWith('test-notif-id');
+    expect(mockDismissAllNotificationsAsync).toHaveBeenCalled();
+  });
+
+  it('dismisses all presented notifications even if category identifier is missing', async () => {
+    mockGetPresentedNotificationsAsync
+      .mockResolvedValueOnce([
+        { request: { identifier: 'active-1', content: {} } },
+      ])
+      .mockResolvedValueOnce([]);
+
+    await dismissReminderFromTray();
+
+    expect(mockDismissNotificationAsync).toHaveBeenCalledWith('active-1');
+    expect(mockDismissAllNotificationsAsync).toHaveBeenCalled();
+  });
+
+  it('handles empty presented list and still invokes dismissAllNotificationsAsync', async () => {
+    mockGetPresentedNotificationsAsync.mockResolvedValue([]);
+
+    await dismissReminderFromTray();
+
+    expect(mockDismissAllNotificationsAsync).toHaveBeenCalled();
+  });
+
+  it('catches notification dismissal errors gracefully without throwing', async () => {
+    mockDismissNotificationAsync.mockRejectedValueOnce(new Error('Native error'));
+    mockDismissAllNotificationsAsync.mockRejectedValueOnce(new Error('Native error'));
+
+    await expect(dismissReminderFromTray('error-id')).resolves.not.toThrow();
   });
 });

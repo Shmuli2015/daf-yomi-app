@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 const STUDY_REMINDER_CATEGORY = 'study-reminder';
-const ANDROID_RETRY_DELAYS_MS = [0, 300, 800];
+const ANDROID_RETRY_DELAYS_MS = [0, 150, 450];
 const IOS_RETRY_DELAYS_MS = [0, 50];
 
 function sleep(ms: number): Promise<void> {
@@ -35,7 +35,8 @@ export function getNotificationIdFromActionData(data: unknown): string | undefin
 }
 
 function isStudyReminder(notification: Notifications.Notification): boolean {
-  return notification.request.content.categoryIdentifier === STUDY_REMINDER_CATEGORY;
+  const category = notification.request?.content?.categoryIdentifier;
+  return category === STUDY_REMINDER_CATEGORY || !category;
 }
 
 async function getPresentedNotifications(): Promise<Notifications.Notification[]> {
@@ -50,7 +51,10 @@ function reminderStillInTray(
   presented: Notifications.Notification[],
   notificationId?: string,
 ): boolean {
-  if (notificationId && presented.some(item => item.request.identifier === notificationId)) {
+  if (presented.length === 0) {
+    return false;
+  }
+  if (notificationId && presented.some(item => item.request?.identifier === notificationId)) {
     return true;
   }
   return presented.some(isStudyReminder);
@@ -63,11 +67,11 @@ async function dismissPresentedReminders(notificationId?: string): Promise<void>
 
   const presented = await getPresentedNotifications();
   const ids = new Set<string>();
+  if (notificationId) {
+    ids.add(notificationId);
+  }
   for (const item of presented) {
-    if (notificationId && item.request.identifier === notificationId) {
-      ids.add(item.request.identifier);
-    }
-    if (isStudyReminder(item)) {
+    if (item.request?.identifier) {
       ids.add(item.request.identifier);
     }
   }
@@ -75,6 +79,8 @@ async function dismissPresentedReminders(notificationId?: string): Promise<void>
   await Promise.all(
     [...ids].map(id => Notifications.dismissNotificationAsync(id).catch(() => {})),
   );
+
+  await Notifications.dismissAllNotificationsAsync().catch(() => {});
 }
 
 export async function dismissReminderFromTray(notificationId?: string): Promise<void> {
