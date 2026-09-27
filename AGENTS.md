@@ -60,3 +60,8 @@
 
 - **No Em Dash**: Never use the em dash character (`—`, U+2014, or `--` used as an em dash) anywhere in text. This applies to UI text, Hebrew copy, translations, documentation, markdown files, commit messages, code strings, and agent responses. Use standard punctuation instead (such as a standard hyphen `-`, comma `,`, colon `:`, parentheses `()`, or a period `.`), or rephrase the sentence.
 
+## Git & Branching Workflow
+
+- **No Direct Push to Master**: Never push commits directly to the `master` branch. The master branch is protected.
+- **Dedicated Branches**: Always create a dedicated branch (e.g. `feature/...`, `fix/...`, `chore/...`, `docs/...`) for any code or documentation changes.
+- **Merge via Pull Request**: All changes must be delivered and merged into `master` exclusively through a Pull Request.
