@@ -6,6 +6,7 @@ import { getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
 import { getNotificationPermissionStatus } from '../utils/notificationPermission';
 import { dismissStuckStudyReminders } from '../utils/dismissStuckStudyReminders';
+import { getNotificationIdFromActionData } from '../utils/dismissReminderFromTray';
 import { handleStudyReminderResponse } from '../utils/handleStudyReminderResponse';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
@@ -19,7 +20,7 @@ export function useNotificationsSetup() {
     const onResponse = (response: Notifications.NotificationResponse) => {
       void handleStudyReminderResponse({
         actionIdentifier: response.actionIdentifier,
-        notificationId: response.notification.request.identifier,
+        notificationId: getNotificationIdFromActionData(response) || response.notification?.request?.identifier,
       });
     };
 
