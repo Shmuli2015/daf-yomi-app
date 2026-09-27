@@ -196,7 +196,7 @@ GitHub Actions workflows:
 - Older GitHub Releases are removed so `/releases/latest` stays a single current release.
 - Requires `EXPO_TOKEN` (and `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` when uploading to Play).
 
-**Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page points at the current APK. Triggered after a successful GitHub publish from the Android release workflow (also via `workflow_run` when the whole release workflow succeeds). Use **Run workflow** manually if you change `docs/` without a new APK.
+**Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page points at the current APK. Triggered after a successful GitHub publish from the Android release workflow (also via `workflow_run` when the whole release workflow succeeds). Use **Run workflow** manually on `master` if you change `docs/` without a new APK. The `github-pages` environment only allows deploys from `master`, so a manual run from another branch is skipped.
 
 **Whats New notes:** Before each release, add an entry for the **next** version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts) (Hebrew bullets). `npm run release` fails without it. The GitHub Release body and the in-app lists (pre-download modal, post-install **מה חדש**, Settings) come from that file. Unique bullets are capped at 8 overall. After install, skipped versions are merged (newest first) up to that cap. Older GitHub Releases are deleted, so the latest body is built from remaining file entries.
 

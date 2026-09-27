@@ -21,8 +21,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     if: >
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' &&
+      (github.event_name == 'workflow_dispatch' && github.ref_name == 'master') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.conclusion == 'success' &&
        (github.event.workflow_run.head_branch == 'master' ||
         startsWith(github.event.workflow_run.head_branch, 'release/') ||
         startsWith(github.event.workflow_run.head_branch, 'v')))
