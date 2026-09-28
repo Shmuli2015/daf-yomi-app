@@ -131,7 +131,6 @@ const HomeHeader = React.memo(function HomeHeader({
             onPrevDay={handlePrevDay}
             onNextDay={handleNextDay}
             onTodayPress={handleTodayPress}
-            animatedTodayBtnStyle={animatedTodayBtnStyle}
           />
         </Animated.View>
 
@@ -151,6 +150,8 @@ const HomeHeader = React.memo(function HomeHeader({
             animatedProgressStyle={animatedProgressStyle}
             animatedContentStyle={animatedSwipeOpacityStyle}
             animatedTodayContentStyle={animatedTodayJumpOpacityStyle}
+            animatedTodayBtnStyle={animatedTodayBtnStyle}
+            onTodayPress={handleTodayPress}
             panHandlers={panResponder.panHandlers}
             onOpenTzuratHadaf={onOpenTzuratHadaf}
             onPressMasechet={onPressMasechet}
