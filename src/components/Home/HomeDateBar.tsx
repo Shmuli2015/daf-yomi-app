@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { createHomeDateBarStyles } from './HomeDateBar.styles';
@@ -14,7 +13,6 @@ interface HomeDateBarProps {
   onPrevDay?: () => void;
   onNextDay?: () => void;
   onTodayPress?: () => void;
-  animatedTodayBtnStyle?: any;
 }
 
 const HomeDateBar = React.memo(function HomeDateBar({
@@ -26,7 +24,6 @@ const HomeDateBar = React.memo(function HomeDateBar({
   onPrevDay,
   onNextDay,
   onTodayPress,
-  animatedTodayBtnStyle,
 }: HomeDateBarProps) {
   const theme = useTheme();
   const styles = useMemo(() => createHomeDateBarStyles(theme), [theme]);
@@ -67,21 +64,6 @@ const HomeDateBar = React.memo(function HomeDateBar({
           <Ionicons name="chevron-back" size={24} color={theme.colors.textPrimary} />
         </TouchableOpacity>
       </View>
-
-      {!isToday && (
-        <Animated.View style={[styles.todayButtonWrapper, animatedTodayBtnStyle]}>
-          <TouchableOpacity
-            style={styles.todayButton}
-            onPress={onTodayPress}
-            activeOpacity={0.7}
-            accessibilityRole="button"
-            accessibilityLabel="חזור להיום"
-          >
-            <Ionicons name="calendar-outline" size={14} color={theme.colors.accent} />
-            <Text style={styles.todayButtonText}>חזור להיום</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
     </View>
   );
 });

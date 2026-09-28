@@ -49,26 +49,6 @@ export const createHomeDateBarStyles = (theme: ReturnType<typeof useTheme>) =>
       textAlign: Platform.OS === 'web' ? 'right' : 'left',
       writingDirection: 'rtl',
     },
-    todayButtonWrapper: {
-      marginTop: 10,
-      alignItems: 'center',
-    },
-    todayButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      backgroundColor: theme.colors.accentLight,
-      paddingHorizontal: 16,
-      paddingVertical: 7,
-      borderRadius: theme.radius.full,
-      borderWidth: 1,
-      borderColor: theme.colors.accentBorder,
-    },
-    todayButtonText: {
-      color: theme.colors.accent,
-      fontSize: 12,
-      fontWeight: '800',
-    },
   });
 
 export type HomeDateBarStyles = ReturnType<typeof createHomeDateBarStyles>;

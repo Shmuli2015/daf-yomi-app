@@ -31,6 +31,8 @@ interface HomeHeroCardProps {
   animatedProgressStyle: any;
   animatedContentStyle?: any;
   animatedTodayContentStyle?: any;
+  animatedTodayBtnStyle?: any;
+  onTodayPress?: () => void;
   panHandlers?: any;
   onOpenTzuratHadaf?: () => void;
   onPressMasechet?: () => void;
@@ -57,6 +59,8 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
   animatedProgressStyle,
   animatedContentStyle,
   animatedTodayContentStyle,
+  animatedTodayBtnStyle,
+  onTodayPress,
   panHandlers,
   onOpenTzuratHadaf,
   onPressMasechet,
@@ -273,6 +277,21 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
         <HomeHeroSwipeHint />
           </Animated.View>
         </Animated.View>
+
+        {!isToday && (
+          <Animated.View style={[styles.todayButtonWrapper, animatedTodayBtnStyle]} pointerEvents="box-none">
+            <TouchableOpacity
+              style={styles.todayButton}
+              onPress={onTodayPress}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="חזור להיום"
+            >
+              <Ionicons name="calendar-outline" size={14} color={theme.colors.accent} />
+              <Text style={styles.todayButtonText}>חזור להיום</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
       </View>
     </View>
   );
