@@ -1,10 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import type { EventSubscription } from 'expo-modules-core';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
-import { getNotificationPermissionStatus } from '../utils/notificationPermission';
+import {
+  getNotificationPermissionStatus,
+  requestNotificationPermission,
+} from '../utils/notificationPermission';
 import { dismissStuckStudyReminders } from '../utils/dismissStuckStudyReminders';
 import { getNotificationIdFromActionData } from '../utils/dismissReminderFromTray';
 import { handleStudyReminderResponse } from '../utils/handleStudyReminderResponse';
@@ -12,7 +16,7 @@ import { handleStudyReminderResponse } from '../utils/handleStudyReminderRespons
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 export function useNotificationsSetup() {
-  const responseSubRef = useRef<Notifications.Subscription | undefined>(undefined);
+  const responseSubRef = useRef<EventSubscription | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -44,7 +48,8 @@ export function useNotificationsSetup() {
         if (Platform.OS === 'android' && !isExpoGo) {
           try {
             await Notifications.setNotificationChannelAsync('default', {
-              name: 'default',
+              name: 'תזכורות לימוד',
+              description: 'תזכורות יומיות ללימוד הדף היומי',
               importance: Notifications.AndroidImportance.MAX,
               vibrationPattern: [0, 250, 250, 250],
               lightColor: '#FF231F7C',
@@ -54,13 +59,18 @@ export function useNotificationsSetup() {
           }
         }
 
-        const status = await getNotificationPermissionStatus();
+        const s = getSettings();
+        let status = await getNotificationPermissionStatus();
         if (cancelled) return;
+
+        if (status === 'undetermined' && s.notifications_enabled === 1) {
+          status = await requestNotificationPermission();
+          if (cancelled) return;
+        }
 
         console.log('Notification permission status:', status);
 
         if (status === 'granted') {
-          const s = getSettings();
           const daySchedules: DaySchedule[] = s.day_schedules
             ? JSON.parse(s.day_schedules)
             : DEFAULT_SCHEDULES;
