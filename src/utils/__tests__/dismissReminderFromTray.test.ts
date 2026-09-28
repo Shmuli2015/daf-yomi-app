@@ -28,6 +28,11 @@ describe('getNotificationIdFromActionData', () => {
     expect(getNotificationIdFromActionData({ request: { identifier: 'from-request' } })).toBe(
       'from-request',
     );
+    expect(
+      getNotificationIdFromActionData({
+        notificationResponse: { notification: { request: { identifier: 'from-wrapped' } } },
+      }),
+    ).toBe('from-wrapped');
     expect(getNotificationIdFromActionData({ identifier: 'from-root' })).toBe('from-root');
   });
 

@@ -4,7 +4,7 @@ import { getDafDayDate } from './dafDayBoundary';
 import { getDateStr } from './dafYomi';
 import { dismissReminderFromTray } from './dismissReminderFromTray';
 
-const SNOOZE_REMINDER_ID = 'later-reminder';
+import { isSnoozeReminderId } from './snoozeConstants';
 
 export async function dismissStuckStudyReminders(): Promise<void> {
   try {
@@ -15,7 +15,7 @@ export async function dismissStuckStudyReminders(): Promise<void> {
     }
 
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    const hasSnoozePending = scheduled.some(item => item.identifier === SNOOZE_REMINDER_ID);
+    const hasSnoozePending = scheduled.some(item => isSnoozeReminderId(item.identifier));
     if (hasSnoozePending) {
       await dismissReminderFromTray();
     }

@@ -4,9 +4,26 @@ import { getSettings } from '../db/database';
 import { getDafDayDate } from './dafDayBoundary';
 import { getSnoozeReminderCopy } from './notificationCopy';
 
+import { SNOOZE_REMINDER_PREFIX, isSnoozeReminderId } from './snoozeConstants';
+
 const SNOOZE_SECONDS = 3600;
+export { SNOOZE_REMINDER_PREFIX, isSnoozeReminderId };
+
+export async function cancelExistingSnoozeReminders(): Promise<void> {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const snoozeItems = scheduled.filter(item => isSnoozeReminderId(item.identifier));
+    await Promise.all(
+      snoozeItems.map(item =>
+        Notifications.cancelScheduledNotificationAsync(item.identifier).catch(() => {}),
+      ),
+    );
+  } catch {}
+}
 
 export async function scheduleSnoozeReminder(soundEnabled: boolean): Promise<void> {
+  await cancelExistingSnoozeReminders();
+
   const snoozeCopy = getSnoozeReminderCopy(getDafDayDate(new Date(), getSettings()));
   const isAndroid = Platform.OS === 'android';
 
@@ -24,7 +41,7 @@ export async function scheduleSnoozeReminder(soundEnabled: boolean): Promise<voi
       };
 
   await Notifications.scheduleNotificationAsync({
-    identifier: 'later-reminder',
+    identifier: `${SNOOZE_REMINDER_PREFIX}-${Date.now()}`,
     content: {
       title: snoozeCopy.title,
       body: snoozeCopy.body,

@@ -60,14 +60,14 @@ describe('handleStudyReminderResponse', () => {
     expect(mockMarkTodayAsLearned).not.toHaveBeenCalled();
   });
 
-  it('focuses home for default body tap', async () => {
+  it('focuses home and dismisses reminder for default body tap', async () => {
     await handleStudyReminderResponse({
       actionIdentifier: 'expo.modules.notifications.actions.DEFAULT',
       notificationId: 'notif-3',
     });
 
+    expect(mockDismissReminderFromTray).toHaveBeenCalledWith('notif-3');
     expect(mockLoadInitialData).toHaveBeenCalled();
     expect(mockRequestHomeTabFocus).toHaveBeenCalled();
-    expect(mockDismissReminderFromTray).not.toHaveBeenCalled();
   });
 });
