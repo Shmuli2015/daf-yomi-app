@@ -1,5 +1,7 @@
 const { version } = require('./package.json');
 
+const isPreviewBuild = process.env.EAS_BUILD_PROFILE === 'preview';
+
 module.exports = {
   expo: {
     name: 'מסע דף',
@@ -24,7 +26,9 @@ module.exports = {
         backgroundColor: '#ffffff',
       },
       predictiveBackGestureEnabled: false,
-      permissions: ['SCHEDULE_EXACT_ALARM'],
+      permissions: isPreviewBuild
+        ? ['SCHEDULE_EXACT_ALARM', 'REQUEST_INSTALL_PACKAGES']
+        : ['SCHEDULE_EXACT_ALARM'],
     },
     web: {
       favicon: './assets/favicon.png',
@@ -62,7 +66,7 @@ module.exports = {
       githubRepo: 'daf-yomi-app',
       /** APK asset prefix on releases (מסע דף → masa-daf-1.2.3.apk) */
       releaseApkBasename: 'masa-daf',
-      updateCheckEnabled: process.env.EAS_BUILD_PROFILE === 'preview',
+      updateCheckEnabled: isPreviewBuild,
       downloadPageUrl: 'https://shmuli2015.github.io/daf-yomi-app/',
       privacyPolicyUrl: 'https://shmuli2015.github.io/daf-yomi-app/privacy.html',
       sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
