@@ -19,7 +19,10 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error }) => 
     return;
   }
   if (data) {
-    const { actionIdentifier } = data as { actionIdentifier?: string };
+    const raw = data as Record<string, unknown>;
+    const actionIdentifier =
+      (raw.actionIdentifier as string | undefined) ||
+      ((raw.notificationResponse as Record<string, unknown> | undefined)?.actionIdentifier as string | undefined);
     const notificationId = getNotificationIdFromActionData(data);
 
     try {

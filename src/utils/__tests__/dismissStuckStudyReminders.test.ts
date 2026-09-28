@@ -32,9 +32,9 @@ describe('dismissStuckStudyReminders', () => {
     expect(mockGetAllScheduledNotificationsAsync).not.toHaveBeenCalled();
   });
 
-  it('dismisses when a snooze reminder is pending', async () => {
+  it('dismisses when a snooze reminder is pending with timestamped id', async () => {
     mockGetDailyRecord.mockReturnValue({ status: null });
-    mockGetAllScheduledNotificationsAsync.mockResolvedValue([{ identifier: 'later-reminder' }]);
+    mockGetAllScheduledNotificationsAsync.mockResolvedValue([{ identifier: 'later-reminder-1727500000000' }]);
 
     await dismissStuckStudyReminders();
 

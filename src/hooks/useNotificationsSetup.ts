@@ -27,6 +27,14 @@ export function useNotificationsSetup() {
     responseSubRef.current?.remove();
     responseSubRef.current = Notifications.addNotificationResponseReceivedListener(onResponse);
 
+    try {
+      const initialResponse = Notifications.getLastNotificationResponse();
+      if (initialResponse && !cancelled) {
+        Notifications.clearLastNotificationResponse();
+        onResponse(initialResponse);
+      }
+    } catch {}
+
     void (async () => {
       try {
         if (isExpoGo) {

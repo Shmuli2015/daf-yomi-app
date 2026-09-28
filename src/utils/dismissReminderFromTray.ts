@@ -14,6 +14,10 @@ export function getNotificationIdFromActionData(data: unknown): string | undefin
 
   const value = data as {
     notification?: { request?: { identifier?: unknown }; identifier?: unknown };
+    notificationResponse?: {
+      notification?: { request?: { identifier?: unknown }; identifier?: unknown };
+      identifier?: unknown;
+    };
     request?: { identifier?: unknown };
     identifier?: unknown;
   };
@@ -21,6 +25,8 @@ export function getNotificationIdFromActionData(data: unknown): string | undefin
   const candidates = [
     value.notification?.request?.identifier,
     value.notification?.identifier,
+    value.notificationResponse?.notification?.request?.identifier,
+    value.notificationResponse?.notification?.identifier,
     value.request?.identifier,
     value.identifier,
   ];

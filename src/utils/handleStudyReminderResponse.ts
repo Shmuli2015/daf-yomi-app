@@ -27,6 +27,7 @@ export async function handleStudyReminderResponse(params: {
   }
 
   if (actionIdentifier === Notifications.DEFAULT_ACTION_IDENTIFIER) {
+    await dismissReminderFromTray(notificationId);
     const { loadInitialData } = useAppStore.getState();
     loadInitialData();
     requestHomeTabFocus();
