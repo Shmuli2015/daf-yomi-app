@@ -74,11 +74,11 @@ export default function SettingsNotificationsSection({
     exactAlarmStatus === 'granted'
       ? 'פעיל'
       : exactAlarmStatus === 'denied'
-        ? 'דורש הרשאה'
+        ? 'לא פעיל'
         : 'לא זמין ב-Expo Go';
   const exactDescription =
     exactAlarmStatus === 'denied'
-      ? 'לחץ כדי לאשר תזמון מדויק בהגדרות המכשיר'
+      ? 'התזכורת עלולה לאחר. לחץ כדי להפעיל את המתג בהגדרות המכשיר.'
       : 'התזכורת תצלצל בדיוק בשעה שבחרת';
   const showExactAlarmRow =
     notificationsEnabled &&
