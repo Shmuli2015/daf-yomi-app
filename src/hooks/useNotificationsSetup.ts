@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import type { EventSubscription } from 'expo-modules-core';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
@@ -15,7 +16,7 @@ import { handleStudyReminderResponse } from '../utils/handleStudyReminderRespons
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 export function useNotificationsSetup() {
-  const responseSubRef = useRef<Notifications.Subscription | undefined>(undefined);
+  const responseSubRef = useRef<EventSubscription | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
