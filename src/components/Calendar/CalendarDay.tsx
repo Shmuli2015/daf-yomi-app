@@ -28,6 +28,7 @@ const CalendarDay = React.memo(
 
     const gematriya = hdate.renderGematriya().split(' ')[0];
     const gregDay = hdate.greg().getDate();
+    const isStackedCapsule = showSecularDate && Boolean(dafLabel);
 
     const scale = useSharedValue(1);
     const pulseOpacity = useSharedValue(0);
@@ -86,13 +87,23 @@ const CalendarDay = React.memo(
 
     const gregColor = learned
       ? theme.colors.white
-      : theme.colors.textMuted;
+      : isStackedCapsule
+        ? theme.colors.textSecondary
+        : theme.colors.textMuted;
 
     const dafColor = learned
-      ? theme.colors.white
-      : isToday
+      ? isStackedCapsule
+        ? theme.colors.accent
+        : theme.colors.white
+      : isToday && !isStackedCapsule
         ? theme.colors.textPrimary
         : theme.colors.accent;
+
+    const dafChipBackground = partial && !learned
+      ? 'transparent'
+      : learned || isToday
+        ? theme.colors.surface
+        : theme.colors.accentLight;
 
     const borderColor = isSelected
       ? theme.colors.accent
@@ -105,14 +116,20 @@ const CalendarDay = React.memo(
     const borderWidth = isSelected ? 1.5 : partial ? 1.5 : isSpecial ? 1 : 0;
 
     return (
-      <TouchableOpacity onPress={handlePress} activeOpacity={1} style={styles.cell}>
+      <TouchableOpacity
+        onPress={handlePress}
+        activeOpacity={1}
+        style={[styles.cell, isStackedCapsule ? styles.cellCapsule : null]}
+      >
         <Animated.View style={animatedContainerStyle}>
           {isToday && (
-            <Animated.View style={[styles.pulseRing, animatedPulseStyle]} />
+            <Animated.View
+              style={[isStackedCapsule ? styles.pulseRingCapsule : styles.pulseRing, animatedPulseStyle]}
+            />
           )}
           <Animated.View
             style={[
-              styles.circle,
+              isStackedCapsule ? styles.capsule : styles.circle,
               {
                 backgroundColor: bg,
                 borderColor,
@@ -121,15 +138,58 @@ const CalendarDay = React.memo(
             ]}
           >
             {partial && !learned && (
-              <View style={partialAmud === 'b' ? styles.halfFillLeft : styles.halfFillRight} />
+              <View
+                style={[
+                  partialAmud === 'b' ? styles.halfFillLeft : styles.halfFillRight,
+                  isStackedCapsule ? styles.halfFillSoft : null,
+                ]}
+              />
             )}
-            <Animated.Text style={[styles.dayText, dafLabel ? styles.dayTextWithDaf : null, { color: textColor }]}>
-              {gematriya}
-            </Animated.Text>
-            {showSecularDate && (
-              <Animated.Text style={[styles.gregText, { color: gregColor, opacity: learned ? 0.75 : 1 }]}>{gregDay}</Animated.Text>
+            {isStackedCapsule ? (
+              <View style={styles.capsuleDates}>
+                <Animated.Text style={[styles.dayText, styles.dayTextCapsule, { color: textColor }]}>
+                  {gematriya}
+                </Animated.Text>
+                {showSecularDate && (
+                  <Animated.Text
+                    style={[styles.gregTextCapsule, { color: gregColor, opacity: learned ? 0.82 : 1 }]}
+                  >
+                    {gregDay}
+                  </Animated.Text>
+                )}
+              </View>
+            ) : (
+              <Animated.Text
+                style={[
+                  styles.dayText,
+                  dafLabel ? styles.dayTextWithDaf : null,
+                  { color: textColor },
+                ]}
+              >
+                {gematriya}
+              </Animated.Text>
             )}
-            {dafLabel ? (
+            {!isStackedCapsule && showSecularDate && (
+              <Animated.Text style={[styles.gregText, { color: gregColor, opacity: learned ? 0.75 : 1 }]}>
+                {gregDay}
+              </Animated.Text>
+            )}
+            {dafLabel && isStackedCapsule ? (
+              <View style={[styles.dafChip, { backgroundColor: dafChipBackground }]}>
+                <Animated.Text
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.75}
+                  style={[
+                    styles.dafChipText,
+                    { color: partial && !learned ? theme.colors.textPrimary : dafColor },
+                  ]}
+                >
+                  {dafLabel}
+                </Animated.Text>
+              </View>
+            ) : null}
+            {dafLabel && !isStackedCapsule ? (
               <Animated.Text style={[styles.dafText, { color: dafColor }]}>{dafLabel}</Animated.Text>
             ) : null}
           </Animated.View>
