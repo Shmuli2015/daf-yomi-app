@@ -8,6 +8,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.1.9',
+    highlights: [
+      'תיקוני התראות: דחייה, סגירה והרשאה',
+      'תיקון תצוגת לוח השנה וכרטיס הדף במסך הבית',
+    ],
+  },
+  {
     version: '1.1.8',
     highlights: [
       'תיקון סגירת התראת הלימוד בלחיצה על כפתורי הפעולה',
