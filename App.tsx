@@ -20,7 +20,7 @@ import { initSentry, Sentry } from './src/services/sentry';
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
 
-initSentry();
+const sentryEnabled = initSentry();
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
@@ -85,4 +85,4 @@ function App() {
   );
 }
 
-export default Sentry.wrap(App);
+export default sentryEnabled ? Sentry.wrap(App) : App;

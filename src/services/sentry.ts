@@ -36,10 +36,10 @@ function resolveSentryRelease(): string | undefined {
   return undefined;
 }
 
-export function initSentry(): void {
+export function initSentry(): boolean {
   const dsn = resolveSentryDsn();
   if (!dsn || isExpoGo) {
-    return;
+    return false;
   }
 
   Sentry.init({
@@ -49,6 +49,7 @@ export function initSentry(): void {
     sendDefaultPii: false,
     tracesSampleRate: 0,
   });
+  return true;
 }
 
 export function captureException(error: unknown): void {
