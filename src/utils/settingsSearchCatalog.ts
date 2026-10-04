@@ -211,6 +211,12 @@ export const LICENSES_ITEM: SearchableSetting = {
   synonyms: ['ספריא', 'רישיון', 'קרדיט'],
 };
 
+export const SIYUM_NUSACH_ITEM: SearchableSetting = {
+  title: 'נוסח סיום מסכת',
+  description: 'הדרן, תפילות הסיום וקדיש לקריאה',
+  synonyms: ['הדרן', 'סיום', 'קדיש', 'נוסח'],
+};
+
 export const PRIVACY_POLICY_ITEM: SearchableSetting = {
   title: 'מדיניות פרטיות',
   description: 'איך האפליקציה מתייחסת לנתונים ולהרשאות',
@@ -221,6 +227,7 @@ export const HELP_SEARCH_ITEMS: SearchableSetting[] = [
   GUIDE_ITEM,
   SUPPORT_ITEM,
   PRIVACY_POLICY_ITEM,
+  SIYUM_NUSACH_ITEM,
   LICENSES_ITEM,
 ];
 

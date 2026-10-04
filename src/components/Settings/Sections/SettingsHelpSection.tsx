@@ -9,6 +9,7 @@ import {
   HELP_SEARCH_ITEMS,
   LICENSES_ITEM,
   PRIVACY_POLICY_ITEM,
+  SIYUM_NUSACH_ITEM,
   SUPPORT_ITEM,
 } from '../../../utils/settingsSearchCatalog';
 
@@ -17,10 +18,18 @@ type SettingsHelpSectionProps = SettingsSectionChrome & {
   onSupportPress: () => void;
   onSupportLongPress: () => void;
   onPrivacyPolicyPress: () => void;
+  onSiyumNusachPress: () => void;
   onLicensesPress: () => void;
 };
 
-export { HELP_SEARCH_ITEMS, GUIDE_ITEM, SUPPORT_ITEM, PRIVACY_POLICY_ITEM, LICENSES_ITEM };
+export {
+  HELP_SEARCH_ITEMS,
+  GUIDE_ITEM,
+  SUPPORT_ITEM,
+  PRIVACY_POLICY_ITEM,
+  SIYUM_NUSACH_ITEM,
+  LICENSES_ITEM,
+};
 
 export default function SettingsHelpSection({
   styles,
@@ -31,13 +40,15 @@ export default function SettingsHelpSection({
   onSupportPress,
   onSupportLongPress,
   onPrivacyPolicyPress,
+  onSiyumNusachPress,
   onLicensesPress,
 }: SettingsHelpSectionProps) {
   const showGuide = matchesSetting(searchQuery, GUIDE_ITEM);
   const showSupport = matchesSetting(searchQuery, SUPPORT_ITEM);
   const showPrivacy = matchesSetting(searchQuery, PRIVACY_POLICY_ITEM);
+  const showSiyumNusach = matchesSetting(searchQuery, SIYUM_NUSACH_ITEM);
   const showLicenses = matchesSetting(searchQuery, LICENSES_ITEM);
-  const flags = [showGuide, showSupport, showPrivacy, showLicenses];
+  const flags = [showGuide, showSupport, showPrivacy, showSiyumNusach, showLicenses];
   if (!flags.some(Boolean)) return null;
 
   return (
@@ -77,13 +88,23 @@ export default function SettingsHelpSection({
             highlightText={searchQuery}
           />
         ) : null}
+        {showSiyumNusach ? (
+          <SettingItem
+            icon="book-outline"
+            title={SIYUM_NUSACH_ITEM.title}
+            description={SIYUM_NUSACH_ITEM.description}
+            onPress={onSiyumNusachPress}
+            isLast={isLastVisible(flags, 3)}
+            highlightText={searchQuery}
+          />
+        ) : null}
         {showLicenses ? (
           <SettingItem
             icon="ribbon-outline"
             title={LICENSES_ITEM.title}
             description={LICENSES_ITEM.description}
             onPress={onLicensesPress}
-            isLast={isLastVisible(flags, 3)}
+            isLast={isLastVisible(flags, 4)}
             highlightText={searchQuery}
           />
         ) : null}
