@@ -15,7 +15,7 @@ import ResetConfirmModal from './ResetConfirmModal';
 import BackupImportModal from './BackupImportModal';
 import type { BackupPreview } from '../../../services/backup';
 import ClearCacheModal from './ClearCacheModal';
-import type { ViewMode } from '../../SefariaReader/ReaderToolbar';
+import type { ReaderTheme, ViewMode } from '../../SefariaReader/ReaderToolbar';
 
 export type SettingsModalsProps = {
   themeMode: ThemeMode;
@@ -69,6 +69,10 @@ export type SettingsModalsProps = {
   showReaderViewModal: boolean;
   onReaderViewModalClose: () => void;
   onReaderViewModeSelect: (mode: ViewMode) => void;
+  readerTheme: ReaderTheme;
+  showReaderThemeModal: boolean;
+  onReaderThemeModalClose: () => void;
+  onReaderThemeSelect: (theme: ReaderTheme) => void;
 };
 
 export default function SettingsModals({
@@ -123,6 +127,10 @@ export default function SettingsModals({
   showReaderViewModal,
   onReaderViewModalClose,
   onReaderViewModeSelect,
+  readerTheme,
+  showReaderThemeModal,
+  onReaderThemeModalClose,
+  onReaderThemeSelect,
 }: SettingsModalsProps) {
   return (
     <>
@@ -164,6 +172,19 @@ export default function SettingsModals({
         ]}
         onClose={onReaderViewModalClose}
         onSelect={onReaderViewModeSelect}
+      />
+      <SettingsChoiceModal
+        visible={showReaderThemeModal}
+        title="בחירת ערכת קריאה"
+        headerIcon="color-palette-outline"
+        value={readerTheme}
+        options={[
+          { value: 'light', label: 'בהיר', icon: 'sunny-outline' },
+          { value: 'sepia', label: 'ספיה (דף ישן)', icon: 'book-outline' },
+          { value: 'dark', label: 'כהה', icon: 'moon-outline' },
+        ]}
+        onClose={onReaderThemeModalClose}
+        onSelect={onReaderThemeSelect}
       />
       <GuideModal visible={showGuideModal} onClose={onGuideModalClose} />
       <TimePickerModal

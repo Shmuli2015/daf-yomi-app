@@ -60,8 +60,15 @@ export function useSettingsAppUpdates({
   const handleShareDownloadLink = useCallback(async () => {
     try {
       await Share.share(buildDownloadShareContent(getDownloadPageUrl(), Platform.OS));
-    } catch {}
-  }, []);
+    } catch {
+      onFeedback({
+        title: 'השיתוף נכשל',
+        message: 'לא הצלחנו לפתוח את חלון השיתוף. נסו שוב בעוד רגע.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    }
+  }, [onFeedback]);
 
   return {
     updatesConfigured,

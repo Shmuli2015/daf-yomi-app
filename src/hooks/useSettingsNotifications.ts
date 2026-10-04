@@ -115,9 +115,15 @@ export function useSettingsNotifications({
         await refreshExactAlarmStatus();
       } catch (error) {
         console.error('Save error:', error);
+        onFeedback({
+          title: 'שמירת ההתראות נכשלה',
+          message: 'לא הצלחנו לשמור או לתזמן את התזכורות. נסו שוב בעוד רגע.',
+          iconName: 'alert-circle-outline',
+          compact: true,
+        });
       }
     },
-    [updateNotificationSettings, refreshExactAlarmStatus, soundEnabled],
+    [updateNotificationSettings, refreshExactAlarmStatus, soundEnabled, onFeedback],
   );
 
   const handleModeChange = useCallback(

@@ -28,6 +28,12 @@ export function getNextReaderTheme(current: ReaderTheme): ReaderTheme {
   return 'light';
 }
 
+export function getReaderThemeLabel(theme: ReaderTheme): string {
+  if (theme === 'sepia') return 'ספיה';
+  if (theme === 'dark') return 'כהה';
+  return 'בהיר';
+}
+
 export function getReaderThemePalette(
   readerTheme: ReaderTheme,
   appAccentColor?: string

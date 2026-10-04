@@ -1,5 +1,6 @@
 import {
   getNextReaderTheme,
+  getReaderThemeLabel,
   resolveEffectiveReaderTheme,
 } from '../readerTheme';
 
@@ -24,5 +25,13 @@ describe('getNextReaderTheme', () => {
     expect(getNextReaderTheme('light')).toBe('sepia');
     expect(getNextReaderTheme('sepia')).toBe('dark');
     expect(getNextReaderTheme('dark')).toBe('light');
+  });
+});
+
+describe('getReaderThemeLabel', () => {
+  it('returns Hebrew labels for reader themes', () => {
+    expect(getReaderThemeLabel('light')).toBe('בהיר');
+    expect(getReaderThemeLabel('sepia')).toBe('ספיה');
+    expect(getReaderThemeLabel('dark')).toBe('כהה');
   });
 });

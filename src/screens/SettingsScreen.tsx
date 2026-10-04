@@ -68,16 +68,19 @@ export default function SettingsScreen() {
   const [showThemeModal, setShowThemeModal] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [showReaderViewModal, setShowReaderViewModal] = useState(false);
+  const [showReaderThemeModal, setShowReaderThemeModal] = useState(false);
 
   const { feedback, showFeedback, clearFeedback } = useSettingsFeedback();
   const { fontSize, increase: onIncreaseFontSize, decrease: onDecreaseFontSize } = useReaderFontSize();
   const {
     readerViewMode,
+    readerTheme,
     showChavrutaNotes,
     gemaraNikud,
     hapticsEnabled,
     keepScreenAwake,
     handleReaderViewModeSelect,
+    handleReaderThemeSelect,
     handleGemaraNikudToggle,
     handleChavrutaNotesToggle,
     handleHapticsToggle,
@@ -199,6 +202,7 @@ export default function SettingsScreen() {
     probeGithubRelease,
     handleUpdateAutoPromptToggle,
     handleCheckAppUpdates,
+    handleShareDownloadLink,
     handleShowWhatsNew,
   } = useSettingsAppUpdates({
     onFeedback: showFeedback,
@@ -227,78 +231,96 @@ export default function SettingsScreen() {
         <View style={styles.screenRoot}>
           <SettingsScrollContent
             styles={styles}
-            notificationsEnabled={notificationsEnabled}
-            onNotificationsToggle={handleNotificationsToggle}
-            exactAlarmStatus={exactAlarmStatus}
-            onExactAlarmSettingsPress={handleExactAlarmSettingsPress}
-            permissionStatus={permissionStatus}
-            onNotificationPermissionPress={handleNotificationPermissionPress}
-            notifMode={notifMode}
-            onNotifModeChange={handleModeChange}
-            hour={hour}
-            minute={minute}
-            daySchedules={daySchedules}
-            onDailyTimePress={handleTimePickerOpen}
-            onToggleDay={handleToggleDay}
-            onEditDayTime={handleEditDayTime}
-            soundEnabled={soundEnabled}
-            onSoundToggle={handleSoundToggle}
-            themeMode={themeMode}
-            onThemeModalOpen={() => setShowThemeModal(true)}
-            dafDayStartMode={dafDayStartMode}
-            dafDayStartHour={dafDayStartHour}
-            dafDayStartMinute={dafDayStartMinute}
-            dafDayStartSchedules={dafDayStartSchedules}
-            onDafDayStartModeOpen={openDafDayStartModeModal}
-            onDafDayStartTimeOpen={openDafDayStartTimePicker}
-            onEditDafDayStartDay={handleEditDafDayStartDay}
-            readerViewMode={readerViewMode}
-            onReaderViewModePress={() => setShowReaderViewModal(true)}
-            gemaraNikud={gemaraNikud}
-            onGemaraNikudToggle={handleGemaraNikudToggle}
-            showChavrutaNotes={showChavrutaNotes}
-            onChavrutaNotesToggle={handleChavrutaNotesToggle}
-            hapticsEnabled={hapticsEnabled}
-            onHapticsToggle={handleHapticsToggle}
-            keepScreenAwake={keepScreenAwake}
-            onKeepScreenAwakeToggle={handleKeepScreenAwakeToggle}
-            fontSize={fontSize}
-            onIncreaseFontSize={onIncreaseFontSize}
-            onDecreaseFontSize={onDecreaseFontSize}
-            onGuideModalOpen={() => setShowGuideModal(true)}
-            showSecularDate={showSecularDate}
-            onSecularDateToggle={handleSecularDateToggle}
-            showCalendarDaf={showCalendarDaf}
-            onCalendarDafToggle={handleCalendarDafToggle}
-            showPersonalTrackBannerPref={showPersonalTrackBannerPref}
-            onPersonalTrackBannerToggle={handlePersonalTrackBannerToggle}
-            showConfettiPref={showConfettiPref}
-            onConfettiToggle={handleConfettiToggle}
-            showDevSection={__DEV__}
-            scheduledCount={scheduledCount}
-            onTestNotification={handleTestNotification}
-            onCheckScheduled={handleCheckScheduled}
-            onResetModalOpen={openResetModal}
-            lastBackupAt={settings.last_backup_at}
-            onSaveBackupToFile={handleSaveBackupToFile}
-            onShareBackup={handleShareBackup}
-            onImportBackup={handleImportBackupPick}
-            updateAutoPromptEnabled={updatesConfigured ? settings.update_auto_prompt_enabled === 1 : undefined}
-            onUpdateAutoPromptToggle={updatesConfigured ? handleUpdateAutoPromptToggle : undefined}
-            onCheckAppUpdate={updatesConfigured ? handleCheckAppUpdates : undefined}
-            onShowWhatsNew={handleShowWhatsNew}
-            onProbeGithubRelease={__DEV__ ? probeGithubRelease : undefined}
-            storageSizeFormatted={storageSizeFormatted}
-            onClearCacheOpen={openClearCacheModal}
-            onEmailCopied={() =>
-              showFeedback({
-                title: 'הכתובת הועתקה',
-                message: 'אפשר להדביק אותה בכל אפליקציית דוא״ל.',
-                iconName: 'copy-outline',
-                toast: true,
-                autoCloseMs: 2500,
-              })
-            }
+            notifications={{
+              notificationsEnabled,
+              onNotificationsToggle: handleNotificationsToggle,
+              exactAlarmStatus,
+              onExactAlarmSettingsPress: handleExactAlarmSettingsPress,
+              permissionStatus,
+              onNotificationPermissionPress: handleNotificationPermissionPress,
+              notifMode,
+              onNotifModeChange: handleModeChange,
+              hour,
+              minute,
+              daySchedules,
+              onDailyTimePress: handleTimePickerOpen,
+              onToggleDay: handleToggleDay,
+              onEditDayTime: handleEditDayTime,
+              soundEnabled,
+              onSoundToggle: handleSoundToggle,
+            }}
+            reader={{
+              readerViewMode,
+              onReaderViewModePress: () => setShowReaderViewModal(true),
+              readerTheme,
+              onReaderThemePress: () => setShowReaderThemeModal(true),
+              gemaraNikud,
+              onGemaraNikudToggle: handleGemaraNikudToggle,
+              showChavrutaNotes,
+              onChavrutaNotesToggle: handleChavrutaNotesToggle,
+              hapticsEnabled,
+              onHapticsToggle: handleHapticsToggle,
+              keepScreenAwake,
+              onKeepScreenAwakeToggle: handleKeepScreenAwakeToggle,
+              fontSize,
+              onIncreaseFontSize,
+              onDecreaseFontSize,
+            }}
+            display={{
+              themeMode,
+              onThemeModalOpen: () => setShowThemeModal(true),
+              dafDayStartMode,
+              dafDayStartHour,
+              dafDayStartMinute,
+              dafDayStartSchedules,
+              onDafDayStartModeOpen: openDafDayStartModeModal,
+              onDafDayStartTimeOpen: openDafDayStartTimePicker,
+              onEditDafDayStartDay: handleEditDafDayStartDay,
+              showSecularDate,
+              onSecularDateToggle: handleSecularDateToggle,
+              showCalendarDaf,
+              onCalendarDafToggle: handleCalendarDafToggle,
+              showPersonalTrackBannerPref,
+              onPersonalTrackBannerToggle: handlePersonalTrackBannerToggle,
+              showConfettiPref,
+              onConfettiToggle: handleConfettiToggle,
+            }}
+            backupData={{
+              lastBackupAt: settings.last_backup_at,
+              onSaveBackupToFile: handleSaveBackupToFile,
+              onShareBackup: handleShareBackup,
+              onImportBackup: handleImportBackupPick,
+              storageSizeFormatted,
+              onClearCacheOpen: openClearCacheModal,
+              onResetModalOpen: openResetModal,
+            }}
+            helpUpdates={{
+              onGuideModalOpen: () => setShowGuideModal(true),
+              updateAutoPromptEnabled: updatesConfigured
+                ? settings.update_auto_prompt_enabled === 1
+                : undefined,
+              onUpdateAutoPromptToggle: updatesConfigured
+                ? handleUpdateAutoPromptToggle
+                : undefined,
+              onCheckAppUpdate: updatesConfigured ? handleCheckAppUpdates : undefined,
+              onShareDownloadLink: updatesConfigured ? handleShareDownloadLink : undefined,
+              onShowWhatsNew: handleShowWhatsNew,
+              onEmailCopied: () =>
+                showFeedback({
+                  title: 'הכתובת הועתקה',
+                  message: 'אפשר להדביק אותה בכל אפליקציית דוא״ל.',
+                  iconName: 'copy-outline',
+                  toast: true,
+                  autoCloseMs: 2500,
+                }),
+            }}
+            dev={{
+              showDevSection: __DEV__,
+              scheduledCount,
+              onTestNotification: handleTestNotification,
+              onCheckScheduled: handleCheckScheduled,
+              onProbeGithubRelease: __DEV__ ? probeGithubRelease : undefined,
+            }}
           />
         </View>
 
@@ -356,6 +378,10 @@ export default function SettingsScreen() {
           showReaderViewModal={showReaderViewModal}
           onReaderViewModalClose={() => setShowReaderViewModal(false)}
           onReaderViewModeSelect={handleReaderViewModeSelect}
+          readerTheme={readerTheme}
+          showReaderThemeModal={showReaderThemeModal}
+          onReaderThemeModalClose={() => setShowReaderThemeModal(false)}
+          onReaderThemeSelect={handleReaderThemeSelect}
         />
 
         <InfoModal
