@@ -94,47 +94,58 @@ export default function HebrewCalendar() {
 
       <Reanimated.View style={styles.card} {...panResponder.panHandlers}>
         <View style={styles.navRow}>
-          <TouchableOpacity onPress={goPrevMonth} style={styles.navBtn} activeOpacity={0.7}>
-            <Ionicons name="chevron-forward" size={20} color={theme.colors.textSecondary} />
-          </TouchableOpacity>
-          <View style={styles.monthCenter}>
-            <View style={styles.monthTitleRow}>
-              <TouchableOpacity
-                onPress={() => setShowMonthPicker(true)}
-                style={styles.monthTitleBtn}
-                activeOpacity={0.7}
-                accessibilityRole="button"
-                accessibilityLabel="בחירת חודש ושנה"
-              >
-                <View style={styles.monthTitleRow}>
-                  <Text style={styles.monthName}>{monthName}</Text>
-                  <Ionicons name="chevron-down" size={16} color={theme.colors.accent} />
-                </View>
-              </TouchableOpacity>
-              <CalendarTodayButton
-                isCurrentMonth={isViewingTodayMonth}
-                onPress={goToToday}
-              />
-            </View>
+          <View style={styles.navControls}>
             <TouchableOpacity
-              onPress={() => setShowMonthPicker(true)}
+              onPress={goPrevMonth}
+              style={styles.navBtn}
               activeOpacity={0.7}
               accessibilityRole="button"
-              accessibilityLabel="בחירת חודש ושנה"
+              accessibilityLabel="חודש קודם"
             >
-              <Text style={styles.yearName}>{yearName}</Text>
+              <Ionicons name="chevron-forward" size={17} color={theme.colors.textPrimary} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={goNextMonth}
+              style={styles.navBtn}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="חודש הבא"
+            >
+              <Ionicons name="chevron-back" size={17} color={theme.colors.textPrimary} />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={goNextMonth} style={styles.navBtn} activeOpacity={0.7}>
-            <Ionicons name="chevron-back" size={20} color={theme.colors.textSecondary} />
+
+          <TouchableOpacity
+            onPress={() => setShowMonthPicker(true)}
+            style={styles.monthPickerButton}
+            activeOpacity={0.75}
+            accessibilityRole="button"
+            accessibilityLabel="בחירת חודש ושנה"
+          >
+            <Text style={styles.monthPickerText}>{monthName} {yearName}</Text>
+            <Ionicons name="chevron-down" size={13} color={theme.colors.accent} />
           </TouchableOpacity>
+
+          <CalendarTodayButton
+            isCurrentMonth={isViewingTodayMonth}
+            onPress={goToToday}
+          />
         </View>
 
         <MonthTractateBanner summary={monthTractateSummary} />
 
         <View style={styles.weekLabels}>
           {DAYS_OF_WEEK.map((day, index) => (
-            <Text key={index} style={styles.weekLabel}>{day}</Text>
+            <View key={index} style={styles.weekLabelWrapper}>
+              <Text
+                style={[
+                  styles.weekLabel,
+                  day === 'ש' && styles.weekLabelShabbat,
+                ]}
+              >
+                {day}
+              </Text>
+            </View>
           ))}
         </View>
 

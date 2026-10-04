@@ -21,30 +21,30 @@ const CalendarHeader = () => {
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     container: {
-      marginBottom: 20,
+      marginBottom: 10,
       paddingHorizontal: 4,
       alignItems: 'flex-start',
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
-      marginBottom: 6,
+      gap: 10,
+      marginBottom: 3,
     },
     accentBar: {
       width: 4,
-      height: 32,
+      height: 24,
       backgroundColor: theme.colors.accent,
       borderRadius: 2,
     },
     title: {
-      fontSize: 34,
+      fontSize: 26,
       fontWeight: '900',
       color: theme.colors.primary,
-      letterSpacing: -0.5,
+      letterSpacing: -0.4,
     },
     subtitle: {
-      fontSize: 13,
+      fontSize: 12,
       color: theme.colors.textSecondary,
       fontWeight: '600',
     },

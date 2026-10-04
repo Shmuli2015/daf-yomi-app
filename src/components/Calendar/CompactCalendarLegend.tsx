@@ -5,7 +5,7 @@ import { useTheme } from '../../theme';
 const visualRightEdge = Platform.OS === 'web' ? { right: 0 } : { left: 0 };
 const visualLeftEdge = Platform.OS === 'web' ? { left: 0 } : { right: 0 };
 
-const SWATCH_SIZE = 16;
+const SWATCH_SIZE = 11;
 
 export default function CompactCalendarLegend() {
   const theme = useTheme();
@@ -57,11 +57,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: 'center',
       flexWrap: 'nowrap',
       gap: 12,
-      paddingVertical: 10,
+      paddingVertical: 7,
       paddingHorizontal: 12,
-      marginTop: 10,
+      marginTop: 8,
       backgroundColor: theme.colors.surface,
-      borderRadius: 16,
+      borderRadius: 12,
       borderWidth: 1,
       borderColor: theme.colors.border,
       direction: 'rtl',
@@ -69,14 +69,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     legendItem: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
+      gap: 4,
       flexShrink: 1,
     },
     swatch: {
       width: SWATCH_SIZE,
       height: SWATCH_SIZE,
-      borderRadius: SWATCH_SIZE / 2,
-      borderWidth: 1.5,
+      borderRadius: 3.5,
+      borderWidth: 1,
       overflow: 'hidden',
     },
     learnedSwatch: {
@@ -90,48 +90,51 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     halfGroup: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: 3,
     },
     halfPair: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 3,
+      gap: 2,
     },
     amudLabel: {
-      fontSize: 10,
+      fontSize: 9.5,
       fontWeight: '700',
       color: theme.colors.textSecondary,
+      includeFontPadding: false,
     },
     halfFillRight: {
       position: 'absolute',
       top: 0,
       bottom: 0,
       width: '50%',
-      ...visualRightEdge,
       backgroundColor: theme.colors.accent,
-      opacity: 0.65,
+      opacity: 0.45,
+      ...visualRightEdge,
     },
     halfFillLeft: {
       position: 'absolute',
       top: 0,
       bottom: 0,
       width: '50%',
-      ...visualLeftEdge,
       backgroundColor: theme.colors.accent,
-      opacity: 0.65,
+      opacity: 0.45,
+      ...visualLeftEdge,
     },
     todaySwatch: {
       backgroundColor: theme.colors.accentLight,
       borderColor: theme.colors.accent,
+      borderWidth: 1.5,
     },
     specialSwatch: {
       backgroundColor: 'transparent',
       borderColor: theme.colors.accentBorder,
     },
     label: {
-      fontSize: 11,
-      fontWeight: '700',
+      fontSize: 10.5,
+      fontWeight: '600',
       color: theme.colors.textSecondary,
       flexShrink: 1,
+      includeFontPadding: false,
     },
   });

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 
@@ -14,20 +14,31 @@ const CalendarTodayButton = ({ isCurrentMonth, onPress }: CalendarTodayButtonPro
 
   return (
     <TouchableOpacity
-      style={styles.button}
+      style={[
+        styles.button,
+        !isCurrentMonth ? styles.buttonActive : styles.buttonDisabled,
+      ]}
       onPress={onPress}
       disabled={isCurrentMonth}
-      activeOpacity={0.7}
+      activeOpacity={0.75}
       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       accessibilityRole="button"
-      accessibilityLabel="חזרה לחודש של היום בלוח"
+      accessibilityLabel="חזרה לחודש הנוכחי בלוח"
       accessibilityState={{ disabled: isCurrentMonth }}
     >
       <Ionicons
-        name="today-outline"
-        size={18}
-        color={isCurrentMonth ? theme.colors.muted : theme.colors.accent}
+        name="calendar-outline"
+        size={13}
+        color={isCurrentMonth ? theme.colors.textMuted : theme.colors.accent}
       />
+      <Text
+        style={[
+          styles.text,
+          { color: isCurrentMonth ? theme.colors.textMuted : theme.colors.accent },
+        ]}
+      >
+        היום
+      </Text>
     </TouchableOpacity>
   );
 };
@@ -35,11 +46,27 @@ const CalendarTodayButton = ({ isCurrentMonth, onPress }: CalendarTodayButtonPro
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
   StyleSheet.create({
     button: {
-      width: 28,
-      height: 28,
+      flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: theme.radius.sm,
+      gap: 4,
+      paddingHorizontal: 9,
+      paddingVertical: 5,
+      borderRadius: 10,
+      borderWidth: 1,
+    },
+    buttonActive: {
+      backgroundColor: theme.colors.accentLight,
+      borderColor: theme.colors.accentBorder,
+    },
+    buttonDisabled: {
+      backgroundColor: 'transparent',
+      borderColor: 'transparent',
+      opacity: 0.45,
+    },
+    text: {
+      fontSize: 11,
+      fontWeight: '700',
+      includeFontPadding: false,
     },
   });
 

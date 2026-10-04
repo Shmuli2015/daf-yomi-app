@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, Easing } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
 import { HDate } from '@hebcal/core';
 import { useTheme } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
@@ -21,37 +21,31 @@ interface CalendarDayProps {
 }
 
 const CalendarDay = React.memo(
-  ({ hdate, isCurrentMonth, learned, partial = false, partialAmud = null, isToday, isSelected, dafLabel, hasSpecialEvent, onPress }: CalendarDayProps) => {
+  ({
+    hdate,
+    isCurrentMonth,
+    learned,
+    partial = false,
+    partialAmud = null,
+    isToday,
+    isSelected,
+    dafLabel,
+    hasSpecialEvent,
+    onPress,
+  }: CalendarDayProps) => {
     const theme = useTheme();
     const styles = useMemo(() => createCalendarDayStyles(theme), [theme]);
     const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
 
     const gematriya = hdate.renderGematriya().split(' ')[0];
     const gregDay = hdate.greg().getDate();
-    const isStackedCapsule = showSecularDate && Boolean(dafLabel);
 
     const scale = useSharedValue(1);
-    const pulseOpacity = useSharedValue(0);
-
-    useEffect(() => {
-      if (isToday) {
-        pulseOpacity.value = withRepeat(
-          withSequence(
-            withTiming(0.15, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
-            withTiming(0.7, { duration: 1100, easing: Easing.inOut(Easing.ease) })
-          ),
-          -1,
-          true
-        );
-      } else {
-        pulseOpacity.value = withTiming(0, { duration: 200 });
-      }
-    }, [isToday]);
 
     const handlePress = () => {
       scale.value = withSequence(
-        withSpring(0.8, { damping: 10, stiffness: 400 }),
-        withSpring(1, { damping: 12, stiffness: 200 })
+        withSpring(0.85, { damping: 12, stiffness: 450 }),
+        withSpring(1, { damping: 14, stiffness: 250 })
       );
       onPress(hdate);
     };
@@ -59,16 +53,12 @@ const CalendarDay = React.memo(
     const containerOpacity = isCurrentMonth
       ? 1
       : learned || partial
-        ? 0.75
-        : 0.35;
+        ? 0.55
+        : 0.28;
 
     const animatedContainerStyle = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
       opacity: containerOpacity,
-    }));
-
-    const animatedPulseStyle = useAnimatedStyle(() => ({
-      opacity: pulseOpacity.value,
     }));
 
     const isSpecial = hasSpecialEvent && !learned && isCurrentMonth;
@@ -79,57 +69,64 @@ const CalendarDay = React.memo(
         ? theme.colors.accentLight
         : 'transparent';
 
+    const borderColor = !isCurrentMonth
+      ? 'transparent'
+      : isSelected
+        ? theme.colors.primary
+        : isToday
+          ? theme.colors.accent
+          : partial && !learned
+            ? theme.colors.accent
+            : isSpecial
+              ? theme.colors.accentBorder
+              : theme.colors.border;
+
+    const borderWidth = !isCurrentMonth ? 0 : isSelected ? 2 : isToday ? 2 : partial ? 1.5 : 1;
+
     const textColor = learned
       ? theme.colors.white
       : isToday
         ? theme.colors.accent
-        : theme.colors.textPrimary;
+        : isCurrentMonth
+          ? theme.colors.textPrimary
+          : theme.colors.textMuted;
 
     const gregColor = learned
-      ? theme.colors.white
-      : isStackedCapsule
-        ? theme.colors.textSecondary
+      ? 'rgba(255, 255, 255, 0.72)'
+      : isToday
+        ? theme.colors.accent
         : theme.colors.textMuted;
 
-    const dafColor = learned
-      ? isStackedCapsule
-        ? theme.colors.accent
-        : theme.colors.white
-      : isToday && !isStackedCapsule
-        ? theme.colors.textPrimary
-        : theme.colors.accent;
-
-    const dafChipBackground = partial && !learned
+    const dafChipBackground = !isCurrentMonth
       ? 'transparent'
-      : learned || isToday
-        ? theme.colors.surface
-        : theme.colors.accentLight;
+      : learned
+        ? 'rgba(255, 255, 255, 0.22)'
+        : isToday
+          ? theme.colors.surface
+          : partial
+            ? theme.colors.accentLight
+            : theme.colors.background;
 
-    const borderColor = isSelected
-      ? theme.colors.accent
-      : partial
-        ? theme.colors.accent
-        : isSpecial
-          ? theme.colors.accentBorder
-          : 'transparent';
-
-    const borderWidth = isSelected ? 1.5 : partial ? 1.5 : isSpecial ? 1 : 0;
+    const dafTextColor = !isCurrentMonth
+      ? theme.colors.textMuted
+      : learned
+        ? theme.colors.white
+        : isToday || partial
+          ? theme.colors.accent
+          : theme.colors.textSecondary;
 
     return (
       <TouchableOpacity
         onPress={handlePress}
-        activeOpacity={1}
-        style={[styles.cell, isStackedCapsule ? styles.cellCapsule : null]}
+        activeOpacity={0.7}
+        style={styles.cell}
+        accessibilityRole="button"
+        accessibilityLabel={`יום ${gematriya}${dafLabel ? `, דף ${dafLabel}` : ''}`}
       >
         <Animated.View style={animatedContainerStyle}>
-          {isToday && (
-            <Animated.View
-              style={[isStackedCapsule ? styles.pulseRingCapsule : styles.pulseRing, animatedPulseStyle]}
-            />
-          )}
-          <Animated.View
+          <View
             style={[
-              isStackedCapsule ? styles.capsule : styles.circle,
+              styles.dayCard,
               {
                 backgroundColor: bg,
                 borderColor,
@@ -140,59 +137,52 @@ const CalendarDay = React.memo(
             {partial && !learned && (
               <View
                 style={[
-                  partialAmud === 'b' ? styles.halfFillLeft : styles.halfFillRight,
-                  isStackedCapsule ? styles.halfFillSoft : null,
+                  styles.partialFill,
+                  partialAmud === 'b' ? styles.partialFillLeft : styles.partialFillRight,
                 ]}
               />
             )}
-            {isStackedCapsule ? (
-              <View style={styles.capsuleDates}>
-                <Animated.Text style={[styles.dayText, styles.dayTextCapsule, { color: textColor }]}>
-                  {gematriya}
+
+            <View style={styles.topRow}>
+              {showSecularDate ? (
+                <Animated.Text style={[styles.gregText, { color: gregColor }]}>
+                  {gregDay}
                 </Animated.Text>
-                {showSecularDate && (
-                  <Animated.Text
-                    style={[styles.gregTextCapsule, { color: gregColor, opacity: learned ? 0.82 : 1 }]}
-                  >
-                    {gregDay}
-                  </Animated.Text>
-                )}
-              </View>
-            ) : (
-              <Animated.Text
-                style={[
-                  styles.dayText,
-                  dafLabel ? styles.dayTextWithDaf : null,
-                  { color: textColor },
-                ]}
-              >
-                {gematriya}
-              </Animated.Text>
-            )}
-            {!isStackedCapsule && showSecularDate && (
-              <Animated.Text style={[styles.gregText, { color: gregColor, opacity: learned ? 0.75 : 1 }]}>
-                {gregDay}
-              </Animated.Text>
-            )}
-            {dafLabel && isStackedCapsule ? (
+              ) : (
+                <View style={styles.topPlaceholder} />
+              )}
+              {isSpecial ? (
+                <View style={styles.specialDot} />
+              ) : (
+                <View style={styles.topPlaceholder} />
+              )}
+            </View>
+
+            <Animated.Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+              style={[styles.dayText, { color: textColor }]}
+            >
+              {gematriya}
+            </Animated.Text>
+
+            {dafLabel ? (
               <View style={[styles.dafChip, { backgroundColor: dafChipBackground }]}>
                 <Animated.Text
                   numberOfLines={1}
                   adjustsFontSizeToFit
-                  minimumFontScale={0.75}
-                  style={[
-                    styles.dafChipText,
-                    { color: partial && !learned ? theme.colors.textPrimary : dafColor },
-                  ]}
+                  minimumFontScale={0.7}
+                  style={[styles.dafChipText, { color: dafTextColor }]}
                 >
                   {dafLabel}
+                  {partial && !learned ? (partialAmud === 'b' ? ' ע"ב' : ' ע"א') : ''}
                 </Animated.Text>
               </View>
-            ) : null}
-            {dafLabel && !isStackedCapsule ? (
-              <Animated.Text style={[styles.dafText, { color: dafColor }]}>{dafLabel}</Animated.Text>
-            ) : null}
-          </Animated.View>
+            ) : (
+              <View style={styles.dafPlaceholder} />
+            )}
+          </View>
         </Animated.View>
       </TouchableOpacity>
     );
