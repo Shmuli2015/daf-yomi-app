@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, withRepeat, withSequence, Easing } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
 import { HDate } from '@hebcal/core';
 import { useTheme } from '../../theme';
 import { useAppStore } from '../../store/useAppStore';
@@ -41,22 +41,6 @@ const CalendarDay = React.memo(
     const gregDay = hdate.greg().getDate();
 
     const scale = useSharedValue(1);
-    const pulseOpacity = useSharedValue(0);
-
-    useEffect(() => {
-      if (isToday) {
-        pulseOpacity.value = withRepeat(
-          withSequence(
-            withTiming(0.2, { duration: 1100, easing: Easing.inOut(Easing.ease) }),
-            withTiming(0.85, { duration: 1100, easing: Easing.inOut(Easing.ease) })
-          ),
-          -1,
-          true
-        );
-      } else {
-        pulseOpacity.value = withTiming(0, { duration: 200 });
-      }
-    }, [isToday]);
 
     const handlePress = () => {
       scale.value = withSequence(
@@ -75,10 +59,6 @@ const CalendarDay = React.memo(
     const animatedContainerStyle = useAnimatedStyle(() => ({
       transform: [{ scale: scale.value }],
       opacity: containerOpacity,
-    }));
-
-    const animatedPulseStyle = useAnimatedStyle(() => ({
-      opacity: pulseOpacity.value,
     }));
 
     const isSpecial = hasSpecialEvent && !learned && isCurrentMonth;
@@ -101,7 +81,7 @@ const CalendarDay = React.memo(
               ? theme.colors.accentBorder
               : theme.colors.border;
 
-    const borderWidth = !isCurrentMonth ? 0 : isSelected ? 2 : isToday || partial ? 1.5 : 1;
+    const borderWidth = !isCurrentMonth ? 0 : isSelected ? 2 : isToday ? 2 : partial ? 1.5 : 1;
 
     const textColor = learned
       ? theme.colors.white
@@ -154,10 +134,6 @@ const CalendarDay = React.memo(
               },
             ]}
           >
-            {isToday && (
-              <Animated.View style={[styles.pulseRing, animatedPulseStyle]} />
-            )}
-
             {partial && !learned && (
               <View
                 style={[
@@ -182,7 +158,12 @@ const CalendarDay = React.memo(
               )}
             </View>
 
-            <Animated.Text style={[styles.dayText, { color: textColor }]}>
+            <Animated.Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.8}
+              style={[styles.dayText, { color: textColor }]}
+            >
               {gematriya}
             </Animated.Text>
 
