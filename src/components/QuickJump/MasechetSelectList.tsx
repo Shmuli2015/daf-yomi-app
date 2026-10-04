@@ -27,6 +27,7 @@ export default function MasechetSelectList({
   const scheduledRevealRef = useRef(false);
   const revealedRef = useRef(selectedIndex <= 0);
   const [isPositioned, setIsPositioned] = useState(selectedIndex <= 0);
+  const listRenderWindowSize = Math.max(masechtot.length, 1);
 
   const initialOffset = selectedIndex > 0 ? selectedIndex * MASECHET_ITEM_HEIGHT : 0;
 
@@ -75,9 +76,9 @@ export default function MasechetSelectList({
         extraData={selectedEn}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator
-        initialNumToRender={masechtot.length}
-        maxToRenderPerBatch={masechtot.length}
-        windowSize={masechtot.length}
+        initialNumToRender={listRenderWindowSize}
+        maxToRenderPerBatch={listRenderWindowSize}
+        windowSize={listRenderWindowSize}
         removeClippedSubviews={false}
         getItemLayout={(_, index) => ({
           length: MASECHET_ITEM_HEIGHT,
