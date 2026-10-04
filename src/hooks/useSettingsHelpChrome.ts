@@ -10,6 +10,7 @@ type UseSettingsHelpChromeParams = {
 export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromeParams) {
   const [mailHintVisible, setMailHintVisible] = useState(false);
   const [licensesVisible, setLicensesVisible] = useState(false);
+  const [siyumNusachVisible, setSiyumNusachVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const copySupportEmail = useCallback(async () => {
@@ -45,6 +46,14 @@ export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromePa
     setLicensesVisible(false);
   }, []);
 
+  const openSiyumNusach = useCallback(() => {
+    setSiyumNusachVisible(true);
+  }, []);
+
+  const closeSiyumNusach = useCallback(() => {
+    setSiyumNusachVisible(false);
+  }, []);
+
   const closeMailHint = useCallback(() => {
     setMailHintVisible(false);
   }, []);
@@ -58,6 +67,9 @@ export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromePa
     licensesVisible,
     openLicenses,
     closeLicenses,
+    siyumNusachVisible,
+    openSiyumNusach,
+    closeSiyumNusach,
     copySupportEmail,
     openSupportEmail,
     openPrivacyPolicy,

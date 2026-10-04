@@ -12,6 +12,7 @@ interface BottomSheetModalProps {
   children: React.ReactNode;
   showHandle?: boolean;
   dismissible?: boolean;
+  contentBottomGap?: number;
 }
 
 const SHEET_MIN_BOTTOM_INSET = 12;
@@ -23,11 +24,12 @@ export default function BottomSheetModal({
   children,
   showHandle = true,
   dismissible = true,
+  contentBottomGap = SHEET_CONTENT_BOTTOM_GAP,
 }: BottomSheetModalProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createBottomSheetModalStyles(theme), [theme]);
-  const sheetBottomPadding = Math.max(insets.bottom, SHEET_MIN_BOTTOM_INSET) + SHEET_CONTENT_BOTTOM_GAP;
+  const sheetBottomPadding = Math.max(insets.bottom, SHEET_MIN_BOTTOM_INSET) + contentBottomGap;
   const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType, dismiss } =
     useSheetDismissGesture({
       visible,

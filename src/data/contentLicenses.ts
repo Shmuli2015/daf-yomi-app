@@ -1,3 +1,5 @@
+import { GFDL_URL, SIYUM_NUSACH_SOURCE_URL } from './siyumNusach';
+
 export interface ContentLicenseLink {
   label: string;
   url: string;
@@ -203,6 +205,18 @@ export const CONTENT_LICENSES: ContentLicenseEntry[] = [
     links: [
       { label: 'תורת אמת', url: TORAT_EMET_URL },
       { label: 'תנאי הרישיון', url: CC_BY_NC_SA_25_URL },
+      { label: 'תנאי המאגר', url: TORAT_EMET_RIGHTS_URL },
+    ],
+  },
+  {
+    id: 'siyum-nusach',
+    title: 'נוסח סיום מסכת',
+    attribution:
+      'נוסח סיום מסכת (הדרן וקדיש) מתוך מאגר תורת אמת, ברישיון GNU Free Documentation License.',
+    licenseLabel: 'GFDL',
+    links: [
+      { label: 'תורת אמת', url: SIYUM_NUSACH_SOURCE_URL },
+      { label: 'תנאי הרישיון', url: GFDL_URL },
       { label: 'תנאי המאגר', url: TORAT_EMET_RIGHTS_URL },
     ],
   },

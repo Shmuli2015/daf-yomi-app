@@ -18,6 +18,7 @@ import SettingsUpdatesSection from './Sections/SettingsUpdatesSection';
 import SettingsDevSection from './Sections/SettingsDevSection';
 import InfoModal from '../InfoModal';
 import ContentLicensesModal from './Modals/ContentLicensesModal';
+import SiyumNusachModal from './Modals/SiyumNusachModal';
 import { SUPPORT_EMAIL } from '../../supportContact';
 import {
   hasVisibleSettingsMatch,
@@ -35,6 +36,7 @@ import {
 } from '../../utils/settingsSummaries';
 import { useSettingsAccordion, type SettingsSectionKey } from '../../hooks/useSettingsAccordion';
 import { useSettingsHelpChrome } from '../../hooks/useSettingsHelpChrome';
+import { useAppStore } from '../../store/useAppStore';
 import type { SettingsScrollContentProps } from './settingsScrollContent.types';
 
 export type { SettingsScrollContentProps } from './settingsScrollContent.types';
@@ -49,6 +51,8 @@ export default function SettingsScrollContent({
   dev,
 }: SettingsScrollContentProps) {
   const theme = useTheme();
+  const todayMasechet = useAppStore((state) => state.todayMasechet);
+  const todayMasechetEn = useAppStore((state) => state.todayMasechetEn);
   const {
     searchQuery,
     setSearchQuery,
@@ -58,6 +62,9 @@ export default function SettingsScrollContent({
     licensesVisible,
     openLicenses,
     closeLicenses,
+    siyumNusachVisible,
+    openSiyumNusach,
+    closeSiyumNusach,
     copySupportEmail,
     openSupportEmail,
     openPrivacyPolicy,
@@ -336,6 +343,7 @@ export default function SettingsScrollContent({
                     onSupportPress={openSupportEmail}
                     onSupportLongPress={copySupportEmail}
                     onPrivacyPolicyPress={openPrivacyPolicy}
+                    onSiyumNusachPress={openSiyumNusach}
                     onLicensesPress={openLicenses}
                   />
                   <SettingsUpdatesSection
@@ -390,6 +398,13 @@ export default function SettingsScrollContent({
       <ContentLicensesModal
         visible={licensesVisible}
         onClose={closeLicenses}
+      />
+
+      <SiyumNusachModal
+        visible={siyumNusachVisible}
+        onClose={closeSiyumNusach}
+        initialMasechetEn={todayMasechetEn}
+        initialMasechetHe={todayMasechet}
       />
     </>
   );
