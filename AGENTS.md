@@ -65,3 +65,5 @@
 - **No Direct Push to Master**: Never push commits directly to the `master` branch. The master branch is protected.
 - **Dedicated Branches**: Always create a dedicated branch (e.g. `feature/...`, `fix/...`, `chore/...`, `docs/...`) for any code or documentation changes.
 - **Merge via Pull Request**: All changes must be delivered and merged into `master` exclusively through a Pull Request.
+- **Merge Commit Only**: Merge PRs with **Create a merge commit** only. Do not use Squash merge or Rebase merge, so the git graph stays connected to `master`.
+- **Delete Branches After Merge**: Rely on GitHub auto-delete of head branches after merge. If a branch remains, delete it after the PR is merged. Locally run `git checkout master && git pull && git fetch --prune`, then delete the merged local branch.
