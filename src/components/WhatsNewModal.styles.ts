@@ -60,5 +60,23 @@ export function createWhatsNewModalStyles(theme: Theme) {
       fontSize: 13,
       fontWeight: '800',
     },
+    guideLinkBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      marginTop: 18,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      backgroundColor: theme.colors.surface,
+      borderRadius: theme.radius.md,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+    },
+    guideLinkText: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: theme.colors.accent,
+    },
   });
 }

@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import type { Theme } from '../../theme';
 
 export function createGuideFaqListStyles(theme: Theme) {
@@ -7,76 +7,41 @@ export function createGuideFaqListStyles(theme: Theme) {
       width: '100%',
       direction: 'rtl',
     },
-    controlsRow: {
+    categoryGroup: {
+      marginBottom: 16,
+    },
+    groupHeader: {
       flexDirection: 'row',
-      justifyContent: 'flex-end',
-      gap: 16,
-      marginBottom: 12,
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 8,
       paddingHorizontal: 4,
+      direction: 'rtl',
     },
-    controlBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-    },
-    controlBtnText: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: theme.colors.accent,
-    },
-    controlBtnTextMuted: {
-      fontSize: 12,
-      fontWeight: '600',
-      color: theme.colors.textMuted,
-    },
-    emptyState: {
-      alignItems: 'center',
-      paddingVertical: 36,
-      paddingHorizontal: 20,
-      gap: 10,
-    },
-    emptyTitle: {
-      fontSize: 16,
-      fontWeight: '800',
-      color: theme.colors.textPrimary,
-    },
-    emptySubtitle: {
-      fontSize: 13,
-      color: theme.colors.textMuted,
-      textAlign: 'center',
-      lineHeight: 20,
-    },
-    clearSearchBtn: {
-      marginTop: 8,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+    groupIconBox: {
+      width: 24,
+      height: 24,
+      borderRadius: 7,
       backgroundColor: theme.colors.accentLight,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: theme.colors.accent,
-    },
-    clearSearchBtnText: {
-      fontSize: 13,
-      fontWeight: '700',
-      color: theme.colors.accent,
-    },
-    switchTabResultBtn: {
-      flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
-      backgroundColor: theme.colors.accentLight,
-      paddingVertical: 10,
-      paddingHorizontal: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: theme.colors.accent,
-      marginTop: 8,
     },
-    switchTabResultBtnText: {
-      fontSize: 13,
+    groupTitle: {
+      fontSize: 13.5,
+      fontWeight: '800',
+      color: theme.colors.primary,
+      textAlign: Platform.OS === 'web' ? 'right' : 'left',
+      writingDirection: 'rtl',
+    },
+    groupDivider: {
+      flex: 1,
+      height: 1,
+      backgroundColor: theme.colors.border,
+    },
+    groupCount: {
+      fontSize: 11,
       fontWeight: '700',
-      color: theme.colors.accent,
+      color: theme.colors.textMuted,
     },
   });
 }

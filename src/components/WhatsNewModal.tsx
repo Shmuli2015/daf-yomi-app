@@ -11,6 +11,7 @@ type WhatsNewModalProps = {
   version: string;
   highlights: string[];
   onClose: () => void;
+  onOpenGuide?: () => void;
 };
 
 export default function WhatsNewModal({
@@ -18,6 +19,7 @@ export default function WhatsNewModal({
   version,
   highlights,
   onClose,
+  onOpenGuide,
 }: WhatsNewModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createWhatsNewModalStyles(theme), [theme]);
@@ -49,6 +51,18 @@ export default function WhatsNewModal({
           </View>
         </View>
         <WhatsNewHighlights items={highlights} />
+        {onOpenGuide ? (
+          <TouchableOpacity
+            style={styles.guideLinkBtn}
+            onPress={onOpenGuide}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel="מדריך שימוש מקיף"
+          >
+            <Ionicons name="book-outline" size={16} color={theme.colors.accent} />
+            <Text style={styles.guideLinkText}>מדריך שימוש מקיף</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </BottomSheetModal>
   );

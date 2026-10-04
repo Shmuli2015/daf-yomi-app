@@ -37,6 +37,7 @@ interface HomeHeaderProps {
   isToday?: boolean;
   isFuture?: boolean;
   currentDate?: Date;
+  onOpenGuide?: () => void;
 }
 
 const HomeHeader = React.memo(function HomeHeader({
@@ -67,6 +68,7 @@ const HomeHeader = React.memo(function HomeHeader({
   isToday,
   isFuture = false,
   currentDate,
+  onOpenGuide,
 }: HomeHeaderProps) {
   const theme = useTheme();
   const styles = useMemo(() => createHomeHeaderStyles(theme), [theme]);
@@ -161,6 +163,7 @@ const HomeHeader = React.memo(function HomeHeader({
             handleToggle={handleToggle}
             onMarkFull={onMarkFull}
             onDismissHalfDafTip={onDismissHalfDafTip}
+            onOpenGuide={onOpenGuide}
           />
         </Animated.View>
       </Animated.View>

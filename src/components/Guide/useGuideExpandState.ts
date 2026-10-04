@@ -36,6 +36,17 @@ export function useGuideExpandState(hasSearch: boolean, searchKey: string) {
     [hasSearch],
   );
 
+  const expandSection = useCallback(
+    (id: string) => {
+      if (hasSearch) {
+        setCollapsedInSearch((prev) => ({ ...prev, [id]: false }));
+        return;
+      }
+      setExpandedMap((prev) => ({ ...prev, [id]: true }));
+    },
+    [hasSearch],
+  );
+
   const handleExpandAll = useCallback(() => {
     setExpandedMap(createAllExpandedMap());
   }, []);
@@ -56,6 +67,7 @@ export function useGuideExpandState(hasSearch: boolean, searchKey: string) {
   return useMemo(
     () => ({
       toggleSection,
+      expandSection,
       handleExpandAll,
       handleCollapseAll,
       allExpanded,
@@ -64,6 +76,7 @@ export function useGuideExpandState(hasSearch: boolean, searchKey: string) {
     }),
     [
       toggleSection,
+      expandSection,
       handleExpandAll,
       handleCollapseAll,
       allExpanded,

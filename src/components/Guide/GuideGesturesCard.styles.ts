@@ -8,25 +8,18 @@ export function createGuideGesturesCardStyles(theme: Theme) {
       borderRadius: 16,
       borderWidth: 1,
       borderColor: theme.colors.border,
+      marginTop: 8,
       marginBottom: 14,
-      overflow: 'hidden',
+      padding: 14,
       direction: 'rtl',
     },
-    headerTouchable: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 14,
-      paddingVertical: 12,
-      direction: 'rtl',
-    },
-    headerLeft: {
+    headerRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      flex: 1,
+      marginBottom: 12,
     },
-    headerIconWrap: {
+    headerIconBox: {
       width: 34,
       height: 34,
       borderRadius: 10,
@@ -34,7 +27,7 @@ export function createGuideGesturesCardStyles(theme: Theme) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    headerTitleWrap: {
+    headerTextWrap: {
       flex: 1,
     },
     title: {
@@ -47,45 +40,42 @@ export function createGuideGesturesCardStyles(theme: Theme) {
     subtitle: {
       fontSize: 11.5,
       color: theme.colors.textMuted,
-      marginTop: 1,
+      marginTop: 2,
       textAlign: Platform.OS === 'web' ? 'right' : 'left',
       writingDirection: 'rtl',
     },
-    itemsContainer: {
-      paddingHorizontal: 14,
-      paddingBottom: 12,
-      paddingTop: 8,
+    itemsList: {
       gap: 10,
-      borderTopWidth: 1,
-      borderTopColor: theme.colors.border,
-      backgroundColor: theme.colors.background,
     },
-    gestureRow: {
+    gestureCard: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       gap: 10,
-      paddingVertical: 4,
+      backgroundColor: theme.colors.background,
+      borderRadius: 12,
+      padding: 10,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      direction: 'rtl',
     },
-    gestureIconBadge: {
+    gestureIconBox: {
       width: 32,
       height: 32,
       borderRadius: 8,
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.accentLight,
       alignItems: 'center',
       justifyContent: 'center',
       marginTop: 2,
     },
-    gestureTextWrap: {
+    gestureContent: {
       flex: 1,
+      gap: 2,
     },
     gestureTitleRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
-      flexWrap: 'wrap',
-      marginBottom: 2,
+      justifyContent: 'space-between',
+      gap: 6,
     },
     gestureTitle: {
       fontSize: 13,
@@ -93,6 +83,7 @@ export function createGuideGesturesCardStyles(theme: Theme) {
       color: theme.colors.textPrimary,
       textAlign: Platform.OS === 'web' ? 'right' : 'left',
       writingDirection: 'rtl',
+      flex: 1,
     },
     gestureBadge: {
       paddingHorizontal: 6,
@@ -103,7 +94,7 @@ export function createGuideGesturesCardStyles(theme: Theme) {
       borderColor: theme.colors.accentBorder,
     },
     gestureBadgeText: {
-      fontSize: 10.5,
+      fontSize: 10,
       fontWeight: '700',
       color: theme.colors.accent,
       writingDirection: 'rtl',

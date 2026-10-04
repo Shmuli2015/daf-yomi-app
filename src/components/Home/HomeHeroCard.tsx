@@ -42,6 +42,7 @@ interface HomeHeroCardProps {
   handleToggle?: () => void;
   onMarkFull?: () => void;
   onDismissHalfDafTip?: () => void;
+  onOpenGuide?: () => void;
 }
 
 const HomeHeroCard = React.memo(function HomeHeroCard({
@@ -70,6 +71,7 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
   handleToggle,
   onMarkFull,
   onDismissHalfDafTip,
+  onOpenGuide,
 }: HomeHeroCardProps) {
   const theme = useTheme();
   const styles = useMemo(() => createHomeHeroCardStyles(theme), [theme]);
@@ -116,8 +118,22 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
         />
 
         <View style={styles.cardHeader}>
-          <View style={styles.dailyStudyBadge}>
-            <Text style={styles.dailyStudyText}>{isToday ? 'הלימוד היומי' : 'דף יומי'}</Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.dailyStudyBadge}>
+              <Text style={styles.dailyStudyText}>{isToday ? 'הלימוד היומי' : 'דף יומי'}</Text>
+            </View>
+            {onOpenGuide ? (
+              <TouchableOpacity
+                onPress={onOpenGuide}
+                style={styles.guideButton}
+                activeOpacity={0.7}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                accessibilityRole="button"
+                accessibilityLabel="מדריך שימוש"
+              >
+                <Ionicons name="help-circle-outline" size={17} color={theme.colors.accent} />
+              </TouchableOpacity>
+            ) : null}
           </View>
 
           {onOpenQuickJump && (

@@ -1,17 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
+import type { Ionicons } from '@expo/vector-icons';
 
 export interface GuideSectionData {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
+  shortTitle: string;
+  subtitle: string;
   items: string[];
-}
-
-export interface FaqChipData {
-  id: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  query: string;
 }
 
 export const GUIDE_SECTIONS: GuideSectionData[] = [
@@ -19,6 +14,8 @@ export const GUIDE_SECTIONS: GuideSectionData[] = [
     id: 'home',
     icon: 'home-outline',
     title: 'מסך הבית',
+    shortTitle: 'בית',
+    subtitle: 'סימון, מעבר בין ימים, רצף והתקדמות',
     items: [
       'מעבר בין הימים מתבצע באמצעות החצים שבראש המסך, או בהחלקה ימינה ושמאלה על כרטיס הדף היומי. לחיצה על התאריך מאפשרת מעבר מהיר להיום. בעת צפייה ביום אחר, יופיע כפתור [[חזור להיום]]. מתי מתחלף "היום" נקבע בהגדרות תחת [[מתי מתחלף הדף היומי]]. מתחת לתאריך מוצג שם המועד כשיש כזה: שבת ופרשת השבוע, חג, צום או ראש חודש.',
       'תזכורת לדף של אתמול (**שכחת לסמן אתמול?**): בעת פתיחת האפליקציה ביום הנוכחי, אם הדף של אתמול טרם נלמד, יופיע באנר תזכורת עדין בראש המסך. לחיצה על כפתור [[סמן]] מסמנת את הדף של אתמול כנלמד ישירות מבלי לעזוב את היום הנוכחי, לחיצה על גוף הבאנר מעבירה לדף של אתמול, ולחיצה על [[✕]] סוגרת את התזכורת לאותו יום.',
@@ -39,6 +36,8 @@ export const GUIDE_SECTIONS: GuideSectionData[] = [
     id: 'reader',
     icon: 'reader-outline',
     title: 'קורא הטקסט',
+    shortTitle: 'קורא',
+    subtitle: 'מצבי צפייה, מפרשים וכלי קריאה',
     items: [
       '**פתיחת הקורא**: כפתור [[לימוד הדף]] במסך הבית ובכרטיס היום בלוח פותח את מסך הקריאה לדף הנבחר. במסלול האישי ובש״ס אפשר גם [[פתח בקורא]] מתפריט הסימון. כשמתג [[מסך דלוק]] פעיל בהגדרות (ברירת מחדל), המסך נשאר דולק בזמן הקריאה ולא נכבה.',
       '**מצבי צפייה (גמרא / שטיינזלץ / חברותא)**: בסרגל הכלים העליון ניתן לעבור בין [[גמרא]] (טקסט מספריא, מנוקד כברירת מחדל, עם רש״י ותוספות בהרחבה מוטמעת תחת כל קטע), [[שטיינזלץ]] (ביאור רציף שבו הגמרא משובצת בתוך הביאור), ו-[[חברותא]] (ביאור רציף של הרב יעקב שולביץ ממאגר תורת אמת, שבו מילות הגמרא מודגשות בתוך הביאור). ברירת המחדל בפתיחת הדף נקבעת ב-[[מצב קורא]] בהגדרות. במסכתות שאין להן ביאור חברותא (קינים ומדות) המצב לא מוצג, מלבד עמוד כה ע״ב של קינים שבו מוצגת תחילת תמיד. בקינים (עד כה ע״א) ובמדות הטאב הקלאסי נקרא [[משנה]], וטאב [[שטיינזלץ]] מוסתר.',
@@ -61,6 +60,8 @@ export const GUIDE_SECTIONS: GuideSectionData[] = [
     id: 'calendar',
     icon: 'calendar-outline',
     title: 'מסך הלוח העברי',
+    shortTitle: 'לוח',
+    subtitle: 'חודשים, מועדים והשלמת פערים',
     items: [
       '**ניווט בלוח**: מעבר בין החודשים השונים מתבצע באמצעות חצי הניווט או על ידי החלקת האצבע ימינה ושמאלה על גבי הלוח. כפתור [[היום]] ליד שם החודש מאפשר חזרה מיידית לחודש ולתאריך הנוכחיים.',
       '**בורר חודש ושנה מהיר**: לחיצה על כותרת החודש והשנה בראש המסך פותחת חלונית לבחירת שנה עברית (כולל תמיכה מלאה בשנים מעוברות עם אדר א׳ ואדר ב׳) וחודש עברי, למעבר מהיר לכל נקודת זמן.',
@@ -78,6 +79,8 @@ export const GUIDE_SECTIONS: GuideSectionData[] = [
     id: 'history',
     icon: 'stats-chart-outline',
     title: 'מסך ההיסטוריה, התקדמות בש"ס',
+    shortTitle: 'ש״ס',
+    subtitle: 'מסכתות, סדרים וסימון מרוכז',
     items: [
       'טבעת ההתקדמות המרכזית מציגה את אחוז ההתקדמות הכללי שלך בש"ס. ספירת ה-**דפים נלמדו** משקללת גם חצאי דפים, וכוללת דפים שסומנו בדף היומי או בלימוד אישי (בלי כפילות).',
       'כפתור ה-[[שתף]] שליד טבעת ההתקדמות מאפשר לשתף תמונת הישגים מעוצבת. בלחיצה עליו תיפתח תצוגה מקדימה המציגה את אחוז ההתקדמות בש"ס, מספר הדפים שנלמדו, מספר המסכתות שהושלמו ומיתוג האפליקציה.',
@@ -98,6 +101,8 @@ export const GUIDE_SECTIONS: GuideSectionData[] = [
     id: 'settings',
     icon: 'settings-outline',
     title: 'מסך ההגדרות, תזכורות והתאמה אישית',
+    shortTitle: 'הגדרות',
+    subtitle: 'תזכורות, תצוגה, גיבוי ואחסון',
     items: [
       'סרגל [[חפש בהגדרות...]]: מאפשר לאתר במהירות ובזמן אמת כל הגדרה, מתג או אפשרות הקיימים באפליקציה.',
       'מתג ה-[[תזכורת יומית]] מפעיל או מכבה את כלל התראות הלימוד. כאשר הוא כבוי, לא יישלחו תזכורות כלל. בהתראה עצמה במכשיר ניתן לבחור [[סיימתי את הדף!]] לסימון מיידי, או [[הזכר לי עוד שעה]] לקבלת תזכורת נוספת כעבור שעה. לחיצה על גוף ההתראה פותחת את מסך הבית.',
@@ -122,6 +127,8 @@ export const GUIDE_SECTIONS: GuideSectionData[] = [
     id: 'tips',
     icon: 'bulb-outline',
     title: 'טיפים ודגשים נוספים',
+    shortTitle: 'טיפים',
+    subtitle: 'רטט, קריאה ללא רשת ושיתוף',
     items: [
       '**משוב רטט עדין (Haptics)**: פעולות שונות באפליקציה (סימון דף, מעבר יום, לחיצה ארוכה, דפדוף) מלוות במשוב תחושתי עדין. ניתן להפעיל או לכבות זאת במתג [[רטט]] בקטגוריית הקורא בהגדרות.',
       'האפליקציה כוללת תמיכה מלאה ואינטגרלית בשפה העברית ובכיווניות מימין לשמאל (RTL) בכל המסכים.',
@@ -133,25 +140,4 @@ export const GUIDE_SECTIONS: GuideSectionData[] = [
       'שיתוף תמונות ההישגים וההתקדמות (רצף הלימוד, אחוז ההתקדמות בש"ס, או סיום מסכת) מתבצע מתוך מסכי **הבית** ו-**ההיסטוריה**, ומחלון **סיום מסכת**. להתקנה ועדכון של האפליקציה יש להשתמש ב-Google Play.',
     ],
   },
-];
-
-export const FAQ_CHIPS: FaqChipData[] = [
-  { id: 'quickjump', icon: 'bookmarks-outline', label: 'קפיצה לדף', query: 'קפיצה' },
-  { id: 'reader', icon: 'reader-outline', label: 'קורא טקסט', query: 'קורא' },
-  { id: 'readertheme', icon: 'contrast-outline', label: 'ערכת קריאה', query: 'ערכת קריאה' },
-  { id: 'calendar', icon: 'calendar-outline', label: 'לוח שנה', query: 'לוח' },
-  { id: 'catchup', icon: 'flash', label: 'השלמת פערים', query: 'השלמת פערים' },
-  { id: 'markall', icon: 'checkmark-done-outline', label: 'סמן הכל', query: 'סמן הכל' },
-  { id: 'half', icon: 'remove-circle-outline', label: 'חצי דף', query: 'חצי דף' },
-  { id: 'streak', icon: 'flame', label: 'רצף הלימוד', query: 'רצף הלימוד' },
-  { id: 'siyum', icon: 'ribbon-outline', label: 'סיום מסכת', query: 'סיום מסכת' },
-  { id: 'personal', icon: 'bookmark-outline', label: 'מסלול אישי', query: 'מסלול אישי' },
-  { id: 'fullscreen', icon: 'expand-outline', label: 'מסך מלא', query: 'מסך מלא' },
-  { id: 'dafday', icon: 'time-outline', label: 'החלפת הדף', query: 'מתחלף' },
-  { id: 'reminder', icon: 'notifications-outline', label: 'תזכורות', query: 'תזכורת' },
-  { id: 'snooze', icon: 'alarm-outline', label: 'הזכר לי', query: 'הזכר לי' },
-  { id: 'licenses', icon: 'ribbon-outline', label: 'מקורות ורישיונות', query: 'מקורות ורישיונות' },
-  { id: 'backup', icon: 'cloud-upload-outline', label: 'גיבוי', query: 'גיבוי' },
-  { id: 'update', icon: 'cloud-download-outline', label: 'עדכונים', query: 'עדכון' },
-  { id: 'cache', icon: 'folder-open-outline', label: 'ניקוי קבצים', query: 'ניקוי קבצים' },
 ];

@@ -64,7 +64,23 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     dismissNudgeForDay,
   } = useHomeScreenModals();
 
-  const [showPersonalGuideModal, setShowPersonalGuideModal] = useState(false);
+  const [guideModalConfig, setGuideModalConfig] = useState<{
+    visible: boolean;
+    initialTab?: 'guide' | 'faq';
+    initialCategory?: any;
+  }>({ visible: false });
+
+  const handleOpenHeroGuide = useCallback(() => {
+    setGuideModalConfig({ visible: true, initialTab: 'guide' });
+  }, []);
+
+  const handleOpenPersonalGuide = useCallback(() => {
+    setGuideModalConfig({ visible: true, initialTab: 'faq', initialCategory: 'marking' });
+  }, []);
+
+  const handleCloseGuideModal = useCallback(() => {
+    setGuideModalConfig(prev => ({ ...prev, visible: false }));
+  }, []);
 
   const {
     todayRecord,
@@ -332,6 +348,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             isToday={isToday}
             isFuture={isFuture}
             currentDate={currentDate}
+            onOpenGuide={handleOpenHeroGuide}
           />
 
           {personalTrackEnabled && (
@@ -345,7 +362,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
                 onOpenMasechetDetailPress={handleOpenActivePersonalDetail}
                 onToggleDafLearned={togglePersonalDafLearned}
                 onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
-                onOpenGuide={() => setShowPersonalGuideModal(true)}
+                onOpenGuide={handleOpenPersonalGuide}
               />
             </>
           )}
@@ -397,10 +414,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       />
 
       <GuideModal
-        visible={showPersonalGuideModal}
-        onClose={() => setShowPersonalGuideModal(false)}
-        initialTab="faq"
-        initialQuery="מסלול אישי"
+        visible={guideModalConfig.visible}
+        onClose={handleCloseGuideModal}
+        initialTab={guideModalConfig.initialTab}
+        initialCategory={guideModalConfig.initialCategory}
       />
 
       {siyumMasechet && (

@@ -26,6 +26,7 @@ export type Theme = {
     white: string;
     gold: string;
     overlay: string;
+    overlayStrong: string;
   };
   radius: {
     sm: number;
@@ -66,6 +67,7 @@ export const DARK_THEME: Theme = {
     white: '#FFFFFF',
     gold: '#FFD700',
     overlay: 'rgba(0,0,0,0.4)',
+    overlayStrong: 'rgba(0,0,0,0.65)',
   },
   radius: {
     sm: 12,
