@@ -1,4 +1,9 @@
-import { countVisibleSettingsMatches, hasVisibleSettingsMatch } from '../settingsVisibleSearch';
+import {
+  countVisibleSettingsMatches,
+  getMatchingSectionKeys,
+  hasVisibleSectionMatch,
+  hasVisibleSettingsMatch,
+} from '../settingsVisibleSearch';
 import type { VisibleSettingsSearchContext } from '../settingsVisibleSearch';
 
 const baseCtx: VisibleSettingsSearchContext = {
@@ -57,6 +62,15 @@ describe('settingsVisibleSearch', () => {
     expect(countVisibleSettingsMatches('   ', baseCtx)).toBe(0);
     expect(countVisibleSettingsMatches('גיבוי', baseCtx)).toBeGreaterThan(0);
     expect(countVisibleSettingsMatches('xyznonexistentterm', baseCtx)).toBe(0);
+  });
+
+  it('matches sections independently for accordion filtering', () => {
+    expect(hasVisibleSectionMatch('גיבוי', 'backup_data', baseCtx)).toBe(true);
+    expect(hasVisibleSectionMatch('גיבוי', 'notifications', baseCtx)).toBe(false);
+    expect(hasVisibleSectionMatch('ערכת קריאה', 'reader', baseCtx)).toBe(true);
+    expect(hasVisibleSectionMatch('ערכת קריאה', 'display', baseCtx)).toBe(false);
+    expect(getMatchingSectionKeys('גיבוי', baseCtx)).toEqual(['backup_data']);
+    expect(getMatchingSectionKeys('מצב תצוגה', baseCtx)).toEqual(['display']);
   });
 });
 
