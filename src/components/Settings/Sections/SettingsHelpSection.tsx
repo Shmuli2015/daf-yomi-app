@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { SettingItem } from '../SettingItem';
 import { SectionHeader } from '../SectionHeader';
@@ -26,6 +26,7 @@ export default function SettingsHelpSection({
   styles,
   searchQuery,
   isFirst,
+  embedded,
   onGuideModalOpen,
   onSupportPress,
   onSupportLongPress,
@@ -41,8 +42,10 @@ export default function SettingsHelpSection({
 
   return (
     <>
-      <SectionHeader title="עזרה" icon="help-circle-outline" isFirst={isFirst} />
-      <View style={styles.card}>
+      {!embedded ? (
+        <SectionHeader title="עזרה" icon="help-circle-outline" isFirst={isFirst} />
+      ) : null}
+      <View style={embedded ? styles.embeddedCard : styles.card}>
         {showGuide ? (
           <SettingItem
             icon="help-circle-outline"

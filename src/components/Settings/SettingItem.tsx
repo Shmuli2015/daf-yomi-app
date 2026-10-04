@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, Text, Switch, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
+import { triggerSelection } from '../../utils/haptics';
 import HighlightedText from './HighlightedText';
 import { createSettingItemStyles } from './SettingItem.styles';
 
@@ -16,6 +17,8 @@ export interface SettingItemProps {
   isDestructive?: boolean;
   isLast?: boolean;
   highlightText?: string;
+  iconColor?: string;
+  iconBgColor?: string;
 }
 
 export const SettingItem = React.memo(function SettingItem({
@@ -29,12 +32,17 @@ export const SettingItem = React.memo(function SettingItem({
   isDestructive = false,
   isLast = false,
   highlightText,
+  iconColor,
+  iconBgColor,
 }: SettingItemProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSettingItemStyles(theme), [theme]);
 
-  const iconBg = isDestructive ? theme.colors.dangerLight : theme.colors.accentLight;
-  const iconColor = isDestructive ? theme.colors.danger : theme.colors.accent;
+  const defaultIconBg = isDestructive ? theme.colors.dangerLight : theme.colors.accentLight;
+  const defaultIconColor = isDestructive ? theme.colors.danger : theme.colors.accent;
+  const resolvedIconColor = iconColor ?? defaultIconColor;
+  const resolvedIconBg = iconBgColor ?? (iconColor ? iconColor + '18' : defaultIconBg);
+
   const titleColor = isDestructive ? theme.colors.danger : theme.colors.textPrimary;
   const accessibilityLabelParts = [title];
   if (description) accessibilityLabelParts.push(description);
@@ -43,13 +51,18 @@ export const SettingItem = React.memo(function SettingItem({
   const isSwitch = type === 'switch';
   const switchValue = Boolean(value);
 
+  const handlePress = () => {
+    void triggerSelection();
+    if (isSwitch) {
+      onPress?.(!switchValue);
+    } else {
+      onPress?.();
+    }
+  };
+
   return (
     <TouchableOpacity
-      onPress={
-        isSwitch
-          ? () => onPress?.(!switchValue)
-          : onPress
-      }
+      onPress={onPress ? handlePress : undefined}
       onLongPress={onLongPress}
       delayLongPress={350}
       disabled={!onPress && !onLongPress}
@@ -60,8 +73,8 @@ export const SettingItem = React.memo(function SettingItem({
       accessibilityState={isSwitch ? { checked: switchValue } : undefined}
     >
       <View style={styles.left}>
-        <View style={[styles.iconBox, { backgroundColor: iconBg }]}>
-          <Ionicons name={icon} size={19} color={iconColor} />
+        <View style={[styles.iconBox, { backgroundColor: resolvedIconBg }, iconColor ? { borderColor: iconColor + '35' } : undefined]}>
+          <Ionicons name={icon} size={19} color={resolvedIconColor} />
         </View>
         <View style={styles.textBlock}>
           <HighlightedText

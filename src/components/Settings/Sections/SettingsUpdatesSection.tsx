@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { SettingItem } from '../SettingItem';
 import { SectionHeader } from '../SectionHeader';
@@ -26,6 +26,7 @@ export default function SettingsUpdatesSection({
   styles,
   searchQuery,
   isFirst,
+  embedded,
   updateAutoPromptEnabled,
   onUpdateAutoPromptToggle,
   onCheckAppUpdate,
@@ -44,8 +45,10 @@ export default function SettingsUpdatesSection({
 
   return (
     <>
-      <SectionHeader title="עדכונים" icon="sparkles-outline" isFirst={isFirst} />
-      <View style={styles.card}>
+      {!embedded ? (
+        <SectionHeader title="עדכונים" icon="sparkles-outline" isFirst={isFirst} />
+      ) : null}
+      <View style={embedded ? styles.embeddedCard : styles.card}>
         {showAuto ? (
           <SettingItem
             icon="alert-circle-outline"

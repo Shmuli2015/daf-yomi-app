@@ -1,8 +1,9 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text } from 'react-native';
 import { SettingItem } from '../SettingItem';
 import { SectionHeader } from '../SectionHeader';
 import type { SettingsSectionChrome } from '../settingsSection.types';
+import { useTheme } from '../../../theme';
 import { formatLastBackupAt, getBackupReminderText } from '../../../utils/backupReminder';
 import { isLastVisible, matchesSetting } from '../../../utils/settingsSearch';
 import {
@@ -25,11 +26,13 @@ export default function SettingsBackupSection({
   styles,
   searchQuery,
   isFirst,
+  embedded,
   lastBackupAt,
   onSaveBackupToFile,
   onShareBackup,
   onImportBackup,
 }: SettingsBackupSectionProps) {
+  const theme = useTheme();
   const lastLabel = formatLastBackupAt(lastBackupAt);
   const reminder = getBackupReminderText(lastBackupAt);
   const saveDescription = lastLabel
@@ -45,14 +48,22 @@ export default function SettingsBackupSection({
 
   return (
     <>
-      <SectionHeader title="גיבוי ושחזור" icon="cloud-upload-outline" isFirst={isFirst} />
-      <View style={styles.card}>
+      {!embedded ? (
+        <SectionHeader
+          title="גיבוי ושחזור"
+          icon="cloud-upload-outline"
+          isFirst={isFirst}
+          accentColor={theme.colors.success}
+        />
+      ) : null}
+      <View style={embedded ? styles.embeddedCard : styles.card}>
         {showSave ? (
           <SettingItem
             icon="save-outline"
             title={SAVE_ITEM.title}
             description={saveDescription}
             onPress={onSaveBackupToFile}
+            iconColor={theme.colors.success}
             isLast={isLastVisible(flags, 0)}
             highlightText={searchQuery}
           />
@@ -63,6 +74,7 @@ export default function SettingsBackupSection({
             title={SHARE_BACKUP_ITEM.title}
             description={SHARE_BACKUP_ITEM.description}
             onPress={onShareBackup}
+            iconColor={theme.colors.success}
             isLast={isLastVisible(flags, 1)}
             highlightText={searchQuery}
           />
@@ -73,6 +85,7 @@ export default function SettingsBackupSection({
             title={IMPORT_ITEM.title}
             description={IMPORT_ITEM.description}
             onPress={onImportBackup}
+            iconColor={theme.colors.success}
             isLast={isLastVisible(flags, 2)}
             highlightText={searchQuery}
           />

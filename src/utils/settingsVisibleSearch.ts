@@ -1,7 +1,7 @@
 import type { DafDayStartMode } from './dafDayBoundary';
 import type { ExactAlarmStatus } from './exactAlarm';
 import type { NotificationPermissionStatus } from './notificationPermission';
-import { matchesAnySetting, type SearchableSetting } from './settingsSearch';
+import { matchesAnySetting, matchesSetting, type SearchableSetting } from './settingsSearch';
 import {
   AUTO_UPDATE_ITEM,
   BACKUP_SEARCH_ITEMS,
@@ -102,3 +102,13 @@ export function hasVisibleSettingsMatch(
 ): boolean {
   return matchesAnySetting(query, getVisibleSettingsSearchItems(ctx));
 }
+
+export function countVisibleSettingsMatches(
+  query: string,
+  ctx: VisibleSettingsSearchContext,
+): number {
+  if (!query.trim()) return 0;
+  const items = getVisibleSettingsSearchItems(ctx);
+  return items.filter(item => matchesSetting(query, item)).length;
+}
+
