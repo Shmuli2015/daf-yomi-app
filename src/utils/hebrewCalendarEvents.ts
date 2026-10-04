@@ -34,7 +34,14 @@ function normalizeEventName(raw: string): string {
     .trim();
 }
 
+const hebrewDayEventCache = new Map<string, HebrewDayEventInfo>();
+const HEBREW_DAY_EVENT_CACHE_MAX = 120;
+
 export function getHebrewDayEventInfo(hdate: HDate): HebrewDayEventInfo {
+  const cacheKey = `${hdate.getFullYear()}-${hdate.getMonth()}-${hdate.getDate()}`;
+  const cached = hebrewDayEventCache.get(cacheKey);
+  if (cached) return cached;
+
   const isShabbat = hdate.getDay() === 6;
   const isRoshChodesh = hdate.getDate() === 1 || hdate.getDate() === 30;
 
@@ -105,11 +112,19 @@ export function getHebrewDayEventInfo(hdate: HDate): HebrewDayEventInfo {
     badgeLabel = 'שבת';
   }
 
-  return {
+  const result: HebrewDayEventInfo = {
     isShabbat,
     isRoshChodesh,
     isHoliday,
     eventName,
     badgeLabel,
   };
+
+  hebrewDayEventCache.set(cacheKey, result);
+  if (hebrewDayEventCache.size > HEBREW_DAY_EVENT_CACHE_MAX) {
+    const oldest = hebrewDayEventCache.keys().next().value;
+    if (oldest !== undefined) hebrewDayEventCache.delete(oldest);
+  }
+
+  return result;
 }

@@ -29,6 +29,12 @@ describe('siyumNusach', () => {
     expect(joined.split('שבת').length - 1).toBe(4);
   });
 
+  it('keeps the liturgy without vowel points', () => {
+    const nikud = /[\u0591-\u05C7]/;
+    const text = SIYUM_NUSACH_SECTIONS.map((section) => `${section.title}\n${section.body}`).join('\n');
+    expect(nikud.test(text)).toBe(false);
+  });
+
   it('keeps the hadran triple-recitation note', () => {
     const hadran = SIYUM_NUSACH_SECTIONS.find((section) => section.id === 'hadran');
     expect(hadran?.note).toBe('נאמר שלוש פעמים');

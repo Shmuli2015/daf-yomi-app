@@ -1,5 +1,4 @@
 ﻿import { useState, useEffect, useCallback } from 'react';
-import { InteractionManager } from 'react-native';
 import type { SettingsRecord } from '../db/database';
 import { getSettings } from '../db/database';
 import { ThemeMode } from '../theme';
@@ -15,6 +14,7 @@ import {
 import { getNotificationPermissionStatus } from '../utils/notificationPermission';
 import { parseDaySchedulesJson } from '../utils/settingsScreen';
 import { scheduleNotifications } from '../utils/notifications';
+import { scheduleIdleTask } from '../utils/scheduleIdleTask';
 import { DAY_LABELS } from '../components/Settings/Schedule/DayScheduleList.constants';
 
 interface UseSettingsDisplayPrefsParams {
@@ -138,10 +138,10 @@ export function useSettingsDisplayPrefs({
         setEditingDafDayIndex(null);
       }
       if (switchingToCustom) {
-        InteractionManager.runAfterInteractions(() => {
+        scheduleIdleTask(() => {
           setTimeout(() => {
             setShowDafDayStartTimePicker(true);
-            InteractionManager.runAfterInteractions(() => {
+            scheduleIdleTask(() => {
               void rescheduleStudyReminders();
             });
           }, 320);

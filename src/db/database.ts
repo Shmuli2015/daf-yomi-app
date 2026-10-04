@@ -614,10 +614,21 @@ export function replaceAllRecords(records: DailyRecordInput[]) {
 export function importRecords(records: DailyRecordInput[]) {
   migrateDailyDafColumns();
   db.withTransactionSync(() => {
+    const existingByDate = new Map(getAllRecords().map((record) => [record.date, record]));
     for (const incoming of records) {
-      const existing = getDailyRecord(incoming.date);
+      const existing = existingByDate.get(incoming.date);
       if (!existing) {
         insertDailyRecord(incoming);
+        existingByDate.set(incoming.date, {
+          id: -1,
+          date: incoming.date,
+          masechet: incoming.masechet,
+          daf: incoming.daf,
+          status: incoming.status,
+          percentage: incoming.percentage ?? 0,
+          amud: incoming.amud ?? null,
+          learnedAt: incoming.learnedAt,
+        });
         continue;
       }
 
@@ -638,6 +649,15 @@ export function importRecords(records: DailyRecordInput[]) {
             };
 
       updateDailyRecordFromBackup(winner);
+      existingByDate.set(incoming.date, {
+        ...existing,
+        masechet: winner.masechet,
+        daf: winner.daf,
+        status: winner.status,
+        percentage: winner.percentage ?? 0,
+        amud: winner.amud ?? null,
+        learnedAt: winner.learnedAt,
+      });
     }
   });
 }
@@ -661,10 +681,21 @@ export function importFullBackupTransaction(data: FullBackupInput, mode: 'replac
         );
       }
     } else {
+      const existingByDate = new Map(getAllRecords().map((record) => [record.date, record]));
       for (const incoming of data.records) {
-        const existing = getDailyRecord(incoming.date);
+        const existing = existingByDate.get(incoming.date);
         if (!existing) {
           insertDailyRecord(incoming);
+          existingByDate.set(incoming.date, {
+            id: -1,
+            date: incoming.date,
+            masechet: incoming.masechet,
+            daf: incoming.daf,
+            status: incoming.status,
+            percentage: incoming.percentage ?? 0,
+            amud: incoming.amud ?? null,
+            learnedAt: incoming.learnedAt,
+          });
           continue;
         }
 
@@ -685,20 +716,38 @@ export function importFullBackupTransaction(data: FullBackupInput, mode: 'replac
               };
 
         updateDailyRecordFromBackup(winner);
+        existingByDate.set(incoming.date, {
+          ...existing,
+          masechet: winner.masechet,
+          daf: winner.daf,
+          status: winner.status,
+          percentage: winner.percentage ?? 0,
+          amud: winner.amud ?? null,
+          learnedAt: winner.learnedAt,
+        });
       }
 
       if (data.personalTrackRecords) {
         const now = new Date().toISOString();
+        const existingPersonal = new Map(
+          getPersonalTrackRecords().map((record) => [`${record.masechet}_${record.daf_num}`, record]),
+        );
         for (const r of data.personalTrackRecords) {
-          const existing = db.getFirstSync<{ id: number; status: string; learnedAt: string }>(
-            'SELECT id, status, learnedAt FROM personal_track_daf WHERE masechet = ? AND daf_num = ?',
-            [r.masechet, r.daf_num]
-          );
+          const key = `${r.masechet}_${r.daf_num}`;
+          const existing = existingPersonal.get(key);
           if (!existing) {
             db.runSync(
               'INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt) VALUES (?, ?, ?, ?, ?)',
               [r.masechet, r.daf_num, r.status, r.amud ?? null, r.learnedAt || now]
             );
+            existingPersonal.set(key, {
+              id: -1,
+              masechet: r.masechet,
+              daf_num: r.daf_num,
+              status: r.status,
+              amud: r.amud ?? null,
+              learnedAt: r.learnedAt || now,
+            });
           } else {
             const existingTime = Date.parse(existing.learnedAt);
             const incomingTime = Date.parse(r.learnedAt);
@@ -707,9 +756,15 @@ export function importFullBackupTransaction(data: FullBackupInput, mode: 'replac
               (!Number.isFinite(existingTime) || incomingTime >= existingTime);
             if (incomingWins) {
               db.runSync(
-                'UPDATE personal_track_daf SET status = ?, amud = ?, learnedAt = ? WHERE id = ?',
-                [r.status, r.amud ?? null, r.learnedAt || now, existing.id]
+                'UPDATE personal_track_daf SET status = ?, amud = ?, learnedAt = ? WHERE masechet = ? AND daf_num = ?',
+                [r.status, r.amud ?? null, r.learnedAt || now, r.masechet, r.daf_num]
               );
+              existingPersonal.set(key, {
+                ...existing,
+                status: r.status,
+                amud: r.amud ?? null,
+                learnedAt: r.learnedAt || now,
+              });
             }
           }
         }
@@ -862,16 +917,25 @@ export function mergePersonalTrackRecords(records: PersonalTrackRecord[]) {
   migratePersonalTrackColumns();
   db.withTransactionSync(() => {
     const now = new Date().toISOString();
+    const existingPersonal = new Map(
+      getPersonalTrackRecords().map((record) => [`${record.masechet}_${record.daf_num}`, record]),
+    );
     for (const r of records) {
-      const existing = db.getFirstSync<{ id: number; status: string; learnedAt: string }>(
-        'SELECT id, status, learnedAt FROM personal_track_daf WHERE masechet = ? AND daf_num = ?',
-        [r.masechet, r.daf_num]
-      );
+      const key = `${r.masechet}_${r.daf_num}`;
+      const existing = existingPersonal.get(key);
       if (!existing) {
         db.runSync(
           'INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt) VALUES (?, ?, ?, ?, ?)',
           [r.masechet, r.daf_num, r.status, r.amud ?? null, r.learnedAt || now]
         );
+        existingPersonal.set(key, {
+          id: -1,
+          masechet: r.masechet,
+          daf_num: r.daf_num,
+          status: r.status,
+          amud: r.amud ?? null,
+          learnedAt: r.learnedAt || now,
+        });
       } else {
         const existingTime = Date.parse(existing.learnedAt);
         const incomingTime = Date.parse(r.learnedAt);
@@ -880,9 +944,15 @@ export function mergePersonalTrackRecords(records: PersonalTrackRecord[]) {
           (!Number.isFinite(existingTime) || incomingTime >= existingTime);
         if (incomingWins) {
           db.runSync(
-            'UPDATE personal_track_daf SET status = ?, amud = ?, learnedAt = ? WHERE id = ?',
-            [r.status, r.amud ?? null, r.learnedAt || now, existing.id]
+            'UPDATE personal_track_daf SET status = ?, amud = ?, learnedAt = ? WHERE masechet = ? AND daf_num = ?',
+            [r.status, r.amud ?? null, r.learnedAt || now, r.masechet, r.daf_num]
           );
+          existingPersonal.set(key, {
+            ...existing,
+            status: r.status,
+            amud: r.amud ?? null,
+            learnedAt: r.learnedAt || now,
+          });
         }
       }
     }

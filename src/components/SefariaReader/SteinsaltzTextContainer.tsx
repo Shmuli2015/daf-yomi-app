@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import type { SharedValue } from 'react-native-reanimated';
 import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import CommentaryBodyText from './CommentaryBodyText';
 import ReaderSkeleton from './ReaderSkeleton';
@@ -32,7 +33,7 @@ interface SteinsaltzTextContainerProps {
   fontSize: number;
   readerTheme?: ReaderTheme;
   accentColor: string;
-  onScrollProgress?: (progress: number) => void;
+  scrollProgress?: SharedValue<number>;
 }
 
 export default function SteinsaltzTextContainer({
@@ -43,14 +44,14 @@ export default function SteinsaltzTextContainer({
   fontSize,
   readerTheme,
   accentColor,
-  onScrollProgress,
+  scrollProgress,
 }: SteinsaltzTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSteinsaltzTextContainerStyles(theme), [theme]);
 
   const { scrollViewRef, showFab, handleScroll, scrollToTop } =
     useScrollProgress({
-      onProgressChange: onScrollProgress,
+      progressShared: scrollProgress,
       resetKey: data?.tref || '',
     });
 

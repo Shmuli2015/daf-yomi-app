@@ -6,6 +6,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import type { SharedValue } from 'react-native-reanimated';
 import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import ReaderSkeleton from '../SefariaReader/ReaderSkeleton';
 import ScrollToTopFab from '../SefariaReader/ScrollToTopFab';
@@ -28,7 +29,7 @@ interface ChavrutaTextContainerProps {
   showNotes: boolean;
   readerTheme?: ReaderTheme;
   accentColor?: string;
-  onScrollProgress?: (progress: number) => void;
+  scrollProgress?: SharedValue<number>;
 }
 
 export default function ChavrutaTextContainer({
@@ -40,7 +41,7 @@ export default function ChavrutaTextContainer({
   showNotes,
   readerTheme,
   accentColor,
-  onScrollProgress,
+  scrollProgress,
 }: ChavrutaTextContainerProps) {
   const theme = useTheme();
   const palette = useMemo(
@@ -56,7 +57,7 @@ export default function ChavrutaTextContainer({
   const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
   const { scrollViewRef, showFab, handleScroll, scrollToTop } =
     useScrollProgress({
-      onProgressChange: onScrollProgress,
+      progressShared: scrollProgress,
       resetKey,
     });
 

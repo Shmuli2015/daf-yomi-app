@@ -4,6 +4,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import ConfettiCannon from 'react-native-confetti-cannon';
+import { useSharedValue } from 'react-native-reanimated';
 import TzuratHeader from '../components/TzuratHadaf/TzuratHeader';
 import TzuratNavigationBar from '../components/TzuratHadaf/TzuratNavigationBar';
 import FullscreenExitButton from '../components/TzuratHadaf/FullscreenExitButton';
@@ -50,7 +51,7 @@ export default function TzuratHadafScreen() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
+  const scrollProgress = useSharedValue(0);
   const isSystemDark = theme.colors.background === '#121212';
   const { readerTheme, setReaderTheme } = useReaderTheme(isSystemDark);
   const readerPalette = useMemo(
@@ -65,8 +66,8 @@ export default function TzuratHadafScreen() {
   });
 
   useEffect(() => {
-    setScrollProgress(0);
-  }, [reader.pageKey]);
+    scrollProgress.value = 0;
+  }, [reader.pageKey, scrollProgress]);
 
   const masechetHe = useMemo(
     () => getMasechetHe(reader.location.masechetEn, route.params.masechetHe),
@@ -208,7 +209,7 @@ export default function TzuratHadafScreen() {
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
               classicTabLabel={reader.classicTabLabel}
-              onScrollProgress={setScrollProgress}
+              scrollProgress={scrollProgress}
             />
           ) : reader.viewMode === 'steinsaltz' ? (
             <SteinsaltzTextContainer
@@ -219,7 +220,7 @@ export default function TzuratHadafScreen() {
               fontSize={reader.fontSize}
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
-              onScrollProgress={setScrollProgress}
+              scrollProgress={scrollProgress}
             />
           ) : (
             <ChavrutaTextContainer
@@ -231,7 +232,7 @@ export default function TzuratHadafScreen() {
               showNotes={reader.showChavrutaNotes}
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
-              onScrollProgress={setScrollProgress}
+              scrollProgress={scrollProgress}
             />
           )}
         </ReaderModePane>

@@ -65,6 +65,36 @@ export interface SefariaPageData {
 
 const CACHE_DIR = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? ''}sefaria-text/`;
 const SEFARIA_TEXT_CACHE_VERSION = 19;
+const MEMORY_CACHE_MAX = 5;
+const memoryCache = new Map<string, SefariaPageData>();
+
+function memoryCacheKey(tref: string, plainGemara: boolean): string {
+  return `${tref}${plainGemara ? '.plain' : ''}`;
+}
+
+function readMemoryCache(key: string): SefariaPageData | null {
+  const cached = memoryCache.get(key);
+  if (!cached) return null;
+  memoryCache.delete(key);
+  memoryCache.set(key, cached);
+  return cached;
+}
+
+function writeMemoryCache(key: string, data: SefariaPageData): void {
+  if (memoryCache.has(key)) {
+    memoryCache.delete(key);
+  }
+  memoryCache.set(key, data);
+  while (memoryCache.size > MEMORY_CACHE_MAX) {
+    const oldest = memoryCache.keys().next().value;
+    if (oldest === undefined) break;
+    memoryCache.delete(oldest);
+  }
+}
+
+export function invalidateSefariaTextMemoryCache(): void {
+  memoryCache.clear();
+}
 
 async function ensureCacheDir(): Promise<string> {
   const info = await FileSystem.getInfoAsync(CACHE_DIR);
@@ -321,6 +351,12 @@ export async function fetchSefariaPageText(
     throw new Error(shekalim ? 'לא נמצא טקסט לשקלים לעמוד זה' : 'לא נמצא טקסט לדף זה');
   }
   const plainGemara = !gemaraNikud && !shekalim && !mishnah;
+  const memKey = memoryCacheKey(tref, plainGemara);
+  const remembered = readMemoryCache(memKey);
+  if (remembered) {
+    return remembered;
+  }
+
   const cachePath = getCacheFilePath(tref, plainGemara);
 
   try {
@@ -334,10 +370,12 @@ export async function fetchSefariaPageText(
         Array.isArray(parsed.segments) &&
         parsed.segments.length > 0
       ) {
-        return {
+        const page = {
           ...parsed,
           chapterEvents: Array.isArray(parsed.chapterEvents) ? parsed.chapterEvents : [],
         };
+        writeMemoryCache(memKey, page);
+        return page;
       }
     }
   } catch {
@@ -386,11 +424,13 @@ export async function fetchSefariaPageText(
   } catch {
   }
 
+  writeMemoryCache(memKey, data);
   return data;
 }
 
 export async function clearSefariaTextCache(): Promise<void> {
   invalidateSefariaChaptersMemoryCache();
+  invalidateSefariaTextMemoryCache();
   try {
     const info = await FileSystem.getInfoAsync(CACHE_DIR);
     if (info.exists) {

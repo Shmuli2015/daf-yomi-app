@@ -16,7 +16,26 @@ export function getUTCDateStr(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export function getDafByDate(date: Date) {
+type DafByDateResult = {
+  masechet: string;
+  daf: string;
+  dafNumOnly: string;
+  masechetEn: string;
+  dafEn: string;
+  dafNum: number;
+  amud: 'a' | 'b';
+  fullText: string;
+  dateString: string;
+};
+
+const dafByDateCache = new Map<string, DafByDateResult>();
+const DAF_BY_DATE_CACHE_MAX = 120;
+
+export function getDafByDate(date: Date): DafByDateResult {
+  const cacheKey = getDateStr(date);
+  const cached = dafByDateCache.get(cacheKey);
+  if (cached) return cached;
+
   const hdate = new HDate(date);
   const dafYomiEvent = new DafYomiEvent(hdate);
   const textHebrew = dafYomiEvent.render('he');
@@ -35,7 +54,7 @@ export function getDafByDate(date: Date) {
 
   const dafNumOnly = (partsHeb[1] || '').replace(/[\u0591-\u05C7]/g, '').trim();
 
-  return {
+  const result: DafByDateResult = {
     masechet: masechetClean,
     daf: partsHeb[1] ? `דף ${partsHeb[1]}` : '',
     dafNumOnly,
@@ -46,4 +65,12 @@ export function getDafByDate(date: Date) {
     fullText: withoutPrefixHeb,
     dateString: getUTCDateStr(date),
   };
+
+  dafByDateCache.set(cacheKey, result);
+  if (dafByDateCache.size > DAF_BY_DATE_CACHE_MAX) {
+    const oldest = dafByDateCache.keys().next().value;
+    if (oldest !== undefined) dafByDateCache.delete(oldest);
+  }
+
+  return result;
 }

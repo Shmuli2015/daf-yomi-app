@@ -3,6 +3,7 @@ import { initDB } from '../db/database';
 import { useAppStore } from '../store/useAppStore';
 import { cleanupAllApkDownloads } from '../services/apkInstall';
 import { deleteLegacyTzuratHadafCache } from '../services/storageManager';
+import { scheduleIdleSequence } from '../utils/scheduleIdleTask';
 
 const MIN_SPLASH_MS = 1800;
 const SPLASH_HARD_MAX_MS = 6000;
@@ -11,14 +12,13 @@ export function useAppInitialization() {
   const [isReady, setIsReady] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
   const loadInitialData = useAppStore(state => state.loadInitialData);
+  const loadProgressData = useAppStore(state => state.loadProgressData);
 
   useEffect(() => {
     const startTime = Date.now();
     try {
       initDB();
       loadInitialData();
-      void cleanupAllApkDownloads();
-      void deleteLegacyTzuratHadafCache();
     } catch (e) {
       console.warn('DB init error:', e);
     }
@@ -26,15 +26,34 @@ export function useAppInitialization() {
     const remaining = Math.max(0, MIN_SPLASH_MS - elapsed);
     const readyTimer = setTimeout(() => setIsReady(true), remaining);
     const maxTimer = setTimeout(() => setIsReady(true), SPLASH_HARD_MAX_MS);
+
+    const deferred = scheduleIdleSequence([
+      () => {
+        try {
+          loadProgressData();
+        } catch (e) {
+          console.warn('Progress load error:', e);
+        }
+      },
+      () => {
+        void cleanupAllApkDownloads();
+      },
+      () => {
+        void deleteLegacyTzuratHadafCache();
+      },
+    ]);
+
     return () => {
       clearTimeout(readyTimer);
       clearTimeout(maxTimer);
+      deferred.cancel();
     };
-  }, [loadInitialData]);
+  }, [loadInitialData, loadProgressData]);
 
   const onSplashFinish = useCallback(() => {
     setShowSplash(false);
     useAppStore.getState().setAppReady(true);
+    useAppStore.getState().loadProgressData();
   }, []);
 
   return {

@@ -14,6 +14,7 @@ import MonthTractateBanner from './Calendar/MonthTractateBanner';
 import CompactCalendarLegend from './Calendar/CompactCalendarLegend';
 import CalendarTodayButton from './Calendar/CalendarTodayButton';
 import CatchUpModal from './Calendar/CatchUpModal';
+import CalendarGridSkeleton from './Calendar/CalendarGridSkeleton';
 import { useCalendarData } from './Calendar/useCalendarData';
 import { useCalendarMonth, isSameDay } from './Calendar/useCalendarMonth';
 import { useCalendarActions } from './Calendar/useCalendarActions';
@@ -27,7 +28,12 @@ export default function HebrewCalendar() {
   const theme = useTheme();
   const styles = useMemo(() => createHebrewCalendarStyles(theme), [theme]);
 
-  const { recordByDate, showCalendarDaf, showConfetti: showConfettiSetting } = useCalendarData();
+  const {
+    recordByDate,
+    showCalendarDaf,
+    showConfetti: showConfettiSetting,
+    showSecularDate,
+  } = useCalendarData();
 
   const {
     currentHDate,
@@ -37,6 +43,7 @@ export default function HebrewCalendar() {
     monthName,
     yearName,
     isViewingTodayMonth,
+    isGridTransitioning,
     monthTractateSummary,
     monthTractateShort,
     gridTranslateX,
@@ -150,23 +157,31 @@ export default function HebrewCalendar() {
         </View>
 
         <Animated.View style={{ flex: 1, justifyContent: 'space-between', transform: [{ translateX: gridTranslateX }], opacity: gridOpacity }}>
-          <View style={styles.grid}>
-            {calendarData.map((day) => (
-              <CalendarDay
-                key={day.dateKey}
-                hdate={day.hdate}
-                isCurrentMonth={day.isCurrentMonth}
-                learned={day.learned}
-                partial={day.partial}
-                partialAmud={day.partialAmud}
-                isToday={day.isToday}
-                isSelected={isSameDay(day.hdate, selectedDate)}
-                dafLabel={day.dafLabel}
-                hasSpecialEvent={day.hasSpecialEvent}
-                onPress={handleDayPress}
-              />
-            ))}
-          </View>
+          {isGridTransitioning ? (
+            <CalendarGridSkeleton />
+          ) : (
+            <View
+              key={`${currentHDate.getFullYear()}-${currentHDate.getMonth()}`}
+              style={styles.grid}
+            >
+              {calendarData.map((day) => (
+                <CalendarDay
+                  key={day.dateKey}
+                  hdate={day.hdate}
+                  isCurrentMonth={day.isCurrentMonth}
+                  learned={day.learned}
+                  partial={day.partial}
+                  partialAmud={day.partialAmud}
+                  isToday={day.isToday}
+                  isSelected={isSameDay(day.hdate, selectedDate)}
+                  dafLabel={day.dafLabel}
+                  hasSpecialEvent={day.hasSpecialEvent}
+                  showSecularDate={showSecularDate}
+                  onPress={handleDayPress}
+                />
+              ))}
+            </View>
+          )}
         </Animated.View>
       </Reanimated.View>
 
