@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Linking,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -12,12 +11,7 @@ import BottomSheetModal from '../../BottomSheetModal';
 import MasechetSelectList from '../../QuickJump/MasechetSelectList';
 import { useTheme } from '../../../theme';
 import { SHAS_MASECHTOT, type Masechet } from '../../../data/shas';
-import {
-  GFDL_URL,
-  SIYUM_NUSACH_ATTRIBUTION_SHORT,
-  SIYUM_NUSACH_SOURCE_URL,
-  getSiyumNusachSections,
-} from '../../../data/siyumNusach';
+import { getSiyumNusachSections } from '../../../data/siyumNusach';
 import { createSiyumNusachModalStyles } from './SiyumNusachModal.styles';
 
 interface SiyumNusachModalProps {
@@ -68,14 +62,6 @@ export default function SiyumNusachModal({
   );
 
   const scrollMaxHeight = Math.min(560, Math.round(windowHeight * 0.62));
-
-  const openLink = useCallback(async (url: string) => {
-    try {
-      await Linking.openURL(url);
-    } catch {
-      return;
-    }
-  }, []);
 
   const handleSelectMasechet = useCallback((masechet: Masechet) => {
     setSelectedMasechet(masechet);
@@ -142,28 +128,6 @@ export default function SiyumNusachModal({
               {section.note ? <Text style={styles.sectionNote}>{section.note}</Text> : null}
             </View>
           ))}
-
-          <View style={styles.attributionCard}>
-            <Text style={styles.attributionText}>{SIYUM_NUSACH_ATTRIBUTION_SHORT}</Text>
-            <View style={styles.linkRow}>
-              <TouchableOpacity
-                style={styles.linkChip}
-                onPress={() => openLink(SIYUM_NUSACH_SOURCE_URL)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="open-outline" size={13} color={theme.colors.accent} />
-                <Text style={styles.linkChipText}>תורת אמת</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.linkChip}
-                onPress={() => openLink(GFDL_URL)}
-                activeOpacity={0.7}
-              >
-                <Ionicons name="open-outline" size={13} color={theme.colors.accent} />
-                <Text style={styles.linkChipText}>תנאי הרישיון</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
         </ScrollView>
       </View>
     </BottomSheetModal>

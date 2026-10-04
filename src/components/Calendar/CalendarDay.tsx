@@ -3,7 +3,6 @@ import { TouchableOpacity, View } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, withSequence } from 'react-native-reanimated';
 import { HDate } from '@hebcal/core';
 import { useTheme } from '../../theme';
-import { useAppStore } from '../../store/useAppStore';
 import { createCalendarDayStyles } from './CalendarDay.styles';
 import type { AmudSide } from '../../utils/dafStatus';
 
@@ -17,6 +16,7 @@ interface CalendarDayProps {
   isSelected: boolean;
   dafLabel?: string;
   hasSpecialEvent?: boolean;
+  showSecularDate?: boolean;
   onPress: (hdate: HDate) => void;
 }
 
@@ -31,11 +31,11 @@ const CalendarDay = React.memo(
     isSelected,
     dafLabel,
     hasSpecialEvent,
+    showSecularDate = false,
     onPress,
   }: CalendarDayProps) => {
     const theme = useTheme();
     const styles = useMemo(() => createCalendarDayStyles(theme), [theme]);
-    const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
 
     const gematriya = hdate.renderGematriya().split(' ')[0];
     const gregDay = hdate.greg().getDate();
@@ -197,6 +197,7 @@ const CalendarDay = React.memo(
       prevProps.isSelected === nextProps.isSelected &&
       prevProps.dafLabel === nextProps.dafLabel &&
       prevProps.hasSpecialEvent === nextProps.hasSpecialEvent &&
+      prevProps.showSecularDate === nextProps.showSecularDate &&
       prevProps.onPress === nextProps.onPress &&
       prevProps.hdate.getFullYear() === nextProps.hdate.getFullYear() &&
       prevProps.hdate.getMonth() === nextProps.hdate.getMonth() &&

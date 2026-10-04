@@ -21,15 +21,15 @@ interface SegmentCardProps {
   accentColor: string;
   isExpanded: boolean;
   isClosing?: boolean;
-  onToggleExpand: () => void;
-  onCardLayout?: (y: number, height: number) => void;
-  onCommentaryLayout?: (height: number) => void;
+  onToggleExpand: (index: number) => void;
+  onCardLayout?: (index: number, y: number, height: number) => void;
+  onCommentaryLayout?: (index: number, height: number) => void;
   collapseScroll?: AccordionCollapseScroll;
   isSepia?: boolean;
   isDark?: boolean;
 }
 
-export default function SegmentCard({
+const SegmentCard = React.memo(function SegmentCard({
   segment,
   commentaries,
   fontSize,
@@ -71,16 +71,16 @@ export default function SegmentCard({
   const handleToggle = () => {
     if (!hasCommentary) return;
     triggerImpact('light');
-    onToggleExpand();
+    onToggleExpand(segment.index);
   };
 
   const handleCardLayout = (event: LayoutChangeEvent) => {
     const { y, height } = event.nativeEvent.layout;
-    onCardLayout?.(y, height);
+    onCardLayout?.(segment.index, y, height);
   };
 
   const handleCommentaryLayout = (event: LayoutChangeEvent) => {
-    onCommentaryLayout?.(event.nativeEvent.layout.height);
+    onCommentaryLayout?.(segment.index, event.nativeEvent.layout.height);
   };
 
   return (
@@ -149,4 +149,6 @@ export default function SegmentCard({
       )}
     </TouchableOpacity>
   );
-}
+});
+
+export default SegmentCard;

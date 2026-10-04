@@ -1,11 +1,11 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Animated from 'react-native-reanimated';
+import Animated, { type SharedValue } from 'react-native-reanimated';
 import type { SefariaPageData } from '../../services/sefariaTextApi';
 import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import SegmentCard from './SegmentCard';
@@ -29,7 +29,7 @@ interface SefariaTextContainerProps {
   readerTheme?: ReaderTheme;
   accentColor: string;
   classicTabLabel?: string;
-  onScrollProgress?: (progress: number) => void;
+  scrollProgress?: SharedValue<number>;
 }
 
 export default function SefariaTextContainer({
@@ -41,15 +41,17 @@ export default function SefariaTextContainer({
   readerTheme,
   accentColor,
   classicTabLabel = 'גמרא',
-  onScrollProgress,
+  scrollProgress,
 }: SefariaTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSefariaTextContainerStyles(theme), [theme]);
   const [expandedIndices, setExpandedIndices] = useState<Set<number>>(new Set());
+  const expandedIndicesRef = useRef(expandedIndices);
+  expandedIndicesRef.current = expandedIndices;
 
   const { scrollViewRef, scrollYRef, showFab, handleScroll, scrollToTop } =
     useScrollProgress({
-      onProgressChange: onScrollProgress,
+      progressShared: scrollProgress,
       resetKey: data?.tref || '',
     });
 
@@ -59,21 +61,6 @@ export default function SefariaTextContainer({
       scrollYRef,
       resetKey: data?.tref || '',
     });
-
-  const toggleExpand = useCallback((index: number, nextSegmentIndex: number | null) => {
-    if (expandedIndices.has(index)) {
-      beginCollapse(index, nextSegmentIndex);
-    }
-    setExpandedIndices((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  }, [beginCollapse, expandedIndices]);
 
   const classicCommentaries = useMemo(
     () =>
@@ -105,6 +92,32 @@ export default function SefariaTextContainer({
     }
     return map;
   }, [blocks]);
+
+  const nextSegmentIndexByIndexRef = useRef(nextSegmentIndexByIndex);
+  nextSegmentIndexByIndexRef.current = nextSegmentIndexByIndex;
+
+  const handleToggleExpand = useCallback((index: number) => {
+    if (expandedIndicesRef.current.has(index)) {
+      beginCollapse(index, nextSegmentIndexByIndexRef.current.get(index) ?? null);
+    }
+    setExpandedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }, [beginCollapse]);
+
+  const handleCardLayout = useCallback((index: number, y: number, height: number) => {
+    registerCardLayout(index, y, height);
+  }, [registerCardLayout]);
+
+  const handleCommentaryLayout = useCallback((index: number, height: number) => {
+    registerCommentaryHeight(index, height);
+  }, [registerCommentaryHeight]);
 
   const palette = useMemo(
     () => getReaderThemePalette(readerTheme ?? 'light', accentColor),
@@ -200,11 +213,9 @@ export default function SefariaTextContainer({
               accentColor={palette.accentColor}
               isExpanded={isExpanded}
               isClosing={closingIndex === segment.index}
-              onToggleExpand={() =>
-                toggleExpand(segment.index, nextSegmentIndexByIndex.get(segment.index) ?? null)
-              }
-              onCardLayout={(y, height) => registerCardLayout(segment.index, y, height)}
-              onCommentaryLayout={(height) => registerCommentaryHeight(segment.index, height)}
+              onToggleExpand={handleToggleExpand}
+              onCardLayout={handleCardLayout}
+              onCommentaryLayout={handleCommentaryLayout}
               collapseScroll={collapseScroll}
               isSepia={palette.isSepia}
               isDark={palette.isDark}

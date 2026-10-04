@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Pressable, useWindowDimensions } from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { View, Text, Modal, StyleSheet, TouchableOpacity, FlatList, Pressable, useWindowDimensions, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
@@ -78,12 +78,70 @@ export default function PersonalMasechetDetailModal({
     );
   }, [masechetRecords]);
 
+  const numColumns = 6;
+  const cellSize = Math.floor((windowWidth - 40 - 5 * 8) / 6);
+  const rowHeight = cellSize + 8;
+  const masechetEnKey = masechet?.en ?? '';
+
+  const renderDafItem = useCallback(
+    ({ item: dafNum }: { item: number }) => {
+      if (!masechetEnKey) return null;
+      const isLearned = learnedSet.has(dafNum);
+      const partialRec = partialMap.get(dafNum);
+      const isPartial = partialRec != null;
+      const dafHe = numberToGematria(dafNum);
+      const amudText = partialRec?.amud === 'a' ? 'א׳' : partialRec?.amud === 'b' ? 'ב׳' : '';
+
+      const cellStyle = isLearned
+        ? styles.dafCellLearned
+        : isPartial
+          ? styles.dafCellPartial
+          : styles.dafCellDefault;
+
+      const textStyle = isLearned
+        ? styles.dafTextLearned
+        : isPartial
+          ? styles.dafTextPartial
+          : styles.dafTextDefault;
+
+      return (
+        <TouchableOpacity
+          style={[
+            styles.dafCell,
+            { width: cellSize, height: cellSize },
+            cellStyle,
+          ]}
+          onPress={() => onToggleDafLearned(masechetEnKey, dafNum)}
+          onLongPress={() => setSelectedDafForMenu(dafNum)}
+          activeOpacity={0.7}
+        >
+          {isPartial && amudText ? (
+            <View style={styles.dafCornerBadge}>
+              <Text style={styles.dafCornerBadgeText}>{amudText}</Text>
+            </View>
+          ) : null}
+          <Text style={[styles.dafText, textStyle]}>
+            {dafHe}
+          </Text>
+        </TouchableOpacity>
+      );
+    },
+    [cellSize, learnedSet, masechetEnKey, onToggleDafLearned, partialMap, styles],
+  );
+
+  const getItemLayout = useCallback(
+    (_: ArrayLike<number> | null | undefined, index: number) => ({
+      length: rowHeight,
+      offset: rowHeight * Math.floor(index / numColumns),
+      index,
+    }),
+    [rowHeight],
+  );
+
   if (!masechet) return null;
 
   const totalCount = masechet.pages;
   const pct = totalCount > 0 ? Math.round((learnedCount / totalCount) * 100) : 0;
-
-  const cellSize = Math.floor((windowWidth - 40 - 5 * 8) / 6);
 
   return (
     <Modal
@@ -158,52 +216,23 @@ export default function PersonalMasechetDetailModal({
             לחץ על דף כדי לסמן כנלמד. לחיצה ארוכה תפתח אפשרויות לסימון חצי דף או פתיחה בקורא.
           </Text>
 
-          <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
-            <View style={styles.grid}>
-              {dafimArray.map((dafNum) => {
-                const isLearned = learnedSet.has(dafNum);
-                const partialRec = partialMap.get(dafNum);
-                const isPartial = partialRec != null;
-                const dafHe = numberToGematria(dafNum);
-                const amudText = partialRec?.amud === 'a' ? 'א׳' : partialRec?.amud === 'b' ? 'ב׳' : '';
-
-                const cellStyle = isLearned
-                  ? styles.dafCellLearned
-                  : isPartial
-                  ? styles.dafCellPartial
-                  : styles.dafCellDefault;
-
-                const textStyle = isLearned
-                  ? styles.dafTextLearned
-                  : isPartial
-                  ? styles.dafTextPartial
-                  : styles.dafTextDefault;
-
-                return (
-                  <TouchableOpacity
-                    key={dafNum}
-                    style={[
-                      styles.dafCell,
-                      { width: cellSize, height: cellSize },
-                      cellStyle,
-                    ]}
-                    onPress={() => onToggleDafLearned(masechet.en, dafNum)}
-                    onLongPress={() => setSelectedDafForMenu(dafNum)}
-                    activeOpacity={0.7}
-                  >
-                    {isPartial && amudText ? (
-                      <View style={styles.dafCornerBadge}>
-                        <Text style={styles.dafCornerBadgeText}>{amudText}</Text>
-                      </View>
-                    ) : null}
-                    <Text style={[styles.dafText, textStyle]}>
-                      {dafHe}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </ScrollView>
+          <FlatList
+            data={dafimArray}
+            keyExtractor={(dafNum) => String(dafNum)}
+            numColumns={numColumns}
+            key={`personal-daf-grid-${numColumns}`}
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            columnWrapperStyle={styles.dafRow}
+            initialNumToRender={36}
+            maxToRenderPerBatch={24}
+            windowSize={5}
+            getItemLayout={getItemLayout}
+            removeClippedSubviews={Platform.OS === 'android'}
+            showsVerticalScrollIndicator
+            renderItem={renderDafItem}
+            ListFooterComponent={<View style={styles.listFooter} />}
+          />
         </SafeAreaView>
       </View>
 
@@ -373,10 +402,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       paddingHorizontal: 20,
       paddingBottom: 40,
     },
-    grid: {
+    dafRow: {
       flexDirection: 'row',
-      flexWrap: 'wrap',
+      justifyContent: 'flex-start',
       gap: 8,
+      marginBottom: 8,
+    },
+    listFooter: {
+      height: 24,
     },
     dafCell: {
       borderRadius: 14,

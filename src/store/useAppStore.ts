@@ -8,6 +8,33 @@ import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from
 import { resolveAmudMark, type AmudSide } from '../utils/dafStatus';
 import { isPersonalTrackEnabled } from '../utils/personalTrack';
 
+function upsertHistoryRecord(history: DailyRecord[], record: DailyRecord): DailyRecord[] {
+  const idx = history.findIndex((r) => r.date === record.date);
+  if (idx >= 0) {
+    const next = history.slice();
+    next[idx] = record;
+    return next;
+  }
+  const next = history.slice();
+  let insertAt = next.findIndex((r) => r.date < record.date);
+  if (insertAt === -1) insertAt = next.length;
+  next.splice(insertAt, 0, record);
+  return next;
+}
+
+function patchHistoryByDates(history: DailyRecord[], dates: string[]): DailyRecord[] {
+  let next = history;
+  for (const dateStr of dates) {
+    const record = getDailyRecord(dateStr);
+    if (record) {
+      next = upsertHistoryRecord(next, record);
+    } else {
+      next = next.filter((r) => r.date !== dateStr);
+    }
+  }
+  return next;
+}
+
 interface AppState {
   currentDate: Date;
   todayRecord: DailyRecord | null;
@@ -27,8 +54,9 @@ interface AppState {
   activePersonalMasechet: string | null;
 
   loadInitialData: () => void;
+  loadProgressData: () => void;
   setAppReady: (ready: boolean) => void;
-  refreshHistory: (masechetIdentifier?: string) => void;
+  refreshHistory: (masechetIdentifier?: string, patchedDates?: string[]) => void;
   refreshSettings: () => void;
   refreshPersonalTrack: (masechetIdentifier?: string) => void;
   setActivePersonalMasechet: (masechetEn: string | null) => void;
@@ -118,46 +146,57 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   loadInitialData: () => {
     const settings = getSettings();
-    get().setCurrentDate(getDafDayDate(new Date(), settings));
+    const date = getDafDayDate(new Date(), settings);
+    const dateStr = getDateStr(date);
+    const dafInfo = getDafByDate(date);
+    const record = getDailyRecord(dateStr);
+
+    set({
+      currentDate: date,
+      todayRecord: record,
+      settings,
+      activePersonalMasechet: settings?.active_personal_masechet || null,
+      todayDafText: dafInfo.fullText,
+      todayMasechet: dafInfo.masechet,
+      todayDafNum: dafInfo.daf,
+      todayMasechetEn: dafInfo.masechetEn,
+      todayDafNumValue: dafInfo.dafNum,
+      todayAmud: dafInfo.amud,
+    });
+  },
+
+  loadProgressData: () => {
+    if (get().progressCache) return;
+
+    const { currentDate, settings } = get();
+    const history = getAllRecords();
+    const personalTrackRecords = getPersonalTrackRecords();
+    const cache = buildProgressCache(
+      history,
+      isPersonalTrackEnabled(settings) ? personalTrackRecords : [],
+    );
+    const dateStr = getDateStr(currentDate);
+    const record = history.find((r) => r.date === dateStr) || get().todayRecord;
+
+    set({
+      history,
+      personalTrackRecords,
+      progressCache: cache,
+      streak: cache.streak,
+      todayRecord: record,
+      activePersonalMasechet: settings?.active_personal_masechet || null,
+    });
   },
 
   setCurrentDate: (date: Date) => {
     const dateStr = getDateStr(date);
     const dafInfo = getDafByDate(date);
     const current = get();
+    const record =
+      current.history.length > 0
+        ? current.history.find((r) => r.date === dateStr) || null
+        : getDailyRecord(dateStr);
 
-    let history = current.history;
-    if (history.length === 0) {
-      history = getAllRecords();
-      const settings = getSettings();
-      const personalTrackRecords = getPersonalTrackRecords();
-      const cache = buildProgressCache(
-        history,
-        isPersonalTrackEnabled(settings) ? personalTrackRecords : [],
-      );
-      const record = history.find((r) => r.date === dateStr) || null;
-      const activePersonalMasechet = settings?.active_personal_masechet || null;
-
-      set({
-        currentDate: date,
-        todayRecord: record,
-        history,
-        settings,
-        personalTrackRecords,
-        activePersonalMasechet,
-        todayDafText: dafInfo.fullText,
-        todayMasechet: dafInfo.masechet,
-        todayDafNum: dafInfo.daf,
-        todayMasechetEn: dafInfo.masechetEn,
-        todayDafNumValue: dafInfo.dafNum,
-        todayAmud: dafInfo.amud,
-        streak: cache.streak,
-        progressCache: cache,
-      });
-      return;
-    }
-
-    const record = history.find((r) => r.date === dateStr) || null;
     set({
       currentDate: date,
       todayRecord: record,
@@ -170,18 +209,26 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
   },
 
-  refreshHistory: (masechetIdentifier?: string) => {
-    const { currentDate, personalTrackRecords, settings, progressCache } = get();
-    const history = getAllRecords();
+  refreshHistory: (masechetIdentifier?: string, patchedDates?: string[]) => {
+    const { currentDate, personalTrackRecords, settings, progressCache, history } = get();
+    const canPatch =
+      Boolean(patchedDates) &&
+      (patchedDates?.length ?? 0) > 0 &&
+      (patchedDates?.length ?? 0) <= 40 &&
+      history.length > 0 &&
+      progressCache != null;
+    const nextHistory = canPatch && patchedDates
+      ? patchHistoryByDates(history, patchedDates)
+      : getAllRecords();
     const personalRecords = isPersonalTrackEnabled(settings) ? personalTrackRecords : [];
     const cache = masechetIdentifier && progressCache
-      ? updateMasechetProgressInCache(progressCache, masechetIdentifier, history, personalRecords)
-      : buildProgressCache(history, personalRecords);
+      ? updateMasechetProgressInCache(progressCache, masechetIdentifier, nextHistory, personalRecords)
+      : buildProgressCache(nextHistory, personalRecords);
     const dateStr = getDateStr(currentDate);
-    const record = history.find(r => r.date === dateStr) || null;
+    const record = nextHistory.find(r => r.date === dateStr) || null;
 
     set({
-      history,
+      history: nextHistory,
       progressCache: cache,
       todayRecord: record,
       streak: cache.streak
@@ -189,13 +236,25 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshSettings: () => {
+    const prevSettings = get().settings;
     const settings = getSettings();
-    const cache = buildProgressCache(get().history, isPersonalTrackEnabled(settings) ? get().personalTrackRecords : []);
-    set({
+    const prevEnabled = isPersonalTrackEnabled(prevSettings);
+    const nextEnabled = isPersonalTrackEnabled(settings);
+    const patch: Partial<AppState> = {
       settings,
       activePersonalMasechet: settings?.active_personal_masechet || null,
-      progressCache: cache,
-    });
+    };
+
+    if (prevEnabled !== nextEnabled) {
+      const cache = buildProgressCache(
+        get().history,
+        nextEnabled ? get().personalTrackRecords : [],
+      );
+      patch.progressCache = cache;
+      patch.streak = cache.streak;
+    }
+
+    set(patch);
   },
 
   refreshPersonalTrack: (masechetIdentifier?: string) => {
@@ -264,16 +323,16 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     updateDailyRecord(dateStr, todayMasechet, todayDafNum, 'learned', 100, null);
 
-    get().refreshHistory(todayMasechet);
+    get().refreshHistory(todayMasechet, [dateStr]);
   },
 
   setDafStudyStatus: (dateStr, masechet, daf, status) => {
     updateDailyRecord(dateStr, masechet, daf, status, undefined, null);
-    get().refreshHistory(masechet);
+    get().refreshHistory(masechet, [dateStr]);
   },
 
   markPartialAmud: (dateStr, masechet, daf, amud) => {
-    const existing = getDailyRecord(dateStr);
+    const existing = getDailyRecord(dateStr) || get().history.find((r) => r.date === dateStr) || null;
     const resolved = resolveAmudMark(existing, amud);
     updateDailyRecord(
       dateStr,
@@ -283,31 +342,31 @@ export const useAppStore = create<AppState>((set, get) => ({
       resolved.percentage,
       resolved.amud
     );
-    get().refreshHistory(masechet);
+    get().refreshHistory(masechet, [dateStr]);
   },
 
   toggleAnyDafLearned: (dateStr: string, masechet: string, daf: string) => {
     const { history } = get();
-    const existing = history.find(r => r.date === dateStr);
+    const existing = history.find(r => r.date === dateStr) || getDailyRecord(dateStr);
     const newStatus =
       existing?.status === 'learned' || existing?.status === 'partial' ? 'missed' : 'learned';
 
     updateDailyRecord(dateStr, masechet, daf, newStatus, undefined, null);
-    get().refreshHistory(masechet);
+    get().refreshHistory(masechet, [dateStr]);
   },
 
   batchMarkDafim: (updates) => {
     batchUpdateDailyRecords(
       updates.map(u => ({ ...u, status: 'learned' as const, amud: null }))
     );
-    get().refreshHistory();
+    get().refreshHistory(undefined, updates.map((u) => u.dateStr));
   },
 
   batchUnmarkDafim: (updates) => {
     batchUpdateDailyRecords(
       updates.map(u => ({ ...u, status: 'missed' as const, amud: null }))
     );
-    get().refreshHistory();
+    get().refreshHistory(undefined, updates.map((u) => u.dateStr));
   },
 
   updateNotificationSettings: (

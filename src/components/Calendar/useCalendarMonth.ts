@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { Animated, Easing, PanResponder } from 'react-native';
 import { HDate, Locale } from '@hebcal/core';
 import { useAppStore } from '../../store/useAppStore';
@@ -31,6 +31,7 @@ interface UseCalendarMonthProps {
 }
 
 const SLIDE_PX = 40;
+const SKELETON_HOLD_MS = 120;
 
 function resolveDafTodayHDate() {
   const settings = useAppStore.getState().settings ?? {};
@@ -39,6 +40,7 @@ function resolveDafTodayHDate() {
 
 export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarMonthProps) {
   const [currentHDate, setCurrentHDate] = useState(() => resolveDafTodayHDate());
+  const [isGridTransitioning, setIsGridTransitioning] = useState(false);
   const dafDayStartMode = useAppStore((s) => s.settings?.daf_day_start_mode);
   const dafDayStartHour = useAppStore((s) => s.settings?.daf_day_start_hour);
   const dafDayStartMinute = useAppStore((s) => s.settings?.daf_day_start_minute);
@@ -46,21 +48,44 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
 
   const gridTranslateX = useRef(new Animated.Value(0)).current;
   const gridOpacity = useRef(new Animated.Value(1)).current;
+  const skeletonHoldTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (skeletonHoldTimerRef.current) {
+        clearTimeout(skeletonHoldTimerRef.current);
+      }
+    };
+  }, []);
 
   const animateGridChange = useCallback((direction: 'next' | 'prev', changeFn: () => void) => {
     const outDir = direction === 'next' ? SLIDE_PX : -SLIDE_PX;
     const enterFrom = direction === 'next' ? -SLIDE_PX : SLIDE_PX;
 
+    if (skeletonHoldTimerRef.current) {
+      clearTimeout(skeletonHoldTimerRef.current);
+      skeletonHoldTimerRef.current = null;
+    }
+
+    setIsGridTransitioning(true);
+    gridOpacity.setValue(1);
+    gridTranslateX.setValue(0);
+
     Animated.parallel([
-      Animated.timing(gridOpacity, { toValue: 0, duration: 170, useNativeDriver: true }),
-      Animated.timing(gridTranslateX, { toValue: outDir, duration: 170, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+      Animated.timing(gridOpacity, { toValue: 0.7, duration: 100, useNativeDriver: true }),
+      Animated.timing(gridTranslateX, { toValue: outDir * 0.25, duration: 100, easing: Easing.out(Easing.ease), useNativeDriver: true }),
     ]).start(() => {
       changeFn();
-      gridTranslateX.setValue(enterFrom);
+      gridTranslateX.setValue(enterFrom * 0.25);
       Animated.parallel([
-        Animated.timing(gridOpacity, { toValue: 1, duration: 220, useNativeDriver: true }),
-        Animated.timing(gridTranslateX, { toValue: 0, duration: 220, easing: Easing.out(Easing.ease), useNativeDriver: true }),
-      ]).start();
+        Animated.timing(gridOpacity, { toValue: 1, duration: 140, useNativeDriver: true }),
+        Animated.timing(gridTranslateX, { toValue: 0, duration: 140, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+      ]).start(() => {
+        skeletonHoldTimerRef.current = setTimeout(() => {
+          skeletonHoldTimerRef.current = null;
+          setIsGridTransitioning(false);
+        }, SKELETON_HOLD_MS);
+      });
     });
   }, [gridOpacity, gridTranslateX]);
 
@@ -222,6 +247,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
     monthName,
     yearName,
     isViewingTodayMonth,
+    isGridTransitioning,
     monthTractateSummary,
     monthTractateShort,
     gridTranslateX,

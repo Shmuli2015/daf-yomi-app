@@ -1,15 +1,15 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { NativeSyntheticEvent, NativeScrollEvent, ScrollView } from 'react-native';
-import { useAnimatedRef } from 'react-native-reanimated';
+import { useAnimatedRef, type SharedValue } from 'react-native-reanimated';
 
 interface UseScrollProgressOptions {
-  onProgressChange?: (progress: number) => void;
+  progressShared?: SharedValue<number>;
   fabThreshold?: number;
   resetKey?: string;
 }
 
 export function useScrollProgress({
-  onProgressChange,
+  progressShared,
   fabThreshold = 350,
   resetKey,
 }: UseScrollProgressOptions = {}) {
@@ -18,6 +18,8 @@ export function useScrollProgress({
   const scrollYRef = useRef(0);
   const lastScrollYRef = useRef(0);
   const isScrollingToTopRef = useRef(false);
+  const progressSharedRef = useRef(progressShared);
+  progressSharedRef.current = progressShared;
 
   useEffect(() => {
     scrollYRef.current = 0;
@@ -25,8 +27,10 @@ export function useScrollProgress({
     isScrollingToTopRef.current = false;
     scrollViewRef.current?.scrollTo({ y: 0, animated: false });
     setShowFab(false);
-    onProgressChange?.(0);
-  }, [resetKey, onProgressChange]);
+    if (progressSharedRef.current) {
+      progressSharedRef.current.value = 0;
+    }
+  }, [resetKey, scrollViewRef]);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -37,11 +41,12 @@ export function useScrollProgress({
       lastScrollYRef.current = scrollY;
       const maxScroll = contentSize.height - layoutMeasurement.height;
 
-      if (maxScroll > 0) {
-        const progress = Math.min(1, Math.max(0, scrollY / maxScroll));
-        onProgressChange?.(progress);
-      } else {
-        onProgressChange?.(0);
+      if (progressSharedRef.current) {
+        if (maxScroll > 0) {
+          progressSharedRef.current.value = Math.min(1, Math.max(0, scrollY / maxScroll));
+        } else {
+          progressSharedRef.current.value = 0;
+        }
       }
 
       if (scrollY <= fabThreshold) {
@@ -55,7 +60,7 @@ export function useScrollProgress({
         setShowFab(true);
       }
     },
-    [onProgressChange, fabThreshold],
+    [fabThreshold],
   );
 
   const scrollToTop = useCallback(() => {
