@@ -4,6 +4,7 @@ import { useTheme } from '../theme';
 import SharePreviewModal from './Share/SharePreviewModal';
 import HomeShasCard from './Home/HomeShasCard';
 import HomeStreakCard from './Home/HomeStreakCard';
+import HomeDailyQuoteCard from './Home/HomeDailyQuoteCard';
 import { createHomeContentStyles } from './Home/HomeContent.styles';
 import type { StreakShareData } from '../utils/shareProgressImage';
 import type { Last7DayRecord } from '../utils/last7Days';
@@ -62,6 +63,8 @@ const HomeContent = React.memo(function HomeContent({
         onSharePress={handleSharePress}
         onSelectDay={onSelectDay}
       />
+
+      <HomeDailyQuoteCard />
 
       <SharePreviewModal visible={shareVisible} onClose={handleShareClose} data={shareData} />
     </View>
