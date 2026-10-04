@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View } from 'react-native';
 import Animated, { FadeInLeft, FadeInRight, FadeOut } from 'react-native-reanimated';
 import { SettingItem } from '../SettingItem';
@@ -46,6 +46,7 @@ export default function SettingsNotificationsSection({
   styles,
   searchQuery,
   isFirst,
+  embedded,
   notificationsEnabled,
   onNotificationsToggle,
   notifMode,
@@ -111,8 +112,10 @@ export default function SettingsNotificationsSection({
 
   return (
     <>
-      <SectionHeader title="התראות ותזכורות" icon="notifications-outline" isFirst={isFirst} />
-      <View style={styles.card}>
+      {!embedded ? (
+        <SectionHeader title="התראות ותזכורות" icon="notifications-outline" isFirst={isFirst} />
+      ) : null}
+      <View style={embedded ? styles.embeddedCard : styles.card}>
         {showDaily ? (
           <SettingItem
             icon="notifications-outline"

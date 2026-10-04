@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { SettingItem } from '../SettingItem';
 import { SectionHeader } from '../SectionHeader';
@@ -50,6 +50,7 @@ export default function SettingsDisplaySection({
   styles,
   searchQuery,
   isFirst,
+  embedded,
   themeMode,
   onThemeModalOpen,
   dafDayStartMode,
@@ -101,8 +102,10 @@ export default function SettingsDisplaySection({
 
   return (
     <>
-      <SectionHeader title="תצוגה" icon="color-palette-outline" isFirst={isFirst} />
-      <View style={styles.card}>
+      {!embedded ? (
+        <SectionHeader title="תצוגה" icon="color-palette-outline" isFirst={isFirst} />
+      ) : null}
+      <View style={embedded ? styles.embeddedCard : styles.card}>
         {showTheme ? (
           <SettingItem
             icon={themeDisplay.icon}

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { SettingItem } from '../SettingItem';
 import { SectionHeader } from '../SectionHeader';
@@ -18,6 +18,7 @@ export default function SettingsDataSection({
   styles,
   searchQuery,
   isFirst,
+  embedded,
   storageSizeFormatted,
   onClearCacheOpen,
   onResetModalOpen,
@@ -32,8 +33,10 @@ export default function SettingsDataSection({
 
   return (
     <>
-      <SectionHeader title="נתונים ופרטיות" icon="shield-checkmark-outline" isFirst={isFirst} />
-      <View style={styles.card}>
+      {!embedded ? (
+        <SectionHeader title="נתונים ופרטיות" icon="shield-checkmark-outline" isFirst={isFirst} />
+      ) : null}
+      <View style={embedded ? styles.embeddedCard : styles.card}>
         {showCache ? (
           <SettingItem
             icon="folder-open-outline"

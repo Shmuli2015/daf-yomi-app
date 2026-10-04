@@ -20,6 +20,16 @@ export function createSettingsScreenStyles(theme: Theme) {
       gap: 12,
       marginBottom: 4,
     },
+    headerIconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 14,
+      backgroundColor: theme.colors.accentLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.accentBorder,
+    },
     accentBar: {
       width: 4,
       height: 32,
@@ -49,6 +59,10 @@ export function createSettingsScreenStyles(theme: Theme) {
       borderWidth: 1,
       borderColor: theme.colors.border,
       ...theme.shadow.card,
+    },
+    embeddedCard: {
+      backgroundColor: theme.colors.surface,
+      overflow: 'hidden',
     },
     privacyNote: {
       color: theme.colors.textMuted,

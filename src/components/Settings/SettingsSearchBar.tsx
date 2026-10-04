@@ -1,35 +1,65 @@
-import React, { useMemo } from 'react';
-import { View, TextInput, TouchableOpacity, StyleSheet, Platform } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, TextInput, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
+import { triggerSelection } from '../../utils/haptics';
+import { createSettingsSearchBarStyles } from './SettingsSearchBar.styles';
 
-interface SettingsSearchBarProps {
+export interface SettingsSearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   onClear: () => void;
+  resultCount?: number;
 }
 
-export function SettingsSearchBar({ value, onChangeText, onClear }: SettingsSearchBarProps) {
+export function SettingsSearchBar({
+  value,
+  onChangeText,
+  onClear,
+  resultCount,
+}: SettingsSearchBarProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createSettingsSearchBarStyles(theme), [theme]);
+  const [isFocused, setIsFocused] = useState(false);
+
+  const handleClear = () => {
+    void triggerSelection();
+    onClear();
+  };
+
+  const showResultCount = value.trim().length > 0 && typeof resultCount === 'number';
 
   return (
-    <View style={styles.container}>
-      <Ionicons name="search-outline" size={18} color={theme.colors.textMuted} style={styles.searchIcon} />
+    <View style={[styles.container, isFocused && styles.containerFocused]}>
+      <Ionicons
+        name="search-outline"
+        size={18}
+        color={isFocused ? theme.colors.accent : theme.colors.textMuted}
+        style={styles.searchIcon}
+      />
       <TextInput
         style={styles.input}
         placeholder="חפש בהגדרות..."
         placeholderTextColor={theme.colors.textMuted}
         value={value}
         onChangeText={onChangeText}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         returnKeyType="search"
         autoCapitalize="none"
         autoCorrect={false}
         accessibilityLabel="חפש בהגדרות"
       />
+      {showResultCount && (
+        <View style={styles.countBadge}>
+          <Text style={styles.countBadgeText}>
+            {resultCount === 0 ? '0' : resultCount}
+          </Text>
+        </View>
+      )}
       {value.length > 0 ? (
         <TouchableOpacity
-          onPress={onClear}
+          onPress={handleClear}
           style={styles.clearBtn}
           activeOpacity={0.7}
           accessibilityRole="button"
@@ -42,36 +72,4 @@ export function SettingsSearchBar({ value, onChangeText, onClear }: SettingsSear
   );
 }
 
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
-  StyleSheet.create({
-    container: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: theme.colors.surface,
-      marginHorizontal: 20,
-      marginBottom: 10,
-      borderRadius: 16,
-      paddingHorizontal: 14,
-      paddingVertical: Platform.OS === 'ios' ? 12 : 8,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      ...theme.shadow.card,
-    },
-    searchIcon: {
-      marginStart: 2,
-      marginEnd: 10,
-    },
-    input: {
-      flex: 1,
-      fontSize: 14.5,
-      color: theme.colors.textPrimary,
-      fontWeight: '600',
-      textAlign: 'start' as any,
-      writingDirection: 'rtl',
-      padding: 0,
-    },
-    clearBtn: {
-      padding: 2,
-      marginStart: 8,
-    },
-  });
+export default SettingsSearchBar;

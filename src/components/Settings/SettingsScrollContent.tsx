@@ -3,11 +3,14 @@ import { View, Text, ScrollView, Linking, TouchableOpacity } from 'react-native'
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
+import Constants from 'expo-constants';
 import { ThemeMode, useTheme } from '../../theme';
 import type { ViewMode } from '../SefariaReader/ReaderToolbar';
 import type { DafDayStartDaySchedule, DafDayStartMode } from '../../utils/dafDayBoundary';
 import { SettingsSearchBar } from './SettingsSearchBar';
 import { SettingsFooter } from './SettingsFooter';
+import SettingsOverviewCard from './SettingsOverviewCard';
+import SettingsCollapsibleCard from './SettingsCollapsibleCard';
 import SettingsNotificationsSection from './Sections/SettingsNotificationsSection';
 import SettingsDisplaySection from './Sections/SettingsDisplaySection';
 import SettingsReaderSection from './Sections/SettingsReaderSection';
@@ -23,7 +26,15 @@ import type { DaySchedule } from './Schedule/DayScheduleList';
 import type { ExactAlarmStatus } from '../../utils/exactAlarm';
 import type { NotificationPermissionStatus } from '../../utils/notificationPermission';
 import { SUPPORT_EMAIL, PRIVACY_POLICY_URL, getSupportMailtoUrl } from '../../supportContact';
-import { hasVisibleSettingsMatch } from '../../utils/settingsVisibleSearch';
+import {
+  hasVisibleSettingsMatch,
+  countVisibleSettingsMatches,
+  type VisibleSettingsSearchContext,
+} from '../../utils/settingsVisibleSearch';
+import { formatNotificationTime, getThemeModeSettingDisplay } from '../../utils/settingsScreen';
+import { getReaderViewModeLabel } from '../../utils/readerViewMode';
+import { formatLastBackupAt } from '../../utils/backupReminder';
+import { useSettingsAccordion, type SettingsSectionKey } from '../../hooks/useSettingsAccordion';
 
 export type SettingsScrollContentProps = {
   styles: SettingsScreenStyles;
@@ -167,6 +178,8 @@ export default function SettingsScrollContent({
   const [licensesVisible, setLicensesVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  const { openSection, toggleSection, openSectionByName } = useSettingsAccordion(null);
+
   const copySupportEmail = useCallback(async () => {
     try {
       await Clipboard.setStringAsync(SUPPORT_EMAIL);
@@ -188,7 +201,7 @@ export default function SettingsScrollContent({
     void Linking.openURL(PRIVACY_POLICY_URL);
   }, []);
 
-  const hasAnyMatch = hasVisibleSettingsMatch(searchQuery, {
+  const searchContext: VisibleSettingsSearchContext = {
     notificationsEnabled,
     notifMode,
     exactAlarmStatus,
@@ -206,7 +219,27 @@ export default function SettingsScrollContent({
     hasWhatsNew: onShowWhatsNew != null,
     hasShareDownload: onShareDownloadLink != null,
     showDevSection,
-  });
+  };
+
+  const hasAnyMatch = hasVisibleSettingsMatch(searchQuery, searchContext);
+  const resultCount = countVisibleSettingsMatches(searchQuery, searchContext);
+  const isSearching = searchQuery.trim().length > 0;
+
+  const notifSummary = !notificationsEnabled
+    ? 'כבוי'
+    : notifMode === 'daily'
+      ? `יומי בשעה ${formatNotificationTime(hour, minute)}`
+      : 'לפי ימי השבוע';
+
+  const readerSummary = `${getReaderViewModeLabel(readerViewMode)}, גופן ${fontSize}`;
+  const themeDisplay = getThemeModeSettingDisplay(themeMode);
+  const displaySummary = `${themeDisplay.label}, החלפה ${dafDayStartMode === 'midnight' ? 'בחצות' : 'מותאמת'}`;
+  const backupFormatted = formatLastBackupAt(lastBackupAt);
+  const backupSummary = `${backupFormatted ? 'מעודכן' : 'טרם גובה'} • ${storageSizeFormatted}`;
+  const appVersion = Constants.expoConfig?.version;
+  const helpSummary = appVersion ? `גרסה ${appVersion} • מדריך ועזרה` : 'מדריך למשתמש ועזרה';
+
+  const isCardExpanded = (key: SettingsSectionKey) => isSearching || openSection === key;
 
   return (
     <>
@@ -218,19 +251,49 @@ export default function SettingsScrollContent({
         <View style={styles.body}>
           <Animated.View entering={FadeIn.duration(400).delay(0)} style={styles.pageHeader}>
             <View style={styles.headerRow}>
-              <View style={styles.accentBar} />
-              <Text style={styles.pageTitle}>הגדרות</Text>
+              <View style={styles.headerIconWrap}>
+                <Ionicons name="options-outline" size={20} color={theme.colors.accent} />
+              </View>
+              <View>
+                <Text style={styles.pageTitle}>הגדרות</Text>
+                <Text style={styles.pageSubtitle}>התראות, תצוגה וניהול נתונים</Text>
+              </View>
             </View>
-            <Text style={styles.pageSubtitle}>התראות, תצוגה וניהול נתונים</Text>
           </Animated.View>
 
           <SettingsSearchBar
             value={searchQuery}
             onChangeText={setSearchQuery}
             onClear={() => setSearchQuery('')}
+            resultCount={resultCount}
           />
 
-          {!hasAnyMatch && searchQuery.trim().length > 0 ? (
+          {!isSearching ? (
+            <SettingsOverviewCard
+              notificationsEnabled={notificationsEnabled}
+              notifMode={notifMode}
+              hour={hour}
+              minute={minute}
+              daySchedules={daySchedules}
+              themeMode={themeMode}
+              lastBackupAt={lastBackupAt}
+              onNotificationsPress={() => {
+                if (!notificationsEnabled) {
+                  onNotificationsToggle(true);
+                }
+                openSectionByName('notifications');
+                if (notifMode === 'daily') {
+                  onDailyTimePress();
+                }
+              }}
+              onThemePress={onThemeModalOpen}
+              onBackupPress={() => {
+                openSectionByName('backup_data');
+              }}
+            />
+          ) : null}
+
+          {!hasAnyMatch && isSearching ? (
             <View style={styles.noResultsContainer}>
               <View style={styles.noResultsIconWrap}>
                 <Ionicons name="search" size={24} color={theme.colors.accent} />
@@ -249,104 +312,161 @@ export default function SettingsScrollContent({
             </View>
           ) : (
             <>
-              <SettingsNotificationsSection
-                styles={styles}
-                searchQuery={searchQuery}
-                isFirst
-                notificationsEnabled={notificationsEnabled}
-                onNotificationsToggle={onNotificationsToggle}
-                notifMode={notifMode}
-                onNotifModeChange={onNotifModeChange}
-                hour={hour}
-                minute={minute}
-                daySchedules={daySchedules}
-                onDailyTimePress={onDailyTimePress}
-                onToggleDay={onToggleDay}
-                onEditDayTime={onEditDayTime}
-                exactAlarmStatus={exactAlarmStatus}
-                onExactAlarmSettingsPress={onExactAlarmSettingsPress}
-                permissionStatus={permissionStatus}
-                onNotificationPermissionPress={onNotificationPermissionPress}
-                soundEnabled={soundEnabled}
-                onSoundToggle={onSoundToggle}
-              />
-              <SettingsDisplaySection
-                styles={styles}
-                searchQuery={searchQuery}
-                isFirst={false}
-                themeMode={themeMode}
-                onThemeModalOpen={onThemeModalOpen}
-                dafDayStartMode={dafDayStartMode}
-                dafDayStartHour={dafDayStartHour}
-                dafDayStartMinute={dafDayStartMinute}
-                dafDayStartSchedules={dafDayStartSchedules}
-                onDafDayStartModeOpen={onDafDayStartModeOpen}
-                onDafDayStartTimeOpen={onDafDayStartTimeOpen}
-                onEditDafDayStartDay={onEditDafDayStartDay}
-                showSecularDate={showSecularDate}
-                onSecularDateToggle={onSecularDateToggle}
-                showCalendarDaf={showCalendarDaf}
-                onCalendarDafToggle={onCalendarDafToggle}
-                showConfettiPref={showConfettiPref}
-                onConfettiToggle={onConfettiToggle}
-                showPersonalTrackBannerPref={showPersonalTrackBannerPref}
-                onPersonalTrackBannerToggle={onPersonalTrackBannerToggle}
-              />
-              <SettingsReaderSection
-                styles={styles}
-                searchQuery={searchQuery}
-                isFirst={false}
-                readerViewMode={readerViewMode}
-                onReaderViewModePress={onReaderViewModePress}
-                gemaraNikud={gemaraNikud}
-                onGemaraNikudToggle={onGemaraNikudToggle}
-                showChavrutaNotes={showChavrutaNotes}
-                onChavrutaNotesToggle={onChavrutaNotesToggle}
-                hapticsEnabled={hapticsEnabled}
-                onHapticsToggle={onHapticsToggle}
-                keepScreenAwake={keepScreenAwake}
-                onKeepScreenAwakeToggle={onKeepScreenAwakeToggle}
-                fontSize={fontSize}
-                onIncreaseFontSize={onIncreaseFontSize}
-                onDecreaseFontSize={onDecreaseFontSize}
-              />
-              <SettingsBackupSection
-                styles={styles}
-                searchQuery={searchQuery}
-                isFirst={false}
-                lastBackupAt={lastBackupAt}
-                onSaveBackupToFile={onSaveBackupToFile}
-                onShareBackup={onShareBackup}
-                onImportBackup={onImportBackup}
-              />
-              <SettingsDataSection
-                styles={styles}
-                searchQuery={searchQuery}
-                isFirst={false}
-                storageSizeFormatted={storageSizeFormatted}
-                onClearCacheOpen={onClearCacheOpen}
-                onResetModalOpen={onResetModalOpen}
-              />
-              <SettingsHelpSection
-                styles={styles}
-                searchQuery={searchQuery}
-                isFirst={false}
-                onGuideModalOpen={onGuideModalOpen}
-                onSupportPress={openSupportEmail}
-                onSupportLongPress={copySupportEmail}
-                onPrivacyPolicyPress={openPrivacyPolicy}
-                onLicensesPress={() => setLicensesVisible(true)}
-              />
-              <SettingsUpdatesSection
-                styles={styles}
-                searchQuery={searchQuery}
-                isFirst={false}
-                updateAutoPromptEnabled={updateAutoPromptEnabled}
-                onUpdateAutoPromptToggle={onUpdateAutoPromptToggle}
-                onCheckAppUpdate={onCheckAppUpdate}
-                onShowWhatsNew={onShowWhatsNew}
-                onShareDownloadLink={onShareDownloadLink}
-              />
+              <SettingsCollapsibleCard
+                title="התראות ותזכורות"
+                subtitle={notifSummary}
+                icon="notifications-outline"
+                accentColor={theme.colors.accent}
+                isExpanded={isCardExpanded('notifications')}
+                onToggle={() => toggleSection('notifications')}
+              >
+                <SettingsNotificationsSection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst
+                  embedded
+                  notificationsEnabled={notificationsEnabled}
+                  onNotificationsToggle={onNotificationsToggle}
+                  notifMode={notifMode}
+                  onNotifModeChange={onNotifModeChange}
+                  hour={hour}
+                  minute={minute}
+                  daySchedules={daySchedules}
+                  onDailyTimePress={onDailyTimePress}
+                  onToggleDay={onToggleDay}
+                  onEditDayTime={onEditDayTime}
+                  exactAlarmStatus={exactAlarmStatus}
+                  onExactAlarmSettingsPress={onExactAlarmSettingsPress}
+                  permissionStatus={permissionStatus}
+                  onNotificationPermissionPress={onNotificationPermissionPress}
+                  soundEnabled={soundEnabled}
+                  onSoundToggle={onSoundToggle}
+                />
+              </SettingsCollapsibleCard>
+
+              <SettingsCollapsibleCard
+                title="חוויית קריאה ולימוד"
+                subtitle={readerSummary}
+                icon="book-outline"
+                accentColor={theme.colors.accent}
+                isExpanded={isCardExpanded('reader')}
+                onToggle={() => toggleSection('reader')}
+              >
+                <SettingsReaderSection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst
+                  embedded
+                  readerViewMode={readerViewMode}
+                  onReaderViewModePress={onReaderViewModePress}
+                  gemaraNikud={gemaraNikud}
+                  onGemaraNikudToggle={onGemaraNikudToggle}
+                  showChavrutaNotes={showChavrutaNotes}
+                  onChavrutaNotesToggle={onChavrutaNotesToggle}
+                  hapticsEnabled={hapticsEnabled}
+                  onHapticsToggle={onHapticsToggle}
+                  keepScreenAwake={keepScreenAwake}
+                  onKeepScreenAwakeToggle={onKeepScreenAwakeToggle}
+                  fontSize={fontSize}
+                  onIncreaseFontSize={onIncreaseFontSize}
+                  onDecreaseFontSize={onDecreaseFontSize}
+                />
+              </SettingsCollapsibleCard>
+
+              <SettingsCollapsibleCard
+                title="מראה ותצוגה"
+                subtitle={displaySummary}
+                icon="color-palette-outline"
+                accentColor={theme.colors.gold}
+                isExpanded={isCardExpanded('display')}
+                onToggle={() => toggleSection('display')}
+              >
+                <SettingsDisplaySection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst
+                  embedded
+                  themeMode={themeMode}
+                  onThemeModalOpen={onThemeModalOpen}
+                  dafDayStartMode={dafDayStartMode}
+                  dafDayStartHour={dafDayStartHour}
+                  dafDayStartMinute={dafDayStartMinute}
+                  dafDayStartSchedules={dafDayStartSchedules}
+                  onDafDayStartModeOpen={onDafDayStartModeOpen}
+                  onDafDayStartTimeOpen={onDafDayStartTimeOpen}
+                  onEditDafDayStartDay={onEditDafDayStartDay}
+                  showSecularDate={showSecularDate}
+                  onSecularDateToggle={onSecularDateToggle}
+                  showCalendarDaf={showCalendarDaf}
+                  onCalendarDafToggle={onCalendarDafToggle}
+                  showConfettiPref={showConfettiPref}
+                  onConfettiToggle={onConfettiToggle}
+                  showPersonalTrackBannerPref={showPersonalTrackBannerPref}
+                  onPersonalTrackBannerToggle={onPersonalTrackBannerToggle}
+                />
+              </SettingsCollapsibleCard>
+
+              <SettingsCollapsibleCard
+                title="נתונים, גיבוי וזיכרון"
+                subtitle={backupSummary}
+                icon="cloud-upload-outline"
+                accentColor={theme.colors.success}
+                isExpanded={isCardExpanded('backup_data')}
+                onToggle={() => toggleSection('backup_data')}
+              >
+                <SettingsBackupSection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst
+                  embedded
+                  lastBackupAt={lastBackupAt}
+                  onSaveBackupToFile={onSaveBackupToFile}
+                  onShareBackup={onShareBackup}
+                  onImportBackup={onImportBackup}
+                />
+                <SettingsDataSection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst={false}
+                  embedded
+                  storageSizeFormatted={storageSizeFormatted}
+                  onClearCacheOpen={onClearCacheOpen}
+                  onResetModalOpen={onResetModalOpen}
+                />
+              </SettingsCollapsibleCard>
+
+              <SettingsCollapsibleCard
+                title="עזרה, עדכונים ומידע"
+                subtitle={helpSummary}
+                icon="information-circle-outline"
+                accentColor={theme.colors.accent}
+                isExpanded={isCardExpanded('help_updates')}
+                onToggle={() => toggleSection('help_updates')}
+              >
+                <SettingsHelpSection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst
+                  embedded
+                  onGuideModalOpen={onGuideModalOpen}
+                  onSupportPress={openSupportEmail}
+                  onSupportLongPress={copySupportEmail}
+                  onPrivacyPolicyPress={openPrivacyPolicy}
+                  onLicensesPress={() => setLicensesVisible(true)}
+                />
+                <SettingsUpdatesSection
+                  styles={styles}
+                  searchQuery={searchQuery}
+                  isFirst={false}
+                  embedded
+                  updateAutoPromptEnabled={updateAutoPromptEnabled}
+                  onUpdateAutoPromptToggle={onUpdateAutoPromptToggle}
+                  onCheckAppUpdate={onCheckAppUpdate}
+                  onShowWhatsNew={onShowWhatsNew}
+                  onShareDownloadLink={onShareDownloadLink}
+                />
+              </SettingsCollapsibleCard>
+
               {showDevSection ? (
                 <SettingsDevSection
                   styles={styles}

@@ -1,4 +1,4 @@
-import { hasVisibleSettingsMatch } from '../settingsVisibleSearch';
+import { countVisibleSettingsMatches, hasVisibleSettingsMatch } from '../settingsVisibleSearch';
 import type { VisibleSettingsSearchContext } from '../settingsVisibleSearch';
 
 const baseCtx: VisibleSettingsSearchContext = {
@@ -51,4 +51,12 @@ describe('settingsVisibleSearch', () => {
     ).toBe(false);
     expect(hasVisibleSettingsMatch('התראות עדכון אוטומטיות', baseCtx)).toBe(true);
   });
+
+  it('counts visible matching settings correctly', () => {
+    expect(countVisibleSettingsMatches('', baseCtx)).toBe(0);
+    expect(countVisibleSettingsMatches('   ', baseCtx)).toBe(0);
+    expect(countVisibleSettingsMatches('גיבוי', baseCtx)).toBeGreaterThan(0);
+    expect(countVisibleSettingsMatches('xyznonexistentterm', baseCtx)).toBe(0);
+  });
 });
+

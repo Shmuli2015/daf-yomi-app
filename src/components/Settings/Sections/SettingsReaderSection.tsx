@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { View } from 'react-native';
 import { SettingItem } from '../SettingItem';
 import { SectionHeader } from '../SectionHeader';
@@ -39,6 +39,7 @@ export default function SettingsReaderSection({
   styles,
   searchQuery,
   isFirst,
+  embedded,
   readerViewMode,
   onReaderViewModePress,
   gemaraNikud,
@@ -64,8 +65,10 @@ export default function SettingsReaderSection({
 
   return (
     <>
-      <SectionHeader title="קורא" icon="book-outline" isFirst={isFirst} />
-      <View style={styles.card}>
+      {!embedded ? (
+        <SectionHeader title="קורא" icon="book-outline" isFirst={isFirst} />
+      ) : null}
+      <View style={embedded ? styles.embeddedCard : styles.card}>
         {showMode ? (
           <SettingItem
             icon="reader-outline"

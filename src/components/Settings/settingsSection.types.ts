@@ -4,4 +4,6 @@ export type SettingsSectionChrome = {
   styles: SettingsScreenStyles;
   searchQuery: string;
   isFirst: boolean;
+  embedded?: boolean;
 };
+
