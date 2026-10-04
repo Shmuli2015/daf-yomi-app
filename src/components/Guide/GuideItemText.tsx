@@ -1,13 +1,19 @@
 import React, { useMemo } from 'react';
 import { Text, type StyleProp, type TextStyle } from 'react-native';
-import { useTheme } from '../../theme';
+import type { Theme } from '../../theme';
+import {
+  buildHighlightRegex,
+  splitByHighlight,
+  tokenizeQuery,
+} from './guideSearchUtils';
 
 interface GuideItemTextProps {
   text: string;
   baseStyle: StyleProp<TextStyle>;
   boldStyle: StyleProp<TextStyle>;
-  theme: ReturnType<typeof useTheme>;
+  theme: Theme;
   searchQuery?: string;
+  highlightRegex?: RegExp | null;
 }
 
 const MARKER_SPLIT = /(\*\*[^*]+\*\*|\[\[[^\]]+\]\])/g;
@@ -16,21 +22,24 @@ function splitGuideParts(text: string): string[] {
   return text.split(MARKER_SPLIT).filter((part) => part.length > 0);
 }
 
-const GuideItemText = React.memo(function GuideItemText({
+export const GuideItemText = React.memo(function GuideItemText({
   text,
   baseStyle,
   boldStyle,
   theme,
   searchQuery = '',
+  highlightRegex,
 }: GuideItemTextProps) {
-  const q = searchQuery.trim().toLowerCase();
+  const effectiveRegex = useMemo(() => {
+    if (highlightRegex !== undefined) return highlightRegex;
+    const tokens = tokenizeQuery(searchQuery);
+    return buildHighlightRegex(tokens);
+  }, [highlightRegex, searchQuery]);
 
   const highlightStyle = useMemo(
     () => ({
-      backgroundColor: theme.colors.accentLight,
       color: theme.colors.accent,
       fontWeight: '900' as const,
-      borderRadius: 3,
     }),
     [theme],
   );
@@ -45,24 +54,14 @@ const GuideItemText = React.memo(function GuideItemText({
 
   const content = useMemo(() => {
     const parts = splitGuideParts(text);
-    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = q.length > 0 ? new RegExp(`(${escaped})`, 'gi') : null;
 
-    const renderPartWithHighlight = (
+    const renderWithHighlight = (
       str: string,
       style: StyleProp<TextStyle>,
       partKey: string | number,
     ) => {
-      if (!regex) {
-        return (
-          <Text key={partKey} style={style}>
-            {str}
-          </Text>
-        );
-      }
-
-      const subParts = str.split(regex);
-      if (subParts.length <= 1) {
+      const segments = splitByHighlight(str, effectiveRegex);
+      if (segments.length <= 1 && !segments[0]?.isMatch) {
         return (
           <Text key={partKey} style={style}>
             {str}
@@ -72,13 +71,13 @@ const GuideItemText = React.memo(function GuideItemText({
 
       return (
         <Text key={partKey} style={style}>
-          {subParts.map((sub, subIdx) =>
-            sub.toLowerCase() === q ? (
-              <Text key={subIdx} style={[style, highlightStyle]}>
-                {sub}
+          {segments.map((seg, idx) =>
+            seg.isMatch ? (
+              <Text key={idx} style={[style, highlightStyle]}>
+                {seg.text}
               </Text>
             ) : (
-              sub
+              seg.text
             ),
           )}
         </Text>
@@ -88,15 +87,15 @@ const GuideItemText = React.memo(function GuideItemText({
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
         const boldText = part.slice(2, -2);
-        return renderPartWithHighlight(boldText, [baseStyle, boldStyle], index);
+        return renderWithHighlight(boldText, [baseStyle, boldStyle], index);
       }
       if (part.startsWith('[[') && part.endsWith(']]')) {
         const badgeContent = part.slice(2, -2);
-        return renderPartWithHighlight(badgeContent, [baseStyle, actionTextStyle], index);
+        return renderWithHighlight(badgeContent, [baseStyle, actionTextStyle], index);
       }
-      return renderPartWithHighlight(part, baseStyle, index);
+      return renderWithHighlight(part, baseStyle, index);
     });
-  }, [actionTextStyle, baseStyle, boldStyle, highlightStyle, q, text]);
+  }, [actionTextStyle, baseStyle, boldStyle, effectiveRegex, highlightStyle, text]);
 
   return <Text style={baseStyle}>{content}</Text>;
 });

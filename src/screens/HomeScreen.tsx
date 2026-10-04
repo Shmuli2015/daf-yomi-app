@@ -400,7 +400,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         visible={showPersonalGuideModal}
         onClose={() => setShowPersonalGuideModal(false)}
         initialTab="faq"
-        initialQuery="מסלול אישי"
+        initialCategory="marking"
       />
 
       {siyumMasechet && (

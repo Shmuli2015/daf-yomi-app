@@ -1,14 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { GuideFaqItemData } from './guideFaqData';
 
-const DEFAULT_EXPANDED_FAQ: Record<string, boolean> = { 'daf-day-start': true };
-
 export function useGuideFaqState(
   faqItems: GuideFaqItemData[],
   hasSearch: boolean,
   searchKey: string,
 ) {
-  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>(DEFAULT_EXPANDED_FAQ);
+  const [expandedMap, setExpandedMap] = useState<Record<string, boolean>>({});
   const [collapsedInSearch, setCollapsedInSearch] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
@@ -32,6 +30,10 @@ export function useGuideFaqState(
     },
     [hasSearch],
   );
+
+  const expandFaq = useCallback((id: string) => {
+    setExpandedMap((prev) => ({ ...prev, [id]: true }));
+  }, []);
 
   const handleExpandAllFaq = useCallback(() => {
     if (hasSearch) {
@@ -77,6 +79,7 @@ export function useGuideFaqState(
   return useMemo(
     () => ({
       toggleFaq,
+      expandFaq,
       handleExpandAllFaq,
       handleCollapseAllFaq,
       allFaqExpanded,
@@ -85,6 +88,7 @@ export function useGuideFaqState(
     }),
     [
       toggleFaq,
+      expandFaq,
       handleExpandAllFaq,
       handleCollapseAllFaq,
       allFaqExpanded,

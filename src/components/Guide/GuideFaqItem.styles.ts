@@ -12,12 +12,18 @@ export function createGuideFaqItemStyles(theme: Theme) {
       overflow: 'hidden',
       direction: 'rtl',
     },
+    cardExpanded: {
+      borderColor: theme.colors.accentBorder,
+    },
     headerTouchable: {
       flexDirection: 'row',
       alignItems: 'center',
       padding: 14,
       gap: 12,
       direction: 'rtl',
+    },
+    headerExpanded: {
+      backgroundColor: theme.colors.accentLight,
     },
     iconBox: {
       width: 36,
@@ -30,31 +36,18 @@ export function createGuideFaqItemStyles(theme: Theme) {
     textContainer: {
       flex: 1,
     },
-    categoryText: {
-      fontSize: 11,
-      fontWeight: '700',
-      color: theme.colors.accent,
-      marginBottom: 2,
-      textAlign: Platform.OS === 'web' ? 'right' : 'left',
-      writingDirection: 'rtl',
-    },
     questionText: {
-      fontSize: 15,
+      fontSize: 14.5,
       fontWeight: '800',
       color: theme.colors.textPrimary,
       lineHeight: 21,
       textAlign: Platform.OS === 'web' ? 'right' : 'left',
       writingDirection: 'rtl',
     },
-    questionHighlight: {
-      backgroundColor: theme.colors.accentLight,
-      color: theme.colors.accent,
-      fontWeight: '900',
-    },
     answerContainer: {
       paddingHorizontal: 16,
       paddingBottom: 16,
-      paddingTop: 4,
+      paddingTop: 8,
       borderTopWidth: 1,
       borderTopColor: theme.colors.border,
       backgroundColor: theme.colors.background,

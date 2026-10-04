@@ -1,76 +1,79 @@
 import React, { useMemo, useCallback } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
-import GuideItemText from './GuideItemText';
-import { createGuideModalStyles } from './GuideModal.styles';
-import { useGuideSectionAnimation } from './useGuideSectionAnimation';
 import AccordionSlideContent from '../AccordionSlideContent';
+import { useGuideSectionAnimation } from './useGuideSectionAnimation';
+import GuideSectionItem from './GuideSectionItem';
+import { createGuideSectionStyles } from './GuideSection.styles';
 
 interface GuideSectionProps {
   id: string;
   icon: keyof typeof Ionicons.glyphMap;
   title: string;
+  subtitle?: string;
   items: string[];
-  theme: ReturnType<typeof useTheme>;
   isExpanded: boolean;
   onToggle: (id: string) => void;
-  searchQuery?: string;
+  highlightRegex?: RegExp | null;
+  onLayout?: (event: LayoutChangeEvent) => void;
 }
 
-const GuideSection = React.memo(function GuideSection({
+export const GuideSection = React.memo(function GuideSection({
   id,
   icon,
   title,
+  subtitle,
   items,
-  theme,
   isExpanded,
   onToggle,
-  searchQuery = '',
+  highlightRegex,
+  onLayout,
 }: GuideSectionProps) {
-  const styles = useMemo(() => createGuideModalStyles(theme), [theme]);
+  const theme = useTheme();
+  const styles = useMemo(() => createGuideSectionStyles(theme), [theme]);
   const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
+
   const handlePress = useCallback(() => {
     onToggle(id);
   }, [id, onToggle]);
 
   return (
-    <View style={styles.sectionCard}>
+    <View style={styles.card} onLayout={onLayout}>
       <TouchableOpacity
         onPress={handlePress}
         activeOpacity={0.7}
-        style={styles.sectionHeaderTouchable}
+        style={styles.headerTouchable}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+        accessibilityState={{ expanded: isExpanded }}
       >
         <View style={styles.iconBox}>
-          <Ionicons name={icon} size={22} color={theme.colors.accent} />
+          <Ionicons name={icon} size={20} color={theme.colors.accent} />
         </View>
-        <View style={styles.sectionTitleContainer}>
-          <Text style={styles.sectionTitle}>{title}</Text>
-          <Text style={styles.sectionCountText}>{items.length} נושאים</Text>
+        <View style={styles.titleWrap}>
+          <Text style={styles.title}>{title}</Text>
+          {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+        </View>
+        <View style={styles.countBadge}>
+          <Text style={styles.countText}>{items.length}</Text>
         </View>
         <Animated.View style={animatedChevronStyle}>
-          <Ionicons
-            name="chevron-down-outline"
-            size={20}
-            color={theme.colors.textMuted}
-          />
+          <Ionicons name="chevron-down-outline" size={18} color={theme.colors.textMuted} />
         </Animated.View>
       </TouchableOpacity>
 
       <AccordionSlideContent isExpanded={isExpanded}>
         <View style={styles.itemsList}>
           {items.map((item, index) => (
-            <View key={index} style={styles.item}>
-              <View style={styles.bullet} />
-              <GuideItemText
-                text={item}
-                baseStyle={styles.itemText}
-                boldStyle={styles.itemTextBold}
-                theme={theme}
-                searchQuery={searchQuery}
-              />
-            </View>
+            <GuideSectionItem
+              key={index}
+              item={item}
+              index={index}
+              highlightRegex={highlightRegex}
+              isLast={index === items.length - 1}
+            />
           ))}
         </View>
       </AccordionSlideContent>

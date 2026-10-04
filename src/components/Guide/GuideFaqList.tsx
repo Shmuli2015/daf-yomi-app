@@ -1,10 +1,13 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, type LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import type { GuideFaqItemData } from './guideFaqData';
+import { getGuideCategory } from './guideCategories';
+import { groupFaqItemsByCategory } from './guideFilters';
 import GuideFaqItem from './GuideFaqItem';
-import { useGuideFaqState } from './useGuideFaqState';
+import GuideEmptyState from './GuideEmptyState';
+import GuideExpandControls from './GuideExpandControls';
 import { createGuideFaqListStyles } from './GuideFaqList.styles';
 
 interface GuideFaqListProps {
@@ -14,6 +17,15 @@ interface GuideFaqListProps {
   onClearSearch: () => void;
   guideResultCount?: number;
   onSwitchToGuide?: () => void;
+  onAskSupport?: (subject: string) => void;
+  isItemExpanded: (id: string) => boolean;
+  onToggleItem: (id: string) => void;
+  onExpandAll: () => void;
+  onCollapseAll: () => void;
+  allExpanded: boolean;
+  noneExpanded: boolean;
+  highlightRegex?: RegExp | null;
+  onRegisterAnchor?: (id: string, event: LayoutChangeEvent) => void;
 }
 
 export function GuideFaqList({
@@ -23,106 +35,77 @@ export function GuideFaqList({
   onClearSearch,
   guideResultCount = 0,
   onSwitchToGuide,
+  onAskSupport,
+  isItemExpanded,
+  onToggleItem,
+  onExpandAll,
+  onCollapseAll,
+  allExpanded,
+  noneExpanded,
+  highlightRegex,
+  onRegisterAnchor,
 }: GuideFaqListProps) {
   const theme = useTheme();
   const styles = useMemo(() => createGuideFaqListStyles(theme), [theme]);
-
-  const {
-    toggleFaq,
-    handleExpandAllFaq,
-    handleCollapseAllFaq,
-    allFaqExpanded,
-    noneFaqExpanded,
-    isFaqExpanded,
-  } = useGuideFaqState(items, hasSearch, searchQuery);
+  const groups = useMemo(() => groupFaqItemsByCategory(items), [items]);
 
   if (items.length === 0) {
     return (
-      <View style={styles.emptyState}>
-        <Ionicons
-          name="help-circle-outline"
-          size={48}
-          color={theme.colors.textMuted}
-        />
-        <Text style={styles.emptyTitle}>לא נמצאו שאלות מתאימות</Text>
-        <Text style={styles.emptySubtitle}>
-          לא מצאנו שאלות ותשובות המתאימות לחיפוש "{searchQuery}".
-        </Text>
-        {guideResultCount > 0 && onSwitchToGuide && (
-          <TouchableOpacity
-            onPress={onSwitchToGuide}
-            style={styles.switchTabResultBtn}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="swap-horizontal-outline"
-              size={16}
-              color={theme.colors.accent}
-            />
-            <Text style={styles.switchTabResultBtnText}>
-              מעבר ל-{guideResultCount} תוצאות ב"מדריך מפורט"
-            </Text>
-          </TouchableOpacity>
-        )}
-        <TouchableOpacity
-          onPress={onClearSearch}
-          style={styles.clearSearchBtn}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.clearSearchBtnText}>נקה חיפוש</Text>
-        </TouchableOpacity>
-      </View>
+      <GuideEmptyState
+        searchQuery={searchQuery}
+        onClearSearch={onClearSearch}
+        otherTabLabel="מדריך מפורט"
+        otherTabCount={guideResultCount}
+        onSwitchTab={onSwitchToGuide}
+        onAskSupport={onAskSupport}
+      />
     );
   }
 
   return (
     <View style={styles.container}>
       {!hasSearch && (
-        <View style={styles.controlsRow}>
-          <TouchableOpacity
-            onPress={handleExpandAllFaq}
-            style={styles.controlBtn}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="expand-outline"
-              size={14}
-              color={allFaqExpanded ? theme.colors.textMuted : theme.colors.accent}
-            />
-            <Text style={allFaqExpanded ? styles.controlBtnTextMuted : styles.controlBtnText}>
-              פתח הכל
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleCollapseAllFaq}
-            style={styles.controlBtn}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="contract-outline"
-              size={14}
-              color={noneFaqExpanded ? theme.colors.textMuted : theme.colors.accent}
-            />
-            <Text style={noneFaqExpanded ? styles.controlBtnTextMuted : styles.controlBtnText}>
-              סגור הכל
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <GuideExpandControls
+          onExpandAll={onExpandAll}
+          onCollapseAll={onCollapseAll}
+          allExpanded={allExpanded}
+          noneExpanded={noneExpanded}
+        />
       )}
 
-      {items.map((item) => (
-        <GuideFaqItem
-          key={item.id}
-          id={item.id}
-          icon={item.icon}
-          category={item.category}
-          question={item.question}
-          answer={item.answer}
-          isExpanded={isFaqExpanded(item.id)}
-          onToggle={toggleFaq}
-          searchQuery={searchQuery}
-        />
-      ))}
+      {groups.map((group) => {
+        const category = getGuideCategory(group.categoryId);
+        return (
+          <View key={group.categoryId} style={styles.categoryGroup}>
+            <View style={styles.groupHeader}>
+              <View style={styles.groupIconBox}>
+                <Ionicons name={category.icon} size={13} color={theme.colors.accent} />
+              </View>
+              <Text style={styles.groupTitle}>{category.label}</Text>
+              <View style={styles.groupDivider} />
+              <Text style={styles.groupCount}>{group.items.length}</Text>
+            </View>
+
+            {group.items.map((item) => (
+              <GuideFaqItem
+                key={item.id}
+                id={item.id}
+                icon={item.icon}
+                question={item.question}
+                answer={item.answer}
+                isExpanded={isItemExpanded(item.id)}
+                onToggle={onToggleItem}
+                highlightRegex={highlightRegex}
+                onLayout={
+                  onRegisterAnchor
+                    ? (event) => onRegisterAnchor(item.id, event)
+                    : undefined
+                }
+              />
+            ))}
+          </View>
+        );
+      })}
     </View>
   );
 }

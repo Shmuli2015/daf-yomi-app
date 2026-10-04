@@ -321,7 +321,7 @@ export default function TzuratHadafScreen() {
         visible={showGuideModal}
         onClose={() => setShowGuideModal(false)}
         initialTab="faq"
-        initialQuery="קורא"
+        initialCategory="reader"
       />
 
       {showConfetti && (

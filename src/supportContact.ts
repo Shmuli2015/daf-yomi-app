@@ -4,6 +4,12 @@ export const PRIVACY_POLICY_URL = 'https://shmuli2015.github.io/daf-yomi-app/pri
 
 const SUPPORT_MAIL_SUBJECT = 'מסע דף, יצירת קשר / הצעה לשיפור';
 
-export function getSupportMailtoUrl(): string {
-  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(SUPPORT_MAIL_SUBJECT)}`;
+const GUIDE_QUESTION_SUBJECT_PREFIX = 'מסע דף, שאלה מהמדריך: ';
+
+export function getSupportMailtoUrl(subject: string = SUPPORT_MAIL_SUBJECT): string {
+  return `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;
+}
+
+export function getGuideQuestionSubject(question: string): string {
+  return `${GUIDE_QUESTION_SUBJECT_PREFIX}${question.trim()}`;
 }
