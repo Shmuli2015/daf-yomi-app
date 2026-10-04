@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 
 interface MonthTractateBannerProps {
@@ -17,6 +18,7 @@ export default function MonthTractateBanner({ summary }: MonthTractateBannerProp
   return (
     <View style={styles.wrapper}>
       <View style={styles.badge}>
+        <Ionicons name="book-outline" size={13} color={theme.colors.accent} />
         <Text
           style={styles.text}
           numberOfLines={1}
@@ -39,21 +41,24 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       marginBottom: 10,
     },
     badge: {
-      alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
       backgroundColor: theme.colors.accentLight,
       borderColor: theme.colors.accentBorder,
       borderWidth: 1,
-      borderRadius: 12,
-      paddingVertical: 5,
-      paddingHorizontal: 14,
+      borderRadius: 10,
+      paddingVertical: 4,
+      paddingHorizontal: 12,
       direction: 'rtl',
     },
     text: {
-      fontSize: 12,
-      fontWeight: '800',
+      fontSize: 11.5,
+      fontWeight: '700',
       color: theme.colors.textPrimary,
       textAlign: 'center',
       writingDirection: 'rtl',
       letterSpacing: -0.1,
+      includeFontPadding: false,
     },
   });
