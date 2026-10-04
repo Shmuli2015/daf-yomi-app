@@ -2,6 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { AppUpdateModal } from '../components/AppUpdateModal';
 import Toast, { type ToastIconName } from '../components/Toast';
 import WhatsNewModal from '../components/WhatsNewModal';
+import GuideModal from '../components/Guide/GuideModal';
 import { useAppUpdateCheck } from '../hooks/useAppUpdateCheck';
 import { useWhatsNewOnLaunch } from '../hooks/useWhatsNewOnLaunch';
 import { probeLatestReleaseForDev } from '../services/appUpdate';
@@ -79,6 +80,12 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timeoutId);
   }, [githubProbeToast]);
 
+  const [guideVisible, setGuideVisible] = useState(false);
+  const handleOpenGuideFromWhatsNew = useCallback(() => {
+    onDismissWhatsNew();
+    setGuideVisible(true);
+  }, [onDismissWhatsNew]);
+
   const value = useMemo(
     () => ({
       checkManualAsync,
@@ -97,6 +104,11 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
         version={whatsNewVersion}
         highlights={whatsNewHighlights}
         onClose={onDismissWhatsNew}
+        onOpenGuide={handleOpenGuideFromWhatsNew}
+      />
+      <GuideModal
+        visible={guideVisible}
+        onClose={() => setGuideVisible(false)}
       />
       <AppUpdateModal
         visible={visible}

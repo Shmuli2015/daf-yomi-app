@@ -47,6 +47,14 @@ export const createHomeHeroCardStyles = (theme: ReturnType<typeof useTheme>) =>
       alignItems: 'center',
       marginBottom: 16,
     },
+    badgeRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    guideButton: {
+      padding: 4,
+    },
     dailyStudyBadge: {
       backgroundColor: theme.colors.accentLight,
       paddingHorizontal: 12,
