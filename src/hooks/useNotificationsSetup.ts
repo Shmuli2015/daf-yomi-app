@@ -12,6 +12,7 @@ import {
 import { dismissStuckStudyReminders } from '../utils/dismissStuckStudyReminders';
 import { getNotificationIdFromActionData } from '../utils/dismissReminderFromTray';
 import { handleStudyReminderResponse } from '../utils/handleStudyReminderResponse';
+import { captureException } from '../services/sentry';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
@@ -37,11 +38,15 @@ export function useNotificationsSetup() {
         Notifications.clearLastNotificationResponse();
         onResponse(initialResponse);
       }
-    } catch {}
+    } catch (error) {
+      if (__DEV__) {
+        console.warn('getLastNotificationResponse failed:', error);
+      }
+    }
 
     void (async () => {
       try {
-        if (isExpoGo) {
+        if (isExpoGo && __DEV__) {
           console.log('Running in Expo Go - Push notifications (remote) are restricted.');
         }
 
@@ -55,7 +60,7 @@ export function useNotificationsSetup() {
               lightColor: '#FF231F7C',
             });
           } catch (channelError) {
-            console.warn('Notification channel error:', channelError);
+            captureException(channelError);
           }
         }
 
@@ -67,8 +72,6 @@ export function useNotificationsSetup() {
           status = await requestNotificationPermission();
           if (cancelled) return;
         }
-
-        console.log('Notification permission status:', status);
 
         if (status === 'granted') {
           const daySchedules: DaySchedule[] = s.day_schedules
@@ -83,15 +86,13 @@ export function useNotificationsSetup() {
             s.notifications_enabled === 1,
             { sound: s.notification_sound_enabled !== 0 },
           );
-
-          console.log('Notifications scheduled successfully');
         }
 
         if (cancelled) return;
 
         await dismissStuckStudyReminders();
       } catch (e) {
-        console.warn('Notification setup error:', e);
+        captureException(e);
       }
     })();
 

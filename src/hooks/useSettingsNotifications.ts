@@ -349,14 +349,23 @@ export function useSettingsNotifications({
   }, []);
 
   const handleTestNotification = useCallback(async () => {
-    await sendTestNotification(soundEnabled);
-    onFeedback({
-      title: 'התראת בדיקה',
-      message: 'התראת בדיקה תגיע בעוד 5 שניות',
-      iconName: 'notifications-outline',
-      toast: true,
-      autoCloseMs: 3000,
-    });
+    try {
+      await sendTestNotification(soundEnabled);
+      onFeedback({
+        title: 'התראת בדיקה',
+        message: 'התראת בדיקה תגיע בעוד 5 שניות',
+        iconName: 'notifications-outline',
+        toast: true,
+        autoCloseMs: 3000,
+      });
+    } catch {
+      onFeedback({
+        title: 'התראת הבדיקה נכשלה',
+        message: 'לא הצלחנו לתזמן התראת בדיקה. בדקו את הרשאות ההתראות ונסו שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    }
   }, [onFeedback, soundEnabled]);
 
   const handleCheckScheduled = useCallback(async () => {

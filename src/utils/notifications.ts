@@ -4,6 +4,7 @@ import { getSettings } from '../db/database';
 import { getDafDayDate } from './dafDayBoundary';
 import { hasExactAlarmPermission, promptForExactAlarmPermission } from './exactAlarm';
 import { getStudyReminderCopy } from './notificationCopy';
+import { captureException } from '../services/sentry';
 
 export type DaySchedule = { enabled: boolean; hour: number; minute: number };
 
@@ -34,7 +35,7 @@ export async function scheduleNotifications(
       await promptForExactAlarmPermission();
     }
     const hasExactAlarm = await hasExactAlarmPermission();
-    if (!hasExactAlarm) {
+    if (!hasExactAlarm && __DEV__) {
       console.log(
         'Exact alarm permission not granted - reminders will be scheduled with approximate timing',
       );
@@ -54,7 +55,6 @@ export async function scheduleNotifications(
         targetDate.setHours(globalHour, globalMin, 0, 0);
 
         if (targetDate.getTime() <= Date.now()) {
-          console.log(`Skipping past notification for ${targetDate.toISOString()}`);
           continue;
         }
 
@@ -98,7 +98,6 @@ export async function scheduleNotifications(
         targetDate.setHours(daySchedule.hour, daySchedule.minute, 0, 0);
         
         if (targetDate.getTime() <= Date.now()) {
-          console.log(`Skipping past notification for ${targetDate.toISOString()}`);
           continue;
         }
         
@@ -130,29 +129,18 @@ export async function scheduleNotifications(
       }
     }
 
-    const results = await Promise.all(notificationPromises);
-    console.log(`Successfully scheduled ${results.length} notifications`);
-    
-    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
-    console.log(`Total scheduled notifications in system: ${scheduled.length}`);
-    if (scheduled.length > 0) {
-      console.log('First scheduled notification:', JSON.stringify(scheduled[0], null, 2));
-    }
+    await Promise.all(notificationPromises);
   } catch (error) {
-    console.error('Failed to schedule notification:', error instanceof Error ? error.message : error);
-    if (error instanceof Error) {
-      console.error('Error stack:', error.stack);
-    }
+    captureException(error);
+    throw error;
   }
 }
 
 export async function getScheduledNotifications() {
   try {
-    const notifications = await Notifications.getAllScheduledNotificationsAsync();
-    console.log(`Found ${notifications.length} scheduled notifications`);
-    return notifications;
+    return await Notifications.getAllScheduledNotificationsAsync();
   } catch (error) {
-    console.error('Failed to get scheduled notifications:', error);
+    captureException(error);
     return [];
   }
 }
@@ -185,9 +173,8 @@ export async function sendTestNotification(sound = true) {
             repeats: false,
           },
     });
-    
-    console.log('Test notification scheduled for 5 seconds from now');
   } catch (error) {
-    console.error('Failed to send test notification:', error);
+    captureException(error);
+    throw error;
   }
 }
