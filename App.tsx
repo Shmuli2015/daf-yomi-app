@@ -15,7 +15,7 @@ import SystemChromeThemeSync from './src/components/SystemChromeThemeSync';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { AppUpdateProvider } from './src/context/AppUpdateProvider';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
-import { initSentry, Sentry } from './src/services/sentry';
+import { initSentry, Sentry, captureException } from './src/services/sentry';
 
 I18nManager.allowRTL(true);
 I18nManager.forceRTL(true);
@@ -45,7 +45,9 @@ if (!isExpoGo) {
       buttonTitle: '⏰ הזכר לי עוד שעה',
       options: { opensAppToForeground: false },
     },
-  ]).catch(() => {});
+  ]).catch(error => {
+    captureException(error);
+  });
 }
 
 function App() {
