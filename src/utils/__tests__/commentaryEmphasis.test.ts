@@ -2,6 +2,7 @@ import {
   cleanCommentaryHtml,
   emphasizeGemaraSectionLabels,
   emphasizeRashiDibur,
+  mishnahSpanFlags,
   parseCommentaryRuns,
   prepareCommentaryText,
   prepareGemaraText,
@@ -195,5 +196,71 @@ describe('parseCommentaryRuns', () => {
 
   it('returns an empty array for empty input', () => {
     expect(parseCommentaryRuns('')).toEqual([]);
+  });
+});
+
+describe('mishnahSpanFlags', () => {
+  it('keeps the mark on every part of a mishnah until gemara starts', () => {
+    expect(
+      mishnahSpanFlags([
+        '**מַתְנִי׳** הָרוֹאֶה מָקוֹם',
+        'עַל הַזִּיקִין וְעַל הַזְּוָעוֹת',
+        'חַיָּיב אָדָם לְבָרֵךְ',
+        '**גְּמָ׳** מְנָא הָנֵי מִילֵּי',
+        'אַנִּיסָּא דְרַבִּים מְבָרְכִינַן',
+      ]),
+    ).toEqual([true, true, true, false, false]);
+  });
+
+  it('starts a new mishnah after the gemara section', () => {
+    expect(
+      mishnahSpanFlags([
+        '**מַתְנִי׳** רֵאשׁוֹנָה',
+        'הֶמְשֵׁךְ',
+        '**גְּמָ׳** דִּיּוּן',
+        '**מַתְנִי׳** שְׁנִיָּה',
+        'הֶמְשֵׁךְ שֵׁנִי',
+      ]),
+    ).toEqual([true, true, false, true, true]);
+  });
+
+  it('treats yerushalmi mishnah and halakhah as a span', () => {
+    expect(
+      mishnahSpanFlags([
+        '**משנה:** אָמַר רִבִּי',
+        'הֶמְשֵׁךְ הַמִּשְׁנָה',
+        '**הלכה:** רִבִּי יְהוּדָה',
+        'הֶמְשֵׁךְ הַהֲלָכָה',
+      ]),
+    ).toEqual([true, true, false, false]);
+  });
+
+  it('marks steinsaltz mishnah paragraphs until gemara', () => {
+    expect(
+      mishnahSpanFlags([
+        null,
+        '**משנה** הָרוֹאֶה מָקוֹם',
+        'הַבֵּאוּר נִמְשָׁךְ',
+        '**א משנה** פֶּרֶק חָדָשׁ',
+        'הֶמְשֵׁךְ הַבֵּאוּר',
+        '**גמרא** מְנָא הָנֵי מִילֵּי',
+        'הֶמְשֵׁךְ הַגְּמָרָא',
+      ]),
+    ).toEqual([false, true, true, true, true, false, false]);
+  });
+
+  it('closes steinsaltz mishnah when the gemara heading has a letter prefix', () => {
+    expect(
+      mishnahSpanFlags([
+        '**א משנה** יוֹצֵא דּוֹפֶן',
+        'רַבִּי טַרְפוֹן אוֹמֵר',
+        '**ב גמרא** בְּמַאי קָמִיפַּלְגִי',
+        'רַבִּי טַרְפוֹן מְסַפְּקָא לֵיהּ',
+      ]),
+    ).toEqual([true, true, false, false]);
+  });
+
+  it('does not open a span when the word mishnah is plain text', () => {
+    expect(mishnahSpanFlags(['משנה זו אינה כותרת', 'הֶמְשֵׁךְ'])).toEqual([false, false]);
   });
 });

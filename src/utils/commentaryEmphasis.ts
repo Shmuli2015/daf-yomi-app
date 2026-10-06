@@ -30,9 +30,54 @@ const GEMARA_SECTION_LABEL_RE = new RegExp(
   'g',
 );
 
+const HEBREW_LETTER_PREFIX = '(?:[\\u05D0-\\u05EA]\\s+)?';
+
+const STEINSALTZ_MISHNAH_RE = new RegExp(`\\*\\*${HEBREW_LETTER_PREFIX}${heLetters('משנה')}\\*\\*`);
+const STEINSALTZ_GEMARA_RE = new RegExp(`\\*\\*${HEBREW_LETTER_PREFIX}${heLetters('גמרא')}\\*\\*`);
+
+const MISHNAH_SPAN_OPEN_RE = new RegExp(
+  `^(?:${heLetters('מתני')}${GERESH}|${heLetters('משנה')}\\s*:|${HEBREW_LETTER_PREFIX}${heLetters('משנה')}\\*\\*)`,
+);
+
+const MISHNAH_SPAN_CLOSE_RE = new RegExp(
+  `^(?:${heLetters('גמ')}${GERESH}|${HEBREW_LETTER_PREFIX}${heLetters('גמרא')}(?:\\*\\*|\\s|$)|${heLetters('הלכה')}\\s*:|${heLetters('הדרן')})`,
+);
+
 export function isMishnahHeading(text: string): boolean {
   if (!text) return false;
   return MATNI_LABEL_RE.test(text);
+}
+
+function sectionStart(text: string): string {
+  return text.replace(/^\u200F/, '').replace(/^\s+/, '').replace(/^\*\*/, '').replace(/^\s+/, '');
+}
+
+function isMishnahSpanOpen(part: string): boolean {
+  return (
+    MISHNAH_SPAN_OPEN_RE.test(sectionStart(part)) ||
+    isMishnahHeading(part) ||
+    STEINSALTZ_MISHNAH_RE.test(part)
+  );
+}
+
+function isMishnahSpanClose(part: string): boolean {
+  return MISHNAH_SPAN_CLOSE_RE.test(sectionStart(part)) || STEINSALTZ_GEMARA_RE.test(part);
+}
+
+export function mishnahSpanFlags(parts: ReadonlyArray<string | null>): boolean[] {
+  let inMishnah = false;
+  return parts.map((part) => {
+    if (part == null) return false;
+    if (isMishnahSpanClose(part)) {
+      inMishnah = false;
+      return false;
+    }
+    if (isMishnahSpanOpen(part)) {
+      inMishnah = true;
+      return true;
+    }
+    return inMishnah;
+  });
 }
 
 export function stripEmDash(text: string): string {

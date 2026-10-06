@@ -15,15 +15,11 @@ import type { SefariaPageData } from '../../services/sefariaTextApi';
 import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
 import { collectCommentariesWithIndex } from '../../utils/sefariaCommentators';
 import { useTheme } from '../../theme';
-import { isMishnahHeading } from '../../utils/commentaryEmphasis';
+import { mishnahSpanFlags } from '../../utils/commentaryEmphasis';
 import type { ReaderTheme } from './ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { createSteinsaltzTextContainerStyles } from './SteinsaltzTextContainer.styles';
-
-function isMishnahSteinsaltz(text: string): boolean {
-  return /\*\*(?:[א-ת]\s+)?משנה\*\*/.test(text) || isMishnahHeading(text);
-}
 
 interface SteinsaltzTextContainerProps {
   data: SefariaPageData | null;
@@ -66,6 +62,10 @@ export default function SteinsaltzTextContainer({
   const blocks = useMemo(
     () => insertChapterBoundaries(paragraphs, data?.chapterEvents ?? []),
     [paragraphs, data?.chapterEvents],
+  );
+  const mishnahMarks = useMemo(
+    () => mishnahSpanFlags(blocks.map((block) => (block.kind === 'paragraph' ? block.item.he : null))),
+    [blocks],
   );
 
   if (loading) {
@@ -139,7 +139,7 @@ export default function SteinsaltzTextContainer({
               />
             );
           }
-          const isMishnah = isMishnahSteinsaltz(block.item.he);
+          const isMishnah = mishnahMarks[index];
           return (
             <View
               key={`${block.item.ref}-${index}`}

@@ -14,6 +14,7 @@ import ScrollToTopFab from './ScrollToTopFab';
 import type { ReaderTheme } from './ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useTheme } from '../../theme';
+import { mishnahSpanFlags } from '../../utils/commentaryEmphasis';
 import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
 import { classicCommentatorKeysForTref, filterCommentaries } from '../../utils/sefariaCommentators';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
@@ -77,6 +78,11 @@ export default function SefariaTextContainer({
         data?.chapterEvents ?? [],
       ),
     [data?.segments, data?.chapterEvents],
+  );
+
+  const mishnahMarks = useMemo(
+    () => mishnahSpanFlags(blocks.map((block) => (block.kind === 'paragraph' ? block.item.he : null))),
+    [blocks],
   );
 
   const nextSegmentIndexByIndex = useMemo(() => {
@@ -219,6 +225,7 @@ export default function SefariaTextContainer({
               collapseScroll={collapseScroll}
               isSepia={palette.isSepia}
               isDark={palette.isDark}
+              markAsMishnah={mishnahMarks[index]}
             />
           );
         })}

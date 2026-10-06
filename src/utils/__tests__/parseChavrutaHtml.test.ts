@@ -1,6 +1,7 @@
 import {
   buildAmudKey,
   buildFootnoteToken,
+  chavrutaMishnahFlags,
   findChavrutaAmud,
   gematriaToNumber,
   parseChavrutaBodyParts,
@@ -344,6 +345,13 @@ describe('parseChavrutaDocument', () => {
       titleHe: 'גמרא',
     });
     expect(amud?.paragraphs).toHaveLength(3);
+    expect(chavrutaMishnahFlags(amud?.blocks ?? [])).toEqual([
+      false,
+      false,
+      true,
+      false,
+      false,
+    ]);
   });
 });
 

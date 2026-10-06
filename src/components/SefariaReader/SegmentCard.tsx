@@ -27,6 +27,7 @@ interface SegmentCardProps {
   collapseScroll?: AccordionCollapseScroll;
   isSepia?: boolean;
   isDark?: boolean;
+  markAsMishnah?: boolean;
 }
 
 const SegmentCard = React.memo(function SegmentCard({
@@ -42,13 +43,15 @@ const SegmentCard = React.memo(function SegmentCard({
   collapseScroll,
   isSepia,
   isDark,
+  markAsMishnah = false,
 }: SegmentCardProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSegmentCardStyles(theme), [theme]);
   const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
 
   const hasCommentary = commentaries.length > 0;
-  const isMishnah = Boolean(segment.mishnahLabel) || isMishnahHeading(segment.he);
+  const isMishnahStart = Boolean(segment.mishnahLabel) || isMishnahHeading(segment.he);
+  const showMishnahMark = markAsMishnah || isMishnahStart;
 
   const textColor = isSepia
     ? '#2C221E'
@@ -85,7 +88,7 @@ const SegmentCard = React.memo(function SegmentCard({
 
   return (
     <TouchableOpacity
-      style={[styles.card, isMishnah && styles.mishnahCard]}
+      style={[styles.card, showMishnahMark && styles.mishnahCard]}
       onPress={handleToggle}
       onLayout={handleCardLayout}
       activeOpacity={hasCommentary ? 0.75 : 1}
@@ -95,7 +98,7 @@ const SegmentCard = React.memo(function SegmentCard({
           <Text style={[styles.mishnahLabel, { color: accentColor }]}>
             {`\u200F${segment.mishnahLabel}`}
           </Text>
-        ) : isMishnah ? (
+        ) : isMishnahStart ? (
           <Text style={[styles.mishnahLabel, { color: accentColor }]}>
             {'\u200Fמשנה'}
           </Text>
