@@ -2,6 +2,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 
 import { invalidateChavrutaMemoryCache } from './chavrutaApi';
 import { invalidateSefariaChaptersMemoryCache } from './sefariaChapters';
+import { invalidateSefariaTextMemoryCache } from './sefariaTextApi';
 
 export interface StorageUsageSummary {
   totalBytes: number;
@@ -140,5 +141,6 @@ export async function getStorageUsageSummary(): Promise<StorageUsageSummary> {
 export async function clearStorageCache(): Promise<void> {
   invalidateChavrutaMemoryCache();
   invalidateSefariaChaptersMemoryCache();
+  invalidateSefariaTextMemoryCache();
   await deleteDirectories(getCacheDirectories());
 }

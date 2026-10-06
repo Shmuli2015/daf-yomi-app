@@ -64,6 +64,22 @@ export function invalidateChavrutaMemoryCache(masechetEn?: string): void {
   inFlight.clear();
 }
 
+export async function hasCachedChavrutaMasechet(masechetEn: string): Promise<boolean> {
+  const normalized = normalizeMasechetEn(masechetEn);
+  if (!getChavrutaSource(normalized)) {
+    return false;
+  }
+  if (memoryCache.has(normalized)) {
+    return true;
+  }
+  const cached = await readCachedMasechet(normalized);
+  if (cached) {
+    memoryCache.set(normalized, cached);
+    return true;
+  }
+  return false;
+}
+
 async function readCachedMasechet(masechetEn: string): Promise<ChavrutaMasechetCache | null> {
   const cachePath = getCacheFilePath(masechetEn);
   try {

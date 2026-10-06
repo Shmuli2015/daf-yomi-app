@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../store/useAppStore';
@@ -18,6 +18,7 @@ import { useSettingsBackup } from '../hooks/useSettingsBackup';
 import { useSettingsReset } from '../hooks/useSettingsReset';
 import { useSettingsAppUpdates } from '../hooks/useSettingsAppUpdates';
 import { useStorageCache } from '../hooks/useStorageCache';
+import { useOfflinePrefetch } from '../hooks/useOfflinePrefetch';
 import { useSettingsReaderPrefs } from '../hooks/useSettingsReaderPrefs';
 import { useReaderFontSize } from '../hooks/useReaderFontSize';
 
@@ -216,9 +217,35 @@ export default function SettingsScreen() {
     openClearCacheModal,
     closeClearCacheModal,
     handleClearCacheConfirm,
+    refreshStorageSize,
   } = useStorageCache({
     onFeedback: showFeedback,
   });
+
+  const {
+    isPrefetching: isOfflinePrefetching,
+    prefetchProgress: offlinePrefetchProgress,
+    activeTargetLabel: offlinePrefetchActiveTargetLabel,
+    prefetchStatus: offlinePrefetchStatus,
+    daysStatus: offlinePrefetchDaysStatus,
+    dafYomiMasechet: offlinePrefetchDafYomiMasechet,
+    personalMasechet: offlinePrefetchPersonalMasechet,
+    dayCount: offlinePrefetchDayCount,
+    startDaysPrefetch,
+    startMasechetPrefetch,
+    cancelPrefetch,
+    refreshPrefetchStatus,
+  } = useOfflinePrefetch({
+    onFeedback: showFeedback,
+    onCompleted: () => {
+      void refreshStorageSize();
+    },
+  });
+
+  const handleClearCacheConfirmAndRefresh = useCallback(async () => {
+    await handleClearCacheConfirm();
+    await refreshPrefetchStatus();
+  }, [handleClearCacheConfirm, refreshPrefetchStatus]);
 
   if (!settings) {
     return <SettingsLoadingView />;
@@ -285,13 +312,26 @@ export default function SettingsScreen() {
               showConfettiPref,
               onConfettiToggle: handleConfettiToggle,
             }}
+            offline={{
+              dayCount: offlinePrefetchDayCount,
+              daysStatus: offlinePrefetchDaysStatus,
+              dafYomiMasechet: offlinePrefetchDafYomiMasechet,
+              personalMasechet: offlinePrefetchPersonalMasechet,
+              isPrefetching: isOfflinePrefetching,
+              prefetchProgress: offlinePrefetchProgress,
+              activeTargetLabel: offlinePrefetchActiveTargetLabel,
+              offlinePrefetchStatusLabel: offlinePrefetchStatus?.label ?? null,
+              storageSizeFormatted,
+              onDownloadDays: startDaysPrefetch,
+              onDownloadMasechet: startMasechetPrefetch,
+              onCancelDownload: cancelPrefetch,
+              onClearCacheOpen: openClearCacheModal,
+            }}
             backupData={{
               lastBackupAt: settings.last_backup_at,
               onSaveBackupToFile: handleSaveBackupToFile,
               onShareBackup: handleShareBackup,
               onImportBackup: handleImportBackupPick,
-              storageSizeFormatted,
-              onClearCacheOpen: openClearCacheModal,
               onResetModalOpen: openResetModal,
             }}
             helpUpdates={{
@@ -372,7 +412,7 @@ export default function SettingsScreen() {
           showClearCacheModal={showClearCacheModal}
           clearCacheSizeFormatted={storageSizeFormatted}
           isClearingCache={isClearingStorage}
-          onClearCacheConfirm={handleClearCacheConfirm}
+          onClearCacheConfirm={handleClearCacheConfirmAndRefresh}
           onClearCacheClose={closeClearCacheModal}
           readerViewMode={readerViewMode}
           showReaderViewModal={showReaderViewModal}

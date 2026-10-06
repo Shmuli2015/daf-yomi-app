@@ -18,6 +18,7 @@ const baseCtx: VisibleSettingsSearchContext = {
   hasShareBackup: true,
   hasImportBackup: true,
   hasClearCache: true,
+  hasOfflinePrefetch: true,
   hasAutoUpdate: true,
   hasCheckUpdate: true,
   hasWhatsNew: true,
@@ -62,6 +63,23 @@ describe('settingsVisibleSearch', () => {
     expect(countVisibleSettingsMatches('   ', baseCtx)).toBe(0);
     expect(countVisibleSettingsMatches('גיבוי', baseCtx)).toBeGreaterThan(0);
     expect(countVisibleSettingsMatches('xyznonexistentterm', baseCtx)).toBe(0);
+  });
+
+  it('shows offline prefetch in offline section when enabled', () => {
+    expect(hasVisibleSectionMatch('ללא רשת', 'offline', baseCtx)).toBe(true);
+    expect(hasVisibleSectionMatch('ללא רשת', 'backup_data', baseCtx)).toBe(false);
+    expect(
+      hasVisibleSettingsMatch('ללא רשת', {
+        ...baseCtx,
+        hasOfflinePrefetch: false,
+      }),
+    ).toBe(false);
+  });
+
+  it('shows clear cache in offline section', () => {
+    expect(hasVisibleSectionMatch('מטמון', 'offline', baseCtx)).toBe(true);
+    expect(hasVisibleSectionMatch('מטמון', 'backup_data', baseCtx)).toBe(false);
+    expect(getMatchingSectionKeys('מטמון', baseCtx)).toEqual(['offline']);
   });
 
   it('matches sections independently for accordion filtering', () => {

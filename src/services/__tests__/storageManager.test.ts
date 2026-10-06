@@ -4,6 +4,7 @@ import {
   clearStorageCache,
 } from '../storageManager';
 import * as FileSystem from 'expo-file-system/legacy';
+import { invalidateSefariaTextMemoryCache } from '../sefariaTextApi';
 
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: 'file:///data/user/0/com.masadaf.app/files/',
@@ -11,6 +12,18 @@ jest.mock('expo-file-system/legacy', () => ({
   getInfoAsync: jest.fn(),
   readDirectoryAsync: jest.fn(),
   deleteAsync: jest.fn(),
+}));
+
+jest.mock('../sefariaTextApi', () => ({
+  invalidateSefariaTextMemoryCache: jest.fn(),
+}));
+
+jest.mock('../chavrutaApi', () => ({
+  invalidateChavrutaMemoryCache: jest.fn(),
+}));
+
+jest.mock('../sefariaChapters', () => ({
+  invalidateSefariaChaptersMemoryCache: jest.fn(),
 }));
 
 describe('storageManager', () => {
@@ -99,6 +112,7 @@ describe('storageManager', () => {
       await clearStorageCache();
       expect(mockDelete).toHaveBeenCalled();
       expect(mockDelete.mock.calls[0][1]).toEqual({ idempotent: true });
+      expect(invalidateSefariaTextMemoryCache).toHaveBeenCalled();
     });
   });
 });

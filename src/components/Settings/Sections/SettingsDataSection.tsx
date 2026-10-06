@@ -3,12 +3,13 @@ import { View } from 'react-native';
 import { SettingItem } from '../SettingItem';
 import { SectionHeader } from '../SectionHeader';
 import type { SettingsSectionChrome } from '../settingsSection.types';
-import { isLastVisible, matchesSetting } from '../../../utils/settingsSearch';
-import { CACHE_ITEM, DATA_SEARCH_ITEMS, RESET_ITEM } from '../../../utils/settingsSearchCatalog';
+import { matchesSetting } from '../../../utils/settingsSearch';
+import {
+  RESET_ITEM,
+  DATA_SEARCH_ITEMS,
+} from '../../../utils/settingsSearchCatalog';
 
 type SettingsDataSectionProps = SettingsSectionChrome & {
-  storageSizeFormatted: string;
-  onClearCacheOpen?: () => void;
   onResetModalOpen: () => void;
 };
 
@@ -19,17 +20,10 @@ export default function SettingsDataSection({
   searchQuery,
   isFirst,
   embedded,
-  storageSizeFormatted,
-  onClearCacheOpen,
   onResetModalOpen,
 }: SettingsDataSectionProps) {
-  const cacheDescription = `מחיקת טקסטים שהורדו (${storageSizeFormatted}). אינו מוחק סימוני לימוד`;
-  const showCache =
-    onClearCacheOpen != null &&
-    matchesSetting(searchQuery, { ...CACHE_ITEM, description: cacheDescription });
   const showReset = matchesSetting(searchQuery, RESET_ITEM);
-  const flags = [showCache, showReset];
-  if (!flags.some(Boolean)) return null;
+  if (!showReset) return null;
 
   return (
     <>
@@ -37,27 +31,15 @@ export default function SettingsDataSection({
         <SectionHeader title="נתונים ופרטיות" icon="shield-checkmark-outline" isFirst={isFirst} />
       ) : null}
       <View style={embedded ? styles.embeddedCard : styles.card}>
-        {showCache ? (
-          <SettingItem
-            icon="folder-open-outline"
-            title={CACHE_ITEM.title}
-            description={cacheDescription}
-            onPress={onClearCacheOpen}
-            isLast={isLastVisible(flags, 0)}
-            highlightText={searchQuery}
-          />
-        ) : null}
-        {showReset ? (
-          <SettingItem
-            icon="trash-outline"
-            title={RESET_ITEM.title}
-            description={RESET_ITEM.description}
-            isDestructive
-            onPress={onResetModalOpen}
-            isLast={isLastVisible(flags, 1)}
-            highlightText={searchQuery}
-          />
-        ) : null}
+        <SettingItem
+          icon="trash-outline"
+          title={RESET_ITEM.title}
+          description={RESET_ITEM.description}
+          isDestructive
+          onPress={onResetModalOpen}
+          isLast
+          highlightText={searchQuery}
+        />
       </View>
     </>
   );

@@ -4,6 +4,7 @@ export type SettingsSectionKey =
   | 'notifications'
   | 'reader'
   | 'display'
+  | 'offline'
   | 'backup_data'
   | 'help_updates';
 

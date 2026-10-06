@@ -57,13 +57,23 @@ export function buildDisplaySummary(
   )}`;
 }
 
-export function buildBackupSummary(
-  lastBackupAt: string | null,
-  storageSizeFormatted: string,
+export function buildOfflineSummary(
+  statusLabel: string | null | undefined,
+  storageSizeFormatted?: string,
 ): string {
+  const base =
+    statusLabel === 'הורד'
+      ? '7 ימים מוכנים'
+      : statusLabel === 'חלקי'
+        ? 'הורדה חלקית'
+        : 'הורדת ימים ומסכתות';
+  if (storageSizeFormatted) return `${base} • ${storageSizeFormatted}`;
+  return base;
+}
+
+export function buildBackupSummary(lastBackupAt: string | null): string {
   const backupFormatted = formatLastBackupAt(lastBackupAt);
-  const backupStatus = backupFormatted ? 'מעודכן' : 'טרם גובה';
-  return `${backupStatus} • מטמון ${storageSizeFormatted}`;
+  return backupFormatted ? 'מעודכן' : 'טרם גובה';
 }
 
 export function buildHelpSummary(appVersion?: string | null): string {

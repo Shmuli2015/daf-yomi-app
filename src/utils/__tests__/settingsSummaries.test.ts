@@ -3,6 +3,7 @@ import {
   buildDisplaySummary,
   buildHelpSummary,
   buildNotificationsSummary,
+  buildOfflineSummary,
 } from '../settingsSummaries';
 
 describe('settingsSummaries', () => {
@@ -20,9 +21,17 @@ describe('settingsSummaries', () => {
     expect(buildDisplaySummary('system', 'weekly', 18, 0)).toBe('מערכת, החלפה לפי ימים');
   });
 
-  it('separates backup status from cache size', () => {
-    expect(buildBackupSummary(null, '12 MB')).toBe('טרם גובה • מטמון 12 MB');
-    expect(buildBackupSummary('2024-01-01T00:00:00.000Z', '3 MB')).toBe('מעודכן • מטמון 3 MB');
+  it('separates backup status from offline cache size', () => {
+    expect(buildBackupSummary(null)).toBe('טרם גובה');
+    expect(buildBackupSummary('2024-01-01T00:00:00.000Z')).toBe('מעודכן');
+  });
+
+  it('builds offline summary from status label', () => {
+    expect(buildOfflineSummary(null)).toBe('הורדת ימים ומסכתות');
+    expect(buildOfflineSummary('חלקי')).toBe('הורדה חלקית');
+    expect(buildOfflineSummary('הורד')).toBe('7 ימים מוכנים');
+    expect(buildOfflineSummary(null, '12 MB')).toBe('הורדת ימים ומסכתות • 12 MB');
+    expect(buildOfflineSummary('הורד', '3 MB')).toBe('7 ימים מוכנים • 3 MB');
   });
 
   it('builds help summary with optional version', () => {
