@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { ThemeMode } from '../../../theme';
 import type { DafDayStartMode } from '../../../utils/dafDayBoundary';
 import {

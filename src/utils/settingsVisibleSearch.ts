@@ -12,13 +12,15 @@ import {
   DAF_DAY_START_TIME_ITEM,
   DAF_DAY_START_WEEKLY_ITEM,
   DAILY_ITEM,
-  DATA_SEARCH_ITEMS,
+  CACHE_ITEM,
   DEV_SEARCH_ITEMS,
   EXACT_ITEM,
   HELP_SEARCH_ITEMS,
   MODE_ITEM,
+  OFFLINE_PREFETCH_ITEM,
   PERMISSION_ITEM,
   READER_SEARCH_ITEMS,
+  RESET_ITEM,
   SECULAR_ITEM,
   SHARE_APP_ITEM,
   SOUND_ITEM,
@@ -32,6 +34,7 @@ export type VisibleSettingsSearchSection =
   | 'notifications'
   | 'reader'
   | 'display'
+  | 'offline'
   | 'backup_data'
   | 'help_updates'
   | 'dev';
@@ -48,6 +51,7 @@ export type VisibleSettingsSearchContext = {
   hasShareBackup: boolean;
   hasImportBackup: boolean;
   hasClearCache: boolean;
+  hasOfflinePrefetch: boolean;
   hasAutoUpdate: boolean;
   hasCheckUpdate: boolean;
   hasWhatsNew: boolean;
@@ -56,7 +60,6 @@ export type VisibleSettingsSearchContext = {
 };
 
 const [SAVE_ITEM, SHARE_BACKUP_ITEM, IMPORT_ITEM] = BACKUP_SEARCH_ITEMS;
-const [CACHE_ITEM, RESET_ITEM] = DATA_SEARCH_ITEMS;
 
 function getNotificationsSearchItems(ctx: VisibleSettingsSearchContext): SearchableSetting[] {
   const items: SearchableSetting[] = [DAILY_ITEM];
@@ -92,12 +95,18 @@ function getReaderSearchItems(): SearchableSetting[] {
   return [...READER_SEARCH_ITEMS];
 }
 
+function getOfflineSearchItems(ctx: VisibleSettingsSearchContext): SearchableSetting[] {
+  const items: SearchableSetting[] = [];
+  if (ctx.hasOfflinePrefetch) items.push(OFFLINE_PREFETCH_ITEM);
+  if (ctx.hasClearCache) items.push(CACHE_ITEM);
+  return items;
+}
+
 function getBackupDataSearchItems(ctx: VisibleSettingsSearchContext): SearchableSetting[] {
   const items: SearchableSetting[] = [];
   if (ctx.hasSaveBackup) items.push(SAVE_ITEM);
   if (ctx.hasShareBackup) items.push(SHARE_BACKUP_ITEM);
   if (ctx.hasImportBackup) items.push(IMPORT_ITEM);
-  if (ctx.hasClearCache) items.push(CACHE_ITEM);
   items.push(RESET_ITEM);
   return items;
 }
@@ -126,6 +135,8 @@ export function getVisibleSectionSearchItems(
       return getReaderSearchItems();
     case 'display':
       return getDisplaySearchItems(ctx);
+    case 'offline':
+      return getOfflineSearchItems(ctx);
     case 'backup_data':
       return getBackupDataSearchItems(ctx);
     case 'help_updates':
@@ -142,6 +153,7 @@ export function getVisibleSettingsSearchItems(
     ...getNotificationsSearchItems(ctx),
     ...getDisplaySearchItems(ctx),
     ...getReaderSearchItems(),
+    ...getOfflineSearchItems(ctx),
     ...getBackupDataSearchItems(ctx),
     ...getHelpUpdatesSearchItems(ctx),
     ...getDevSearchItems(ctx),
@@ -164,6 +176,7 @@ export function getMatchingSectionKeys(
     'notifications',
     'reader',
     'display',
+    'offline',
     'backup_data',
     'help_updates',
     'dev',

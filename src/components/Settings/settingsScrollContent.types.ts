@@ -5,6 +5,11 @@ import type { DaySchedule } from './Schedule/DayScheduleList';
 import type { ExactAlarmStatus } from '../../utils/exactAlarm';
 import type { NotificationPermissionStatus } from '../../utils/notificationPermission';
 import type { SettingsScreenStyles } from './settingsScreenStyles';
+import type {
+  OfflinePrefetchProgress,
+  OfflinePrefetchStatus,
+} from '../../services/offlinePrefetch';
+import type { OfflineMasechetTarget } from '../../hooks/useOfflinePrefetch';
 
 export type SettingsNotificationsProps = {
   notificationsEnabled: boolean;
@@ -68,9 +73,23 @@ export type SettingsBackupDataProps = {
   onSaveBackupToFile?: () => void;
   onShareBackup?: () => void;
   onImportBackup?: () => void;
-  storageSizeFormatted?: string;
-  onClearCacheOpen?: () => void;
   onResetModalOpen: () => void;
+};
+
+export type SettingsOfflineProps = {
+  dayCount: number;
+  daysStatus: OfflinePrefetchStatus | null;
+  dafYomiMasechet: OfflineMasechetTarget | null;
+  personalMasechet: OfflineMasechetTarget | null;
+  isPrefetching: boolean;
+  prefetchProgress: OfflinePrefetchProgress | null;
+  activeTargetLabel: string | null;
+  offlinePrefetchStatusLabel?: string | null;
+  storageSizeFormatted?: string;
+  onDownloadDays: () => void;
+  onDownloadMasechet: (masechetEn: string, masechetHe: string) => void;
+  onCancelDownload: () => void;
+  onClearCacheOpen?: () => void;
 };
 
 export type SettingsHelpUpdatesProps = {
@@ -96,6 +115,7 @@ export type SettingsScrollContentProps = {
   notifications: SettingsNotificationsProps;
   reader: SettingsReaderProps;
   display: SettingsDisplayProps;
+  offline: SettingsOfflineProps;
   backupData: SettingsBackupDataProps;
   helpUpdates: SettingsHelpUpdatesProps;
   dev: SettingsDevProps;

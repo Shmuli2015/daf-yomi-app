@@ -179,11 +179,29 @@ export const BACKUP_SEARCH_ITEMS: SearchableSetting[] = [
   IMPORT_ITEM,
 ];
 
+export const OFFLINE_PREFETCH_ITEM: SearchableSetting = {
+  title: 'לימוד ללא רשת',
+  description: 'הורדת 7 ימים או מסכת שלמה לקריאה במצב טיסה',
+  synonyms: [
+    'offline',
+    'ללא רשת',
+    'הורדה',
+    'שבת',
+    'טיסה',
+    'prefetch',
+    'קאש',
+    'מסכת',
+    'הכנה ללימוד ללא רשת',
+  ],
+};
+
 export const CACHE_ITEM: SearchableSetting = {
   title: 'ניקוי קבצים שמורים',
   description: 'מחיקת טקסטים שמורים',
-  synonyms: ['מטמון', 'קאש', 'אחסון', 'זיכרון'],
+  synonyms: ['מטמון', 'קאש', 'אחסון', 'זיכרון', 'מחיקה'],
 };
+
+export const OFFLINE_SEARCH_ITEMS: SearchableSetting[] = [OFFLINE_PREFETCH_ITEM, CACHE_ITEM];
 
 export const RESET_ITEM: SearchableSetting = {
   title: 'איפוס נתונים',
@@ -191,7 +209,7 @@ export const RESET_ITEM: SearchableSetting = {
   synonyms: ['מחיקה', 'איפוס', 'אתחול'],
 };
 
-export const DATA_SEARCH_ITEMS: SearchableSetting[] = [CACHE_ITEM, RESET_ITEM];
+export const DATA_SEARCH_ITEMS: SearchableSetting[] = [RESET_ITEM];
 
 export const GUIDE_ITEM: SearchableSetting = {
   title: 'מדריך שימוש',

@@ -331,12 +331,12 @@ async function fetchFromNetwork(
   } as SefariaPageData;
 }
 
-export async function fetchSefariaPageText(
+function resolveSefariaCacheIdentity(
   masechetEn: string,
   dafNum: number,
   amud: Amud,
-  gemaraNikud = true,
-): Promise<SefariaPageData> {
+  gemaraNikud: boolean,
+): { tref: string; plainGemara: boolean; shekalim: boolean; mishnah: boolean; sharedAmud: boolean } | null {
   const shekalim = isShekalimMasechet(masechetEn);
   const sharedAmud = isKinnimTamidSharedAmud(masechetEn, dafNum, amud);
   const mishnah = isMishnahOnlySlot(masechetEn, dafNum, amud);
@@ -348,9 +348,57 @@ export async function fetchSefariaPageText(
         ? buildShekalimSefariaTref(dafNum, amud)
         : buildSefariaTref(masechetEn, dafNum, amud);
   if (!tref) {
-    throw new Error(shekalim ? 'לא נמצא טקסט לשקלים לעמוד זה' : 'לא נמצא טקסט לדף זה');
+    return null;
   }
   const plainGemara = !gemaraNikud && !shekalim && !mishnah;
+  return { tref, plainGemara, shekalim, mishnah, sharedAmud };
+}
+
+export async function hasCachedSefariaPageText(
+  masechetEn: string,
+  dafNum: number,
+  amud: Amud,
+  gemaraNikud = true,
+): Promise<boolean> {
+  const identity = resolveSefariaCacheIdentity(masechetEn, dafNum, amud, gemaraNikud);
+  if (!identity) {
+    return false;
+  }
+  const memKey = memoryCacheKey(identity.tref, identity.plainGemara);
+  if (readMemoryCache(memKey)) {
+    return true;
+  }
+  try {
+    const cachePath = getCacheFilePath(identity.tref, identity.plainGemara);
+    const fileInfo = await FileSystem.getInfoAsync(cachePath);
+    if (!fileInfo.exists || (fileInfo.size ?? 0) <= 100) {
+      return false;
+    }
+    const content = await FileSystem.readAsStringAsync(cachePath);
+    const parsed = JSON.parse(content) as SefariaPageData & { v?: number };
+    return (
+      !!parsed &&
+      parsed.v === SEFARIA_TEXT_CACHE_VERSION &&
+      Array.isArray(parsed.segments) &&
+      parsed.segments.length > 0
+    );
+  } catch {
+    return false;
+  }
+}
+
+export async function fetchSefariaPageText(
+  masechetEn: string,
+  dafNum: number,
+  amud: Amud,
+  gemaraNikud = true,
+): Promise<SefariaPageData> {
+  const identity = resolveSefariaCacheIdentity(masechetEn, dafNum, amud, gemaraNikud);
+  if (!identity) {
+    const shekalim = isShekalimMasechet(masechetEn);
+    throw new Error(shekalim ? 'לא נמצא טקסט לשקלים לעמוד זה' : 'לא נמצא טקסט לדף זה');
+  }
+  const { tref, plainGemara, shekalim, mishnah, sharedAmud } = identity;
   const memKey = memoryCacheKey(tref, plainGemara);
   const remembered = readMemoryCache(memKey);
   if (remembered) {

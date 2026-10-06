@@ -13,6 +13,7 @@ import SettingsDisplaySection from './Sections/SettingsDisplaySection';
 import SettingsReaderSection from './Sections/SettingsReaderSection';
 import SettingsBackupSection from './Sections/SettingsBackupSection';
 import SettingsDataSection from './Sections/SettingsDataSection';
+import SettingsOfflineSection from './Sections/SettingsOfflineSection';
 import SettingsHelpSection from './Sections/SettingsHelpSection';
 import SettingsUpdatesSection from './Sections/SettingsUpdatesSection';
 import SettingsDevSection from './Sections/SettingsDevSection';
@@ -32,6 +33,7 @@ import {
   buildDisplaySummary,
   buildHelpSummary,
   buildNotificationsSummary,
+  buildOfflineSummary,
   buildReaderSummary,
 } from '../../utils/settingsSummaries';
 import { useSettingsAccordion, type SettingsSectionKey } from '../../hooks/useSettingsAccordion';
@@ -46,6 +48,7 @@ export default function SettingsScrollContent({
   notifications,
   reader,
   display,
+  offline,
   backupData,
   helpUpdates,
   dev,
@@ -85,7 +88,8 @@ export default function SettingsScrollContent({
     hasSaveBackup: backupData.onSaveBackupToFile != null,
     hasShareBackup: backupData.onShareBackup != null,
     hasImportBackup: backupData.onImportBackup != null,
-    hasClearCache: backupData.onClearCacheOpen != null,
+    hasClearCache: offline.onClearCacheOpen != null,
+    hasOfflinePrefetch: offline.onDownloadDays != null,
     hasAutoUpdate:
       helpUpdates.updateAutoPromptEnabled != null &&
       helpUpdates.onUpdateAutoPromptToggle != null,
@@ -99,7 +103,7 @@ export default function SettingsScrollContent({
   const resultCount = countVisibleSettingsMatches(searchQuery, searchContext);
   const isSearching = searchQuery.trim().length > 0;
 
-  const storageSizeFormatted = backupData.storageSizeFormatted ?? '0 B';
+  const storageSizeFormatted = offline.storageSizeFormatted ?? '0 B';
   const notifSummary = buildNotificationsSummary(
     notifications.notificationsEnabled,
     notifications.notifMode,
@@ -117,10 +121,15 @@ export default function SettingsScrollContent({
     display.dafDayStartHour,
     display.dafDayStartMinute,
   );
-  const backupSummary = buildBackupSummary(backupData.lastBackupAt, storageSizeFormatted);
+  const backupSummary = buildBackupSummary(backupData.lastBackupAt);
+  const offlineSummary = buildOfflineSummary(
+    offline.offlinePrefetchStatusLabel,
+    storageSizeFormatted,
+  );
   const helpSummary = buildHelpSummary(Constants.expoConfig?.version);
 
-  const isCardExpanded = (key: SettingsSectionKey) => isSearching || openSection === key;
+  const isCardExpanded = (key: SettingsSectionKey) =>
+    isSearching || openSection === key || (key === 'offline' && offline.isPrefetching);
   const shouldShowSection = (key: VisibleSettingsSearchSection) =>
     !isSearching || hasVisibleSectionMatch(searchQuery, key, searchContext);
 
@@ -294,9 +303,39 @@ export default function SettingsScrollContent({
                 </SettingsCollapsibleCard>
               ) : null}
 
+              {shouldShowSection('offline') ? (
+                <SettingsCollapsibleCard
+                  title="לימוד ללא רשת"
+                  subtitle={offlineSummary}
+                  icon="cloud-download-outline"
+                  accentColor={theme.colors.accent}
+                  isExpanded={isCardExpanded('offline')}
+                  onToggle={() => toggleSection('offline')}
+                >
+                  <SettingsOfflineSection
+                    styles={styles}
+                    searchQuery={searchQuery}
+                    isFirst
+                    embedded
+                    dayCount={offline.dayCount}
+                    daysStatus={offline.daysStatus}
+                    dafYomiMasechet={offline.dafYomiMasechet}
+                    personalMasechet={offline.personalMasechet}
+                    isPrefetching={offline.isPrefetching}
+                    prefetchProgress={offline.prefetchProgress}
+                    activeTargetLabel={offline.activeTargetLabel}
+                    storageSizeFormatted={storageSizeFormatted}
+                    onDownloadDays={offline.onDownloadDays}
+                    onDownloadMasechet={offline.onDownloadMasechet}
+                    onCancelDownload={offline.onCancelDownload}
+                    onClearCacheOpen={offline.onClearCacheOpen}
+                  />
+                </SettingsCollapsibleCard>
+              ) : null}
+
               {shouldShowSection('backup_data') ? (
                 <SettingsCollapsibleCard
-                  title="נתונים, גיבוי וזיכרון"
+                  title="נתונים וגיבוי"
                   subtitle={backupSummary}
                   icon="cloud-upload-outline"
                   accentColor={theme.colors.success}
@@ -318,8 +357,6 @@ export default function SettingsScrollContent({
                     searchQuery={searchQuery}
                     isFirst={false}
                     embedded
-                    storageSizeFormatted={storageSizeFormatted}
-                    onClearCacheOpen={backupData.onClearCacheOpen}
                     onResetModalOpen={backupData.onResetModalOpen}
                   />
                 </SettingsCollapsibleCard>
