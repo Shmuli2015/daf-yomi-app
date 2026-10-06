@@ -724,6 +724,24 @@ export function parseChavrutaDocument(html: string): ChavrutaAmud[] {
   return finalized;
 }
 
+export function isChavrutaMishnahTitle(titleHe: string): boolean {
+  return titleHe.includes('מתני') || titleHe.includes('משנה');
+}
+
+export function chavrutaMishnahFlags(blocks: ChavrutaBlock[]): boolean[] {
+  let inMishnah = false;
+  return blocks.map((block) => {
+    if (block.kind === 'sectionHeader') {
+      inMishnah = isChavrutaMishnahTitle(block.titleHe);
+      return false;
+    }
+    if (block.kind !== 'paragraph') {
+      return false;
+    }
+    return inMishnah;
+  });
+}
+
 export function findChavrutaAmud(
   amudim: ChavrutaAmud[],
   dafNum: number,

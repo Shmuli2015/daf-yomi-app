@@ -14,6 +14,7 @@ import type { ReaderTheme } from '../SefariaReader/ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useTheme } from '../../theme';
 import type { ChavrutaBlock, ChavrutaFootnote, ChavrutaPageData } from '../../services/chavrutaApi';
+import { chavrutaMishnahFlags } from '../../utils/parseChavrutaHtml';
 import ChavrutaBodyText from './ChavrutaBodyText';
 import ChavrutaFootnoteSheet from './ChavrutaFootnoteSheet';
 import ChavrutaSectionHeader from './ChavrutaSectionHeader';
@@ -66,6 +67,13 @@ export default function ChavrutaTextContainer({
     [data?.footnotes],
   );
 
+  const renderBlocks = useMemo<ChavrutaBlock[]>(() => {
+    if (data?.blocks && data.blocks.length > 0) return data.blocks;
+    return (data?.paragraphs ?? []).map((paragraph) => ({ kind: 'paragraph' as const, ...paragraph }));
+  }, [data?.blocks, data?.paragraphs]);
+
+  const mishnahFlags = useMemo(() => chavrutaMishnahFlags(renderBlocks), [renderBlocks]);
+
   useEffect(() => {
     setActiveFootnoteIndex(null);
   }, [data?.masechetEn, data?.dafNum, data?.amud, showNotes]);
@@ -91,11 +99,6 @@ export default function ChavrutaTextContainer({
     );
   }
 
-  const renderBlocks: ChavrutaBlock[] =
-    data.blocks && data.blocks.length > 0
-      ? data.blocks
-      : data.paragraphs.map((paragraph) => ({ kind: 'paragraph', ...paragraph }));
-
   if (renderBlocks.length === 0) {
     return (
       <View style={styles.centerContainer}>
@@ -110,8 +113,6 @@ export default function ChavrutaTextContainer({
     const index = data.footnotes.findIndex((item) => item.id === footnote.id);
     setActiveFootnoteIndex(index >= 0 ? index : null);
   };
-
-  let currentSection = 'gemara';
 
   return (
     <View style={styles.container}>
@@ -150,9 +151,6 @@ export default function ChavrutaTextContainer({
             );
           }
           if (block.kind === 'sectionHeader') {
-            const isMishnah =
-              block.titleHe.includes('מתני') || block.titleHe.includes('משנה');
-            currentSection = isMishnah ? 'mishnah' : 'gemara';
             return (
               <ChavrutaSectionHeader
                 key={`section-header-${index}`}
@@ -163,7 +161,7 @@ export default function ChavrutaTextContainer({
               />
             );
           }
-          const isMishnahParagraph = currentSection === 'mishnah';
+          const isMishnahParagraph = mishnahFlags[index];
           return (
             <View
               key={`paragraph-${index}`}
@@ -181,6 +179,7 @@ export default function ChavrutaTextContainer({
                 ]}
                 fontSize={fontSize}
                 accentColor={palette.accentColor}
+                accentSourceWords={isMishnahParagraph}
                 showNotes={showNotes}
                 footnotesById={footnotesById}
                 onPressFootnote={openFootnote}

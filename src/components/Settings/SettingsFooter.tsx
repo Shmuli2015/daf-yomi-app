@@ -32,25 +32,22 @@ export function SettingsFooter() {
 
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
-          <Ionicons name="sparkles" size={10} color={theme.colors.accent} />
+          <View style={styles.dividerDot} />
           <View style={styles.dividerLine} />
         </View>
 
-        <View style={styles.bottomRow}>
+        <View style={styles.metaStack}>
+          {versionLabel ? (
+            <View style={styles.versionBadge}>
+              <View style={styles.versionDot} />
+              <Text style={styles.versionText}>{versionLabel}</Text>
+            </View>
+          ) : null}
+
           <View style={styles.authorBadge}>
             <Ionicons name="code-slash-outline" size={14} color={theme.colors.accent} />
             <Text style={styles.authorText}>פיתוח: שמואל רוזנברג</Text>
           </View>
-
-          {versionLabel ? (
-            <>
-              <View style={styles.dotSeparator} />
-              <View style={styles.versionBadge}>
-                <View style={styles.versionDot} />
-                <Text style={styles.versionText}>{versionLabel}</Text>
-              </View>
-            </>
-          ) : null}
         </View>
       </View>
     </View>

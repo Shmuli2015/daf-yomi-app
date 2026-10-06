@@ -11,6 +11,7 @@ interface ChavrutaBodyTextProps {
   baseStyle: StyleProp<TextStyle>;
   fontSize: number;
   accentColor: string;
+  accentSourceWords?: boolean;
   showNotes: boolean;
   footnotesById: Map<number, ChavrutaFootnote>;
   onPressFootnote: (footnote: ChavrutaFootnote) => void;
@@ -21,6 +22,7 @@ export default function ChavrutaBodyText({
   baseStyle,
   fontSize,
   accentColor,
+  accentSourceWords = true,
   showNotes,
   footnotesById,
   onPressFootnote,
@@ -61,9 +63,7 @@ export default function ChavrutaBodyText({
               key={`gemara-${index}`}
               style={[
                 styles.gemaraRun,
-                {
-                  color: accentColor,
-                },
+                accentSourceWords ? { color: accentColor } : null,
               ]}
             >
               {part.text}

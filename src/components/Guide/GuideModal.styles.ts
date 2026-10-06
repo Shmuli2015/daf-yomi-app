@@ -60,7 +60,7 @@ export function createGuideModalStyles(theme: Theme) {
       writingDirection: 'rtl',
     },
     bottomSpacer: {
-      height: 84,
+      height: 24,
     },
   });
 }
