@@ -3,13 +3,16 @@ import { getSettings } from '../db/database';
 import { useAppStore } from '../store/useAppStore';
 import { dismissReminderFromTray } from './dismissReminderFromTray';
 import { requestHomeTabFocus } from './homeTabFocus';
+import { queuePendingDafOpen } from './pendingDafOpen';
 import { scheduleSnoozeReminder } from './scheduleSnoozeReminder';
+import { getStudyReminderTargetFromResponse } from './studyReminderTarget';
 
 export async function handleStudyReminderResponse(params: {
   actionIdentifier: string;
   notificationId?: string;
+  response?: unknown;
 }): Promise<void> {
-  const { actionIdentifier, notificationId } = params;
+  const { actionIdentifier, notificationId, response } = params;
 
   if (actionIdentifier === 'finish-daf') {
     await dismissReminderFromTray(notificationId);
@@ -30,6 +33,13 @@ export async function handleStudyReminderResponse(params: {
     await dismissReminderFromTray(notificationId);
     const { loadInitialData } = useAppStore.getState();
     loadInitialData();
+
+    const opensDaf = getSettings().notification_opens_daf === 1;
+    const target = opensDaf ? getStudyReminderTargetFromResponse(response) : null;
+    if (target) {
+      queuePendingDafOpen(target, notificationId);
+      return;
+    }
     requestHomeTabFocus();
   }
 }

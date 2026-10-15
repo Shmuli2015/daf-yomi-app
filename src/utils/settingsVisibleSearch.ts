@@ -21,6 +21,7 @@ import {
   HELP_SEARCH_ITEMS,
   MODE_ITEM,
   OFFLINE_PREFETCH_ITEM,
+  OPENS_DAF_ITEM,
   PERMISSION_ITEM,
   READER_SEARCH_ITEMS,
   RESET_ITEM,
@@ -70,7 +71,7 @@ function getNotificationsSearchItems(ctx: VisibleSettingsSearchContext): Searcha
   const items: SearchableSetting[] = [DAILY_ITEM];
 
   if (ctx.notificationsEnabled) {
-    items.push(MODE_ITEM, SOUND_ITEM);
+    items.push(MODE_ITEM, SOUND_ITEM, OPENS_DAF_ITEM);
     if (ctx.notifMode === 'daily') items.push(TIME_ITEM);
     if (ctx.exactAlarmStatus !== 'not_required' && ctx.hasExactAlarmHandler) {
       items.push(EXACT_ITEM);

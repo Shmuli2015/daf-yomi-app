@@ -5,6 +5,7 @@ import * as Notifications from 'expo-notifications';
 import { initDB } from './src/db/database';
 import { getNotificationIdFromActionData } from './src/utils/dismissReminderFromTray';
 import { handleStudyReminderResponse } from './src/utils/handleStudyReminderResponse';
+import { extendStudyReminders } from './src/utils/extendStudyReminders';
 import { captureException } from './src/services/sentry';
 
 import App from './App';
@@ -33,11 +34,16 @@ TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, async ({ data, error }) => 
     }
 
     if (!actionIdentifier) {
+      try {
+        await extendStudyReminders();
+      } catch (e) {
+        captureException(e);
+      }
       return;
     }
 
     try {
-      await handleStudyReminderResponse({ actionIdentifier, notificationId });
+      await handleStudyReminderResponse({ actionIdentifier, notificationId, response: data });
     } catch (e) {
       console.error('Background study reminder response error:', e);
       captureException(e);

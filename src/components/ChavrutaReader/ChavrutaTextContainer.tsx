@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -19,6 +19,7 @@ import ChavrutaBodyText from './ChavrutaBodyText';
 import ChavrutaFootnoteSheet from './ChavrutaFootnoteSheet';
 import ChavrutaSectionHeader from './ChavrutaSectionHeader';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
+import { useReaderPosition } from '../../hooks/useReaderPosition';
 import { createChavrutaTextContainerStyles } from './ChavrutaTextContainer.styles';
 
 interface ChavrutaTextContainerProps {
@@ -33,6 +34,7 @@ interface ChavrutaTextContainerProps {
   scrollProgress?: SharedValue<number>;
   initialScrollOffset?: number;
   onScrollOffset?: (offset: number) => void;
+  positionKey?: string;
 }
 
 export default function ChavrutaTextContainer({
@@ -47,6 +49,7 @@ export default function ChavrutaTextContainer({
   scrollProgress,
   initialScrollOffset = 0,
   onScrollOffset,
+  positionKey,
 }: ChavrutaTextContainerProps) {
   const theme = useTheme();
   const palette = useMemo(
@@ -60,13 +63,25 @@ export default function ChavrutaTextContainer({
   const [activeFootnoteIndex, setActiveFootnoteIndex] = useState<number | null>(null);
 
   const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
-  const { scrollViewRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey,
       initialOffset: initialScrollOffset,
       onOffsetChange: onScrollOffset,
     });
+
+  const { registerAnchor, clearSavedPosition } = useReaderPosition({
+    positionKey,
+    scrollViewRef,
+    scrollYRef,
+    skipRestore: initialScrollOffset > 1,
+  });
+
+  const handleScrollToTop = useCallback(() => {
+    clearSavedPosition();
+    scrollToTop();
+  }, [clearSavedPosition, scrollToTop]);
 
   const footnotesById = useMemo(
     () => new Map((data?.footnotes ?? []).map((footnote) => [footnote.id, footnote])),
@@ -172,6 +187,7 @@ export default function ChavrutaTextContainer({
           return (
             <View
               key={`paragraph-${index}`}
+              onLayout={(event) => registerAnchor(index, event.nativeEvent.layout.y)}
               style={[styles.paragraph, isMishnahParagraph && styles.mishnahParagraph]}
             >
               <ChavrutaBodyText
@@ -197,7 +213,7 @@ export default function ChavrutaTextContainer({
 
       <ScrollToTopFab
         visible={showFab}
-        onPress={scrollToTop}
+        onPress={handleScrollToTop}
         accentColor={palette.accentColor}
       />
 

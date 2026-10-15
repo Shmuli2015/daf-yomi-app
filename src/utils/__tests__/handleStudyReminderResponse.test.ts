@@ -5,7 +5,8 @@ jest.mock('expo-notifications', () => ({
 const mockDismissReminderFromTray = jest.fn(async () => undefined);
 const mockScheduleSnoozeReminder = jest.fn(async () => undefined);
 const mockRequestHomeTabFocus = jest.fn();
-const mockGetSettings = jest.fn(() => ({ notification_sound_enabled: 1 }));
+const mockGetSettings = jest.fn(() => ({ notification_sound_enabled: 1, notification_opens_daf: 0 }));
+const mockQueuePendingDafOpen = jest.fn();
 const mockLoadInitialData = jest.fn();
 const mockMarkTodayAsLearned = jest.fn();
 
@@ -17,6 +18,9 @@ jest.mock('../scheduleSnoozeReminder', () => ({
 }));
 jest.mock('../homeTabFocus', () => ({
   requestHomeTabFocus: mockRequestHomeTabFocus,
+}));
+jest.mock('../pendingDafOpen', () => ({
+  queuePendingDafOpen: mockQueuePendingDafOpen,
 }));
 jest.mock('../../db/database', () => ({
   getSettings: mockGetSettings,
@@ -68,6 +72,33 @@ describe('handleStudyReminderResponse', () => {
 
     expect(mockDismissReminderFromTray).toHaveBeenCalledWith('notif-3');
     expect(mockLoadInitialData).toHaveBeenCalled();
+    expect(mockRequestHomeTabFocus).toHaveBeenCalled();
+  });
+
+  it('queues the daf instead of focusing home when the setting is on', async () => {
+    mockGetSettings.mockReturnValueOnce({ notification_sound_enabled: 1, notification_opens_daf: 1 } as never);
+    const target = { masechetEn: 'Berachot', masechetHe: 'ברכות', dafNum: 5, amud: 'a' };
+
+    await handleStudyReminderResponse({
+      actionIdentifier: 'expo.modules.notifications.actions.DEFAULT',
+      notificationId: 'notif-4',
+      response: { notification: { request: { content: { data: target } } } },
+    });
+
+    expect(mockQueuePendingDafOpen).toHaveBeenCalledWith(target, 'notif-4');
+    expect(mockRequestHomeTabFocus).not.toHaveBeenCalled();
+  });
+
+  it('falls back to home when the setting is on but data is missing', async () => {
+    mockGetSettings.mockReturnValueOnce({ notification_sound_enabled: 1, notification_opens_daf: 1 } as never);
+
+    await handleStudyReminderResponse({
+      actionIdentifier: 'expo.modules.notifications.actions.DEFAULT',
+      notificationId: 'notif-5',
+      response: {},
+    });
+
+    expect(mockQueuePendingDafOpen).not.toHaveBeenCalled();
     expect(mockRequestHomeTabFocus).toHaveBeenCalled();
   });
 });

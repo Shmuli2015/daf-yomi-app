@@ -3,6 +3,11 @@ import {
   normalizeDafDayStartMode,
   parseDafDayStartSchedules,
 } from '../utils/dafDayBoundary';
+import {
+  addPinnedPersonalMasechet,
+  parsePinnedPersonalMasechtot,
+  serializePinnedPersonalMasechtot,
+} from '../utils/pinnedPersonalMasechtot';
 import { clampReaderFontSize } from '../utils/readerFontSize';
 import { clampReaderViewMode } from '../utils/readerViewMode';
 import { db } from './connection';
@@ -210,10 +215,26 @@ export function importFullBackupTransaction(data: FullBackupInput, mode: 'replac
         }
       }
 
-      if (data.settings.active_personal_masechet !== undefined) {
-        db.runSync('UPDATE settings SET active_personal_masechet = ? WHERE id = 1', [
+      if (
+        data.settings.active_personal_masechet !== undefined ||
+        data.settings.pinned_personal_masechtot !== undefined
+      ) {
+        const current = db.getFirstSync(
+          'SELECT pinned_personal_masechtot, active_personal_masechet FROM settings WHERE id = 1',
+        ) as { pinned_personal_masechtot: string | null; active_personal_masechet: string | null } | null;
+        const currentPinned = parsePinnedPersonalMasechtot(
+          current?.pinned_personal_masechtot,
+          current?.active_personal_masechet,
+        );
+        const incomingPinned = parsePinnedPersonalMasechtot(
+          data.settings.pinned_personal_masechtot,
           data.settings.active_personal_masechet,
-        ]);
+        );
+        const merged = incomingPinned.reduce(addPinnedPersonalMasechet, currentPinned);
+        db.runSync(
+          'UPDATE settings SET pinned_personal_masechtot = ?, active_personal_masechet = ? WHERE id = 1',
+          [serializePinnedPersonalMasechtot(merged), merged[0] ?? null],
+        );
       }
       if (data.settings.show_personal_track_banner !== undefined) {
         db.runSync('UPDATE settings SET show_personal_track_banner = ? WHERE id = 1', [
@@ -225,6 +246,10 @@ export function importFullBackupTransaction(data: FullBackupInput, mode: 'replac
 }
 
 export function importSettingsFromBackup(settings: SettingsInput) {
+  const importedPinned = parsePinnedPersonalMasechtot(
+    settings.pinned_personal_masechtot,
+    settings.active_personal_masechet,
+  );
   const clampedStart = clampDafDayStartTime(
     settings.daf_day_start_hour,
     settings.daf_day_start_minute,
@@ -246,6 +271,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       show_calendar_daf = ?,
       dismissed_half_daf_tip = ?,
       active_personal_masechet = ?,
+      pinned_personal_masechtot = ?,
       show_personal_track_banner = ?,
       reader_font_size = ?,
       seen_app_version = ?,
@@ -255,6 +281,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       haptics_enabled = ?,
       keep_screen_awake = ?,
       notification_sound_enabled = ?,
+      notification_opens_daf = ?,
       daf_day_start_mode = ?,
       daf_day_start_hour = ?,
       daf_day_start_minute = ?,
@@ -278,7 +305,8 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.study_link_mode,
       settings.show_calendar_daf,
       settings.dismissed_half_daf_tip,
-      settings.active_personal_masechet,
+      importedPinned[0] ?? null,
+      serializePinnedPersonalMasechtot(importedPinned),
       settings.show_personal_track_banner,
       clampReaderFontSize(settings.reader_font_size),
       settings.seen_app_version,
@@ -288,6 +316,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.haptics_enabled === 0 ? 0 : 1,
       settings.keep_screen_awake === 0 ? 0 : 1,
       settings.notification_sound_enabled === 0 ? 0 : 1,
+      settings.notification_opens_daf === 1 ? 1 : 0,
       normalizeDafDayStartMode(settings.daf_day_start_mode),
       clampedStart.hour,
       clampedStart.minute,

@@ -16,6 +16,7 @@ import {
   EXACT_ITEM,
   MODE_ITEM,
   NOTIFICATIONS_SEARCH_ITEMS,
+  OPENS_DAF_ITEM,
   PERMISSION_ITEM,
   SOUND_ITEM,
   TIME_ITEM,
@@ -38,6 +39,8 @@ type SettingsNotificationsSectionProps = SettingsSectionChrome & {
   onNotificationPermissionPress: () => void;
   soundEnabled: boolean;
   onSoundToggle: (enabled: boolean) => void;
+  opensDafEnabled: boolean;
+  onOpensDafToggle: (enabled: boolean) => void;
 };
 
 export { NOTIFICATIONS_SEARCH_ITEMS };
@@ -63,6 +66,8 @@ export default function SettingsNotificationsSection({
   onNotificationPermissionPress,
   soundEnabled,
   onSoundToggle,
+  opensDafEnabled,
+  onOpensDafToggle,
 }: SettingsNotificationsSectionProps) {
   const skipEnter = useRef(true);
   useEffect(() => {
@@ -97,6 +102,7 @@ export default function SettingsNotificationsSection({
     notificationsEnabled && notifMode === 'daily' && matchesSetting(searchQuery, TIME_ITEM);
   const showDays = notificationsEnabled && notifMode === 'custom' && matchesSetting(searchQuery, MODE_ITEM);
   const showSound = notificationsEnabled && matchesSetting(searchQuery, SOUND_ITEM);
+  const showOpensDaf = notificationsEnabled && matchesSetting(searchQuery, OPENS_DAF_ITEM);
 
   const flags = [
     showDaily,
@@ -104,6 +110,7 @@ export default function SettingsNotificationsSection({
     showTime,
     showDays,
     showSound,
+    showOpensDaf,
     showExactAlarmRow,
     showPermissionRow,
   ];
@@ -163,6 +170,18 @@ export default function SettingsNotificationsSection({
             highlightText={searchQuery}
           />
         ) : null}
+        {showOpensDaf ? (
+          <SettingItem
+            icon="book-outline"
+            title={OPENS_DAF_ITEM.title}
+            description={OPENS_DAF_ITEM.description}
+            type="switch"
+            value={opensDafEnabled}
+            onPress={onOpensDafToggle}
+            isLast={isLastVisible(flags, 5)}
+            highlightText={searchQuery}
+          />
+        ) : null}
         {showExactAlarmRow ? (
           <SettingItem
             icon="alarm-outline"
@@ -170,7 +189,7 @@ export default function SettingsNotificationsSection({
             description={exactDescription}
             value={exactAlarmLabel}
             onPress={onExactAlarmSettingsPress}
-            isLast={isLastVisible(flags, 5)}
+            isLast={isLastVisible(flags, 6)}
             highlightText={searchQuery}
           />
         ) : null}
@@ -181,7 +200,7 @@ export default function SettingsNotificationsSection({
             description={PERMISSION_ITEM.description}
             value={permissionLabel}
             onPress={onNotificationPermissionPress}
-            isLast={isLastVisible(flags, 6)}
+            isLast={isLastVisible(flags, 7)}
             highlightText={searchQuery}
           />
         ) : null}

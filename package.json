@@ -29,7 +29,7 @@
     "@sentry/react-native": "~7.11.0",
     "date-fns": "^4.1.0",
     "exact-alarm": "file:./modules/exact-alarm",
-    "expo": "~57.0.29",
+    "expo": "~57.0.30",
     "expo-application": "~57.0.3",
     "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.22",

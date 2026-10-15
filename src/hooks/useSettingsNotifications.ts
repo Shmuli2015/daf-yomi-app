@@ -39,6 +39,7 @@ interface UseSettingsNotificationsParams {
   showConfettiPref: boolean;
   onFeedback: (feedback: SettingsFeedback) => void;
   setNotificationSoundEnabled: (enabled: boolean) => void;
+  setNotificationOpensDaf: (enabled: boolean) => void;
 }
 
 export function useSettingsNotifications({
@@ -48,7 +49,9 @@ export function useSettingsNotifications({
   showConfettiPref,
   onFeedback,
   setNotificationSoundEnabled,
+  setNotificationOpensDaf,
 }: UseSettingsNotificationsParams) {
+  const opensDafEnabled = settings?.notification_opens_daf === 1;
   const [hour, setHour] = useState(7);
   const [minute, setMinute] = useState(30);
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -330,6 +333,13 @@ export function useSettingsNotifications({
     ],
   );
 
+  const handleOpensDafToggle = useCallback(
+    (enabled: boolean) => {
+      setNotificationOpensDaf(enabled);
+    },
+    [setNotificationOpensDaf],
+  );
+
   const handleExactAlarmSettingsPress = useCallback(async () => {
     await openExactAlarmSettings();
   }, []);
@@ -417,6 +427,7 @@ export function useSettingsNotifications({
     exactAlarmStatus,
     permissionStatus,
     soundEnabled,
+    opensDafEnabled,
     scheduledCount,
     refreshExactAlarmStatus,
     saveAndSchedule,
@@ -429,6 +440,7 @@ export function useSettingsNotifications({
     timePickerTitle,
     handleNotificationsToggle,
     handleSoundToggle,
+    handleOpensDafToggle,
     handleExactAlarmSettingsPress,
     handleNotificationPermissionPress,
     handleTimePickerOpen,

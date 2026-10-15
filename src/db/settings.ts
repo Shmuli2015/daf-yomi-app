@@ -9,6 +9,10 @@ import {
   type DafDayStartDaySchedule,
 } from '../utils/dafDayBoundary';
 import { normalizeAutoBackupInterval } from '../utils/autoBackupInterval';
+import {
+  parsePinnedPersonalMasechtot,
+  serializePinnedPersonalMasechtot,
+} from '../utils/pinnedPersonalMasechtot';
 import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
 import { clampReaderViewMode, READER_VIEW_MODE_DEFAULT } from '../utils/readerViewMode';
 import { db } from './connection';
@@ -49,6 +53,7 @@ function createDefaultSettingsRecord(): SettingsRecord {
     show_calendar_daf: 0,
     dismissed_half_daf_tip: 0,
     active_personal_masechet: null,
+    pinned_personal_masechtot: null,
     show_personal_track_banner: 1,
     reader_font_size: READER_FONT_SIZE_DEFAULT,
     seen_app_version: null,
@@ -59,6 +64,7 @@ function createDefaultSettingsRecord(): SettingsRecord {
     keep_screen_awake: 1,
     last_backup_at: null,
     notification_sound_enabled: 1,
+    notification_opens_daf: 0,
     daf_day_start_mode: 'midnight',
     daf_day_start_hour: DAF_DAY_START_DEFAULT_HOUR,
     daf_day_start_minute: DAF_DAY_START_DEFAULT_MINUTE,
@@ -87,6 +93,9 @@ function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
   return {
     ...createDefaultSettingsRecord(),
     ...row,
+    pinned_personal_masechtot: serializePinnedPersonalMasechtot(
+      parsePinnedPersonalMasechtot(row.pinned_personal_masechtot, row.active_personal_masechet),
+    ),
     reader_font_size: clampReaderFontSize(Number(row.reader_font_size)),
     reader_view_mode: clampReaderViewMode(row.reader_view_mode),
     show_chavruta_notes: row.show_chavruta_notes === 0 ? 0 : 1,
@@ -94,6 +103,7 @@ function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
     haptics_enabled: row.haptics_enabled === 0 ? 0 : 1,
     keep_screen_awake: row.keep_screen_awake === 0 ? 0 : 1,
     notification_sound_enabled: row.notification_sound_enabled === 0 ? 0 : 1,
+    notification_opens_daf: row.notification_opens_daf === 1 ? 1 : 0,
     daf_day_start_mode: normalizeDafDayStartMode(row.daf_day_start_mode),
     daf_day_start_hour: clampedStart.hour,
     daf_day_start_minute: clampedStart.minute,
@@ -240,6 +250,10 @@ export function setNotificationSoundEnabled(enabled: boolean) {
   db.runSync('UPDATE settings SET notification_sound_enabled = ? WHERE id = 1', [enabled ? 1 : 0]);
 }
 
+export function setNotificationOpensDaf(enabled: boolean) {
+  db.runSync('UPDATE settings SET notification_opens_daf = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
 export function setDafDayStartMode(mode: string) {
   db.runSync('UPDATE settings SET daf_day_start_mode = ? WHERE id = 1', [
     normalizeDafDayStartMode(mode),
@@ -284,8 +298,16 @@ export function setDismissedHalfDafTip(version: number = HALF_DAF_TIP_VERSION) {
   db.runSync('UPDATE settings SET dismissed_half_daf_tip = ? WHERE id = 1', [version]);
 }
 
+export function setPinnedPersonalMasechtot(masechtot: string[]) {
+  const normalized = parsePinnedPersonalMasechtot(serializePinnedPersonalMasechtot(masechtot));
+  db.runSync(
+    'UPDATE settings SET pinned_personal_masechtot = ?, active_personal_masechet = ? WHERE id = 1',
+    [serializePinnedPersonalMasechtot(normalized), normalized[0] ?? null],
+  );
+}
+
 export function setActivePersonalMasechet(masechetEn: string | null) {
-  db.runSync('UPDATE settings SET active_personal_masechet = ? WHERE id = 1', [masechetEn]);
+  setPinnedPersonalMasechtot(masechetEn ? [masechetEn] : []);
 }
 
 export function setShowPersonalTrackBanner(enabled: boolean) {

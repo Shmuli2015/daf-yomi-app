@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import HomeHeader from '../components/HomeHeader';
 import HomeContent from '../components/HomeContent';
-import PersonalTrackBanner from '../components/PersonalTrackBanner';
+import PersonalTrackSection from '../components/PersonalTrack/PersonalTrackSection';
 import ScreenTopGradient from '../components/ScreenTopGradient';
 import YesterdayNudge from '../components/Home/YesterdayNudge';
 import HomeModals from '../components/Home/HomeModals';
@@ -58,9 +58,11 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     isAppReady,
     dismissHalfDafTip,
     activePersonalMasechet,
+    pinnedPersonalMasechtot,
     personalTrackRecords,
     setActivePersonalMasechet,
-    clearActivePersonalMasechet,
+    pinPersonalMasechet,
+    unpinPersonalMasechet,
     togglePersonalDafLearned,
     currentDate,
     currentDateStr,
@@ -114,7 +116,6 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     handlePressShas,
     handleSelectDay,
     handleDismissNudge,
-    handleOpenActivePersonalDetail,
     handleSelectPersonalMasechet,
     handleOpenPersonalMasechetDetail,
     handleToggleHomeActive,
@@ -128,10 +129,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     todayAmud,
     partialAmud,
     activePersonalMasechet,
+    pinnedPersonalMasechtot,
     detailMasechetEn,
     todayStr,
     setActivePersonalMasechet,
-    clearActivePersonalMasechet,
+    pinPersonalMasechet,
+    unpinPersonalMasechet,
     setDetailMasechetEn,
     openPersonalDetail,
     dismissNudgeForDay,
@@ -192,19 +195,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
           />
 
           {personalTrackEnabled && (
-            <>
-              <View style={{ height: 16 }} />
-              <PersonalTrackBanner
-                activeMasechetEn={activePersonalMasechet}
-                personalTrackRecords={personalTrackRecords}
-                hideMarkButton={activePersonalMasechet === todayMasechetEn}
-                onSelectMasechetPress={openPersonalPicker}
-                onOpenMasechetDetailPress={handleOpenActivePersonalDetail}
-                onToggleDafLearned={togglePersonalDafLearned}
-                onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
-                onOpenGuide={openPersonalGuide}
-              />
-            </>
+            <PersonalTrackSection
+              pinnedMasechtot={pinnedPersonalMasechtot}
+              personalTrackRecords={personalTrackRecords}
+              todayMasechetEn={todayMasechetEn}
+              onSelectMasechetPress={openPersonalPicker}
+              onOpenMasechetDetailPress={handleOpenPersonalMasechetDetail}
+              onToggleDafLearned={togglePersonalDafLearned}
+              onOpenTzuratHadaf={handleOpenPersonalTzuratHadaf}
+              onOpenGuide={openPersonalGuide}
+            />
           )}
 
           <View style={{ height: 16 }} />
@@ -233,6 +233,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         guideInitialCategory={guideModalConfig.initialCategory}
         detailMasechetEn={detailMasechetEn}
         activePersonalMasechet={activePersonalMasechet}
+        pinnedPersonalMasechtot={pinnedPersonalMasechtot}
         personalTrackRecords={personalTrackRecords}
         todayMasechetEn={todayMasechetEn}
         todayDafNumValue={todayDafNumValue}

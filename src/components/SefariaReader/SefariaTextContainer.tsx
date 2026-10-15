@@ -18,6 +18,7 @@ import { mishnahSpanFlags } from '../../utils/commentaryEmphasis';
 import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
 import { classicCommentatorKeysForTref, filterCommentaries } from '../../utils/sefariaCommentators';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
+import { useReaderPosition } from '../../hooks/useReaderPosition';
 import { useCommentaryCollapseScroll } from '../../hooks/useCommentaryCollapseScroll';
 import { createSefariaTextContainerStyles } from './SefariaTextContainer.styles';
 
@@ -33,6 +34,7 @@ interface SefariaTextContainerProps {
   scrollProgress?: SharedValue<number>;
   initialScrollOffset?: number;
   onScrollOffset?: (offset: number) => void;
+  positionKey?: string;
 }
 
 export default function SefariaTextContainer({
@@ -47,6 +49,7 @@ export default function SefariaTextContainer({
   scrollProgress,
   initialScrollOffset = 0,
   onScrollOffset,
+  positionKey,
 }: SefariaTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSefariaTextContainerStyles(theme), [theme]);
@@ -61,6 +64,18 @@ export default function SefariaTextContainer({
       initialOffset: initialScrollOffset,
       onOffsetChange: onScrollOffset,
     });
+
+  const { registerAnchor, clearSavedPosition } = useReaderPosition({
+    positionKey,
+    scrollViewRef,
+    scrollYRef,
+    skipRestore: initialScrollOffset > 1,
+  });
+
+  const handleScrollToTop = useCallback(() => {
+    clearSavedPosition();
+    scrollToTop();
+  }, [clearSavedPosition, scrollToTop]);
 
   const { registerCardLayout, registerCommentaryHeight, beginCollapse, collapseScroll, closingIndex } =
     useCommentaryCollapseScroll({
@@ -125,7 +140,8 @@ export default function SefariaTextContainer({
 
   const handleCardLayout = useCallback((index: number, y: number, height: number) => {
     registerCardLayout(index, y, height);
-  }, [registerCardLayout]);
+    registerAnchor(index, y);
+  }, [registerCardLayout, registerAnchor]);
 
   const handleCommentaryLayout = useCallback((index: number, height: number) => {
     registerCommentaryHeight(index, height);
@@ -240,7 +256,7 @@ export default function SefariaTextContainer({
 
       <ScrollToTopFab
         visible={showFab}
-        onPress={scrollToTop}
+        onPress={handleScrollToTop}
         accentColor={palette.accentColor}
       />
     </View>

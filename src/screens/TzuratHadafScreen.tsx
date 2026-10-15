@@ -18,6 +18,7 @@ import ReaderModePane from '../components/SefariaReader/ReaderModePane';
 import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';
 import SteinsaltzTextContainer from '../components/SefariaReader/SteinsaltzTextContainer';
 import ChavrutaTextContainer from '../components/ChavrutaReader/ChavrutaTextContainer';
+import { buildReaderPositionKey } from '../utils/readerPositionAnchors';
 import ChavrutaUnavailableState from '../components/ChavrutaReader/ChavrutaUnavailableState';
 import ReadingProgressBar from '../components/SefariaReader/ReadingProgressBar';
 import { useDafReader } from '../hooks/useDafReader';
@@ -215,6 +216,7 @@ export default function TzuratHadafScreen() {
               scrollProgress={scrollProgress}
               initialScrollOffset={getOffset('classic')}
               onScrollOffset={(offset) => setOffset('classic', offset)}
+              positionKey={buildReaderPositionKey(reader.pageKey, 'classic')}
             />
           ) : reader.viewMode === 'steinsaltz' ? (
             <SteinsaltzTextContainer
@@ -228,6 +230,7 @@ export default function TzuratHadafScreen() {
               scrollProgress={scrollProgress}
               initialScrollOffset={getOffset('steinsaltz')}
               onScrollOffset={(offset) => setOffset('steinsaltz', offset)}
+              positionKey={buildReaderPositionKey(reader.pageKey, 'steinsaltz')}
             />
           ) : !reader.chavrutaAvailable ? (
             <ChavrutaUnavailableState readerTheme={readerTheme} accentColor={theme.colors.accent} />
@@ -244,6 +247,7 @@ export default function TzuratHadafScreen() {
               scrollProgress={scrollProgress}
               initialScrollOffset={getOffset('chavruta')}
               onScrollOffset={(offset) => setOffset('chavruta', offset)}
+              positionKey={buildReaderPositionKey(reader.pageKey, 'chavruta')}
             />
           )}
         </ReaderModePane>

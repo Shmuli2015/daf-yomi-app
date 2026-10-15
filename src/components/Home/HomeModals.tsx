@@ -18,6 +18,7 @@ export type HomeModalsProps = {
   guideInitialCategory?: GuideCategoryId;
   detailMasechetEn: string | null;
   activePersonalMasechet: string | null;
+  pinnedPersonalMasechtot: string[];
   personalTrackRecords: PersonalTrackRecord[];
   todayMasechetEn: string;
   todayDafNumValue: number;
@@ -52,6 +53,7 @@ export default function HomeModals({
   guideInitialCategory,
   detailMasechetEn,
   activePersonalMasechet,
+  pinnedPersonalMasechtot,
   personalTrackRecords,
   todayMasechetEn,
   todayDafNumValue,
@@ -87,7 +89,7 @@ export default function HomeModals({
         visible={showPersonalDetailModal}
         masechetEn={detailMasechet}
         personalTrackRecords={personalTrackRecords}
-        isHomeActive={activePersonalMasechet === detailMasechet}
+        isHomeActive={detailMasechet != null && pinnedPersonalMasechtot.includes(detailMasechet)}
         onToggleHomeActive={onToggleHomeActive}
         onToggleDafLearned={onToggleDafLearned}
         onOpenTzuratHadaf={onOpenPersonalTzuratHadaf}
