@@ -31,6 +31,8 @@ interface SefariaTextContainerProps {
   accentColor: string;
   classicTabLabel?: string;
   scrollProgress?: SharedValue<number>;
+  initialScrollOffset?: number;
+  onScrollOffset?: (offset: number) => void;
 }
 
 export default function SefariaTextContainer({
@@ -43,6 +45,8 @@ export default function SefariaTextContainer({
   accentColor,
   classicTabLabel = 'גמרא',
   scrollProgress,
+  initialScrollOffset = 0,
+  onScrollOffset,
 }: SefariaTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSefariaTextContainerStyles(theme), [theme]);
@@ -50,10 +54,12 @@ export default function SefariaTextContainer({
   const expandedIndicesRef = useRef(expandedIndices);
   expandedIndicesRef.current = expandedIndices;
 
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey: data?.tref || '',
+      initialOffset: initialScrollOffset,
+      onOffsetChange: onScrollOffset,
     });
 
   const { registerCardLayout, registerCommentaryHeight, beginCollapse, collapseScroll, closingIndex } =
@@ -177,6 +183,7 @@ export default function SefariaTextContainer({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         onScroll={handleScroll}
+        onContentSizeChange={handleContentSizeChange}
         scrollEventThrottle={16}
       >
         <View style={[styles.headerBox, { borderBottomColor: palette.borderColor }]}>

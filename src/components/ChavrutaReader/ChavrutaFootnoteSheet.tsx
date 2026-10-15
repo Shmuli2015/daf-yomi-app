@@ -6,6 +6,7 @@ import CommentaryBodyText from '../SefariaReader/CommentaryBodyText';
 import { useTheme } from '../../theme';
 import type { ChavrutaFootnote } from '../../services/chavrutaApi';
 import { emphasizeChavrutaFootnote } from '../../utils/chavrutaFootnoteEmphasis';
+import { chavrutaFootnoteLabel } from '../../utils/parseChavrutaHtml';
 import ChavrutaFootnoteNav from './ChavrutaFootnoteNav';
 import { createChavrutaFootnoteSheetStyles } from './ChavrutaFootnoteSheet.styles';
 
@@ -30,7 +31,7 @@ export default function ChavrutaFootnoteSheet({
   return (
     <BottomSheetModal visible={visible} onClose={onClose}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{`הערה ${footnote?.n ?? ''}`}</Text>
+        <Text style={styles.title}>{`הערה ${footnote ? chavrutaFootnoteLabel(footnote) : ''}`}</Text>
         <TouchableOpacity
           onPress={onClose}
           style={styles.closeBtn}

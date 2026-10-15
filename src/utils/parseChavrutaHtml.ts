@@ -4,6 +4,7 @@ import type { Amud } from './dafNavigation';
 export interface ChavrutaFootnote {
   id: number;
   n: number;
+  suffix: string;
   text: string;
 }
 
@@ -62,9 +63,16 @@ const HADARAN_PATTERN = /הדרן\s+עלך\s+(?:פרק\s+)?([^<]{1,80}?)(?=<|$)/
 const SALIKA_PATTERN = /וסליקא\s+לה\s+מסכת\s+([^<]{1,40}?)(?=<|$)/gi;
 
 const MARKER_PATTERN =
-  /<nobr>\s*<b\b[^>]*>(?:&nbsp;|\s)*(\d+)(\.?)(?:&nbsp;|\s)*<\/b>\s*<\/nobr>/gi;
+  /<nobr>\s*<b\b[^>]*>(?:&nbsp;|\s)*(\d+)([\u05D0-\u05EA]?)(\.?)(?:&nbsp;|\s)*<\/b>\s*<\/nobr>/gi;
+
+const PLAIN_LETTERED_REF_PATTERN =
+  /<small>\(\)<\/small>\s*(\d+)([\u05D0-\u05EA])|(\d+)([\u05D0-\u05EA])\s*<small>\(\)<\/small>/gi;
+
+const PLAIN_LETTERED_DEF_PATTERN = /(\d+)([\u05D0-\u05EA])\./g;
 
 const FOOTNOTE_TOKEN_PATTERN = /\[\[fn:(\d+)\]\]/g;
+
+const RAW_FOOTNOTE_TOKEN_PATTERN = /\[\[fn:(\d+[\u05D0-\u05EA]?)\]\]/g;
 
 export function gematriaToNumber(value: string): number {
   const letters = value.replace(/[^\u05D0-\u05EA]/g, '');
@@ -85,6 +93,14 @@ export function buildAmudKey(dafNum: number, amud: Amud): string {
 
 export function buildFootnoteToken(id: number): string {
   return `[[fn:${id}]]`;
+}
+
+export function chavrutaFootnoteLabel(footnote: Pick<ChavrutaFootnote, 'n' | 'suffix'>): string {
+  return `${footnote.n}${footnote.suffix}`;
+}
+
+function buildRawFootnoteToken(n: number, suffix: string): string {
+  return `[[fn:${n}${suffix}]]`;
 }
 
 function decodeEntities(value: string): string {
@@ -189,47 +205,134 @@ function extractStyledSpans(html: string): StyledSpan[] {
   return spans;
 }
 
-function parseBodyParagraph(inner: string): ChavrutaParagraph | null {
-  const footnoteRefs: number[] = [];
+interface DraftFootnote {
+  n: number;
+  suffix: string;
+  text: string;
+}
 
-  const withTokens = inner.replace(MARKER_PATTERN, (full, digits: string, dot: string) => {
+interface DraftParagraph {
+  text: string;
+  footnoteLabels: string[];
+}
+
+type DraftBlock =
+  | ({ kind: 'paragraph' } & DraftParagraph)
+  | ChapterStartBlock
+  | ChapterEndBlock
+  | SectionHeaderBlock;
+
+interface FootnoteMarker {
+  n: number;
+  suffix: string;
+  start: number;
+  end: number;
+}
+
+function rememberFootnoteLabel(labels: string[], n: number, suffix: string): string {
+  const label = `${n}${suffix}`;
+  if (!labels.includes(label)) labels.push(label);
+  return buildRawFootnoteToken(n, suffix);
+}
+
+function parseBodyParagraph(inner: string): DraftParagraph | null {
+  const footnoteLabels: string[] = [];
+  const markerPattern = new RegExp(MARKER_PATTERN.source, MARKER_PATTERN.flags);
+
+  const withNobr = inner.replace(markerPattern, (full, digits: string, suffix: string, dot: string) => {
     if (dot) return full;
     const parsed = Number(digits);
-    if (Number.isFinite(parsed) && !footnoteRefs.includes(parsed)) {
-      footnoteRefs.push(parsed);
-    }
-    return parsed > 0 ? buildFootnoteToken(parsed) : ' ';
+    if (!Number.isFinite(parsed) || parsed <= 0) return ' ';
+    return rememberFootnoteLabel(footnoteLabels, parsed, suffix ?? '');
   });
+
+  const plainPattern = new RegExp(PLAIN_LETTERED_REF_PATTERN.source, PLAIN_LETTERED_REF_PATTERN.flags);
+  const withTokens = withNobr.replace(
+    plainPattern,
+    (_full, beforeDigits: string, beforeSuffix: string, afterDigits: string, afterSuffix: string) => {
+      const parsed = Number(beforeDigits || afterDigits);
+      const suffix = beforeSuffix || afterSuffix || '';
+      if (!Number.isFinite(parsed) || parsed <= 0 || !suffix) return ' ';
+      return rememberFootnoteLabel(footnoteLabels, parsed, suffix);
+    },
+  );
 
   const text = cleanChavrutaText(withTokens);
   if (!text) return null;
 
-  return { text, footnoteRefs };
+  return { text, footnoteLabels };
 }
 
-function parseFootnoteSpan(inner: string): Array<Omit<ChavrutaFootnote, 'id'>> {
-  const markers: Array<{ n: number; start: number; end: number }> = [];
+function markerOverlaps(start: number, end: number, markers: FootnoteMarker[]): boolean {
+  return markers.some((marker) => start < marker.end && end > marker.start);
+}
+
+function collectNobrDefinitionMarkers(inner: string): FootnoteMarker[] {
+  const markers: FootnoteMarker[] = [];
   const pattern = new RegExp(MARKER_PATTERN.source, MARKER_PATTERN.flags);
   let match: RegExpExecArray | null;
 
   while ((match = pattern.exec(inner)) !== null) {
-    if (!match[2]) continue;
+    if (!match[3]) continue;
     const parsed = Number(match[1]);
-    if (!Number.isFinite(parsed)) continue;
-    markers.push({ n: parsed, start: match.index, end: match.index + match[0].length });
+    if (!Number.isFinite(parsed) || parsed <= 0) continue;
+    markers.push({
+      n: parsed,
+      suffix: match[2] ?? '',
+      start: match.index,
+      end: match.index + match[0].length,
+    });
   }
+
+  return markers;
+}
+
+function collectPlainLetteredDefinitions(inner: string, occupied: FootnoteMarker[]): FootnoteMarker[] {
+  const markers: FootnoteMarker[] = [];
+  const pattern = new RegExp(PLAIN_LETTERED_DEF_PATTERN.source, PLAIN_LETTERED_DEF_PATTERN.flags);
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(inner)) !== null) {
+    const start = match.index;
+    const end = match.index + match[0].length;
+    if (markerOverlaps(start, end, occupied)) continue;
+    const parsed = Number(match[1]);
+    if (!Number.isFinite(parsed) || parsed <= 0) continue;
+    markers.push({ n: parsed, suffix: match[2] ?? '', start, end });
+  }
+
+  return markers;
+}
+
+function parseFootnoteSpan(inner: string): DraftFootnote[] {
+  const nobrMarkers = collectNobrDefinitionMarkers(inner);
+  const markers = [...nobrMarkers, ...collectPlainLetteredDefinitions(inner, nobrMarkers)].sort(
+    (a, b) => a.start - b.start,
+  );
 
   return markers
     .map((marker, index) => {
       const sliceEnd = index + 1 < markers.length ? markers[index + 1].start : inner.length;
-      return { n: marker.n, text: cleanChavrutaText(inner.slice(marker.end, sliceEnd)) };
+      return {
+        n: marker.n,
+        suffix: marker.suffix,
+        text: cleanChavrutaText(inner.slice(marker.end, sliceEnd)),
+      };
     })
     .filter((footnote) => footnote.text.length > 0);
 }
 
 interface ParsedSection {
-  blocks: ChavrutaBlock[];
-  footnotes: Array<Omit<ChavrutaFootnote, 'id'>>;
+  blocks: DraftBlock[];
+  footnotes: DraftFootnote[];
+}
+
+function compareDraftFootnotes(a: DraftFootnote, b: DraftFootnote): number {
+  if (a.n !== b.n) return a.n - b.n;
+  if (a.suffix === b.suffix) return 0;
+  if (!a.suffix) return -1;
+  if (!b.suffix) return 1;
+  return a.suffix.localeCompare(b.suffix, 'he');
 }
 
 function cleanMarkerTitle(raw: string): string {
@@ -303,9 +406,9 @@ function paragraphsFromBlocks(blocks: ChavrutaBlock[]): ChavrutaParagraph[] {
 }
 
 function parseAmudSection(section: string): ParsedSection {
-  const paragraphs: ChavrutaParagraph[] = [];
-  const footnotes: Array<Omit<ChavrutaFootnote, 'id'>> = [];
-  const seenFootnotes = new Set<number>();
+  const paragraphs: DraftParagraph[] = [];
+  const footnotes: DraftFootnote[] = [];
+  const seenFootnotes = new Set<string>();
 
   for (const span of extractStyledSpans(section)) {
     if (span.kind === 'body') {
@@ -315,13 +418,14 @@ function parseAmudSection(section: string): ParsedSection {
     }
 
     for (const footnote of parseFootnoteSpan(span.inner)) {
-      if (seenFootnotes.has(footnote.n)) continue;
-      seenFootnotes.add(footnote.n);
+      const label = chavrutaFootnoteLabel(footnote);
+      if (seenFootnotes.has(label)) continue;
+      seenFootnotes.add(label);
       footnotes.push(footnote);
     }
   }
 
-  footnotes.sort((a, b) => a.n - b.n);
+  footnotes.sort(compareDraftFootnotes);
   return {
     blocks: paragraphs.map((paragraph) => ({ kind: 'paragraph', ...paragraph })),
     footnotes,
@@ -454,8 +558,8 @@ function classifyLeakedParagraph(
   return null;
 }
 
-function blocksFromParsedSection(parsed: ParsedSection): ChavrutaBlock[] {
-  const blocks: ChavrutaBlock[] = [];
+function blocksFromParsedSection(parsed: ParsedSection): DraftBlock[] {
+  const blocks: DraftBlock[] = [];
   for (const block of parsed.blocks) {
     if (block.kind !== 'paragraph') {
       blocks.push(block);
@@ -473,8 +577,8 @@ function blocksFromParsedSection(parsed: ParsedSection): ChavrutaBlock[] {
   return blocks;
 }
 
-function dedupeBoundaryBlocks(blocks: ChavrutaBlock[]): ChavrutaBlock[] {
-  const result: ChavrutaBlock[] = [];
+function dedupeBoundaryBlocks(blocks: DraftBlock[]): DraftBlock[] {
+  const result: DraftBlock[] = [];
   for (const block of blocks) {
     const prev = result[result.length - 1];
     if (prev && block.kind !== 'paragraph' && prev.kind === block.kind) {
@@ -509,8 +613,8 @@ function parseSectionWithBoundaries(section: string): ParsedSection {
     };
   }
 
-  const blocks: ChavrutaBlock[] = [];
-  const footnotes: Array<Omit<ChavrutaFootnote, 'id'>> = [];
+  const blocks: DraftBlock[] = [];
+  const footnotes: DraftFootnote[] = [];
   let cursor = 0;
 
   const consumeSlice = (slice: string) => {
@@ -518,7 +622,8 @@ function parseSectionWithBoundaries(section: string): ParsedSection {
     const parsed = parseAmudSection(slice);
     blocks.push(...blocksFromParsedSection(parsed));
     for (const footnote of parsed.footnotes) {
-      if (footnotes.some((item) => item.n === footnote.n)) continue;
+      const label = chavrutaFootnoteLabel(footnote);
+      if (footnotes.some((item) => chavrutaFootnoteLabel(item) === label)) continue;
       footnotes.push(footnote);
     }
   };
@@ -531,7 +636,7 @@ function parseSectionWithBoundaries(section: string): ParsedSection {
   }
   consumeSlice(section.slice(cursor));
 
-  footnotes.sort((a, b) => a.n - b.n);
+  footnotes.sort(compareDraftFootnotes);
   return {
     blocks: dedupeBoundaryBlocks(blocks),
     footnotes,
@@ -562,9 +667,9 @@ function peelTrailingChapterStarts(blocks: ChavrutaBlock[]): {
   return { blocks: blocks.slice(0, end), trailingStarts };
 }
 
-function remapFootnoteTokens(text: string, idByDisplayNumber: Map<number, number>): string {
-  return text.replace(FOOTNOTE_TOKEN_PATTERN, (full, digits: string) => {
-    const id = idByDisplayNumber.get(Number(digits));
+function remapFootnoteTokens(text: string, idByLabel: Map<string, number>): string {
+  return text.replace(RAW_FOOTNOTE_TOKEN_PATTERN, (full, label: string) => {
+    const id = idByLabel.get(label);
     return id == null ? '' : buildFootnoteToken(id);
   });
 }
@@ -573,21 +678,21 @@ function remapSectionBlocks(
   section: ParsedSection,
   footnotes: ChavrutaFootnote[],
 ): ChavrutaBlock[] {
-  const idByDisplayNumber = new Map<number, number>();
+  const idByLabel = new Map<string, number>();
 
   for (const footnote of section.footnotes) {
     const id = footnotes.length + 1;
-    idByDisplayNumber.set(footnote.n, id);
-    footnotes.push({ id, n: footnote.n, text: footnote.text });
+    idByLabel.set(chavrutaFootnoteLabel(footnote), id);
+    footnotes.push({ id, n: footnote.n, suffix: footnote.suffix, text: footnote.text });
   }
 
   return section.blocks.map((block) => {
     if (block.kind !== 'paragraph') return block;
     return {
       kind: 'paragraph',
-      text: remapFootnoteTokens(block.text, idByDisplayNumber).replace(/\s+/g, ' ').trim(),
-      footnoteRefs: block.footnoteRefs
-        .map((ref) => idByDisplayNumber.get(ref))
+      text: remapFootnoteTokens(block.text, idByLabel).replace(/\s+/g, ' ').trim(),
+      footnoteRefs: block.footnoteLabels
+        .map((label) => idByLabel.get(label))
         .filter((id): id is number => id !== undefined),
     };
   });
@@ -655,7 +760,7 @@ export function parseChavrutaDocument(html: string): ChavrutaAmud[] {
   const grouped = new Map<string, GroupedAmud>();
   let pendingStarts: PendingBoundaryBlock[] = [];
 
-  const prependPending = (blocks: ChavrutaBlock[]): ChavrutaBlock[] => {
+  const prependPending = (blocks: DraftBlock[]): DraftBlock[] => {
     if (pendingStarts.length === 0) return blocks;
     const leading = pendingStarts;
     pendingStarts = [];

@@ -30,6 +30,8 @@ interface SteinsaltzTextContainerProps {
   readerTheme?: ReaderTheme;
   accentColor: string;
   scrollProgress?: SharedValue<number>;
+  initialScrollOffset?: number;
+  onScrollOffset?: (offset: number) => void;
 }
 
 export default function SteinsaltzTextContainer({
@@ -41,14 +43,18 @@ export default function SteinsaltzTextContainer({
   readerTheme,
   accentColor,
   scrollProgress,
+  initialScrollOffset = 0,
+  onScrollOffset,
 }: SteinsaltzTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSteinsaltzTextContainerStyles(theme), [theme]);
 
-  const { scrollViewRef, showFab, handleScroll, scrollToTop } =
+  const { scrollViewRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey: data?.tref || '',
+      initialOffset: initialScrollOffset,
+      onOffsetChange: onScrollOffset,
     });
 
   const palette = useMemo(
@@ -111,6 +117,7 @@ export default function SteinsaltzTextContainer({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         onScroll={handleScroll}
+        onContentSizeChange={handleContentSizeChange}
         scrollEventThrottle={16}
       >
         <View style={[styles.headerBox, { borderBottomColor: palette.borderColor }]}>

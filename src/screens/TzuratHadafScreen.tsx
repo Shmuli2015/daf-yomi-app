@@ -29,6 +29,7 @@ import { normalizeMasechetEn } from '../utils/dafNavigation';
 import { readerDisplayMasechetHe, isTamidStartDaf } from '../utils/mishnahOnlySefaria';
 import { SHAS_MASECHTOT } from '../data/shas';
 import { useDafSwipeGesture } from '../hooks/useDafSwipeGesture';
+import { useReaderScrollMemory } from '../hooks/useReaderScrollMemory';
 import { useTzuratLearnedMark } from '../hooks/useTzuratLearnedMark';
 
 type Route = RouteProp<RootStackParamList, 'TzuratHadaf'>;
@@ -64,6 +65,7 @@ export default function TzuratHadafScreen() {
     dafNum: route.params.dafNum,
     amud: route.params.amud,
   });
+  const { getOffset, setOffset } = useReaderScrollMemory(reader.pageKey);
 
   useEffect(() => {
     scrollProgress.value = 0;
@@ -210,6 +212,8 @@ export default function TzuratHadafScreen() {
               accentColor={theme.colors.accent}
               classicTabLabel={reader.classicTabLabel}
               scrollProgress={scrollProgress}
+              initialScrollOffset={getOffset('classic')}
+              onScrollOffset={(offset) => setOffset('classic', offset)}
             />
           ) : reader.viewMode === 'steinsaltz' ? (
             <SteinsaltzTextContainer
@@ -221,6 +225,8 @@ export default function TzuratHadafScreen() {
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
               scrollProgress={scrollProgress}
+              initialScrollOffset={getOffset('steinsaltz')}
+              onScrollOffset={(offset) => setOffset('steinsaltz', offset)}
             />
           ) : (
             <ChavrutaTextContainer
@@ -233,6 +239,8 @@ export default function TzuratHadafScreen() {
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
               scrollProgress={scrollProgress}
+              initialScrollOffset={getOffset('chavruta')}
+              onScrollOffset={(offset) => setOffset('chavruta', offset)}
             />
           )}
         </ReaderModePane>

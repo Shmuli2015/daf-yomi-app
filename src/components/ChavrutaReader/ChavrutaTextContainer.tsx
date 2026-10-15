@@ -31,6 +31,8 @@ interface ChavrutaTextContainerProps {
   readerTheme?: ReaderTheme;
   accentColor?: string;
   scrollProgress?: SharedValue<number>;
+  initialScrollOffset?: number;
+  onScrollOffset?: (offset: number) => void;
 }
 
 export default function ChavrutaTextContainer({
@@ -43,6 +45,8 @@ export default function ChavrutaTextContainer({
   readerTheme,
   accentColor,
   scrollProgress,
+  initialScrollOffset = 0,
+  onScrollOffset,
 }: ChavrutaTextContainerProps) {
   const theme = useTheme();
   const palette = useMemo(
@@ -56,10 +60,12 @@ export default function ChavrutaTextContainer({
   const [activeFootnoteIndex, setActiveFootnoteIndex] = useState<number | null>(null);
 
   const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
-  const { scrollViewRef, showFab, handleScroll, scrollToTop } =
+  const { scrollViewRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey,
+      initialOffset: initialScrollOffset,
+      onOffsetChange: onScrollOffset,
     });
 
   const footnotesById = useMemo(
@@ -122,6 +128,7 @@ export default function ChavrutaTextContainer({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         onScroll={handleScroll}
+        onContentSizeChange={handleContentSizeChange}
         scrollEventThrottle={16}
       >
         <View style={styles.headerBox}>
@@ -179,7 +186,6 @@ export default function ChavrutaTextContainer({
                 ]}
                 fontSize={fontSize}
                 accentColor={palette.accentColor}
-                accentSourceWords={isMishnahParagraph}
                 showNotes={showNotes}
                 footnotesById={footnotesById}
                 onPressFootnote={openFootnote}
