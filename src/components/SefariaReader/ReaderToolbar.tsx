@@ -60,18 +60,17 @@ export default function ReaderToolbar({
   const theme = useTheme();
   const styles = useMemo(() => createReaderToolbarStyles(theme), [theme]);
   const onAccent = LIGHT_THEME.colors.surface;
-  const showNotesToggle = viewMode === 'chavruta' && onToggleNotes != null;
+  const showNotesToggle = viewMode === 'chavruta' && chavrutaAvailable && onToggleNotes != null;
   const showNikudToggle = viewMode === 'classic' && nikudAvailable && onToggleGemaraNikud != null;
 
   const [showThemeModal, setShowThemeModal] = useState(false);
   const visibleModes = useMemo(
     () =>
       MODES.filter((mode) => {
-        if (mode.id === 'chavruta') return chavrutaAvailable;
         if (mode.id === 'steinsaltz') return steinsaltzAvailable;
         return true;
       }),
-    [chavrutaAvailable, steinsaltzAvailable],
+    [steinsaltzAvailable],
   );
   const modeIds = useMemo(() => visibleModes.map((mode) => mode.id), [visibleModes]);
   const { onSwitcherLayout, indicatorStyle, isReady } = useModeSwitcherIndicator(viewMode, modeIds);

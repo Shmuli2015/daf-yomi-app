@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ScrollView,
   Text,
@@ -19,6 +19,7 @@ import { mishnahSpanFlags } from '../../utils/commentaryEmphasis';
 import type { ReaderTheme } from './ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
+import { useReaderPosition } from '../../hooks/useReaderPosition';
 import { createSteinsaltzTextContainerStyles } from './SteinsaltzTextContainer.styles';
 
 interface SteinsaltzTextContainerProps {
@@ -32,6 +33,7 @@ interface SteinsaltzTextContainerProps {
   scrollProgress?: SharedValue<number>;
   initialScrollOffset?: number;
   onScrollOffset?: (offset: number) => void;
+  positionKey?: string;
 }
 
 export default function SteinsaltzTextContainer({
@@ -45,17 +47,30 @@ export default function SteinsaltzTextContainer({
   scrollProgress,
   initialScrollOffset = 0,
   onScrollOffset,
+  positionKey,
 }: SteinsaltzTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSteinsaltzTextContainerStyles(theme), [theme]);
 
-  const { scrollViewRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey: data?.tref || '',
       initialOffset: initialScrollOffset,
       onOffsetChange: onScrollOffset,
     });
+
+  const { registerAnchor, clearSavedPosition } = useReaderPosition({
+    positionKey,
+    scrollViewRef,
+    scrollYRef,
+    skipRestore: initialScrollOffset > 1,
+  });
+
+  const handleScrollToTop = useCallback(() => {
+    clearSavedPosition();
+    scrollToTop();
+  }, [clearSavedPosition, scrollToTop]);
 
   const palette = useMemo(
     () => getReaderThemePalette(readerTheme ?? 'light', accentColor),
@@ -150,6 +165,7 @@ export default function SteinsaltzTextContainer({
           return (
             <View
               key={`${block.item.ref}-${index}`}
+              onLayout={(event) => registerAnchor(index, event.nativeEvent.layout.y)}
               style={[
                 styles.paragraph,
                 isMishnah && [styles.mishnahParagraph, { borderRightColor: palette.accentColor }],
@@ -175,7 +191,7 @@ export default function SteinsaltzTextContainer({
 
       <ScrollToTopFab
         visible={showFab}
-        onPress={scrollToTop}
+        onPress={handleScrollToTop}
         accentColor={palette.accentColor}
       />
     </View>

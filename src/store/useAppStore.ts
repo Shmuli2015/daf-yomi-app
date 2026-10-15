@@ -1,4 +1,13 @@
 import { create } from 'zustand';
+import {
+  setNotificationOpensDaf as persistNotificationOpensDaf,
+  setPinnedPersonalMasechtot as persistPinnedPersonalMasechtot,
+} from '../db/database';
+import {
+  addPinnedPersonalMasechet,
+  parsePinnedPersonalMasechtot,
+  removePinnedPersonalMasechet,
+} from '../utils/pinnedPersonalMasechtot';
 import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, updateReaderTheme as persistReaderTheme, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setGemaraNikud as persistGemaraNikud, setHapticsEnabled as persistHapticsEnabled, setKeepScreenAwake as persistKeepScreenAwake, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, setDafDayStartMode as persistDafDayStartMode, setDafDayStartTime as persistDafDayStartTime, setDafDayStartSchedules as persistDafDayStartSchedules, ensureDafDayStartSchedulesFromCurrentHour as persistEnsureDafDayStartSchedules, importFullBackupTransaction, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafDayDate } from '../utils/dafDayBoundary';
@@ -7,6 +16,17 @@ import { getDafByDate, getDateStr } from '../utils/dafYomi';
 import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from '../utils/progressCache';
 import { resolveAmudMark, type AmudSide } from '../utils/dafStatus';
 import { isPersonalTrackEnabled } from '../utils/personalTrack';
+
+function derivePinnedState(settings: SettingsRecord | null | undefined) {
+  const pinned = parsePinnedPersonalMasechtot(
+    settings?.pinned_personal_masechtot,
+    settings?.active_personal_masechet,
+  );
+  return {
+    pinnedPersonalMasechtot: pinned,
+    activePersonalMasechet: pinned[0] ?? null,
+  };
+}
 
 function upsertHistoryRecord(history: DailyRecord[], record: DailyRecord): DailyRecord[] {
   const idx = history.findIndex((r) => r.date === record.date);
@@ -52,6 +72,7 @@ interface AppState {
   
   personalTrackRecords: PersonalTrackRecord[];
   activePersonalMasechet: string | null;
+  pinnedPersonalMasechtot: string[];
 
   loadInitialData: () => void;
   loadProgressData: () => void;
@@ -61,6 +82,8 @@ interface AppState {
   refreshPersonalTrack: (masechetIdentifier?: string) => void;
   setActivePersonalMasechet: (masechetEn: string | null) => void;
   clearActivePersonalMasechet: () => void;
+  pinPersonalMasechet: (masechetEn: string) => void;
+  unpinPersonalMasechet: (masechetEn: string) => void;
   togglePersonalDafLearned: (masechetEn: string, dafNum: number) => void;
   markPersonalDafLearned: (masechetEn: string, dafNum: number) => void;
   markPersonalPartialAmud: (masechetEn: string, dafNum: number, amud: AmudSide) => void;
@@ -111,6 +134,7 @@ interface AppState {
   setHapticsEnabled: (enabled: boolean) => void;
   setKeepScreenAwake: (enabled: boolean) => void;
   setNotificationSoundEnabled: (enabled: boolean) => void;
+  setNotificationOpensDaf: (enabled: boolean) => void;
   setDafDayStartMode: (mode: string) => void;
   setDafDayStartTime: (hour: number, minute: number) => void;
   setDafDayStartSchedules: (schedules: DafDayStartDaySchedule[]) => void;
@@ -141,6 +165,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   personalTrackRecords: [],
   activePersonalMasechet: null,
+  pinnedPersonalMasechtot: [],
 
   setAppReady: (ready) => set({ isAppReady: ready }),
 
@@ -155,7 +180,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       currentDate: date,
       todayRecord: record,
       settings,
-      activePersonalMasechet: settings?.active_personal_masechet || null,
+      ...derivePinnedState(settings),
       todayDafText: dafInfo.fullText,
       todayMasechet: dafInfo.masechet,
       todayDafNum: dafInfo.daf,
@@ -184,7 +209,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       progressCache: cache,
       streak: cache.streak,
       todayRecord: record,
-      activePersonalMasechet: settings?.active_personal_masechet || null,
+      ...derivePinnedState(settings),
     });
   },
 
@@ -242,7 +267,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const nextEnabled = isPersonalTrackEnabled(settings);
     const patch: Partial<AppState> = {
       settings,
-      activePersonalMasechet: settings?.active_personal_masechet || null,
+      ...derivePinnedState(settings),
     };
 
     if (prevEnabled !== nextEnabled) {
@@ -267,13 +292,27 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   setActivePersonalMasechet: (masechetEn) => {
-    persistActivePersonalMasechet(masechetEn);
+    if (masechetEn) {
+      get().pinPersonalMasechet(masechetEn);
+      return;
+    }
+    get().clearActivePersonalMasechet();
+  },
+
+  clearActivePersonalMasechet: () => {
+    persistPinnedPersonalMasechtot([]);
     get().refreshSettings();
     get().refreshPersonalTrack();
   },
 
-  clearActivePersonalMasechet: () => {
-    persistActivePersonalMasechet(null);
+  pinPersonalMasechet: (masechetEn) => {
+    persistPinnedPersonalMasechtot(addPinnedPersonalMasechet(get().pinnedPersonalMasechtot, masechetEn));
+    get().refreshSettings();
+    get().refreshPersonalTrack();
+  },
+
+  unpinPersonalMasechet: (masechetEn) => {
+    persistPinnedPersonalMasechtot(removePinnedPersonalMasechet(get().pinnedPersonalMasechtot, masechetEn));
     get().refreshSettings();
     get().refreshPersonalTrack();
   },
@@ -460,6 +499,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().refreshSettings();
   },
 
+  setNotificationOpensDaf: (enabled: boolean) => {
+    persistNotificationOpensDaf(enabled);
+    get().refreshSettings();
+  },
+
   setDafDayStartMode: (mode: string) => {
     const previousSettings = get().settings ?? getSettings();
     const wasOnToday =
@@ -535,6 +579,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       personalTrackRecords: [],
       activePersonalMasechet: null,
+      pinnedPersonalMasechtot: [],
       progressCache: cache,
     });
   },
@@ -552,6 +597,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       settings,
       personalTrackRecords: [],
       activePersonalMasechet: null,
+      pinnedPersonalMasechtot: [],
       todayDafText: dafInfo.fullText,
       todayMasechet: dafInfo.masechet,
       todayDafNum: dafInfo.daf,

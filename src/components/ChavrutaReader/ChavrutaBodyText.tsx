@@ -31,7 +31,7 @@ export default function ChavrutaBodyText({
   const markSize = Math.max(13, Math.round(fontSize * 0.82));
 
   return (
-    <Text style={baseStyle}>
+    <Text style={baseStyle} selectable>
       {'\u200F'}
       {parts.map((part, index) => {
         if (part.kind === 'footnote') {

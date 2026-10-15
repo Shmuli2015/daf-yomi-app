@@ -30,6 +30,11 @@ export function initDB() {
       notification_hour INTEGER DEFAULT 7,
       notification_minute INTEGER DEFAULT 30
     );
+    CREATE TABLE IF NOT EXISTS reader_position (
+      position_key TEXT PRIMARY KEY NOT NULL,
+      anchor_index INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
     CREATE INDEX IF NOT EXISTS idx_daily_daf_status ON daily_daf(status);
     CREATE INDEX IF NOT EXISTS idx_personal_track_status ON personal_track_daf(status);
   `);
@@ -108,6 +113,12 @@ export function initDB() {
   if (!columns.includes('notification_sound_enabled')) {
     db.execSync('ALTER TABLE settings ADD COLUMN notification_sound_enabled INTEGER DEFAULT 1;');
   }
+  if (!columns.includes('pinned_personal_masechtot')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN pinned_personal_masechtot TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('notification_opens_daf')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN notification_opens_daf INTEGER DEFAULT 0;');
+  }
   if (!columns.includes('daf_day_start_mode')) {
     db.execSync("ALTER TABLE settings ADD COLUMN daf_day_start_mode TEXT DEFAULT 'midnight';");
   }
@@ -164,5 +175,6 @@ function enableAutoUpdatePromptByDefault() {
 export function resetDB() {
   db.execSync('DROP TABLE IF EXISTS daily_daf;');
   db.execSync('DROP TABLE IF EXISTS personal_track_daf;');
+  db.execSync('DROP TABLE IF EXISTS reader_position;');
   initDB();
 }

@@ -78,6 +78,8 @@ describe('backup security and validation', () => {
       keep_screen_awake: 1,
       last_backup_at: null,
       notification_sound_enabled: 1,
+      notification_opens_daf: 0,
+      pinned_personal_masechtot: null,
       daf_day_start_mode: 'midnight',
       daf_day_start_hour: 20,
       daf_day_start_minute: 0,

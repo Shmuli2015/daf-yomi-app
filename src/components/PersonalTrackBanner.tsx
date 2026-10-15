@@ -19,7 +19,7 @@ interface PersonalTrackBannerProps {
   activeMasechetEn: string | null;
   personalTrackRecords: PersonalTrackRecord[];
   onSelectMasechetPress: () => void;
-  onOpenMasechetDetailPress?: () => void;
+  onOpenMasechetDetailPress?: (masechetEn: string) => void;
   onToggleDafLearned: (masechetEn: string, dafNum: number) => void;
   onOpenTzuratHadaf?: (masechetEn: string, dafNum: number) => void;
   hideMarkButton?: boolean;
@@ -92,7 +92,7 @@ export default function PersonalTrackBanner({
             style={styles.headerTitleRow}
             onPress={() => {
               if (expanded) {
-                onOpenMasechetDetailPress?.();
+                onOpenMasechetDetailPress?.(masechet.en);
                 return;
               }
               setExpanded(true);

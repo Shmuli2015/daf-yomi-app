@@ -36,6 +36,7 @@ export default function SettingsScreen() {
     setShowSecularDateEnabled,
     setShowConfettiEnabled,
     setNotificationSoundEnabled,
+    setNotificationOpensDaf,
     setDafDayStartMode,
     setDafDayStartTime,
     setDafDayStartSchedules,
@@ -55,6 +56,7 @@ export default function SettingsScreen() {
       setShowSecularDateEnabled: s.setShowSecularDateEnabled,
       setShowConfettiEnabled: s.setShowConfettiEnabled,
       setNotificationSoundEnabled: s.setNotificationSoundEnabled,
+      setNotificationOpensDaf: s.setNotificationOpensDaf,
       setDafDayStartMode: s.setDafDayStartMode,
       setDafDayStartTime: s.setDafDayStartTime,
       setDafDayStartSchedules: s.setDafDayStartSchedules,
@@ -140,6 +142,7 @@ export default function SettingsScreen() {
     exactAlarmStatus,
     permissionStatus,
     soundEnabled,
+    opensDafEnabled,
     scheduledCount,
     handleModeChange,
     handleToggleDay,
@@ -150,6 +153,7 @@ export default function SettingsScreen() {
     timePickerTitle,
     handleNotificationsToggle,
     handleSoundToggle,
+    handleOpensDafToggle,
     handleExactAlarmSettingsPress,
     handleNotificationPermissionPress,
     handleTimePickerOpen,
@@ -163,6 +167,7 @@ export default function SettingsScreen() {
     showConfettiPref,
     onFeedback: showFeedback,
     setNotificationSoundEnabled,
+    setNotificationOpensDaf,
   });
 
   const {
@@ -278,6 +283,8 @@ export default function SettingsScreen() {
               onEditDayTime: handleEditDayTime,
               soundEnabled,
               onSoundToggle: handleSoundToggle,
+              opensDafEnabled,
+              onOpensDafToggle: handleOpensDafToggle,
             }}
             reader={{
               readerViewMode,

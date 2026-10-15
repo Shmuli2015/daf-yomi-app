@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { getSettings } from '../db/database';
 import { getDafDayDate } from './dafDayBoundary';
 import { getSnoozeReminderCopy } from './notificationCopy';
+import { buildStudyReminderTarget } from './studyReminderTarget';
 
 import { SNOOZE_REMINDER_PREFIX, isSnoozeReminderId } from './snoozeConstants';
 
@@ -24,7 +25,8 @@ export async function cancelExistingSnoozeReminders(): Promise<void> {
 export async function scheduleSnoozeReminder(soundEnabled: boolean): Promise<void> {
   await cancelExistingSnoozeReminders();
 
-  const snoozeCopy = getSnoozeReminderCopy(getDafDayDate(new Date(), getSettings()));
+  const dafDate = getDafDayDate(new Date(), getSettings());
+  const snoozeCopy = getSnoozeReminderCopy(dafDate);
   const isAndroid = Platform.OS === 'android';
 
   const trigger: Notifications.NotificationTriggerInput = isAndroid
@@ -48,6 +50,7 @@ export async function scheduleSnoozeReminder(soundEnabled: boolean): Promise<voi
       sound: soundEnabled,
       priority: Notifications.AndroidNotificationPriority.MAX,
       categoryIdentifier: 'study-reminder',
+      data: buildStudyReminderTarget(dafDate),
     },
     trigger,
   });

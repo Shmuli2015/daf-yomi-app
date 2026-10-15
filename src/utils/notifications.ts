@@ -4,15 +4,17 @@ import { getSettings } from '../db/database';
 import { getDafDayDate } from './dafDayBoundary';
 import { hasExactAlarmPermission, promptForExactAlarmPermission } from './exactAlarm';
 import { getStudyReminderCopy } from './notificationCopy';
+import {
+  DEFAULT_SCHEDULES,
+  REMINDER_WINDOW_DAYS,
+  type DaySchedule,
+  resolveReminderTime,
+  scheduleStudyReminderAt,
+} from './reminderSchedule';
+import { buildStudyReminderTarget } from './studyReminderTarget';
 import { captureException } from '../services/sentry';
 
-export type DaySchedule = { enabled: boolean; hour: number; minute: number };
-
-export const DEFAULT_SCHEDULES: DaySchedule[] = Array.from({ length: 7 }, (_, i) => ({
-  enabled: i < 6,
-  hour: 7,
-  minute: 30,
-}));
+export { DEFAULT_SCHEDULES, type DaySchedule };
 
 export type ScheduleNotificationsOptions = {
   promptForExactAlarm?: boolean;
@@ -41,92 +43,20 @@ export async function scheduleNotifications(
       );
     }
 
-    const isAndroid = Platform.OS === 'android';
     const today = new Date();
-    const DAYS_TO_SCHEDULE = 30;
-    const notificationPromises: Promise<string>[] = [];
     const sound = options?.sound !== false;
     const settings = getSettings();
+    const config = { mode, hour: globalHour, minute: globalMin, schedules };
+    const notificationPromises: Promise<string>[] = [];
 
-    if (mode === 'daily') {
-      for (let dayOffset = 0; dayOffset < DAYS_TO_SCHEDULE; dayOffset++) {
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + dayOffset);
-        targetDate.setHours(globalHour, globalMin, 0, 0);
-
-        if (targetDate.getTime() <= Date.now()) {
-          continue;
-        }
-
-        const copy = getStudyReminderCopy(getDafDayDate(targetDate, settings));
-        
-        const content: Notifications.NotificationContentInput = {
-          title: copy.title,
-          body: copy.body,
-          sound,
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          categoryIdentifier: 'study-reminder',
-        };
-
-        const promise = Notifications.scheduleNotificationAsync({
-          content,
-          trigger: isAndroid
-            ? {
-                channelId: 'default',
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: targetDate,
-              }
-            : {
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: targetDate,
-              },
-        });
-        
-        notificationPromises.push(promise);
+    for (let dayOffset = 0; dayOffset < REMINDER_WINDOW_DAYS; dayOffset++) {
+      const day = new Date(today);
+      day.setDate(today.getDate() + dayOffset);
+      const reminderTime = resolveReminderTime(day, config);
+      if (!reminderTime || reminderTime.getTime() <= Date.now()) {
+        continue;
       }
-    } else {
-      for (let dayOffset = 0; dayOffset < DAYS_TO_SCHEDULE; dayOffset++) {
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + dayOffset);
-        
-        const dayOfWeek = targetDate.getDay();
-        const scheduleIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        const daySchedule = schedules[scheduleIndex];
-        
-        if (!daySchedule || !daySchedule.enabled) continue;
-
-        targetDate.setHours(daySchedule.hour, daySchedule.minute, 0, 0);
-        
-        if (targetDate.getTime() <= Date.now()) {
-          continue;
-        }
-        
-        const copy = getStudyReminderCopy(getDafDayDate(targetDate, settings));
-        
-        const content: Notifications.NotificationContentInput = {
-          title: copy.title,
-          body: copy.body,
-          sound,
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          categoryIdentifier: 'study-reminder',
-        };
-
-        const promise = Notifications.scheduleNotificationAsync({
-          content,
-          trigger: isAndroid
-            ? {
-                channelId: 'default',
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: targetDate,
-              }
-            : {
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: targetDate,
-              },
-        });
-        
-        notificationPromises.push(promise);
-      }
+      notificationPromises.push(scheduleStudyReminderAt(reminderTime, settings, sound));
     }
 
     await Promise.all(notificationPromises);
@@ -149,9 +79,10 @@ export async function sendTestNotification(sound = true) {
   try {
     await promptForExactAlarmPermission({ force: true });
 
-    const copy = getStudyReminderCopy(getDafDayDate(new Date(), getSettings()));
+    const dafDate = getDafDayDate(new Date(), getSettings());
+    const copy = getStudyReminderCopy(dafDate);
     const isAndroid = Platform.OS === 'android';
-    
+
     await Notifications.scheduleNotificationAsync({
       content: {
         title: '🧪 התראת בדיקה',
@@ -159,6 +90,7 @@ export async function sendTestNotification(sound = true) {
         sound,
         priority: Notifications.AndroidNotificationPriority.MAX,
         categoryIdentifier: 'study-reminder',
+        data: buildStudyReminderTarget(dafDate),
       },
       trigger: isAndroid
         ? {

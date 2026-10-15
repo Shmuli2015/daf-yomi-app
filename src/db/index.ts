@@ -10,6 +10,13 @@ export type {
 export { initDB, resetDB } from './init';
 
 export {
+  clearAllReaderPositions,
+  clearReaderPosition,
+  getReaderPosition,
+  saveReaderPosition,
+} from './readerPosition';
+
+export {
   batchUpdateDailyRecords,
   getAllRecords,
   getDailyRecord,
@@ -35,6 +42,8 @@ export {
   setHapticsEnabled,
   setKeepScreenAwake,
   setLastBackupAt,
+  setNotificationOpensDaf,
+  setPinnedPersonalMasechtot,
   setNotificationSoundEnabled,
   setReaderViewMode,
   setSeenAppVersion,

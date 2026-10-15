@@ -94,5 +94,7 @@ export function mergePersonalTrackRecords(records: PersonalTrackRecord[]) {
 
 export function resetPersonalTrackRecords() {
   db.execSync('DELETE FROM personal_track_daf;');
-  db.runSync('UPDATE settings SET active_personal_masechet = NULL WHERE id = 1;');
+  db.runSync(
+    "UPDATE settings SET active_personal_masechet = NULL, pinned_personal_masechtot = '[]' WHERE id = 1;",
+  );
 }
