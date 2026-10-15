@@ -343,7 +343,7 @@ export default function SettingsScreen() {
                 ? handleUpdateAutoPromptToggle
                 : undefined,
               onCheckAppUpdate: updatesConfigured ? handleCheckAppUpdates : undefined,
-              onShareDownloadLink: updatesConfigured ? handleShareDownloadLink : undefined,
+              onShareDownloadLink: handleShareDownloadLink,
               onShowWhatsNew: handleShowWhatsNew,
               onEmailCopied: () =>
                 showFeedback({

@@ -4,7 +4,8 @@ import Constants from 'expo-constants';
 import { useAppUpdateControls } from '../context/AppUpdateProvider';
 import { isUpdateCheckConfigured } from '../services/appUpdate';
 import { getDownloadPageUrl } from '../services/apkInstall';
-import { buildDownloadShareContent } from '../utils/shareDownloadLink';
+import { isPlayStoreBuild } from '../services/playTrack';
+import { buildDownloadShareContent, PLAY_STORE_APP_URL } from '../utils/shareDownloadLink';
 import type { SettingsFeedback } from './useSettingsFeedback';
 
 interface UseSettingsAppUpdatesParams {
@@ -59,7 +60,9 @@ export function useSettingsAppUpdates({
 
   const handleShareDownloadLink = useCallback(async () => {
     try {
-      await Share.share(buildDownloadShareContent(getDownloadPageUrl(), Platform.OS));
+      const channel = isPlayStoreBuild() ? 'play' : 'apk';
+      const url = channel === 'play' ? PLAY_STORE_APP_URL : getDownloadPageUrl();
+      await Share.share(buildDownloadShareContent(url, Platform.OS, channel));
     } catch {
       onFeedback({
         title: 'השיתוף נכשל',

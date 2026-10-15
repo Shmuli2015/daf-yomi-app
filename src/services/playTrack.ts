@@ -15,3 +15,8 @@ export function getPlayTrack(): string {
 export function isPlayProductionTrack(): boolean {
   return getPlayTrack() === 'production';
 }
+
+export function isPlayStoreBuild(): boolean {
+  const track = getPlayTrack();
+  return track.length > 0 && track !== 'none';
+}

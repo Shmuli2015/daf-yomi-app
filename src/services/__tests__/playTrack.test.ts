@@ -1,4 +1,4 @@
-import { isPlayProductionTrack, getPlayTrack } from '../../services/playTrack';
+import { isPlayProductionTrack, isPlayStoreBuild, getPlayTrack } from '../../services/playTrack';
 
 jest.mock('expo-constants', () => ({
   __esModule: true,
@@ -28,12 +28,14 @@ describe('playTrack', () => {
     delete process.env.EXPO_PUBLIC_PLAY_TRACK;
     expect(getPlayTrack()).toBe('production');
     expect(isPlayProductionTrack()).toBe(true);
+    expect(isPlayStoreBuild()).toBe(true);
   });
 
-  it('treats alpha as non-production', () => {
+  it('treats alpha as a store build that is not production', () => {
     Constants.expoConfig.extra = { playTrack: 'alpha' };
     delete process.env.EXPO_PUBLIC_PLAY_TRACK;
     expect(isPlayProductionTrack()).toBe(false);
+    expect(isPlayStoreBuild()).toBe(true);
   });
 
   it('treats missing track as non-production', () => {
@@ -41,5 +43,12 @@ describe('playTrack', () => {
     delete process.env.EXPO_PUBLIC_PLAY_TRACK;
     expect(getPlayTrack()).toBe('');
     expect(isPlayProductionTrack()).toBe(false);
+    expect(isPlayStoreBuild()).toBe(false);
+  });
+
+  it('treats none as outside the store', () => {
+    Constants.expoConfig.extra = { playTrack: 'none' };
+    delete process.env.EXPO_PUBLIC_PLAY_TRACK;
+    expect(isPlayStoreBuild()).toBe(false);
   });
 });
