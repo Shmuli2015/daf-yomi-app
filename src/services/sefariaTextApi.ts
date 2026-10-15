@@ -387,11 +387,25 @@ export async function hasCachedSefariaPageText(
   }
 }
 
+export const SEFARIA_DISK_WRITE_ERROR_MESSAGE = 'הדף לא נשמר במכשיר';
+
+export class SefariaDiskWriteError extends Error {
+  constructor() {
+    super(SEFARIA_DISK_WRITE_ERROR_MESSAGE);
+    this.name = 'SefariaDiskWriteError';
+  }
+}
+
+export interface FetchSefariaPageTextOptions {
+  requireDiskCache?: boolean;
+}
+
 export async function fetchSefariaPageText(
   masechetEn: string,
   dafNum: number,
   amud: Amud,
   gemaraNikud = true,
+  options: FetchSefariaPageTextOptions = {},
 ): Promise<SefariaPageData> {
   const identity = resolveSefariaCacheIdentity(masechetEn, dafNum, amud, gemaraNikud);
   if (!identity) {
@@ -401,7 +415,7 @@ export async function fetchSefariaPageText(
   const { tref, plainGemara, shekalim, mishnah, sharedAmud } = identity;
   const memKey = memoryCacheKey(tref, plainGemara);
   const remembered = readMemoryCache(memKey);
-  if (remembered) {
+  if (remembered && !options.requireDiskCache) {
     return remembered;
   }
 
@@ -466,13 +480,18 @@ export async function fetchSefariaPageText(
     );
   }
 
+  let savedToDisk = true;
   try {
     await ensureCacheDir();
     await FileSystem.writeAsStringAsync(cachePath, JSON.stringify(data));
   } catch {
+    savedToDisk = false;
   }
 
   writeMemoryCache(memKey, data);
+  if (!savedToDisk && options.requireDiskCache) {
+    throw new SefariaDiskWriteError();
+  }
   return data;
 }
 

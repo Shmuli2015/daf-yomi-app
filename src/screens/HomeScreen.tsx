@@ -73,6 +73,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     studyStatus,
     showHalfDafTip,
     masechetStats,
+    masechetEndLabel,
     displayMasechetHe,
     sharedSubtitle,
     partialAmud,
@@ -179,6 +180,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             masechetProgressPct={masechetStats.pct}
             masechetLearnedCountLabel={formatProgressCount(masechetStats.learned)}
             masechetTotalCount={masechetStats.total}
+            masechetEndLabel={masechetEndLabel}
             showSecularDate={showSecularDate}
             onPrevDay={handlePrevDay}
             onNextDay={handleNextDay}

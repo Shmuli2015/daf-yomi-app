@@ -8,6 +8,7 @@ import { getDafDayDate } from '../utils/dafDayBoundary';
 import { buildLast7Days, buildRecentHistoryKey } from '../utils/last7Days';
 import { dafYomiDisplayMasechetHe, kinnimTamidCalendarDisplay } from '../utils/mishnahOnlySefaria';
 import { getMasechetDafim } from '../utils/shas';
+import { formatMasechetEndCountdown, getDaysUntilMasechetEnd } from '../utils/masechetEndCountdown';
 import { getStudyStatus, getPartialAmud } from '../utils/dafStatus';
 import { getMasechetProgressFromCache } from '../utils/progressCache';
 import { isPersonalTrackEnabled } from '../utils/personalTrack';
@@ -84,6 +85,11 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
     return { pct, learned: progress.learned, total };
   }, [todayMasechet, progressCache]);
 
+  const masechetEndLabel = useMemo(() => {
+    const daysLeft = getDaysUntilMasechetEnd(todayMasechet, todayDafNumValue);
+    return daysLeft === null ? undefined : formatMasechetEndCountdown(todayMasechet, daysLeft);
+  }, [todayMasechet, todayDafNumValue]);
+
   const displayMasechetHe = useMemo(
     () => dafYomiDisplayMasechetHe(todayMasechet, todayDafNumValue),
     [todayMasechet, todayDafNumValue],
@@ -148,6 +154,7 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
     studyStatus,
     showHalfDafTip,
     masechetStats,
+    masechetEndLabel,
     displayMasechetHe,
     sharedSubtitle,
     partialAmud,

@@ -110,7 +110,8 @@ export function useCalendarActions({
     const missed: CatchUpItem[] = [];
     const pastDays: HDate[] = [];
     let cur = selectedDate;
-    for (let i = 0; i < 14; i++) {
+    const daysSinceMonthStart = selectedDate.getDate();
+    for (let i = 0; i < daysSinceMonthStart; i++) {
       pastDays.unshift(cur);
       cur = cur.prev();
     }

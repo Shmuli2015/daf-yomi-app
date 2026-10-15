@@ -18,6 +18,7 @@ import ReaderModePane from '../components/SefariaReader/ReaderModePane';
 import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';
 import SteinsaltzTextContainer from '../components/SefariaReader/SteinsaltzTextContainer';
 import ChavrutaTextContainer from '../components/ChavrutaReader/ChavrutaTextContainer';
+import ChavrutaUnavailableState from '../components/ChavrutaReader/ChavrutaUnavailableState';
 import ReadingProgressBar from '../components/SefariaReader/ReadingProgressBar';
 import { useDafReader } from '../hooks/useDafReader';
 import { useReaderKeepAwake } from '../hooks/useReaderKeepAwake';
@@ -228,6 +229,8 @@ export default function TzuratHadafScreen() {
               initialScrollOffset={getOffset('steinsaltz')}
               onScrollOffset={(offset) => setOffset('steinsaltz', offset)}
             />
+          ) : !reader.chavrutaAvailable ? (
+            <ChavrutaUnavailableState readerTheme={readerTheme} accentColor={theme.colors.accent} />
           ) : (
             <ChavrutaTextContainer
               data={reader.chavruta.data}

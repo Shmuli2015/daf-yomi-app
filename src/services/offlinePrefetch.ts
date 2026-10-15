@@ -13,7 +13,11 @@ import {
 } from '../utils/dafNavigation';
 import { getMasechetDafim, isAmudAvailable } from '../utils/shas';
 import { fetchChavrutaAmud, hasCachedChavrutaMasechet } from './chavrutaApi';
-import { fetchSefariaPageText, hasCachedSefariaPageText } from './sefariaTextApi';
+import {
+  fetchSefariaPageText,
+  hasCachedSefariaPageText,
+  SefariaDiskWriteError,
+} from './sefariaTextApi';
 
 export const OFFLINE_PREFETCH_DAY_COUNT = 7;
 const DEFAULT_CONCURRENCY = 2;
@@ -35,6 +39,7 @@ export type OfflinePrefetchResult = {
   failureCount: number;
   cancelled: boolean;
   total: number;
+  diskWriteFailureCount: number;
 };
 
 export type OfflinePrefetchOptions = {
@@ -133,10 +138,16 @@ async function runPool<T>(
   worker: (item: T) => Promise<void>,
   onItemSettled?: () => void,
   shouldCancel?: () => boolean,
-): Promise<{ successCount: number; failureCount: number; cancelled: boolean }> {
+): Promise<{
+  successCount: number;
+  failureCount: number;
+  diskWriteFailureCount: number;
+  cancelled: boolean;
+}> {
   let index = 0;
   let successCount = 0;
   let failureCount = 0;
+  let diskWriteFailureCount = 0;
   let cancelled = false;
 
   const runners = Array.from({ length: Math.max(1, concurrency) }, async () => {
@@ -151,8 +162,11 @@ async function runPool<T>(
       try {
         await worker(item);
         successCount += 1;
-      } catch {
+      } catch (error) {
         failureCount += 1;
+        if (error instanceof SefariaDiskWriteError) {
+          diskWriteFailureCount += 1;
+        }
       } finally {
         onItemSettled?.();
       }
@@ -163,7 +177,7 @@ async function runPool<T>(
   if (shouldCancel?.()) {
     cancelled = true;
   }
-  return { successCount, failureCount, cancelled };
+  return { successCount, failureCount, diskWriteFailureCount, cancelled };
 }
 
 async function getStatusForTargets(
@@ -200,7 +214,13 @@ async function runPrefetchForTargets(
   const total = amudTargets.length + chavrutaTargets.length;
 
   if (total === 0) {
-    return { successCount: 0, failureCount: 0, cancelled: false, total: 0 };
+    return {
+      successCount: 0,
+      failureCount: 0,
+      diskWriteFailureCount: 0,
+      cancelled: false,
+      total: 0,
+    };
   }
 
   let completed = 0;
@@ -211,14 +231,22 @@ async function runPrefetchForTargets(
   options.onProgress?.({ completed, total });
 
   if (options.shouldCancel?.()) {
-    return { successCount: 0, failureCount: 0, cancelled: true, total };
+    return {
+      successCount: 0,
+      failureCount: 0,
+      diskWriteFailureCount: 0,
+      cancelled: true,
+      total,
+    };
   }
 
   const sefariaResult = await runPool(
     amudTargets,
     concurrency,
     async (loc) => {
-      await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud);
+      await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud, {
+        requireDiskCache: true,
+      });
     },
     markSettled,
     options.shouldCancel,
@@ -228,6 +256,7 @@ async function runPrefetchForTargets(
     return {
       successCount: sefariaResult.successCount,
       failureCount: sefariaResult.failureCount,
+      diskWriteFailureCount: sefariaResult.diskWriteFailureCount,
       cancelled: true,
       total,
     };
@@ -246,6 +275,8 @@ async function runPrefetchForTargets(
   return {
     successCount: sefariaResult.successCount + chavrutaResult.successCount,
     failureCount: sefariaResult.failureCount + chavrutaResult.failureCount,
+    diskWriteFailureCount:
+      sefariaResult.diskWriteFailureCount + chavrutaResult.diskWriteFailureCount,
     cancelled: chavrutaResult.cancelled,
     total,
   };

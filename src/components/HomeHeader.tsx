@@ -30,6 +30,7 @@ interface HomeHeaderProps {
   masechetProgressPct?: number;
   masechetLearnedCountLabel?: string;
   masechetTotalCount?: number;
+  masechetEndLabel?: string;
   showSecularDate?: boolean;
   onPrevDay?: () => void;
   onNextDay?: () => void;
@@ -61,6 +62,7 @@ const HomeHeader = React.memo(function HomeHeader({
   masechetProgressPct = 0,
   masechetLearnedCountLabel = '0',
   masechetTotalCount = 0,
+  masechetEndLabel,
   showSecularDate = true,
   onPrevDay,
   onNextDay,
@@ -149,6 +151,7 @@ const HomeHeader = React.memo(function HomeHeader({
             masechetProgressPct={masechetProgressPct}
             masechetLearnedCountLabel={masechetLearnedCountLabel}
             masechetTotalCount={masechetTotalCount}
+            masechetEndLabel={masechetEndLabel}
             animatedProgressStyle={animatedProgressStyle}
             animatedContentStyle={animatedSwipeOpacityStyle}
             animatedTodayContentStyle={animatedTodayJumpOpacityStyle}
