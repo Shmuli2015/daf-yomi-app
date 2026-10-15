@@ -20,11 +20,11 @@ function gemara(text: string): string {
   return `<b style='font-size:20px; color:RGB(0,0,0);'>${text}</b>`;
 }
 
-function bodyRef(n: number): string {
+function bodyRef(n: number | string): string {
   return `<nobr><b style='background-color:RGB(216,216,216); font-size:10px; font-family:arial; color:RGB(0,0,0)'>&nbsp;${n}&nbsp;</b></nobr>`;
 }
 
-function noteMarker(n: number): string {
+function noteMarker(n: number | string): string {
   return `<nobr><b style='background-color:RGB(51,119,204);  color:white; font-size:10px; font-family:arial;'>&nbsp;${n}.&nbsp;</b></nobr>`;
 }
 
@@ -352,6 +352,44 @@ describe('parseChavrutaDocument', () => {
       false,
       false,
     ]);
+  });
+
+  it('links a nobr footnote marker that includes a Hebrew letter', () => {
+    const html = `
+      <u>דף ב - א</u>
+      ${bodySpan(`טקסט ${bodyRef('2א')} המשך`)}
+      ${noteSpan(`${noteMarker('2א')} פירוש האות.`)}
+    `;
+    const amud = findChavrutaAmud(parseChavrutaDocument(html), 2, 'a');
+    const note = amud?.footnotes[0];
+    expect(note?.n).toBe(2);
+    expect(note?.suffix).toBe('א');
+    expect(note?.text).toContain('פירוש האות');
+    expect(amud?.paragraphs[0].text).toContain(buildFootnoteToken(note?.id ?? 0));
+    expect(amud?.paragraphs[0].text).not.toContain('2א');
+  });
+
+  it('splits plain lettered notes out of the parent footnote', () => {
+    const html = `
+      <u>דף ז - ב</u>
+      ${bodySpan('לא כל שכן שאסור בכזית? <small>()</small> 3א')}
+      ${bodySpan('ההלכה למשה מסיני 3ב <small>()</small>.')}
+      ${noteSpan(`${noteMarker(3)} רש"י פירש. 3א. השטמ"ק העיר. 3ב. רש"י ביאר.`)}
+    `;
+    const amud = findChavrutaAmud(parseChavrutaDocument(html), 7, 'b');
+    expect(amud?.footnotes.map((footnote) => `${footnote.n}${footnote.suffix}`)).toEqual([
+      '3',
+      '3א',
+      '3ב',
+    ]);
+    expect(amud?.footnotes[0].text).toContain('רש"י פירש');
+    expect(amud?.footnotes[0].text).not.toContain('השטמ"ק');
+    expect(amud?.footnotes[1].text).toContain('השטמ"ק');
+    expect(amud?.footnotes[2].text).toContain('רש"י ביאר');
+    expect(amud?.paragraphs[0].text).toContain(buildFootnoteToken(amud?.footnotes[1].id ?? 0));
+    expect(amud?.paragraphs[0].text).not.toContain('()');
+    expect(amud?.paragraphs[1].text).toContain(buildFootnoteToken(amud?.footnotes[2].id ?? 0));
+    expect(amud?.paragraphs[1].text).not.toContain('3ב');
   });
 });
 

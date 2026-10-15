@@ -6,36 +6,66 @@ interface UseScrollProgressOptions {
   progressShared?: SharedValue<number>;
   fabThreshold?: number;
   resetKey?: string;
+  initialOffset?: number;
+  onOffsetChange?: (offset: number) => void;
 }
 
 export function useScrollProgress({
   progressShared,
   fabThreshold = 350,
   resetKey,
+  initialOffset = 0,
+  onOffsetChange,
 }: UseScrollProgressOptions = {}) {
   const [showFab, setShowFab] = useState(false);
   const scrollViewRef = useAnimatedRef<ScrollView>();
   const scrollYRef = useRef(0);
   const lastScrollYRef = useRef(0);
   const isScrollingToTopRef = useRef(false);
+  const pendingRestoreRef = useRef(false);
+  const restoredOffsetRef = useRef(0);
   const progressSharedRef = useRef(progressShared);
+  const initialOffsetRef = useRef(initialOffset);
+  const onOffsetChangeRef = useRef(onOffsetChange);
   progressSharedRef.current = progressShared;
+  initialOffsetRef.current = initialOffset;
+  onOffsetChangeRef.current = onOffsetChange;
+
+  const applyOffset = useCallback((offset: number) => {
+    scrollViewRef.current?.scrollTo({ y: offset, animated: false });
+  }, [scrollViewRef]);
 
   useEffect(() => {
-    scrollYRef.current = 0;
-    lastScrollYRef.current = 0;
+    const offset = Math.max(0, initialOffsetRef.current);
+    restoredOffsetRef.current = offset;
+    pendingRestoreRef.current = offset > 1;
+    scrollYRef.current = offset;
+    lastScrollYRef.current = offset;
     isScrollingToTopRef.current = false;
-    scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+    applyOffset(offset);
     setShowFab(false);
-    if (progressSharedRef.current) {
+    if (progressSharedRef.current && offset <= 1) {
       progressSharedRef.current.value = 0;
     }
-  }, [resetKey, scrollViewRef]);
+  }, [resetKey, applyOffset]);
+
+  const handleContentSizeChange = useCallback((_width: number, height: number) => {
+    if (!pendingRestoreRef.current) return;
+    const offset = restoredOffsetRef.current;
+    if (offset > 0 && height > offset) {
+      applyOffset(offset);
+    }
+  }, [applyOffset]);
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
       const scrollY = contentOffset.y;
+      if (pendingRestoreRef.current && scrollY < 1 && restoredOffsetRef.current > 1) {
+        return;
+      }
+      pendingRestoreRef.current = false;
+      onOffsetChangeRef.current?.(scrollY);
       const deltaY = scrollY - lastScrollYRef.current;
       scrollYRef.current = scrollY;
       lastScrollYRef.current = scrollY;
@@ -74,6 +104,7 @@ export function useScrollProgress({
     scrollYRef,
     showFab,
     handleScroll,
+    handleContentSizeChange,
     scrollToTop,
   };
 }

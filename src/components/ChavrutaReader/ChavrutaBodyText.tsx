@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Text, type StyleProp, type TextStyle } from 'react-native';
 import { useTheme } from '../../theme';
-import { parseChavrutaBodyParts } from '../../utils/parseChavrutaHtml';
+import { chavrutaFootnoteLabel, parseChavrutaBodyParts } from '../../utils/parseChavrutaHtml';
 import type { ChavrutaFootnote } from '../../services/chavrutaApi';
 import ChavrutaFootnoteMark from './ChavrutaFootnoteMark';
 import { createChavrutaBodyTextStyles } from './ChavrutaBodyText.styles';
@@ -11,7 +11,6 @@ interface ChavrutaBodyTextProps {
   baseStyle: StyleProp<TextStyle>;
   fontSize: number;
   accentColor: string;
-  accentSourceWords?: boolean;
   showNotes: boolean;
   footnotesById: Map<number, ChavrutaFootnote>;
   onPressFootnote: (footnote: ChavrutaFootnote) => void;
@@ -22,7 +21,6 @@ export default function ChavrutaBodyText({
   baseStyle,
   fontSize,
   accentColor,
-  accentSourceWords = true,
   showNotes,
   footnotesById,
   onPressFootnote,
@@ -49,7 +47,7 @@ export default function ChavrutaBodyText({
           return (
             <ChavrutaFootnoteMark
               key={`fn-${part.id}-${index}`}
-              label={String(footnote.n)}
+              label={chavrutaFootnoteLabel(footnote)}
               fontSize={markSize}
               accentColor={accentColor}
               onPress={() => onPressFootnote(footnote)}
@@ -63,7 +61,7 @@ export default function ChavrutaBodyText({
               key={`gemara-${index}`}
               style={[
                 styles.gemaraRun,
-                accentSourceWords ? { color: accentColor } : null,
+                { color: accentColor },
               ]}
             >
               {part.text}
