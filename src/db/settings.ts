@@ -8,6 +8,7 @@ import {
   schedulesFromSingleTime,
   type DafDayStartDaySchedule,
 } from '../utils/dafDayBoundary';
+import { normalizeAutoBackupInterval } from '../utils/autoBackupInterval';
 import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
 import { clampReaderViewMode, READER_VIEW_MODE_DEFAULT } from '../utils/readerViewMode';
 import { db } from './connection';
@@ -65,6 +66,11 @@ function createDefaultSettingsRecord(): SettingsRecord {
     last_store_review_prompt_at: null,
     store_review_streak7_prompted: 0,
     reader_theme: 'system',
+    auto_backup_enabled: 0,
+    auto_backup_interval: 'weekly',
+    auto_backup_file_uri: null,
+    auto_backup_previous_file_uri: null,
+    auto_backup_failed: 0,
   };
 }
 
@@ -94,6 +100,11 @@ function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
     daf_day_start_schedules: JSON.stringify(schedules),
     store_review_streak7_prompted: row.store_review_streak7_prompted === 1 ? 1 : 0,
     reader_theme: row.reader_theme || 'system',
+    auto_backup_enabled: row.auto_backup_enabled === 1 ? 1 : 0,
+    auto_backup_interval: normalizeAutoBackupInterval(row.auto_backup_interval),
+    auto_backup_file_uri: row.auto_backup_file_uri || null,
+    auto_backup_previous_file_uri: row.auto_backup_previous_file_uri || null,
+    auto_backup_failed: row.auto_backup_failed === 1 ? 1 : 0,
   };
 }
 
@@ -189,6 +200,27 @@ export function setKeepScreenAwake(enabled: boolean) {
 
 export function setLastBackupAt(iso: string) {
   db.runSync('UPDATE settings SET last_backup_at = ? WHERE id = 1', [iso]);
+}
+
+export function setAutoBackupEnabled(enabled: boolean) {
+  db.runSync('UPDATE settings SET auto_backup_enabled = ? WHERE id = 1', [enabled ? 1 : 0]);
+}
+
+export function setAutoBackupInterval(interval: string) {
+  db.runSync('UPDATE settings SET auto_backup_interval = ? WHERE id = 1', [
+    normalizeAutoBackupInterval(interval),
+  ]);
+}
+
+export function saveAutoBackupLocation(currentUri: string, previousUri: string) {
+  db.runSync(
+    'UPDATE settings SET auto_backup_file_uri = ?, auto_backup_previous_file_uri = ?, auto_backup_enabled = 1, auto_backup_failed = 0 WHERE id = 1',
+    [currentUri, previousUri],
+  );
+}
+
+export function setAutoBackupFailed(failed: boolean) {
+  db.runSync('UPDATE settings SET auto_backup_failed = ? WHERE id = 1', [failed ? 1 : 0]);
 }
 
 export function markStoreReviewPrompted(reason: 'siyum' | 'streak7') {

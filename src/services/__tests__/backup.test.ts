@@ -85,6 +85,11 @@ describe('backup security and validation', () => {
       last_store_review_prompt_at: null,
       store_review_streak7_prompted: 0,
       reader_theme: 'system',
+      auto_backup_enabled: 0,
+      auto_backup_interval: 'weekly',
+      auto_backup_file_uri: null,
+      auto_backup_previous_file_uri: null,
+      auto_backup_failed: 0,
     },
     personalTrackRecords: [
       {
@@ -105,6 +110,29 @@ describe('backup security and validation', () => {
       expect(result.data.records.length).toBe(1);
       expect(result.data.records[0].date).toBe('2026-09-24');
       expect(result.data.personalTrackRecords?.length).toBe(1);
+    }
+  });
+
+  it('drops device auto backup paths from parsed settings', () => {
+    const json = JSON.stringify({
+      ...validBackup,
+      settings: {
+        ...validBackup.settings,
+        auto_backup_enabled: 1,
+        auto_backup_interval: 'daily',
+        auto_backup_file_uri: 'content://device/current',
+        auto_backup_previous_file_uri: 'content://device/previous',
+        auto_backup_failed: 1,
+      },
+    });
+    const result = parseBackupJson(json);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data.settings.auto_backup_enabled).toBe(0);
+      expect(result.data.settings.auto_backup_interval).toBe('daily');
+      expect(result.data.settings.auto_backup_file_uri).toBeNull();
+      expect(result.data.settings.auto_backup_previous_file_uri).toBeNull();
+      expect(result.data.settings.auto_backup_failed).toBe(0);
     }
   });
 

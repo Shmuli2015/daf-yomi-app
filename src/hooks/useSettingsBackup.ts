@@ -1,4 +1,12 @@
 import { useState, useCallback } from 'react';
+import { Platform } from 'react-native';
+import { getSettings } from '../db/database';
+import {
+  disableAutoBackup,
+  enableAutoBackupWithPicker,
+  enableExistingAutoBackup,
+  updateAutoBackupInterval,
+} from '../services/autoBackup';
 import {
   saveBackupToDevice,
   exportAndShareBackup,
@@ -7,6 +15,8 @@ import {
   type BackupData,
   type BackupPreview,
 } from '../services/backup';
+import { useAppStore } from '../store/useAppStore';
+import type { AutoBackupInterval } from '../utils/autoBackupInterval';
 import { scheduleNotifications } from '../utils/notifications';
 import type { SettingsFeedback } from './useSettingsFeedback';
 
@@ -30,6 +40,91 @@ export function useSettingsBackup({
     setPendingBackup(null);
     setBackupPreview(null);
   }, []);
+
+  const refreshSettings = useCallback(() => {
+    useAppStore.getState().refreshSettings();
+  }, []);
+
+  const handleAutoBackupToggle = useCallback(async (enabled: boolean) => {
+    if (Platform.OS !== 'android') return;
+    if (!enabled) {
+      disableAutoBackup();
+      refreshSettings();
+      return;
+    }
+
+    const settings = getSettings();
+    const hasFolder = Boolean(settings.auto_backup_file_uri && settings.auto_backup_previous_file_uri);
+    try {
+      const result = hasFolder
+        ? await enableExistingAutoBackup()
+        : await enableAutoBackupWithPicker();
+      refreshSettings();
+      if (result === 'cancelled') return;
+      if (result === 'enabled') {
+        onFeedback({
+          title: 'הגיבוי האוטומטי הופעל',
+          message: hasFolder
+            ? 'הגיבוי יתעדכן בתיקייה שנבחרה לפי התדירות שבהגדרות.'
+            : 'קובץ הגיבוי נשמר בתיקייה שבחרת, ויתעדכן לפי התדירות שבהגדרות.',
+          iconName: 'checkmark-circle',
+          compact: true,
+        });
+        return;
+      }
+      onFeedback({
+        title: 'שגיאה בגיבוי אוטומטי',
+        message: 'לא הצלחנו לשמור את קובץ הגיבוי. בחר תיקייה אחרת ונסה שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    } catch {
+      refreshSettings();
+      onFeedback({
+        title: 'שגיאה בגיבוי אוטומטי',
+        message: 'לא הצלחנו לשמור את קובץ הגיבוי. בחר תיקייה אחרת ונסה שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    }
+  }, [onFeedback, refreshSettings]);
+
+  const handleAutoBackupIntervalChange = useCallback((interval: AutoBackupInterval) => {
+    updateAutoBackupInterval(interval);
+    refreshSettings();
+  }, [refreshSettings]);
+
+  const handleChangeAutoBackupFolder = useCallback(async () => {
+    if (Platform.OS !== 'android') return;
+    try {
+      const result = await enableAutoBackupWithPicker();
+      refreshSettings();
+      if (result === 'cancelled') return;
+      if (result === 'enabled') {
+        onFeedback({
+          title: 'תיקיית הגיבוי עודכנה',
+          message: 'קובץ הגיבוי נשמר בתיקייה החדשה.',
+          iconName: 'checkmark-circle',
+          compact: true,
+        });
+        return;
+      }
+      onFeedback({
+        title: 'שגיאה בגיבוי אוטומטי',
+        message: 'לא הצלחנו לשמור את קובץ הגיבוי. בחר תיקייה אחרת ונסה שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    } catch {
+      refreshSettings();
+      onFeedback({
+        title: 'שגיאה בגיבוי אוטומטי',
+        message: 'לא הצלחנו לשמור את קובץ הגיבוי. בחר תיקייה אחרת ונסה שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    }
+  }, [onFeedback, refreshSettings]);
 
   const handleSaveBackupToFile = useCallback(async () => {
     try {
@@ -153,6 +248,9 @@ export function useSettingsBackup({
     backupPreview,
     showBackupImportModal,
     clearBackupImportState,
+    handleAutoBackupToggle,
+    handleAutoBackupIntervalChange,
+    handleChangeAutoBackupFolder,
     handleSaveBackupToFile,
     handleShareBackup,
     handleImportBackupPick,

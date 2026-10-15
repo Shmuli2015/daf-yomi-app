@@ -71,7 +71,13 @@ export function buildOfflineSummary(
   return base;
 }
 
-export function buildBackupSummary(lastBackupAt: string | null): string {
+export function buildBackupSummary(
+  lastBackupAt: string | null,
+  autoBackupEnabled = false,
+  autoBackupFailed = false,
+): string {
+  if (autoBackupFailed) return 'הגיבוי האוטומטי נכשל';
+  if (autoBackupEnabled) return 'גיבוי אוטומטי';
   const backupFormatted = formatLastBackupAt(lastBackupAt);
   return backupFormatted ? 'מעודכן' : 'טרם גובה';
 }

@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -169,6 +169,9 @@ export default function SettingsScreen() {
     backupPreview,
     showBackupImportModal,
     clearBackupImportState,
+    handleAutoBackupToggle,
+    handleAutoBackupIntervalChange,
+    handleChangeAutoBackupFolder,
     handleSaveBackupToFile,
     handleShareBackup,
     handleImportBackupPick,
@@ -329,6 +332,15 @@ export default function SettingsScreen() {
             }}
             backupData={{
               lastBackupAt: settings.last_backup_at,
+              autoBackupAvailable: Platform.OS === 'android',
+              autoBackupEnabled: settings.auto_backup_enabled === 1,
+              autoBackupInterval: settings.auto_backup_interval,
+              autoBackupFailed: settings.auto_backup_failed === 1,
+              onAutoBackupToggle: Platform.OS === 'android' ? handleAutoBackupToggle : undefined,
+              onAutoBackupIntervalChange:
+                Platform.OS === 'android' ? handleAutoBackupIntervalChange : undefined,
+              onChangeAutoBackupFolder:
+                Platform.OS === 'android' ? handleChangeAutoBackupFolder : undefined,
               onSaveBackupToFile: handleSaveBackupToFile,
               onShareBackup: handleShareBackup,
               onImportBackup: handleImportBackupPick,

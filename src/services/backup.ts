@@ -15,6 +15,7 @@ import {
   type PersonalTrackRecord,
 } from '../db/database';
 import { toFileSharingUrl } from '../utils/shareProgressImage';
+import { normalizeAutoBackupInterval } from '../utils/autoBackupInterval';
 import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
 
 export const CURRENT_BACKUP_VERSION = 2;
@@ -63,7 +64,7 @@ export function buildBackupData(): BackupData {
     exportedAt: new Date().toISOString(),
     appVersion: Constants.expoConfig?.version ?? 'unknown',
     records: getAllRecords().map(stripRecordId),
-    settings: stripSettingsId(getSettings()),
+    settings: settingsForExport(stripSettingsId(getSettings())),
     personalTrackRecords: getPersonalTrackRecords(),
   };
 }
@@ -152,6 +153,21 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     last_store_review_prompt_at: nullableStr('last_store_review_prompt_at'),
     store_review_streak7_prompted: num('store_review_streak7_prompted', 0),
     reader_theme: str('reader_theme', 'system'),
+    auto_backup_enabled: 0,
+    auto_backup_interval: normalizeAutoBackupInterval(s.auto_backup_interval),
+    auto_backup_file_uri: null,
+    auto_backup_previous_file_uri: null,
+    auto_backup_failed: 0,
+  };
+}
+
+function settingsForExport(settings: BackupSettings): BackupSettings {
+  return {
+    ...settings,
+    auto_backup_enabled: 0,
+    auto_backup_file_uri: null,
+    auto_backup_previous_file_uri: null,
+    auto_backup_failed: 0,
   };
 }
 

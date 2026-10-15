@@ -10,6 +10,7 @@ import type {
   OfflinePrefetchStatus,
 } from '../../services/offlinePrefetch';
 import type { OfflineMasechetTarget } from '../../hooks/useOfflinePrefetch';
+import type { AutoBackupInterval } from '../../utils/autoBackupInterval';
 
 export type SettingsNotificationsProps = {
   notificationsEnabled: boolean;
@@ -70,6 +71,13 @@ export type SettingsDisplayProps = {
 
 export type SettingsBackupDataProps = {
   lastBackupAt: string | null;
+  autoBackupAvailable?: boolean;
+  autoBackupEnabled?: boolean;
+  autoBackupInterval?: string;
+  autoBackupFailed?: boolean;
+  onAutoBackupToggle?: (enabled: boolean) => void;
+  onAutoBackupIntervalChange?: (interval: AutoBackupInterval) => void;
+  onChangeAutoBackupFolder?: () => void;
   onSaveBackupToFile?: () => void;
   onShareBackup?: () => void;
   onImportBackup?: () => void;

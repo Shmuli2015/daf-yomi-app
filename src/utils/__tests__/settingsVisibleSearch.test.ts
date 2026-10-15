@@ -17,6 +17,8 @@ const baseCtx: VisibleSettingsSearchContext = {
   hasSaveBackup: true,
   hasShareBackup: true,
   hasImportBackup: true,
+  hasAutoBackup: false,
+  autoBackupEnabled: false,
   hasClearCache: true,
   hasOfflinePrefetch: true,
   hasAutoUpdate: true,
@@ -80,6 +82,24 @@ describe('settingsVisibleSearch', () => {
     expect(hasVisibleSectionMatch('מטמון', 'offline', baseCtx)).toBe(true);
     expect(hasVisibleSectionMatch('מטמון', 'backup_data', baseCtx)).toBe(false);
     expect(getMatchingSectionKeys('מטמון', baseCtx)).toEqual(['offline']);
+  });
+
+  it('shows automatic backup rows only when the feature is available', () => {
+    expect(hasVisibleSettingsMatch('גיבוי אוטומטי', baseCtx)).toBe(false);
+    expect(
+      hasVisibleSettingsMatch('תדירות הגיבוי', {
+        ...baseCtx,
+        hasAutoBackup: true,
+        autoBackupEnabled: false,
+      }),
+    ).toBe(false);
+    expect(
+      hasVisibleSettingsMatch('תדירות הגיבוי', {
+        ...baseCtx,
+        hasAutoBackup: true,
+        autoBackupEnabled: true,
+      }),
+    ).toBe(true);
   });
 
   it('matches sections independently for accordion filtering', () => {

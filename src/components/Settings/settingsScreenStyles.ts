@@ -80,6 +80,18 @@ export function createSettingsScreenStyles(theme: Theme) {
       marginTop: 10,
       marginHorizontal: 28,
       lineHeight: 18,
+      width: '100%',
+      alignSelf: 'stretch',
+    },
+    backupError: {
+      color: theme.colors.danger,
+      fontSize: 12,
+      textAlign: 'center',
+      marginTop: 10,
+      marginHorizontal: 28,
+      lineHeight: 18,
+      width: '100%',
+      alignSelf: 'stretch',
     },
     noResultsContainer: {
       alignItems: 'center',
