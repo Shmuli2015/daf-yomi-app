@@ -24,6 +24,8 @@ describe('settingsSummaries', () => {
   it('separates backup status from offline cache size', () => {
     expect(buildBackupSummary(null)).toBe('טרם גובה');
     expect(buildBackupSummary('2024-01-01T00:00:00.000Z')).toBe('מעודכן');
+    expect(buildBackupSummary('2024-01-01T00:00:00.000Z', true)).toBe('גיבוי אוטומטי');
+    expect(buildBackupSummary('2024-01-01T00:00:00.000Z', true, true)).toBe('הגיבוי האוטומטי נכשל');
   });
 
   it('builds offline summary from status label', () => {

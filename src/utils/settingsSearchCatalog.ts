@@ -155,6 +155,24 @@ export const READER_SEARCH_ITEMS: SearchableSetting[] = [
   FONT_SIZE_SETTING,
 ];
 
+export const AUTO_BACKUP_ITEM: SearchableSetting = {
+  title: 'גיבוי אוטומטי',
+  description: 'שומר את נתוני הלימוד לתיקייה שנבחרה בכל פתיחת האפליקציה',
+  synonyms: ['אוטומטי', 'תזמון', 'תיקייה', 'אנדרואיד'],
+};
+
+export const AUTO_BACKUP_INTERVAL_ITEM: SearchableSetting = {
+  title: 'תדירות הגיבוי',
+  description: 'יומי, שבועי או חודשי',
+  synonyms: ['יומי', 'שבועי', 'חודשי', 'מרווח'],
+};
+
+export const AUTO_BACKUP_FOLDER_ITEM: SearchableSetting = {
+  title: 'החלפת תיקיית גיבוי',
+  description: 'בחר תיקייה אחרת לקובץ הגיבוי',
+  synonyms: ['תיקייה', 'מיקום', 'החלפה'],
+};
+
 export const SAVE_ITEM: SearchableSetting = {
   title: 'שמור גיבוי לקובץ',
   description: 'בחר תיקייה (למשל הורדות) ושמור קובץ JSON במכשיר',

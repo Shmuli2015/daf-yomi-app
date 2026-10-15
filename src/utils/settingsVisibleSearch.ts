@@ -3,6 +3,9 @@ import type { ExactAlarmStatus } from './exactAlarm';
 import type { NotificationPermissionStatus } from './notificationPermission';
 import { matchesAnySetting, matchesSetting, type SearchableSetting } from './settingsSearch';
 import {
+  AUTO_BACKUP_FOLDER_ITEM,
+  AUTO_BACKUP_INTERVAL_ITEM,
+  AUTO_BACKUP_ITEM,
   AUTO_UPDATE_ITEM,
   BACKUP_SEARCH_ITEMS,
   CALENDAR_ITEM,
@@ -50,6 +53,8 @@ export type VisibleSettingsSearchContext = {
   hasSaveBackup: boolean;
   hasShareBackup: boolean;
   hasImportBackup: boolean;
+  hasAutoBackup: boolean;
+  autoBackupEnabled: boolean;
   hasClearCache: boolean;
   hasOfflinePrefetch: boolean;
   hasAutoUpdate: boolean;
@@ -104,6 +109,10 @@ function getOfflineSearchItems(ctx: VisibleSettingsSearchContext): SearchableSet
 
 function getBackupDataSearchItems(ctx: VisibleSettingsSearchContext): SearchableSetting[] {
   const items: SearchableSetting[] = [];
+  if (ctx.hasAutoBackup) items.push(AUTO_BACKUP_ITEM);
+  if (ctx.hasAutoBackup && ctx.autoBackupEnabled) {
+    items.push(AUTO_BACKUP_INTERVAL_ITEM, AUTO_BACKUP_FOLDER_ITEM);
+  }
   if (ctx.hasSaveBackup) items.push(SAVE_ITEM);
   if (ctx.hasShareBackup) items.push(SHARE_BACKUP_ITEM);
   if (ctx.hasImportBackup) items.push(IMPORT_ITEM);

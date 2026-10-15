@@ -129,6 +129,21 @@ export function initDB() {
   if (!columns.includes('reader_theme')) {
     db.execSync("ALTER TABLE settings ADD COLUMN reader_theme TEXT DEFAULT 'system';");
   }
+  if (!columns.includes('auto_backup_enabled')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_enabled INTEGER DEFAULT 0;');
+  }
+  if (!columns.includes('auto_backup_interval')) {
+    db.execSync("ALTER TABLE settings ADD COLUMN auto_backup_interval TEXT DEFAULT 'weekly';");
+  }
+  if (!columns.includes('auto_backup_file_uri')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_file_uri TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('auto_backup_previous_file_uri')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_previous_file_uri TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('auto_backup_failed')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_failed INTEGER DEFAULT 0;');
+  }
 
   db.execSync(`
     INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)

@@ -7,6 +7,7 @@ import { useAppStore } from './src/store/useAppStore';
 import * as Notifications from 'expo-notifications';
 import { useNotificationsSetup } from './src/hooks/useNotificationsSetup';
 import { useAppInitialization } from './src/hooks/useAppInitialization';
+import { useAutoBackup } from './src/hooks/useAutoBackup';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SplashScreen from './src/components/SplashScreen';
 import { ThemeProvider, ThemeMode, resolveThemeScheme, getNavigationThemeColors } from './src/theme';
@@ -52,6 +53,7 @@ if (!isExpoGo) {
 
 function App() {
   const { isReady, showSplash, onSplashFinish } = useAppInitialization();
+  useAutoBackup(isReady);
   const themeMode = (useAppStore(state => state.settings?.theme_mode) || 'system') as ThemeMode;
   const systemScheme = (useColorScheme() || 'dark') as 'dark' | 'light';
   useNotificationsSetup();

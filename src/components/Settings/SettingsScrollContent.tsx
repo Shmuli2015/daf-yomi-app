@@ -88,6 +88,8 @@ export default function SettingsScrollContent({
     hasSaveBackup: backupData.onSaveBackupToFile != null,
     hasShareBackup: backupData.onShareBackup != null,
     hasImportBackup: backupData.onImportBackup != null,
+    hasAutoBackup: backupData.autoBackupAvailable === true && backupData.onAutoBackupToggle != null,
+    autoBackupEnabled: backupData.autoBackupEnabled === true,
     hasClearCache: offline.onClearCacheOpen != null,
     hasOfflinePrefetch: offline.onDownloadDays != null,
     hasAutoUpdate:
@@ -121,7 +123,11 @@ export default function SettingsScrollContent({
     display.dafDayStartHour,
     display.dafDayStartMinute,
   );
-  const backupSummary = buildBackupSummary(backupData.lastBackupAt);
+  const backupSummary = buildBackupSummary(
+    backupData.lastBackupAt,
+    backupData.autoBackupEnabled === true,
+    backupData.autoBackupFailed === true,
+  );
   const offlineSummary = buildOfflineSummary(
     offline.offlinePrefetchStatusLabel,
     storageSizeFormatted,
@@ -348,6 +354,13 @@ export default function SettingsScrollContent({
                     isFirst
                     embedded
                     lastBackupAt={backupData.lastBackupAt}
+                    autoBackupAvailable={backupData.autoBackupAvailable}
+                    autoBackupEnabled={backupData.autoBackupEnabled}
+                    autoBackupInterval={backupData.autoBackupInterval}
+                    autoBackupFailed={backupData.autoBackupFailed}
+                    onAutoBackupToggle={backupData.onAutoBackupToggle}
+                    onAutoBackupIntervalChange={backupData.onAutoBackupIntervalChange}
+                    onChangeAutoBackupFolder={backupData.onChangeAutoBackupFolder}
                     onSaveBackupToFile={backupData.onSaveBackupToFile}
                     onShareBackup={backupData.onShareBackup}
                     onImportBackup={backupData.onImportBackup}

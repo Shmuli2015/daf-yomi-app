@@ -52,6 +52,11 @@ export interface SettingsRecord {
   last_store_review_prompt_at: string | null;
   store_review_streak7_prompted: number;
   reader_theme: string;
+  auto_backup_enabled: number;
+  auto_backup_interval: string;
+  auto_backup_file_uri: string | null;
+  auto_backup_previous_file_uri: string | null;
+  auto_backup_failed: number;
 }
 
 export type DailyRecordInput = Omit<DailyRecord, 'id'>;
