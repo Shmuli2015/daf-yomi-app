@@ -28,6 +28,7 @@ interface HomeHeroCardProps {
   masechetProgressPct?: number;
   masechetLearnedCountLabel?: string;
   masechetTotalCount?: number;
+  masechetEndLabel?: string;
   animatedProgressStyle: any;
   animatedContentStyle?: any;
   animatedTodayContentStyle?: any;
@@ -57,6 +58,7 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
   masechetProgressPct = 0,
   masechetLearnedCountLabel = '0',
   masechetTotalCount = 0,
+  masechetEndLabel,
   animatedProgressStyle,
   animatedContentStyle,
   animatedTodayContentStyle,
@@ -181,6 +183,9 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
           <View style={styles.progressBarBg}>
             <Animated.View style={[styles.progressBarFill, animatedProgressStyle]} />
           </View>
+          {masechetEndLabel ? (
+            <Text style={styles.masechetEndLabel}>{masechetEndLabel}</Text>
+          ) : null}
         </View>
 
         <View style={styles.actionsContainer}>

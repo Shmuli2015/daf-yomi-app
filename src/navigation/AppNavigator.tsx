@@ -5,11 +5,14 @@ import CalendarScreen from '../screens/CalendarScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import StandardTabBar from './StandardTabBar';
+import { useOpenDafFromNotification } from '../hooks/useOpenDafFromNotification';
 import type { MainTabParamList } from './types';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export default function AppNavigator() {
+  useOpenDafFromNotification();
+
   return (
     <Tab.Navigator
       initialRouteName="Home"

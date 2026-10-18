@@ -24,6 +24,12 @@ export const SOUND_ITEM: SearchableSetting = {
   synonyms: ['סאונד', 'שקט', 'קול'],
 };
 
+export const OPENS_DAF_ITEM: SearchableSetting = {
+  title: 'פתיחת הדף מהתראה',
+  description: 'לחיצה על התזכורת פותחת ישר את הדף היומי בקורא',
+  synonyms: ['התראה', 'קורא', 'דף יומי', 'פתיחה', 'תזכורת'],
+};
+
 export const EXACT_ITEM: SearchableSetting = {
   title: 'תזכורות מדויקות',
   synonyms: ['מדויק', 'אנדרואיד', 'אלרם'],
@@ -40,6 +46,7 @@ export const NOTIFICATIONS_SEARCH_ITEMS: SearchableSetting[] = [
   MODE_ITEM,
   TIME_ITEM,
   SOUND_ITEM,
+  OPENS_DAF_ITEM,
   EXACT_ITEM,
   PERMISSION_ITEM,
 ];

@@ -44,21 +44,21 @@ export function useMasechetModal({
   const markPersonalDafLearned = useAppStore((s) => s.markPersonalDafLearned);
   const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
   const setPersonalDafStudyStatus = useAppStore((s) => s.setPersonalDafStudyStatus);
-  const setActivePersonalMasechet = useAppStore((s) => s.setActivePersonalMasechet);
-  const clearActivePersonalMasechet = useAppStore((s) => s.clearActivePersonalMasechet);
+  const pinPersonalMasechet = useAppStore((s) => s.pinPersonalMasechet);
+  const unpinPersonalMasechet = useAppStore((s) => s.unpinPersonalMasechet);
 
   const {
     history,
     progressCache,
     personalTrackRecords,
-    activePersonalMasechet,
+    pinnedPersonalMasechtot,
     settings,
   } = useAppStore(
     useShallow((s) => ({
       history: s.history,
       progressCache: s.progressCache,
       personalTrackRecords: s.personalTrackRecords,
-      activePersonalMasechet: s.activePersonalMasechet,
+      pinnedPersonalMasechtot: s.pinnedPersonalMasechtot,
       settings: s.settings,
     })),
   );
@@ -106,14 +106,14 @@ export function useMasechetModal({
     ? Math.round((masechetStats.learned / masechetStats.total) * 100)
     : 0;
 
-  const isHomeActive = activePersonalMasechet === masechet.en;
+  const isHomeActive = pinnedPersonalMasechtot.includes(masechet.en);
   const handleToggleHomeActive = useCallback(() => {
     if (isHomeActive) {
-      clearActivePersonalMasechet();
+      unpinPersonalMasechet(masechet.en);
     } else {
-      setActivePersonalMasechet(masechet.en);
+      pinPersonalMasechet(masechet.en);
     }
-  }, [isHomeActive, masechet.en, clearActivePersonalMasechet, setActivePersonalMasechet]);
+  }, [isHomeActive, masechet.en, unpinPersonalMasechet, pinPersonalMasechet]);
 
   const handleRequestClose = useCallback(() => {
     if (pendingAction !== null) {

@@ -20,6 +20,7 @@ import { triggerSelection } from '../utils/haptics';
 import { useReaderFontSize } from './useReaderFontSize';
 import { useAppStore } from '../store/useAppStore';
 import { clampReaderViewMode } from '../utils/readerViewMode';
+import { describeSefariaLoadError } from '../utils/sefariaLoadErrorMessage';
 
 export type NavDirection = 'next' | 'prev' | null;
 
@@ -50,10 +51,9 @@ export function useDafReader(initialLocation: DafLocation) {
   const classicTabLabel = mishnahOnly ? 'משנה' : 'גמרא';
   const nikudAvailable = !mishnahOnly && !isShekalimMasechet(normalizedMasechet);
   const viewMode = useMemo<ViewMode>(() => {
-    if (storedViewMode === 'chavruta' && !chavrutaAvailable) return 'classic';
     if (storedViewMode === 'steinsaltz' && !steinsaltzAvailable) return 'classic';
     return storedViewMode;
-  }, [storedViewMode, chavrutaAvailable, steinsaltzAvailable]);
+  }, [storedViewMode, steinsaltzAvailable]);
   const showChavrutaNotes = storedShowNotes;
   const chavruta = useChavrutaPage(
     { masechetEn: chavrutaLocation.masechetEn, dafNum: chavrutaLocation.dafNum, amud: chavrutaLocation.amud },
@@ -67,12 +67,11 @@ export function useDafReader(initialLocation: DafLocation) {
       const data = await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud);
       setSefariaData(data);
     } catch (err: unknown) {
-      const raw = err instanceof Error ? err.message : '';
-      setSefariaError(/[\u0590-\u05FF]/.test(raw) ? raw : 'שגיאה בטעינת הטקסט');
+      setSefariaError(describeSefariaLoadError(err, { gemaraNikud, nikudAvailable }));
     } finally {
       setSefariaLoading(false);
     }
-  }, [gemaraNikud]);
+  }, [gemaraNikud, nikudAvailable]);
 
   const prefetchAdjacentPages = useCallback((loc: DafLocation) => {
     const nextLoc = getNextAmud(loc);
@@ -89,15 +88,12 @@ export function useDafReader(initialLocation: DafLocation) {
     if (mode === viewMode) {
       return;
     }
-    if (mode === 'chavruta' && !chavrutaAvailable) {
-      return;
-    }
     if (mode === 'steinsaltz' && !steinsaltzAvailable) {
       return;
     }
     void triggerSelection();
     persistViewMode(mode);
-  }, [viewMode, chavrutaAvailable, steinsaltzAvailable, persistViewMode]);
+  }, [viewMode, steinsaltzAvailable, persistViewMode]);
 
   const handleToggleNotes = useCallback(() => {
     persistShowNotes(!showChavrutaNotes);

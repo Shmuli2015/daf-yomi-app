@@ -29,6 +29,8 @@ export type SettingsNotificationsProps = {
   onEditDayTime: (index: number) => void;
   soundEnabled: boolean;
   onSoundToggle: (enabled: boolean) => void;
+  opensDafEnabled: boolean;
+  onOpensDafToggle: (enabled: boolean) => void;
 };
 
 export type SettingsReaderProps = {

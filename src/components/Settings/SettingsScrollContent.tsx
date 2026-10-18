@@ -237,6 +237,8 @@ export default function SettingsScrollContent({
                     onNotificationPermissionPress={notifications.onNotificationPermissionPress}
                     soundEnabled={notifications.soundEnabled}
                     onSoundToggle={notifications.onSoundToggle}
+                    opensDafEnabled={notifications.opensDafEnabled}
+                    onOpensDafToggle={notifications.onOpensDafToggle}
                   />
                 </SettingsCollapsibleCard>
               ) : null}

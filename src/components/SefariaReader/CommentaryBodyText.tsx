@@ -25,7 +25,7 @@ export default function CommentaryBodyText({
   const runs = parseCommentaryRuns(prepared);
 
   return (
-    <Text style={baseStyle}>
+    <Text style={baseStyle} selectable>
       {'\u200F'}
       {runs.map((run, index) =>
         run.isGemara ? (

@@ -122,6 +122,9 @@ export function useOfflinePrefetch({
     }
   }, [isPrefetching]);
 
+  const nikudSavedLabel =
+    settings?.gemara_nikud !== 0 ? 'נשמרה גרסה עם ניקוד.' : 'נשמרה גרסה בלי ניקוד.';
+
   const reportResult = useCallback(
     (result: OfflinePrefetchResult, successMessage: string) => {
       if (result.cancelled) {
@@ -135,10 +138,24 @@ export function useOfflinePrefetch({
         return;
       }
 
+      if (result.diskWriteFailureCount > 0) {
+        onFeedback?.({
+          title: 'הדף לא נשמר במכשיר',
+          message:
+            result.successCount > 0
+              ? `נשמרו ${result.successCount} מתוך ${result.total} פריטים. בדקו שיש מקום פנוי במכשיר.`
+              : 'בדקו שיש מקום פנוי במכשיר ונסו שוב.',
+          iconName: 'alert-circle',
+          toast: true,
+          autoCloseMs: 4500,
+        });
+        return;
+      }
+
       if (result.failureCount === 0) {
         onFeedback?.({
           title: 'הדפים מוכנים לקריאה ללא רשת',
-          message: successMessage,
+          message: `${successMessage} ${nikudSavedLabel}`,
           iconName: 'cloud-done-outline',
           toast: true,
           autoCloseMs: 3500,
@@ -165,7 +182,7 @@ export function useOfflinePrefetch({
         autoCloseMs: 3500,
       });
     },
-    [onFeedback],
+    [nikudSavedLabel, onFeedback],
   );
 
   const runPrefetch = useCallback(

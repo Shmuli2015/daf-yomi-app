@@ -12,12 +12,14 @@ import {
 import { dismissStuckStudyReminders } from '../utils/dismissStuckStudyReminders';
 import { getNotificationIdFromActionData } from '../utils/dismissReminderFromTray';
 import { handleStudyReminderResponse } from '../utils/handleStudyReminderResponse';
+import { extendStudyReminders } from '../utils/extendStudyReminders';
 import { captureException } from '../services/sentry';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
 export function useNotificationsSetup() {
   const responseSubRef = useRef<EventSubscription | undefined>(undefined);
+  const receivedSubRef = useRef<EventSubscription | undefined>(undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,11 +28,17 @@ export function useNotificationsSetup() {
       void handleStudyReminderResponse({
         actionIdentifier: response.actionIdentifier,
         notificationId: getNotificationIdFromActionData(response) || response.notification?.request?.identifier,
+        response,
       });
     };
 
     responseSubRef.current?.remove();
     responseSubRef.current = Notifications.addNotificationResponseReceivedListener(onResponse);
+
+    receivedSubRef.current?.remove();
+    receivedSubRef.current = Notifications.addNotificationReceivedListener(() => {
+      void extendStudyReminders().catch(captureException);
+    });
 
     try {
       const initialResponse = Notifications.getLastNotificationResponse();
@@ -108,6 +116,8 @@ export function useNotificationsSetup() {
       appStateSub.remove();
       responseSubRef.current?.remove();
       responseSubRef.current = undefined;
+      receivedSubRef.current?.remove();
+      receivedSubRef.current = undefined;
     };
   }, []);
 }

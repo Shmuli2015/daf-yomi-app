@@ -149,6 +149,14 @@ export const createHomeHeroCardStyles = (theme: ReturnType<typeof useTheme>) =>
       fontSize: 13,
       fontWeight: '800',
     },
+    masechetEndLabel: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: '600',
+      alignSelf: 'stretch',
+      textAlign: Platform.OS === 'web' ? 'right' : 'left',
+      writingDirection: 'rtl',
+    },
     progressBarBg: {
       height: 6,
       backgroundColor: theme.colors.progressTrack,

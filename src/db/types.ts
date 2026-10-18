@@ -35,6 +35,7 @@ export interface SettingsRecord {
   show_calendar_daf: number;
   dismissed_half_daf_tip: number;
   active_personal_masechet: string | null;
+  pinned_personal_masechtot: string | null;
   show_personal_track_banner: number;
   reader_font_size: number;
   seen_app_version: string | null;
@@ -45,6 +46,7 @@ export interface SettingsRecord {
   keep_screen_awake: number;
   last_backup_at: string | null;
   notification_sound_enabled: number;
+  notification_opens_daf: number;
   daf_day_start_mode: string;
   daf_day_start_hour: number;
   daf_day_start_minute: number;

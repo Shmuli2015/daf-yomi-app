@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../../theme';
+import { useAppStore } from '../../../store/useAppStore';
 import { SectionHeader } from '../SectionHeader';
 import { SettingItem } from '../SettingItem';
 import type { SettingsSectionChrome } from '../settingsSection.types';
@@ -59,6 +60,8 @@ export default function SettingsOfflineSection({
   const theme = useTheme();
   const styles = useMemo(() => createSettingsOfflineSectionStyles(theme), [theme]);
   const [showPickerModal, setShowPickerModal] = useState(false);
+  const gemaraNikud = useAppStore((state) => state.settings?.gemara_nikud !== 0);
+  const nikudVersionLabel = gemaraNikud ? 'נשמרת גרסה עם ניקוד' : 'נשמרת גרסה בלי ניקוד';
 
   const cacheDescription = `מחיקת טקסטים שהורדו (${storageSizeFormatted}). אינו מוחק סימוני לימוד`;
   const showPrefetch = matchesSetting(searchQuery, OFFLINE_PREFETCH_ITEM);
@@ -123,7 +126,7 @@ export default function SettingsOfflineSection({
           <SettingItem
             icon="calendar-outline"
             title={`${dayCount} ימים קרובים`}
-            description="דפי הדף היומי לשבוע הקרוב"
+            description={`דפי הדף היומי לשבוע הקרוב (${nikudVersionLabel})`}
             value={actionValue(daysStatus)}
             onPress={isPrefetching ? undefined : onDownloadDays}
             isLast={isLastVisible(visibilityFlags, 0)}
@@ -135,7 +138,7 @@ export default function SettingsOfflineSection({
           <SettingItem
             icon="book-outline"
             title={`מסכת ${dafYomiMasechet.masechetHe}`}
-            description="כל עמודי מסכת הדף היומי הנוכחית"
+            description={`כל עמודי מסכת הדף היומי הנוכחית (${nikudVersionLabel})`}
             value={actionValue(dafYomiMasechet.status)}
             onPress={
               isPrefetching
@@ -155,7 +158,7 @@ export default function SettingsOfflineSection({
           <SettingItem
             icon="bookmark-outline"
             title={`מסלול אישי · ${personalMasechet.masechetHe}`}
-            description="כל עמודי המסכת הפעילה במסלול האישי"
+            description={`כל עמודי המסכת הפעילה במסלול האישי (${nikudVersionLabel})`}
             value={actionValue(personalMasechet.status)}
             onPress={
               isPrefetching

@@ -16,10 +16,12 @@ type UseHomeScreenActionsParams = {
   todayAmud: 'a' | 'b';
   partialAmud: 'a' | 'b' | null;
   activePersonalMasechet: string | null;
+  pinnedPersonalMasechtot: string[];
   detailMasechetEn: string | null;
   todayStr: string;
   setActivePersonalMasechet: (mEn: string | null) => void;
-  clearActivePersonalMasechet: () => void;
+  pinPersonalMasechet: (mEn: string) => void;
+  unpinPersonalMasechet: (mEn: string) => void;
   setDetailMasechetEn: (mEn: string | null) => void;
   openPersonalDetail: (mEn: string | null) => void;
   dismissNudgeForDay: (dayStr: string) => void;
@@ -34,10 +36,12 @@ export function useHomeScreenActions({
   todayAmud,
   partialAmud,
   activePersonalMasechet,
+  pinnedPersonalMasechtot,
   detailMasechetEn,
   todayStr,
   setActivePersonalMasechet,
-  clearActivePersonalMasechet,
+  pinPersonalMasechet,
+  unpinPersonalMasechet,
   setDetailMasechetEn,
   openPersonalDetail,
   dismissNudgeForDay,
@@ -92,10 +96,6 @@ export function useHomeScreenActions({
     dismissNudgeForDay(todayStr);
   }, [dismissNudgeForDay, todayStr]);
 
-  const handleOpenActivePersonalDetail = useCallback(() => {
-    openPersonalDetail(activePersonalMasechet);
-  }, [activePersonalMasechet, openPersonalDetail]);
-
   const handleSelectPersonalMasechet = useCallback(
     (mEn: string | null) => {
       setActivePersonalMasechet(mEn);
@@ -114,16 +114,17 @@ export function useHomeScreenActions({
   const handleToggleHomeActive = useCallback(() => {
     const current = detailMasechetEn || activePersonalMasechet;
     if (!current) return;
-    if (activePersonalMasechet === current) {
-      clearActivePersonalMasechet();
+    if (pinnedPersonalMasechtot.includes(current)) {
+      unpinPersonalMasechet(current);
     } else {
-      setActivePersonalMasechet(current);
+      pinPersonalMasechet(current);
     }
   }, [
     activePersonalMasechet,
-    clearActivePersonalMasechet,
     detailMasechetEn,
-    setActivePersonalMasechet,
+    pinPersonalMasechet,
+    pinnedPersonalMasechtot,
+    unpinPersonalMasechet,
   ]);
 
   const handleQuickJumpNavigate = useCallback(
@@ -155,7 +156,6 @@ export function useHomeScreenActions({
     handlePressShas,
     handleSelectDay,
     handleDismissNudge,
-    handleOpenActivePersonalDetail,
     handleSelectPersonalMasechet,
     handleOpenPersonalMasechetDetail,
     handleToggleHomeActive,
