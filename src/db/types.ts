@@ -59,6 +59,7 @@ export interface SettingsRecord {
   auto_backup_file_uri: string | null;
   auto_backup_previous_file_uri: string | null;
   auto_backup_failed: number;
+  auto_backup_issue: string | null;
 }
 
 export type DailyRecordInput = Omit<DailyRecord, 'id'>;

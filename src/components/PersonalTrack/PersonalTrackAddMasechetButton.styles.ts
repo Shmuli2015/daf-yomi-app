@@ -6,9 +6,12 @@ export function createPersonalTrackAddMasechetButtonStyles(theme: Theme) {
     button: {
       flexDirection: 'row',
       alignItems: 'center',
+      alignSelf: 'flex-start',
       justifyContent: 'center',
       gap: 6,
-      paddingVertical: 10,
+      marginTop: 12,
+      paddingVertical: 6,
+      paddingHorizontal: 12,
       borderRadius: theme.radius.md,
       borderWidth: 1,
       borderStyle: 'dashed',

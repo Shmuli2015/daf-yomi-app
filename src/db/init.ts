@@ -155,6 +155,9 @@ export function initDB() {
   if (!columns.includes('auto_backup_failed')) {
     db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_failed INTEGER DEFAULT 0;');
   }
+  if (!columns.includes('auto_backup_issue')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_issue TEXT DEFAULT NULL;');
+  }
 
   db.execSync(`
     INSERT OR IGNORE INTO settings (id, notification_hour, notification_minute)

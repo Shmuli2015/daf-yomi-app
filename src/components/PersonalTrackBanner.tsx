@@ -10,6 +10,7 @@ import { usePersonalTrackStats } from '../hooks/usePersonalTrackStats';
 import { useAppStore } from '../store/useAppStore';
 import { createPersonalTrackBannerStyles } from './PersonalTrack/PersonalTrackBanner.styles';
 import PersonalTrackOverviewCard from './PersonalTrack/PersonalTrackOverviewCard';
+import PersonalTrackAddMasechetButton from './PersonalTrack/PersonalTrackAddMasechetButton';
 import AccordionSlideContent from './AccordionSlideContent';
 import DafMarkMenuModal from './DafMarkMenuModal';
 import { useGuideSectionAnimation } from './Guide/useGuideSectionAnimation';
@@ -23,6 +24,7 @@ interface PersonalTrackBannerProps {
   onToggleDafLearned: (masechetEn: string, dafNum: number) => void;
   onOpenTzuratHadaf?: (masechetEn: string, dafNum: number) => void;
   hideMarkButton?: boolean;
+  showAddMasechet?: boolean;
   onOpenGuide?: () => void;
 }
 
@@ -34,6 +36,7 @@ export default function PersonalTrackBanner({
   onToggleDafLearned,
   onOpenTzuratHadaf,
   hideMarkButton = false,
+  showAddMasechet = false,
   onOpenGuide,
 }: PersonalTrackBannerProps) {
   const theme = useTheme();
@@ -203,6 +206,9 @@ export default function PersonalTrackBanner({
                 </TouchableOpacity>
               )}
             </View>
+            {showAddMasechet && (
+              <PersonalTrackAddMasechetButton onPress={onSelectMasechetPress} />
+            )}
           </View>
         </AccordionSlideContent>
       </View>

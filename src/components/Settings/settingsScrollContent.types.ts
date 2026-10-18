@@ -77,6 +77,7 @@ export type SettingsBackupDataProps = {
   autoBackupEnabled?: boolean;
   autoBackupInterval?: string;
   autoBackupFailed?: boolean;
+  autoBackupIssue?: string | null;
   onAutoBackupToggle?: (enabled: boolean) => void;
   onAutoBackupIntervalChange?: (interval: AutoBackupInterval) => void;
   onChangeAutoBackupFolder?: () => void;

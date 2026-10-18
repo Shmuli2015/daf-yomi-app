@@ -1,3 +1,4 @@
+import { formatLastBackupAt } from '../backupReminder';
 import {
   buildBackupSummary,
   buildDisplaySummary,
@@ -22,10 +23,17 @@ describe('settingsSummaries', () => {
   });
 
   it('separates backup status from offline cache size', () => {
+    const iso = '2024-01-01T00:00:00.000Z';
+    const lastBackupLabel = `גיבוי אחרון: ${formatLastBackupAt(iso)}`;
     expect(buildBackupSummary(null)).toBe('טרם גובה');
-    expect(buildBackupSummary('2024-01-01T00:00:00.000Z')).toBe('מעודכן');
-    expect(buildBackupSummary('2024-01-01T00:00:00.000Z', true)).toBe('גיבוי אוטומטי');
-    expect(buildBackupSummary('2024-01-01T00:00:00.000Z', true, true)).toBe('הגיבוי האוטומטי נכשל');
+    expect(buildBackupSummary(iso)).toBe(lastBackupLabel);
+    expect(buildBackupSummary(null, true)).toBe('גיבוי אוטומטי');
+    expect(buildBackupSummary(iso, true)).toBe(`גיבוי אוטומטי • ${lastBackupLabel}`);
+    expect(buildBackupSummary(null, true, true)).toBe('הגיבוי האוטומטי נכשל');
+    expect(buildBackupSummary(iso, true, true)).toBe(`הגיבוי האוטומטי נכשל • ${lastBackupLabel}`);
+    expect(buildBackupSummary(iso, true, true, 'missing')).toBe('קובץ הגיבוי לא נמצא');
+    expect(buildBackupSummary(iso, true, false, 'missing_previous')).toBe('קובץ הגיבוי לא נמצא');
+    expect(buildBackupSummary(iso, true, false, 'restored')).toBe('קובץ הגיבוי נשמר מחדש');
   });
 
   it('builds offline summary from status label', () => {
