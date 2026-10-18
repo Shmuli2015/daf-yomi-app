@@ -2,6 +2,7 @@ import type { ThemeMode } from '../theme';
 import type { ReaderTheme, ViewMode } from '../components/SefariaReader/ReaderToolbar';
 import type { DafDayStartMode } from './dafDayBoundary';
 import { formatLastBackupAt } from './backupReminder';
+import { isAutoBackupFileMissing, normalizeAutoBackupIssue } from './autoBackupIssue';
 import { getReaderViewModeLabel } from './readerViewMode';
 import { getReaderThemeLabel } from './readerTheme';
 
@@ -75,11 +76,20 @@ export function buildBackupSummary(
   lastBackupAt: string | null,
   autoBackupEnabled = false,
   autoBackupFailed = false,
+  autoBackupIssue: string | null = null,
 ): string {
-  if (autoBackupFailed) return 'הגיבוי האוטומטי נכשל';
-  if (autoBackupEnabled) return 'גיבוי אוטומטי';
+  const issue = normalizeAutoBackupIssue(autoBackupIssue);
+  if (isAutoBackupFileMissing(issue)) return 'קובץ הגיבוי לא נמצא';
+  if (issue === 'restored') return 'קובץ הגיבוי נשמר מחדש';
   const backupFormatted = formatLastBackupAt(lastBackupAt);
-  return backupFormatted ? 'מעודכן' : 'טרם גובה';
+  const lastBackupLabel = backupFormatted ? `גיבוי אחרון: ${backupFormatted}` : null;
+  if (autoBackupFailed || issue === 'failed') {
+    return lastBackupLabel ? `הגיבוי האוטומטי נכשל • ${lastBackupLabel}` : 'הגיבוי האוטומטי נכשל';
+  }
+  if (autoBackupEnabled) {
+    return lastBackupLabel ? `גיבוי אוטומטי • ${lastBackupLabel}` : 'גיבוי אוטומטי';
+  }
+  return lastBackupLabel ?? 'טרם גובה';
 }
 
 export function buildHelpSummary(appVersion?: string | null): string {

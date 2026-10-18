@@ -343,6 +343,7 @@ export default function SettingsScreen() {
               autoBackupEnabled: settings.auto_backup_enabled === 1,
               autoBackupInterval: settings.auto_backup_interval,
               autoBackupFailed: settings.auto_backup_failed === 1,
+              autoBackupIssue: settings.auto_backup_issue,
               onAutoBackupToggle: Platform.OS === 'android' ? handleAutoBackupToggle : undefined,
               onAutoBackupIntervalChange:
                 Platform.OS === 'android' ? handleAutoBackupIntervalChange : undefined,

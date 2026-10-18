@@ -11,6 +11,11 @@ import {
   type AutoBackupInterval,
 } from '../../../utils/autoBackupInterval';
 import type { SettingsChoiceOption } from '../Modals/SettingsChoiceModal';
+import {
+  autoBackupFailureMessage,
+  autoBackupIssueMessage,
+  normalizeAutoBackupIssue,
+} from '../../../utils/autoBackupIssue';
 import { formatLastBackupAt, getBackupReminderText } from '../../../utils/backupReminder';
 import { isLastVisible, matchesSetting } from '../../../utils/settingsSearch';
 import {
@@ -30,11 +35,13 @@ const INTERVAL_OPTIONS: Array<SettingsChoiceOption<AutoBackupInterval>> = [
 ];
 
 type SettingsBackupSectionProps = SettingsSectionChrome & {
+  showTrailingDivider?: boolean;
   lastBackupAt: string | null;
   autoBackupAvailable?: boolean;
   autoBackupEnabled?: boolean;
   autoBackupInterval?: string;
   autoBackupFailed?: boolean;
+  autoBackupIssue?: string | null;
   onAutoBackupToggle?: (enabled: boolean) => void;
   onAutoBackupIntervalChange?: (interval: AutoBackupInterval) => void;
   onChangeAutoBackupFolder?: () => void;
@@ -50,11 +57,13 @@ export default function SettingsBackupSection({
   searchQuery,
   isFirst,
   embedded,
+  showTrailingDivider = false,
   lastBackupAt,
   autoBackupAvailable = false,
   autoBackupEnabled = false,
   autoBackupInterval = 'weekly',
   autoBackupFailed = false,
+  autoBackupIssue = null,
   onAutoBackupToggle,
   onAutoBackupIntervalChange,
   onChangeAutoBackupFolder,
@@ -63,6 +72,9 @@ export default function SettingsBackupSection({
   onImportBackup,
 }: SettingsBackupSectionProps) {
   const theme = useTheme();
+  const issue = normalizeAutoBackupIssue(autoBackupIssue);
+  const issueMessage =
+    autoBackupIssueMessage(issue) ?? (autoBackupFailed ? autoBackupFailureMessage() : null);
   const [showIntervalModal, setShowIntervalModal] = useState(false);
   const lastLabel = formatLastBackupAt(lastBackupAt);
   const reminder = getBackupReminderText(lastBackupAt);
@@ -178,14 +190,15 @@ export default function SettingsBackupSection({
           ) : null}
         </View>
       ) : null}
-      {autoBackupFailed && !searchQuery.trim() ? (
-        <Text style={styles.backupError}>
-          לא הצלחנו לעדכן את קובץ הגיבוי. בחר תיקייה מחדש או בדוק שההרשאה לתיקייה עדיין פעילה.
+      {issueMessage && !searchQuery.trim() ? (
+        <Text style={issue === 'restored' ? styles.backupHint : styles.backupError}>
+          {issueMessage}
         </Text>
       ) : null}
       {reminder && !autoBackupEnabled && !searchQuery.trim() ? (
         <Text style={styles.backupHint}>{reminder}</Text>
       ) : null}
+      {showTrailingDivider ? <View style={styles.itemDivider} /> : null}
       <SettingsChoiceModal
         visible={showIntervalModal}
         title="תדירות הגיבוי"

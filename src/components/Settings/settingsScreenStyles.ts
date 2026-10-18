@@ -64,6 +64,10 @@ export function createSettingsScreenStyles(theme: Theme) {
       backgroundColor: theme.colors.surface,
       overflow: 'hidden',
     },
+    itemDivider: {
+      height: 1,
+      backgroundColor: theme.colors.border,
+    },
     privacyNote: {
       color: theme.colors.textMuted,
       fontSize: 12,

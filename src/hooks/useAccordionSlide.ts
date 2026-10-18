@@ -29,6 +29,7 @@ export interface AccordionCollapseScroll {
   startHeight: SharedValue<number>;
   initialNextY: SharedValue<number>;
   startScrollY: SharedValue<number>;
+  pinnedScrollY?: SharedValue<number>;
   onEnd: () => void;
 }
 
@@ -69,6 +70,9 @@ export function useAccordionSlide(
       }
       if (collapseScroll.startHeight.value < 0) {
         collapseScroll.startHeight.value = height;
+        if (collapseScroll.pinnedScrollY) {
+          collapseScroll.pinnedScrollY.value = collapseScroll.startScrollY.value;
+        }
         return;
       }
 
@@ -76,6 +80,9 @@ export function useAccordionSlide(
       if (removed > 0) {
         const nextY = collapseScroll.initialNextY.value - removed;
         const target = Math.min(collapseScroll.startScrollY.value, Math.max(0, nextY));
+        if (collapseScroll.pinnedScrollY) {
+          collapseScroll.pinnedScrollY.value = target;
+        }
         scrollTo(collapseScroll.scrollViewRef, 0, target, false);
       }
 

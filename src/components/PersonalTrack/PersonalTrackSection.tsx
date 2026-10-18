@@ -1,7 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
 import PersonalTrackBanner from '../PersonalTrackBanner';
-import PersonalTrackAddMasechetButton from './PersonalTrackAddMasechetButton';
 import type { PersonalTrackRecord } from '../../db/database';
 
 interface PersonalTrackSectionProps {
@@ -44,12 +43,13 @@ export default function PersonalTrackSection({
 
   return (
     <View style={{ marginTop: SECTION_GAP, gap: CARD_GAP }}>
-      {pinnedMasechtot.map((masechetEn) => (
+      {pinnedMasechtot.map((masechetEn, index) => (
         <PersonalTrackBanner
           key={masechetEn}
           activeMasechetEn={masechetEn}
           personalTrackRecords={personalTrackRecords}
           hideMarkButton={masechetEn === todayMasechetEn}
+          showAddMasechet={index === pinnedMasechtot.length - 1}
           onSelectMasechetPress={onSelectMasechetPress}
           onOpenMasechetDetailPress={onOpenMasechetDetailPress}
           onToggleDafLearned={onToggleDafLearned}
@@ -57,7 +57,6 @@ export default function PersonalTrackSection({
           onOpenGuide={onOpenGuide}
         />
       ))}
-      <PersonalTrackAddMasechetButton onPress={onSelectMasechetPress} />
     </View>
   );
 }

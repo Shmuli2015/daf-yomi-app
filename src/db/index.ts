@@ -33,6 +33,7 @@ export {
   setAutoBackupEnabled,
   setAutoBackupFailed,
   setAutoBackupInterval,
+  setAutoBackupIssue,
   setDafDayStartMode,
   setDafDayStartSchedules,
   setDafDayStartTime,

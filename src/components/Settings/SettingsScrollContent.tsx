@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
@@ -21,6 +21,8 @@ import InfoModal from '../InfoModal';
 import ContentLicensesModal from './Modals/ContentLicensesModal';
 import SiyumNusachModal from './Modals/SiyumNusachModal';
 import { SUPPORT_EMAIL } from '../../supportContact';
+import { matchesSetting } from '../../utils/settingsSearch';
+import { RESET_ITEM } from '../../utils/settingsSearchCatalog';
 import {
   hasVisibleSettingsMatch,
   countVisibleSettingsMatches,
@@ -37,6 +39,7 @@ import {
   buildReaderSummary,
 } from '../../utils/settingsSummaries';
 import { useSettingsAccordion, type SettingsSectionKey } from '../../hooks/useSettingsAccordion';
+import { settingsSectionIndex, useSettingsSectionScroll } from '../../hooks/useSettingsSectionScroll';
 import { useSettingsHelpChrome } from '../../hooks/useSettingsHelpChrome';
 import { useAppStore } from '../../store/useAppStore';
 import type { SettingsScrollContentProps } from './settingsScrollContent.types';
@@ -104,6 +107,10 @@ export default function SettingsScrollContent({
   const hasAnyMatch = hasVisibleSettingsMatch(searchQuery, searchContext);
   const resultCount = countVisibleSettingsMatches(searchQuery, searchContext);
   const isSearching = searchQuery.trim().length > 0;
+  const { scrollRef, onScroll, collapseScroll, prepareSectionChange } = useSettingsSectionScroll({
+    isSearching,
+    offlineStaysOpen: offline.isPrefetching,
+  });
 
   const storageSizeFormatted = offline.storageSizeFormatted ?? '0 B';
   const notifSummary = buildNotificationsSummary(
@@ -127,6 +134,7 @@ export default function SettingsScrollContent({
     backupData.lastBackupAt,
     backupData.autoBackupEnabled === true,
     backupData.autoBackupFailed === true,
+    backupData.autoBackupIssue,
   );
   const offlineSummary = buildOfflineSummary(
     offline.offlinePrefetchStatusLabel,
@@ -141,10 +149,13 @@ export default function SettingsScrollContent({
 
   return (
     <>
-      <ScrollView
+      <Animated.ScrollView
+        ref={scrollRef}
         style={styles.scroll}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
       >
         <View style={styles.body}>
           <Animated.View entering={FadeIn.duration(400).delay(0)} style={styles.pageHeader}>
@@ -176,6 +187,7 @@ export default function SettingsScrollContent({
               themeMode={display.themeMode}
               lastBackupAt={backupData.lastBackupAt}
               onNotificationsPress={() => {
+                prepareSectionChange(openSection, 'notifications');
                 openSectionByName('notifications');
                 if (notifications.notificationsEnabled && notifications.notifMode === 'daily') {
                   notifications.onDailyTimePress();
@@ -183,6 +195,7 @@ export default function SettingsScrollContent({
               }}
               onThemePress={display.onThemeModalOpen}
               onBackupPress={() => {
+                prepareSectionChange(openSection, 'backup_data');
                 openSectionByName('backup_data');
               }}
             />
@@ -214,7 +227,12 @@ export default function SettingsScrollContent({
                   icon="notifications-outline"
                   accentColor={theme.colors.accent}
                   isExpanded={isCardExpanded('notifications')}
-                  onToggle={() => toggleSection('notifications')}
+                  collapseScroll={collapseScroll}
+                  collapseCardIndex={settingsSectionIndex('notifications')}
+                  onToggle={() => {
+                    prepareSectionChange(openSection, 'notifications');
+                    toggleSection('notifications');
+                  }}
                 >
                   <SettingsNotificationsSection
                     styles={styles}
@@ -250,7 +268,12 @@ export default function SettingsScrollContent({
                   icon="book-outline"
                   accentColor={theme.colors.accent}
                   isExpanded={isCardExpanded('reader')}
-                  onToggle={() => toggleSection('reader')}
+                  collapseScroll={collapseScroll}
+                  collapseCardIndex={settingsSectionIndex('reader')}
+                  onToggle={() => {
+                    prepareSectionChange(openSection, 'reader');
+                    toggleSection('reader');
+                  }}
                 >
                   <SettingsReaderSection
                     styles={styles}
@@ -283,7 +306,12 @@ export default function SettingsScrollContent({
                   icon="color-palette-outline"
                   accentColor={theme.colors.gold}
                   isExpanded={isCardExpanded('display')}
-                  onToggle={() => toggleSection('display')}
+                  collapseScroll={collapseScroll}
+                  collapseCardIndex={settingsSectionIndex('display')}
+                  onToggle={() => {
+                    prepareSectionChange(openSection, 'display');
+                    toggleSection('display');
+                  }}
                 >
                   <SettingsDisplaySection
                     styles={styles}
@@ -318,7 +346,12 @@ export default function SettingsScrollContent({
                   icon="cloud-download-outline"
                   accentColor={theme.colors.accent}
                   isExpanded={isCardExpanded('offline')}
-                  onToggle={() => toggleSection('offline')}
+                  collapseScroll={collapseScroll}
+                  collapseCardIndex={settingsSectionIndex('offline')}
+                  onToggle={() => {
+                    prepareSectionChange(openSection, 'offline');
+                    toggleSection('offline');
+                  }}
                 >
                   <SettingsOfflineSection
                     styles={styles}
@@ -348,7 +381,12 @@ export default function SettingsScrollContent({
                   icon="cloud-upload-outline"
                   accentColor={theme.colors.success}
                   isExpanded={isCardExpanded('backup_data')}
-                  onToggle={() => toggleSection('backup_data')}
+                  collapseScroll={collapseScroll}
+                  collapseCardIndex={settingsSectionIndex('backup_data')}
+                  onToggle={() => {
+                    prepareSectionChange(openSection, 'backup_data');
+                    toggleSection('backup_data');
+                  }}
                 >
                   <SettingsBackupSection
                     styles={styles}
@@ -360,12 +398,14 @@ export default function SettingsScrollContent({
                     autoBackupEnabled={backupData.autoBackupEnabled}
                     autoBackupInterval={backupData.autoBackupInterval}
                     autoBackupFailed={backupData.autoBackupFailed}
+                    autoBackupIssue={backupData.autoBackupIssue}
                     onAutoBackupToggle={backupData.onAutoBackupToggle}
                     onAutoBackupIntervalChange={backupData.onAutoBackupIntervalChange}
                     onChangeAutoBackupFolder={backupData.onChangeAutoBackupFolder}
                     onSaveBackupToFile={backupData.onSaveBackupToFile}
                     onShareBackup={backupData.onShareBackup}
                     onImportBackup={backupData.onImportBackup}
+                    showTrailingDivider={matchesSetting(searchQuery, RESET_ITEM)}
                   />
                   <SettingsDataSection
                     styles={styles}
@@ -384,7 +424,12 @@ export default function SettingsScrollContent({
                   icon="information-circle-outline"
                   accentColor={theme.colors.accent}
                   isExpanded={isCardExpanded('help_updates')}
-                  onToggle={() => toggleSection('help_updates')}
+                  collapseScroll={collapseScroll}
+                  collapseCardIndex={settingsSectionIndex('help_updates')}
+                  onToggle={() => {
+                    prepareSectionChange(openSection, 'help_updates');
+                    toggleSection('help_updates');
+                  }}
                 >
                   <SettingsHelpSection
                     styles={styles}
@@ -432,7 +477,7 @@ export default function SettingsScrollContent({
 
           <SettingsFooter />
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       <InfoModal
         visible={mailHintVisible}

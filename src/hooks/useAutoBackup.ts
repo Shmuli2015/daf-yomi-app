@@ -13,7 +13,7 @@ export function useAutoBackup(isReady: boolean) {
     const run = () => {
       void runAutoBackupIfDue().then(result => {
         if (cancelled) return;
-        if (result === 'written' || result === 'failed') refreshSettings();
+        if (result !== 'skipped') refreshSettings();
       });
     };
 

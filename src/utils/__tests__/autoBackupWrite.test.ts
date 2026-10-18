@@ -20,6 +20,15 @@ function memoryFile(initial: string | null): BackupFileAccess & { value: string 
 }
 
 describe('rotateAndWriteBackup', () => {
+  it('writes the first backup without creating a missing previous file', () => {
+    const current = memoryFile('');
+    const previous = memoryFile(null);
+    const next = '{"backupVersion":2}';
+    expect(rotateAndWriteBackup(current, previous, next)).toBe('written');
+    expect(current.value).toBe(next);
+    expect(previous.value).toBeNull();
+  });
+
   it('writes the first backup without touching an empty previous file', () => {
     const current = memoryFile('');
     const previous = memoryFile('');

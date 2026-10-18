@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { triggerSelection } from '../../utils/haptics';
 import AccordionSlideContent from '../AccordionSlideContent';
+import type { AccordionCollapseScroll } from '../../hooks/useAccordionSlide';
 import { useGuideSectionAnimation } from '../Guide/useGuideSectionAnimation';
 import { createSettingsCollapsibleCardStyles } from './SettingsCollapsibleCard.styles';
 
@@ -15,6 +16,8 @@ export type SettingsCollapsibleCardProps = {
   accentColor?: string;
   isExpanded: boolean;
   onToggle: () => void;
+  collapseScroll?: AccordionCollapseScroll;
+  collapseCardIndex?: number;
   children: React.ReactNode;
 };
 
@@ -25,6 +28,8 @@ export default function SettingsCollapsibleCard({
   accentColor,
   isExpanded,
   onToggle,
+  collapseScroll,
+  collapseCardIndex,
   children,
 }: SettingsCollapsibleCardProps) {
   const theme = useTheme();
@@ -72,7 +77,11 @@ export default function SettingsCollapsibleCard({
         </View>
       </TouchableOpacity>
 
-      <AccordionSlideContent isExpanded={isExpanded}>
+      <AccordionSlideContent
+        isExpanded={isExpanded}
+        collapseScroll={collapseScroll}
+        collapseCardIndex={collapseCardIndex}
+      >
         <View style={styles.contentDivider} />
         <View style={styles.body}>{children}</View>
       </AccordionSlideContent>

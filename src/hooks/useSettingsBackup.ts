@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Platform } from 'react-native';
 import { getSettings } from '../db/database';
+import { autoBackupIssueMessage, normalizeAutoBackupIssue } from '../utils/autoBackupIssue';
 import {
   disableAutoBackup,
   enableAutoBackupWithPicker,
@@ -54,27 +55,33 @@ export function useSettingsBackup({
     }
 
     const settings = getSettings();
-    const hasFolder = Boolean(settings.auto_backup_file_uri && settings.auto_backup_previous_file_uri);
+    const hasFolder = Boolean(settings.auto_backup_file_uri);
     try {
       const result = hasFolder
         ? await enableExistingAutoBackup()
         : await enableAutoBackupWithPicker();
       refreshSettings();
       if (result === 'cancelled') return;
+      const issue = normalizeAutoBackupIssue(getSettings().auto_backup_issue);
       if (result === 'enabled') {
         onFeedback({
-          title: 'הגיבוי האוטומטי הופעל',
-          message: hasFolder
-            ? 'הגיבוי יתעדכן בתיקייה שנבחרה לפי התדירות שבהגדרות.'
-            : 'קובץ הגיבוי נשמר בתיקייה שבחרת, ויתעדכן לפי התדירות שבהגדרות.',
+          title: issue === 'restored' ? 'קובץ הגיבוי נשמר מחדש' : 'הגיבוי האוטומטי הופעל',
+          message:
+            issue === 'restored'
+              ? autoBackupIssueMessage(issue) ?? ''
+              : hasFolder
+                ? 'הגיבוי יתעדכן בתיקייה שנבחרה לפי התדירות שבהגדרות.'
+                : 'קובץ הגיבוי נשמר בתיקייה שבחרת, ויתעדכן לפי התדירות שבהגדרות.',
           iconName: 'checkmark-circle',
           compact: true,
         });
         return;
       }
       onFeedback({
-        title: 'שגיאה בגיבוי אוטומטי',
-        message: 'לא הצלחנו לשמור את קובץ הגיבוי. בחר תיקייה אחרת ונסה שוב.',
+        title: issue === 'missing' || issue === 'missing_previous' ? 'קובץ הגיבוי לא נמצא' : 'שגיאה בגיבוי אוטומטי',
+        message:
+          autoBackupIssueMessage(issue) ??
+          'לא הצלחנו לשמור את קובץ הגיבוי. בחר תיקייה אחרת ונסה שוב.',
         iconName: 'alert-circle-outline',
         compact: true,
       });

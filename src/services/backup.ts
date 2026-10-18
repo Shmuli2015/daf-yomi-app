@@ -160,6 +160,7 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     auto_backup_file_uri: null,
     auto_backup_previous_file_uri: null,
     auto_backup_failed: 0,
+    auto_backup_issue: null,
   };
 }
 
@@ -170,6 +171,7 @@ function settingsForExport(settings: BackupSettings): BackupSettings {
     auto_backup_file_uri: null,
     auto_backup_previous_file_uri: null,
     auto_backup_failed: 0,
+    auto_backup_issue: null,
   };
 }
 
