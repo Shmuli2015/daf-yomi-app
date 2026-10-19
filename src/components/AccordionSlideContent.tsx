@@ -9,6 +9,7 @@ interface AccordionSlideContentProps {
   collapseScroll?: AccordionCollapseScroll;
   collapseCardIndex?: number;
   adaptCloseToHeight?: boolean;
+  slideContent?: boolean;
 }
 
 export default function AccordionSlideContent({
@@ -17,13 +18,20 @@ export default function AccordionSlideContent({
   collapseScroll,
   collapseCardIndex,
   adaptCloseToHeight,
+  slideContent = false,
 }: AccordionSlideContentProps) {
-  const { isRendered, onContentLayout, animatedStyle, isHeightLocked, isAnimating } =
-    useAccordionSlide(isExpanded, {
-      collapseScroll,
-      collapseCardIndex,
-      adaptCloseToHeight,
-    });
+  const {
+    isRendered,
+    onContentLayout,
+    animatedStyle,
+    animatedContentStyle,
+    isHeightLocked,
+    isAnimating,
+  } = useAccordionSlide(isExpanded, {
+    collapseScroll,
+    collapseCardIndex,
+    adaptCloseToHeight,
+  });
 
   if (!isRendered) {
     return null;
@@ -31,15 +39,18 @@ export default function AccordionSlideContent({
 
   return (
     <Animated.View style={isHeightLocked ? animatedStyle : undefined}>
-      <View
+      <Animated.View
         onLayout={onContentLayout}
-        style={isHeightLocked ? styles.measure : undefined}
+        style={[
+          isHeightLocked && styles.measure,
+          slideContent && isHeightLocked && animatedContentStyle,
+        ]}
         collapsable={false}
         renderToHardwareTextureAndroid={isAnimating}
         shouldRasterizeIOS={isAnimating}
       >
         {children}
-      </View>
+      </Animated.View>
     </Animated.View>
   );
 }

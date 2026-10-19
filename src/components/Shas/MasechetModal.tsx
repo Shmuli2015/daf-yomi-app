@@ -49,7 +49,6 @@ export default function MasechetModal({
     isPersonalEnabled,
     isHomeActive,
     handleToggleHomeActive,
-    handleRequestClose,
     dafimArray,
     numColumns,
     masechetStats,
@@ -67,6 +66,8 @@ export default function MasechetModal({
     selectedDafForMenu,
     handleToggleDafStable,
     handleLongPressDafStable,
+    panHandlers,
+    dismiss,
     sheetAnimatedStyle,
     overlayAnimatedStyle,
     animationType,
@@ -103,7 +104,7 @@ export default function MasechetModal({
       visible
       transparent
       animationType={animationType}
-      onRequestClose={handleRequestClose}
+      onRequestClose={dismiss}
       statusBarTranslucent={Platform.OS === 'android'}
     >
       <View style={styles.overlayRoot}>
@@ -111,7 +112,7 @@ export default function MasechetModal({
           pointerEvents="none"
           style={[StyleSheet.absoluteFill, styles.overlayDim, overlayAnimatedStyle]}
         />
-        <Pressable style={StyleSheet.absoluteFill} onPress={handleRequestClose} />
+        <Pressable style={StyleSheet.absoluteFill} onPress={dismiss} />
         <View style={[styles.sheetLayer, { paddingTop: insets.top + 8 }]} pointerEvents="box-none">
           <Animated.View
             pointerEvents="auto"
@@ -119,7 +120,7 @@ export default function MasechetModal({
           >
             <SafeAreaView style={styles.modalSafe} edges={['bottom']}>
               <View style={styles.handleSpacing}>
-                <SheetDragHandle />
+                <SheetDragHandle panHandlers={panHandlers} />
               </View>
 
               <View style={styles.modalHeaderContainer}>
@@ -142,7 +143,7 @@ export default function MasechetModal({
                         </Text>
                       </TouchableOpacity>
                     )}
-                    <TouchableOpacity onPress={handleRequestClose} style={styles.closeBtn} activeOpacity={0.7}>
+                    <TouchableOpacity onPress={dismiss} style={styles.closeBtn} activeOpacity={0.7}>
                       <Text style={styles.closeBtnText}>סגור</Text>
                     </TouchableOpacity>
                   </View>

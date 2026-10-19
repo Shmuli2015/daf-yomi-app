@@ -20,6 +20,7 @@ import { classicCommentatorKeysForTref, filterCommentaries } from '../../utils/s
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
 import { useCommentaryCollapseScroll } from '../../hooks/useCommentaryCollapseScroll';
+import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
 import { createSefariaTextContainerStyles } from './SefariaTextContainer.styles';
 
 interface SefariaTextContainerProps {
@@ -35,6 +36,10 @@ interface SefariaTextContainerProps {
   initialScrollOffset?: number;
   onScrollOffset?: (offset: number) => void;
   positionKey?: string;
+  autoScrollActive?: boolean;
+  autoScrollLevel?: AutoScrollSpeedLevel;
+  autoScrollPaused?: boolean;
+  onAutoScrollPause?: () => void;
 }
 
 export default function SefariaTextContainer({
@@ -50,6 +55,10 @@ export default function SefariaTextContainer({
   initialScrollOffset = 0,
   onScrollOffset,
   positionKey,
+  autoScrollActive,
+  autoScrollLevel,
+  autoScrollPaused,
+  onAutoScrollPause,
 }: SefariaTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSefariaTextContainerStyles(theme), [theme]);
@@ -57,12 +66,16 @@ export default function SefariaTextContainer({
   const expandedIndicesRef = useRef(expandedIndices);
   expandedIndicesRef.current = expandedIndices;
 
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey: data?.tref || '',
       initialOffset: initialScrollOffset,
       onOffsetChange: onScrollOffset,
+      autoScrollActive,
+      autoScrollLevel,
+      autoScrollPaused,
+      onAutoScrollPause,
     });
 
   const { registerAnchor, clearSavedPosition } = useReaderPosition({
@@ -199,6 +212,7 @@ export default function SefariaTextContainer({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         onScroll={handleScroll}
+        onScrollBeginDrag={handleScrollBeginDrag}
         onContentSizeChange={handleContentSizeChange}
         scrollEventThrottle={16}
       >

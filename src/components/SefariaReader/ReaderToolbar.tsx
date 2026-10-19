@@ -30,6 +30,8 @@ interface ReaderToolbarProps {
   steinsaltzAvailable?: boolean;
   classicTabLabel?: string;
   onOpenGuide?: () => void;
+  autoScrollActive?: boolean;
+  onToggleAutoScroll?: () => void;
 }
 
 const MODES: Array<{ id: ViewMode; label: string; icon: keyof typeof Ionicons.glyphMap }> = [
@@ -56,6 +58,8 @@ export default function ReaderToolbar({
   steinsaltzAvailable = true,
   classicTabLabel = 'גמרא',
   onOpenGuide,
+  autoScrollActive = false,
+  onToggleAutoScroll,
 }: ReaderToolbarProps) {
   const theme = useTheme();
   const styles = useMemo(() => createReaderToolbarStyles(theme), [theme]);
@@ -173,6 +177,29 @@ export default function ReaderToolbar({
         )}
 
         <View style={styles.actionsRow}>
+          {onToggleAutoScroll && (
+            <TouchableOpacity
+              style={[
+                styles.themeBtn,
+                autoScrollActive && { backgroundColor: theme.colors.accentLight },
+              ]}
+              onPress={() => {
+                triggerImpact('light');
+                onToggleAutoScroll();
+              }}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="גלילה אוטומטית"
+              accessibilityState={{ selected: autoScrollActive }}
+            >
+              <Ionicons
+                name="swap-vertical-outline"
+                size={17}
+                color={theme.colors.accent}
+              />
+            </TouchableOpacity>
+          )}
+
           {onChangeReaderTheme && (
             <TouchableOpacity
               style={styles.themeBtn}

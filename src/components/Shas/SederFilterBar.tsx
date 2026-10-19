@@ -5,15 +5,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import { useModeSwitcherIndicator } from '../../hooks/useModeSwitcherIndicator';
 import { createSederFilterBarStyles } from './sederFilterBarStyles';
-import type { Seder } from '../../data/shas';
 import { triggerSelection } from '../../utils/haptics';
 import QuickJumpButton from '../QuickJump/QuickJumpButton';
 
 export type StatusFilter = 'all' | 'completed' | 'in_progress' | 'not_started';
 
 interface SederFilterBarProps {
-  selectedSeder?: Seder | null;
-  onSelectSeder?: (seder: Seder | null) => void;
   selectedStatus: StatusFilter;
   onSelectStatus: (status: StatusFilter) => void;
   searchQuery: string;
@@ -33,8 +30,6 @@ const STATUS_OPTIONS: { id: StatusFilter; label: string }[] = [
 const STATUS_IDS = STATUS_OPTIONS.map((opt) => opt.id);
 
 export default function SederFilterBar({
-  selectedSeder,
-  onSelectSeder,
   selectedStatus,
   onSelectStatus,
   searchQuery,
@@ -50,7 +45,8 @@ export default function SederFilterBar({
     STATUS_IDS,
   );
 
-  const isFilteringActive = searchQuery.trim().length > 0 || selectedStatus !== 'all';
+  const isFilteringActive =
+    searchQuery.trim().length > 0 || selectedStatus !== 'all';
 
   const handleStatusPress = (status: StatusFilter) => {
     void triggerSelection();
@@ -61,9 +57,6 @@ export default function SederFilterBar({
     void triggerSelection();
     onSearchChange('');
     onSelectStatus('all');
-    if (onSelectSeder) {
-      onSelectSeder(null);
-    }
   };
 
   return (
@@ -119,6 +112,7 @@ export default function SederFilterBar({
                   styles.segmentText,
                   isActive && styles.segmentTextActive,
                 ]}
+                numberOfLines={1}
               >
                 {opt.label}
               </Text>

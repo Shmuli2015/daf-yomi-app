@@ -123,7 +123,7 @@ export function useMasechetModal({
     onClose();
   }, [pendingAction, onClose]);
 
-  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType } =
+  const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType, dismiss } =
     useSheetDismissGesture({
       visible: true,
       onClose: handleRequestClose,
@@ -402,6 +402,8 @@ export function useMasechetModal({
     selectedDafForMenu,
     handleToggleDafStable,
     handleLongPressDafStable,
+    panHandlers,
+    dismiss,
     sheetAnimatedStyle,
     overlayAnimatedStyle,
     animationType,

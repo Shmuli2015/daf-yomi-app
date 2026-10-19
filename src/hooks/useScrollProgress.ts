@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { NativeSyntheticEvent, NativeScrollEvent, ScrollView } from 'react-native';
 import { useAnimatedRef, type SharedValue } from 'react-native-reanimated';
+import { useAutoScroll, type AutoScrollSpeedLevel } from './useAutoScroll';
 
 interface UseScrollProgressOptions {
   progressShared?: SharedValue<number>;
@@ -8,6 +9,10 @@ interface UseScrollProgressOptions {
   resetKey?: string;
   initialOffset?: number;
   onOffsetChange?: (offset: number) => void;
+  autoScrollActive?: boolean;
+  autoScrollLevel?: AutoScrollSpeedLevel;
+  autoScrollPaused?: boolean;
+  onAutoScrollPause?: () => void;
 }
 
 export function useScrollProgress({
@@ -16,20 +21,37 @@ export function useScrollProgress({
   resetKey,
   initialOffset = 0,
   onOffsetChange,
+  autoScrollActive = false,
+  autoScrollLevel = 3,
+  autoScrollPaused = false,
+  onAutoScrollPause,
 }: UseScrollProgressOptions = {}) {
   const [showFab, setShowFab] = useState(false);
   const scrollViewRef = useAnimatedRef<ScrollView>();
   const scrollYRef = useRef(0);
   const lastScrollYRef = useRef(0);
+  const maxScrollRef = useRef(0);
   const isScrollingToTopRef = useRef(false);
   const pendingRestoreRef = useRef(false);
   const restoredOffsetRef = useRef(0);
   const progressSharedRef = useRef(progressShared);
   const initialOffsetRef = useRef(initialOffset);
   const onOffsetChangeRef = useRef(onOffsetChange);
+  const onAutoScrollPauseRef = useRef(onAutoScrollPause);
   progressSharedRef.current = progressShared;
   initialOffsetRef.current = initialOffset;
   onOffsetChangeRef.current = onOffsetChange;
+  onAutoScrollPauseRef.current = onAutoScrollPause;
+
+  useAutoScroll({
+    scrollViewRef,
+    scrollYRef,
+    active: autoScrollActive,
+    level: autoScrollLevel,
+    isPaused: autoScrollPaused,
+    maxScrollRef,
+    onReachEnd: onAutoScrollPause,
+  });
 
   const applyOffset = useCallback((offset: number) => {
     scrollViewRef.current?.scrollTo({ y: offset, animated: false });
@@ -71,6 +93,8 @@ export function useScrollProgress({
       lastScrollYRef.current = scrollY;
       const maxScroll = contentSize.height - layoutMeasurement.height;
 
+      maxScrollRef.current = maxScroll;
+
       if (progressSharedRef.current) {
         if (maxScroll > 0) {
           progressSharedRef.current.value = Math.min(1, Math.max(0, scrollY / maxScroll));
@@ -93,6 +117,12 @@ export function useScrollProgress({
     [fabThreshold],
   );
 
+  const handleScrollBeginDrag = useCallback(() => {
+    if (autoScrollActive && !autoScrollPaused) {
+      onAutoScrollPauseRef.current?.();
+    }
+  }, [autoScrollActive, autoScrollPaused]);
+
   const scrollToTop = useCallback(() => {
     isScrollingToTopRef.current = true;
     setShowFab(false);
@@ -104,6 +134,7 @@ export function useScrollProgress({
     scrollYRef,
     showFab,
     handleScroll,
+    handleScrollBeginDrag,
     handleContentSizeChange,
     scrollToTop,
   };
