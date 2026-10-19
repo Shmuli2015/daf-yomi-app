@@ -1,6 +1,21 @@
-const { withAppBuildGradle, withGradleProperties } = require('@expo/config-plugins');
+const { withAppBuildGradle, withGradleProperties, withDangerousMod } = require('@expo/config-plugins');
+const fs = require('fs');
+const path = require('path');
 
 function withAndroidBuildOptimization(config) {
+  config = withDangerousMod(config, [
+    'android',
+    async (mod) => {
+      const proguardFile = path.join(mod.modRequest.platformProjectRoot, 'app', 'proguard-rules.pro');
+      if (fs.existsSync(proguardFile)) {
+        const content = fs.readFileSync(proguardFile, 'utf8');
+        if (!content.includes('expo.modules.**')) {
+          fs.writeFileSync(proguardFile, `${content.trimEnd()}\n-keep class expo.modules.** { *; }\n`, 'utf8');
+        }
+      }
+      return mod;
+    },
+  ]);
   config = withGradleProperties(config, (mod) => {
     mod.modResults = mod.modResults.filter(
       (item) =>
@@ -8,17 +23,25 @@ function withAndroidBuildOptimization(config) {
           'reactNativeArchitectures',
           'android.enableMinifyInReleaseBuilds',
           'android.enableShrinkResourcesInReleaseBuilds',
+          'android.r8.optimizedResourceShrinking',
         ].includes(item.key),
     );
     mod.modResults.push(
       { type: 'property', key: 'reactNativeArchitectures', value: 'armeabi-v7a,arm64-v8a' },
       { type: 'property', key: 'android.enableMinifyInReleaseBuilds', value: 'true' },
       { type: 'property', key: 'android.enableShrinkResourcesInReleaseBuilds', value: 'true' },
+      { type: 'property', key: 'android.r8.optimizedResourceShrinking', value: 'true' },
     );
     return mod;
   });
 
   config = withAppBuildGradle(config, (mod) => {
+    if (mod.modResults.contents.includes('proguard-android.txt')) {
+      mod.modResults.contents = mod.modResults.contents.replace(
+        'proguard-android.txt',
+        'proguard-android-optimize.txt',
+      );
+    }
     if (!mod.modResults.contents.includes('abiFilters')) {
       mod.modResults.contents = mod.modResults.contents.replace(
         'defaultConfig {',
