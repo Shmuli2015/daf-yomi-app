@@ -20,6 +20,7 @@ import ChavrutaFootnoteSheet from './ChavrutaFootnoteSheet';
 import ChavrutaSectionHeader from './ChavrutaSectionHeader';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
+import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
 import { createChavrutaTextContainerStyles } from './ChavrutaTextContainer.styles';
 
 interface ChavrutaTextContainerProps {
@@ -35,6 +36,10 @@ interface ChavrutaTextContainerProps {
   initialScrollOffset?: number;
   onScrollOffset?: (offset: number) => void;
   positionKey?: string;
+  autoScrollActive?: boolean;
+  autoScrollLevel?: AutoScrollSpeedLevel;
+  autoScrollPaused?: boolean;
+  onAutoScrollPause?: () => void;
 }
 
 export default function ChavrutaTextContainer({
@@ -50,6 +55,10 @@ export default function ChavrutaTextContainer({
   initialScrollOffset = 0,
   onScrollOffset,
   positionKey,
+  autoScrollActive,
+  autoScrollLevel,
+  autoScrollPaused,
+  onAutoScrollPause,
 }: ChavrutaTextContainerProps) {
   const theme = useTheme();
   const palette = useMemo(
@@ -63,12 +72,16 @@ export default function ChavrutaTextContainer({
   const [activeFootnoteIndex, setActiveFootnoteIndex] = useState<number | null>(null);
 
   const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey,
       initialOffset: initialScrollOffset,
       onOffsetChange: onScrollOffset,
+      autoScrollActive,
+      autoScrollLevel,
+      autoScrollPaused,
+      onAutoScrollPause,
     });
 
   const { registerAnchor, clearSavedPosition } = useReaderPosition({
@@ -143,6 +156,7 @@ export default function ChavrutaTextContainer({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         onScroll={handleScroll}
+        onScrollBeginDrag={handleScrollBeginDrag}
         onContentSizeChange={handleContentSizeChange}
         scrollEventThrottle={16}
       >

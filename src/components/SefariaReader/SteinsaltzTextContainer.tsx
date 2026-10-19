@@ -20,6 +20,7 @@ import type { ReaderTheme } from './ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
+import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
 import { createSteinsaltzTextContainerStyles } from './SteinsaltzTextContainer.styles';
 
 interface SteinsaltzTextContainerProps {
@@ -34,6 +35,10 @@ interface SteinsaltzTextContainerProps {
   initialScrollOffset?: number;
   onScrollOffset?: (offset: number) => void;
   positionKey?: string;
+  autoScrollActive?: boolean;
+  autoScrollLevel?: AutoScrollSpeedLevel;
+  autoScrollPaused?: boolean;
+  onAutoScrollPause?: () => void;
 }
 
 export default function SteinsaltzTextContainer({
@@ -48,16 +53,24 @@ export default function SteinsaltzTextContainer({
   initialScrollOffset = 0,
   onScrollOffset,
   positionKey,
+  autoScrollActive,
+  autoScrollLevel,
+  autoScrollPaused,
+  onAutoScrollPause,
 }: SteinsaltzTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSteinsaltzTextContainerStyles(theme), [theme]);
 
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleContentSizeChange, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey: data?.tref || '',
       initialOffset: initialScrollOffset,
       onOffsetChange: onScrollOffset,
+      autoScrollActive,
+      autoScrollLevel,
+      autoScrollPaused,
+      onAutoScrollPause,
     });
 
   const { registerAnchor, clearSavedPosition } = useReaderPosition({
@@ -132,6 +145,7 @@ export default function SteinsaltzTextContainer({
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
         onScroll={handleScroll}
+        onScrollBeginDrag={handleScrollBeginDrag}
         onContentSizeChange={handleContentSizeChange}
         scrollEventThrottle={16}
       >

@@ -40,6 +40,13 @@ export const GUIDE_GESTURES: GuideGesture[] = [
     description: 'פותחת את רשת כל דפי המסכת לצפייה בהתקדמות, סימון מהיר ומעבר לכל דף.',
   },
   {
+    id: 'reader-title-tap',
+    icon: 'bookmarks-outline',
+    title: 'הקשה על כותרת הדף בנגן',
+    badge: 'קפיצה מהירה',
+    description: 'פותחת חלונית קפיצה מהירה למעבר ישיר לכל מסכת ודף בש״ס בלי לצאת מהקורא.',
+  },
+  {
     id: 'masechet-long-press',
     icon: 'checkmark-done-outline',
     title: 'לחיצה ארוכה על מסכת',

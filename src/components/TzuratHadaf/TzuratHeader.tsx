@@ -19,6 +19,7 @@ interface TzuratHeaderProps {
   onClose: () => void;
   onToggleLearned?: () => void;
   onLongPressLearned?: () => void;
+  onPressTitle?: () => void;
 }
 
 export default function TzuratHeader({
@@ -34,6 +35,7 @@ export default function TzuratHeader({
   onClose,
   onToggleLearned,
   onLongPressLearned,
+  onPressTitle,
 }: TzuratHeaderProps) {
   const isLearned = studyStatus === 'learned';
   const isPartial = studyStatus === 'partial';
@@ -49,16 +51,33 @@ export default function TzuratHeader({
   return (
     <View style={[styles.container, { paddingTop: insets.top + (isLandscape ? 4 : 8) }]}>
       <View style={styles.content}>
-        <View style={styles.titleBlock} pointerEvents="none">
-          <Text style={styles.masechet} numberOfLines={1}>
-            {title}
-          </Text>
+        <TouchableOpacity
+          style={styles.titleBlock}
+          onPress={onPressTitle}
+          disabled={!onPressTitle}
+          activeOpacity={0.7}
+          accessibilityRole={onPressTitle ? 'button' : undefined}
+          accessibilityLabel={onPressTitle ? `קפיצה מהירה: ${title} ${formatDafLabel(dafNum, amud)}` : undefined}
+        >
+          <View style={styles.titleRow}>
+            <Text style={styles.masechet} numberOfLines={1}>
+              {title}
+            </Text>
+            {onPressTitle ? (
+              <Ionicons
+                name="chevron-down"
+                size={isLandscape ? 12 : 14}
+                color={theme.colors.accent}
+                style={styles.titleChevron}
+              />
+            ) : null}
+          </View>
           <Text style={styles.daf} numberOfLines={1}>
             {formatDafLabel(dafNum, amud)}
           </Text>
-        </View>
+        </TouchableOpacity>
 
-        <View style={styles.row}>
+        <View style={styles.row} pointerEvents="box-none">
           <TouchableOpacity
             onPress={onClose}
             style={[styles.iconBtn, { width: btnSize, height: btnSize }]}
@@ -126,10 +145,23 @@ const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) 
       minHeight: isLandscape ? 34 : 40,
     },
     titleBlock: {
-      ...StyleSheet.absoluteFill,
+      position: 'absolute',
+      left: isLandscape ? 80 : 96,
+      right: isLandscape ? 80 : 96,
+      top: 0,
+      bottom: 0,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 88,
+      zIndex: 1,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 4,
+    },
+    titleChevron: {
+      marginTop: 2,
     },
     masechet: {
       color: theme.colors.textPrimary,
@@ -137,7 +169,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) 
       fontWeight: '900',
       textAlign: 'center',
       writingDirection: 'rtl',
-      width: '100%',
     },
     daf: {
       color: theme.colors.textSecondary,
@@ -153,7 +184,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) 
       alignItems: 'center',
       justifyContent: 'space-between',
       minHeight: isLandscape ? 34 : 40,
-      zIndex: 1,
+      zIndex: 2,
     },
     actions: {
       flexDirection: 'row',

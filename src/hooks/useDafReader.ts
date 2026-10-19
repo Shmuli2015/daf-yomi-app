@@ -144,6 +144,12 @@ export function useDafReader(initialLocation: DafLocation) {
     }
   }, [location]);
 
+  const handleNavigateTo = useCallback((newLocation: DafLocation) => {
+    void triggerSelection();
+    setNavDirection(null);
+    setLocation(newLocation);
+  }, []);
+
   const pageKey = `${location.masechetEn}-${location.dafNum}-${location.amud}`;
 
   return {
@@ -176,5 +182,6 @@ export function useDafReader(initialLocation: DafLocation) {
     handleNextAmud,
     handlePrevDaf,
     handleNextDaf,
+    handleNavigateTo,
   };
 }

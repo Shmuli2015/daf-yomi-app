@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,11 +13,14 @@ import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
 import GuideModal from '../components/Guide/GuideModal';
+import QuickJumpModal from '../components/QuickJump/QuickJumpModal';
 import ReaderToolbar, { type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
 import ReaderModePane from '../components/SefariaReader/ReaderModePane';
 import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';
 import SteinsaltzTextContainer from '../components/SefariaReader/SteinsaltzTextContainer';
 import ChavrutaTextContainer from '../components/ChavrutaReader/ChavrutaTextContainer';
+import AutoScrollFloatingBar from '../components/SefariaReader/AutoScrollFloatingBar';
+import type { AutoScrollSpeedLevel } from '../hooks/useAutoScroll';
 import { buildReaderPositionKey } from '../utils/readerPositionAnchors';
 import ChavrutaUnavailableState from '../components/ChavrutaReader/ChavrutaUnavailableState';
 import ReadingProgressBar from '../components/SefariaReader/ReadingProgressBar';
@@ -54,6 +57,10 @@ export default function TzuratHadafScreen() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showQuickJumpModal, setShowQuickJumpModal] = useState(false);
+  const [autoScrollActive, setAutoScrollActive] = useState(false);
+  const [autoScrollLevel, setAutoScrollLevel] = useState<AutoScrollSpeedLevel>(3);
+  const [autoScrollPaused, setAutoScrollPaused] = useState(false);
   const scrollProgress = useSharedValue(0);
   const isSystemDark = theme.colors.background === '#121212';
   const { readerTheme, setReaderTheme } = useReaderTheme(isSystemDark);
@@ -161,6 +168,7 @@ export default function TzuratHadafScreen() {
             onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
             onClose={() => navigation.goBack()}
             onToggleLearned={handleToggleLearned}
+            onPressTitle={() => setShowQuickJumpModal(true)}
             onLongPressLearned={() => {
               if (personalEnabled) {
                 setShowTrackPicker(true);
@@ -188,6 +196,11 @@ export default function TzuratHadafScreen() {
             steinsaltzAvailable={reader.steinsaltzAvailable}
             classicTabLabel={reader.classicTabLabel}
             onOpenGuide={() => setShowGuideModal(true)}
+            autoScrollActive={autoScrollActive}
+            onToggleAutoScroll={() => {
+              setAutoScrollActive((prev) => !prev);
+              setAutoScrollPaused(false);
+            }}
           />
 
           <ReadingProgressBar progress={scrollProgress} accentColor={theme.colors.accent} />
@@ -217,6 +230,10 @@ export default function TzuratHadafScreen() {
               initialScrollOffset={getOffset('classic')}
               onScrollOffset={(offset) => setOffset('classic', offset)}
               positionKey={buildReaderPositionKey(reader.pageKey, 'classic')}
+              autoScrollActive={autoScrollActive}
+              autoScrollLevel={autoScrollLevel}
+              autoScrollPaused={autoScrollPaused}
+              onAutoScrollPause={() => setAutoScrollPaused(true)}
             />
           ) : reader.viewMode === 'steinsaltz' ? (
             <SteinsaltzTextContainer
@@ -231,6 +248,10 @@ export default function TzuratHadafScreen() {
               initialScrollOffset={getOffset('steinsaltz')}
               onScrollOffset={(offset) => setOffset('steinsaltz', offset)}
               positionKey={buildReaderPositionKey(reader.pageKey, 'steinsaltz')}
+              autoScrollActive={autoScrollActive}
+              autoScrollLevel={autoScrollLevel}
+              autoScrollPaused={autoScrollPaused}
+              onAutoScrollPause={() => setAutoScrollPaused(true)}
             />
           ) : !reader.chavrutaAvailable ? (
             <ChavrutaUnavailableState readerTheme={readerTheme} accentColor={theme.colors.accent} />
@@ -248,6 +269,10 @@ export default function TzuratHadafScreen() {
               initialScrollOffset={getOffset('chavruta')}
               onScrollOffset={(offset) => setOffset('chavruta', offset)}
               positionKey={buildReaderPositionKey(reader.pageKey, 'chavruta')}
+              autoScrollActive={autoScrollActive}
+              autoScrollLevel={autoScrollLevel}
+              autoScrollPaused={autoScrollPaused}
+              onAutoScrollPause={() => setAutoScrollPaused(true)}
             />
           )}
         </ReaderModePane>
@@ -333,12 +358,42 @@ export default function TzuratHadafScreen() {
         onClose={closeSiyum}
       />
 
+      <QuickJumpModal
+        visible={showQuickJumpModal}
+        initialMasechetEn={reader.location.masechetEn}
+        initialDafNum={reader.location.dafNum}
+        initialAmud={reader.location.amud}
+        onNavigate={(params) => {
+          reader.handleNavigateTo({
+            masechetEn: params.masechetEn,
+            dafNum: params.dafNum,
+            amud: params.amud,
+          });
+          setShowQuickJumpModal(false);
+        }}
+        onClose={() => setShowQuickJumpModal(false)}
+      />
+
       <GuideModal
         visible={showGuideModal}
         onClose={() => setShowGuideModal(false)}
         initialTab="faq"
         initialCategory="reader"
       />
+
+      {autoScrollActive && (
+        <AutoScrollFloatingBar
+          isPaused={autoScrollPaused}
+          level={autoScrollLevel}
+          bottomOffset={isFullscreen ? 20 : 64}
+          onTogglePlayPause={() => setAutoScrollPaused((prev) => !prev)}
+          onChangeLevel={setAutoScrollLevel}
+          onClose={() => {
+            setAutoScrollActive(false);
+            setAutoScrollPaused(false);
+          }}
+        />
+      )}
 
       {showConfetti && (
         <View style={styles.confettiContainer} pointerEvents="none">

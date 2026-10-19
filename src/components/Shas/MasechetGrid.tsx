@@ -13,7 +13,6 @@ import SederSection from './SederSection';
 import SederFilterBar from './SederFilterBar';
 import { useShasFilter } from '../../hooks/useShasFilter';
 import { useMasechetCardBulk } from './useMasechetCardBulk';
-import MasechetBulkTip from './MasechetBulkTip';
 
 interface MasechetGridProps {
   openMasechetEn?: string;
@@ -38,8 +37,6 @@ export default function MasechetGrid({
   const returnToHomeRef = useRef(false);
 
   const {
-    selectedSeder,
-    setSelectedSeder,
     selectedStatus,
     setSelectedStatus,
     searchQuery,
@@ -81,13 +78,6 @@ export default function MasechetGrid({
     });
   }, []);
 
-  const handleSelectSeder = useCallback((seder: Seder | null) => {
-    setSelectedSeder(seder);
-    if (seder) {
-      setExpandedSedarim((prev) => new Set(prev).add(seder));
-    }
-  }, [setSelectedSeder]);
-
   const handlePressMasechet = useCallback((masechetEn: string) => {
     const masechet = SHAS_MASECHTOT.find((m) => m.en === masechetEn);
     if (masechet) {
@@ -115,13 +105,11 @@ export default function MasechetGrid({
     handleConfirm,
   } = useMasechetCardBulk();
 
-  const isFilteringActive = selectedSeder !== null || searchQuery.trim().length > 0 || selectedStatus !== 'all';
+  const isFilteringActive = searchQuery.trim().length > 0 || selectedStatus !== 'all';
 
   return (
     <View style={styles.container}>
       <SederFilterBar
-        selectedSeder={selectedSeder}
-        onSelectSeder={handleSelectSeder}
         selectedStatus={selectedStatus}
         onSelectStatus={setSelectedStatus}
         searchQuery={searchQuery}
@@ -130,8 +118,6 @@ export default function MasechetGrid({
         totalCount={totalCount}
         onOpenQuickJump={onOpenQuickJump}
       />
-
-      <MasechetBulkTip />
 
       {SEDARIM.map((seder) => {
         const masechetData = filteredSedarimData.get(seder.id) || [];

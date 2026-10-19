@@ -201,5 +201,25 @@ export function useAccordionSlide(
     overflow: 'hidden',
   }));
 
-  return { isRendered, onContentLayout, animatedStyle, isHeightLocked, isAnimating };
+  const animatedContentStyle = useAnimatedStyle(() => {
+    if (measuredHeight.value <= 0) {
+      return {};
+    }
+    return {
+      transform: [
+        {
+          translateY: animatedHeight.value - measuredHeight.value,
+        },
+      ],
+    };
+  });
+
+  return {
+    isRendered,
+    onContentLayout,
+    animatedStyle,
+    animatedContentStyle,
+    isHeightLocked,
+    isAnimating,
+  };
 }
