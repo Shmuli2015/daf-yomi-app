@@ -60,8 +60,8 @@ function reminderStillInTray(
   if (presented.length === 0) {
     return false;
   }
-  if (notificationId && presented.some(item => item.request?.identifier === notificationId)) {
-    return true;
+  if (notificationId) {
+    return presented.some(item => item.request?.identifier === notificationId);
   }
   return presented.some(isStudyReminder);
 }
@@ -77,7 +77,7 @@ async function dismissPresentedReminders(notificationId?: string): Promise<void>
     ids.add(notificationId);
   }
   for (const item of presented) {
-    if (item.request?.identifier) {
+    if (item.request?.identifier && (isStudyReminder(item) || item.request?.identifier === notificationId)) {
       ids.add(item.request.identifier);
     }
   }
