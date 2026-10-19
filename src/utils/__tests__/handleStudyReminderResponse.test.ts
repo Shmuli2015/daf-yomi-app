@@ -9,6 +9,12 @@ const mockGetSettings = jest.fn(() => ({ notification_sound_enabled: 1, notifica
 const mockQueuePendingDafOpen = jest.fn();
 const mockLoadInitialData = jest.fn();
 const mockMarkTodayAsLearned = jest.fn();
+const mockSetDafStudyStatus = jest.fn();
+
+const mockCaptureException = jest.fn();
+jest.mock('../../services/sentry', () => ({
+  captureException: mockCaptureException,
+}));
 
 jest.mock('../dismissReminderFromTray', () => ({
   dismissReminderFromTray: mockDismissReminderFromTray,
@@ -30,6 +36,7 @@ jest.mock('../../store/useAppStore', () => ({
     getState: () => ({
       loadInitialData: mockLoadInitialData,
       markTodayAsLearned: mockMarkTodayAsLearned,
+      setDafStudyStatus: mockSetDafStudyStatus,
     }),
   },
 }));
@@ -41,7 +48,27 @@ describe('handleStudyReminderResponse', () => {
     jest.clearAllMocks();
   });
 
-  it('dismisses and marks today learned for finish-daf', async () => {
+  it('marks exact target date and tractate for finish-daf when payload carries target data', async () => {
+    const target = {
+      masechetEn: 'Berachot',
+      masechetHe: 'ברכות',
+      dafNum: 2,
+      amud: 'a' as const,
+      dateStr: '2026-10-18',
+    };
+
+    await handleStudyReminderResponse({
+      actionIdentifier: 'finish-daf',
+      notificationId: 'notif-yesterday',
+      response: { notification: { request: { content: { data: target } } } },
+    });
+
+    expect(mockDismissReminderFromTray).toHaveBeenCalledWith('notif-yesterday');
+    expect(mockSetDafStudyStatus).toHaveBeenCalledWith('2026-10-18', 'בכורות', 'דף ל׳', 'learned');
+    expect(mockMarkTodayAsLearned).not.toHaveBeenCalled();
+  });
+
+  it('dismisses and marks today learned for finish-daf when no target is present', async () => {
     await handleStudyReminderResponse({
       actionIdentifier: 'finish-daf',
       notificationId: 'notif-1',
@@ -50,7 +77,22 @@ describe('handleStudyReminderResponse', () => {
     expect(mockDismissReminderFromTray).toHaveBeenCalledWith('notif-1');
     expect(mockLoadInitialData).toHaveBeenCalled();
     expect(mockMarkTodayAsLearned).toHaveBeenCalled();
+    expect(mockSetDafStudyStatus).not.toHaveBeenCalled();
     expect(mockScheduleSnoozeReminder).not.toHaveBeenCalled();
+  });
+
+  it('still dismisses tray if markTodayAsLearned throws an error', async () => {
+    mockMarkTodayAsLearned.mockImplementationOnce(() => {
+      throw new Error('Database write failed');
+    });
+
+    await handleStudyReminderResponse({
+      actionIdentifier: 'finish-daf',
+      notificationId: 'notif-fail',
+    });
+
+    expect(mockCaptureException).toHaveBeenCalled();
+    expect(mockDismissReminderFromTray).toHaveBeenCalledWith('notif-fail');
   });
 
   it('dismisses and schedules snooze for later', async () => {
