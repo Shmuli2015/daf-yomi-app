@@ -43,9 +43,13 @@ export function createResetOptionsModalStyles(theme: Theme) {
       lineHeight: 19,
       marginBottom: 16,
     },
+    optionsScroll: {
+      maxHeight: 340,
+      marginBottom: 16,
+      flexGrow: 0,
+    },
     optionsList: {
       gap: 10,
-      marginBottom: 16,
     },
     optionCard: {
       flexDirection: 'row',

@@ -5,6 +5,19 @@ export interface ResetTexts {
   message: string;
 }
 
+export interface ResetActions {
+  resetDafYomiState: () => void;
+  resetPersonalTrackState: () => void;
+  clearReaderPositionsState: () => void;
+  resetAllState: () => void;
+}
+
+export interface ResetSuccessToast extends ResetTexts {
+  iconName: 'checkmark-circle';
+  toast: true;
+  autoCloseMs: 3000;
+}
+
 export function getResetConfirmTexts(type: ResetOptionType | null): ResetTexts {
   switch (type) {
     case 'dafYomi':
@@ -16,6 +29,11 @@ export function getResetConfirmTexts(type: ResetOptionType | null): ResetTexts {
       return {
         title: 'אישור איפוס מסלול אישי',
         message: 'פעולה זו תמחק את כל סימוני המסלול האישי. היסטוריית הדף היומי וההגדרות יישמרו. פעולה זו אינה ניתנת לביטול.',
+      };
+    case 'readerPositions':
+      return {
+        title: 'אישור ניקוי מיקומי קריאה',
+        message: 'פעולה זו תמחק את מיקומי הקריאה השמורים בכל הדפים. סימוני הלימוד וההגדרות יישמרו. פעולה זו אינה ניתנת לביטול.',
       };
     case 'all':
     default:
@@ -38,6 +56,11 @@ export function getResetSuccessFeedback(type: ResetOptionType): ResetTexts {
         title: 'איפוס מסלול אישי הושלם',
         message: 'כל נתוני והתקדמות המסלול האישי נמחקו בהצלחה. נתוני הדף היומי וההגדרות נשמרו.',
       };
+    case 'readerPositions':
+      return {
+        title: 'מיקומי הקריאה נוקו',
+        message: 'כל מיקומי הקריאה השמורים נמחקו. סימוני הלימוד וההגדרות נשמרו.',
+      };
     case 'all':
     default:
       return {
@@ -45,4 +68,32 @@ export function getResetSuccessFeedback(type: ResetOptionType): ResetTexts {
         message: 'כל הנתונים וההגדרות נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי.',
       };
   }
+}
+
+export function runResetAction(type: ResetOptionType, actions: ResetActions) {
+  switch (type) {
+    case 'dafYomi':
+      actions.resetDafYomiState();
+      return;
+    case 'personalTrack':
+      actions.resetPersonalTrackState();
+      return;
+    case 'readerPositions':
+      actions.clearReaderPositionsState();
+      return;
+    case 'all':
+      actions.resetAllState();
+      return;
+  }
+}
+
+export function getResetSuccessToast(type: ResetOptionType): ResetSuccessToast {
+  const success = getResetSuccessFeedback(type);
+  return {
+    title: success.title,
+    message: success.message,
+    iconName: 'checkmark-circle',
+    toast: true,
+    autoCloseMs: 3000,
+  };
 }

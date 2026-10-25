@@ -44,6 +44,7 @@ export default function SettingsScreen() {
     importBackup,
     resetDafYomiState,
     resetPersonalTrackState,
+    clearReaderPositionsState,
     resetAllState,
   } = useAppStore(
     useShallow(s => ({
@@ -64,6 +65,7 @@ export default function SettingsScreen() {
       importBackup: s.importBackup,
       resetDafYomiState: s.resetDafYomiState,
       resetPersonalTrackState: s.resetPersonalTrackState,
+      clearReaderPositionsState: s.clearReaderPositionsState,
       resetAllState: s.resetAllState,
     })),
   );
@@ -191,19 +193,18 @@ export default function SettingsScreen() {
   const {
     showResetModal,
     showResetConfirmModal,
-    showSuccessModal,
     resetConfirmTexts,
-    resetSuccessFeedback,
     openResetModal,
     closeResetModal,
-    closeSuccessModal,
     handleSelectResetOption,
     handleCancelResetConfirm,
     handleExecuteReset,
   } = useSettingsReset({
     resetDafYomiState,
     resetPersonalTrackState,
+    clearReaderPositionsState,
     resetAllState,
+    onFeedback: showFeedback,
   });
 
   const {
@@ -420,10 +421,6 @@ export default function SettingsScreen() {
           resetConfirmMessage={resetConfirmTexts.message}
           onResetConfirmClose={handleCancelResetConfirm}
           onExecuteReset={handleExecuteReset}
-          showSuccessModal={showSuccessModal}
-          resetSuccessTitle={resetSuccessFeedback?.title}
-          resetSuccessMessage={resetSuccessFeedback?.message}
-          onSuccessModalClose={closeSuccessModal}
           showBackupImportModal={showBackupImportModal}
           backupPreview={backupPreview}
           onBackupImportMerge={handleBackupImportMerge}
