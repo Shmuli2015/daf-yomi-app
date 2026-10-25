@@ -22,7 +22,13 @@ import ContentLicensesModal from './Modals/ContentLicensesModal';
 import SiyumNusachModal from './Modals/SiyumNusachModal';
 import { SUPPORT_EMAIL } from '../../supportContact';
 import { matchesSetting } from '../../utils/settingsSearch';
-import { RESET_ITEM } from '../../utils/settingsSearchCatalog';
+import {
+  AUTO_UPDATE_ITEM,
+  CHECK_UPDATE_ITEM,
+  RESET_ITEM,
+  SHARE_APP_ITEM,
+  WHATS_NEW_ITEM,
+} from '../../utils/settingsSearchCatalog';
 import {
   hasVisibleSettingsMatch,
   countVisibleSettingsMatches,
@@ -146,6 +152,11 @@ export default function SettingsScrollContent({
     isSearching || openSection === key || (key === 'offline' && offline.isPrefetching);
   const shouldShowSection = (key: VisibleSettingsSearchSection) =>
     !isSearching || hasVisibleSectionMatch(searchQuery, key, searchContext);
+  const hasVisibleUpdates =
+    (searchContext.hasAutoUpdate && matchesSetting(searchQuery, AUTO_UPDATE_ITEM)) ||
+    (searchContext.hasCheckUpdate && matchesSetting(searchQuery, CHECK_UPDATE_ITEM)) ||
+    (searchContext.hasWhatsNew && matchesSetting(searchQuery, WHATS_NEW_ITEM)) ||
+    (searchContext.hasShareDownload && matchesSetting(searchQuery, SHARE_APP_ITEM));
 
   return (
     <>
@@ -436,6 +447,7 @@ export default function SettingsScrollContent({
                     searchQuery={searchQuery}
                     isFirst
                     embedded
+                    showTrailingDivider={hasVisibleUpdates}
                     onGuideModalOpen={helpUpdates.onGuideModalOpen}
                     onSupportPress={openSupportEmail}
                     onSupportLongPress={copySupportEmail}
