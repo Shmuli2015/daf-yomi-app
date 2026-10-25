@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { View } from 'react-native';
+import type { ViewInstance } from 'react-native';
 import { captureAndShare, waitForShareCaptureReady } from '../../utils/shareProgressImage';
 
 export function useSiyumShare(visible: boolean) {
-  const captureRef = useRef<View>(null);
+  const captureRef = useRef<ViewInstance>(null);
   const [sharingImage, setSharingImage] = useState(false);
   const [captureLaidOut, setCaptureLaidOut] = useState(false);
 

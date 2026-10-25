@@ -3,7 +3,7 @@ import { captureRef } from 'react-native-view-shot';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import type { RefObject } from 'react';
-import type { View } from 'react-native';
+import type { ViewInstance } from 'react-native';
 
 export const CARD_SIZE = 1080;
 
@@ -59,11 +59,11 @@ function isUserCancel(error: unknown): boolean {
   );
 }
 
-export async function captureAndShare(ref: RefObject<View | null>): Promise<boolean> {
+export async function captureAndShare(ref: RefObject<ViewInstance | null>): Promise<boolean> {
   if (!ref.current) return false;
 
   try {
-    const uri = await captureRef(ref, {
+    const uri = await captureRef(ref as any, {
       format: 'png',
       quality: 1,
       width: CARD_SIZE,

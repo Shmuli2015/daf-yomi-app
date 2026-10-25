@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import type { NativeSyntheticEvent, NativeScrollEvent, ScrollView } from 'react-native';
+import type { NativeSyntheticEvent, NativeScrollEvent, ScrollViewInstance } from 'react-native';
 import { useAnimatedRef, type SharedValue } from 'react-native-reanimated';
 import { useAutoScroll, type AutoScrollSpeedLevel } from './useAutoScroll';
 
@@ -27,7 +27,7 @@ export function useScrollProgress({
   onAutoScrollPause,
 }: UseScrollProgressOptions = {}) {
   const [showFab, setShowFab] = useState(false);
-  const scrollViewRef = useAnimatedRef<ScrollView>();
+  const scrollViewRef = useAnimatedRef<ScrollViewInstance>();
   const scrollYRef = useRef(0);
   const lastScrollYRef = useRef(0);
   const maxScrollRef = useRef(0);

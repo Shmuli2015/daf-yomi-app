@@ -1,9 +1,10 @@
-﻿import React, { useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
+  type ScrollViewInstance,
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native';
@@ -30,7 +31,7 @@ export const WheelPicker = ({
 }: WheelPickerProps) => {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
   const lastScrolledIndex = useRef<number>(-1);
   const isDragging = useRef(false);
   const isUserScrolling = useRef(false);

@@ -4,6 +4,7 @@ import {
   Text,
   Modal,
   ScrollView,
+  type ScrollViewInstance,
   Pressable,
   StyleSheet,
   Animated,
@@ -55,7 +56,7 @@ export function GuideModal({
     useSheetDismissGesture({ visible, onClose });
 
   const [activeTab, setActiveTab] = useState<GuideTabType>(initialTab);
-  const contentScrollRef = useRef<ScrollView>(null);
+  const contentScrollRef = useRef<ScrollViewInstance>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   const {

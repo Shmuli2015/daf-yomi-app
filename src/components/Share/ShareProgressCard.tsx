@@ -1,5 +1,5 @@
 import React, { forwardRef, useId, useMemo } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, type ViewInstance, Text, StyleSheet, Image } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,7 +30,7 @@ interface ShareProgressCardProps {
   onLayout?: (e: LayoutChangeEvent) => void;
 }
 
-const ShareProgressCard = forwardRef<View, ShareProgressCardProps>(function ShareProgressCard(
+const ShareProgressCard = forwardRef<ViewInstance, ShareProgressCardProps>(function ShareProgressCard(
   { data, onLayout },
   ref,
 ) {

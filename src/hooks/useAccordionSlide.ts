@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LayoutChangeEvent } from 'react-native';
-import type { ScrollView } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { scheduleOnRN } from 'react-native-worklets';
 import {
   Easing,
@@ -23,7 +23,7 @@ const SMOOTH_CLOSE_EASING = Easing.inOut(Easing.cubic);
 const HEIGHT_EPSILON = 1;
 
 export interface AccordionCollapseScroll {
-  scrollViewRef: AnimatedRef<ScrollView>;
+  scrollViewRef: AnimatedRef<ScrollViewInstance>;
   active: SharedValue<number>;
   index: SharedValue<number>;
   startHeight: SharedValue<number>;
