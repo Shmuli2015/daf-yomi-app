@@ -45,3 +45,4 @@ whats-new-release-body.md
 play-whatsnew/
 *.apk
 *.aab
+local-builds/
