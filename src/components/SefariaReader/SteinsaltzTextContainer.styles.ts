@@ -1,6 +1,8 @@
 import { Platform, StyleSheet } from 'react-native';
 import { LIGHT_THEME, type Theme } from '../../theme';
 
+export const STEINSALTZ_TEXT_SCROLL_GAP = 16;
+
 export function createSteinsaltzTextContainerStyles(theme: Theme) {
   const textAlignment = Platform.OS === 'web' ? 'right' : 'left';
   const onAccent = LIGHT_THEME.colors.surface;
@@ -18,7 +20,7 @@ export function createSteinsaltzTextContainerStyles(theme: Theme) {
       paddingHorizontal: 16,
       paddingVertical: 16,
       paddingBottom: 32,
-      gap: 16,
+      gap: STEINSALTZ_TEXT_SCROLL_GAP,
     },
     centerContainer: {
       flex: 1,
@@ -76,11 +78,6 @@ export function createSteinsaltzTextContainerStyles(theme: Theme) {
     paragraph: {
       alignSelf: 'stretch',
       width: '100%',
-    },
-    mishnahParagraph: {
-      borderRightWidth: 3,
-      borderRightColor: theme.colors.accentBorder,
-      paddingRight: 10,
     },
     paragraphText: {
       textAlign: textAlignment,

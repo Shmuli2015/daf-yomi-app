@@ -2,6 +2,8 @@ import { Platform, StyleSheet } from 'react-native';
 import { LIGHT_THEME, type Theme } from '../../theme';
 import type { ReaderThemePalette } from '../../utils/readerTheme';
 
+export const CHAVRUTA_TEXT_SCROLL_GAP = 14;
+
 export function createChavrutaTextContainerStyles(theme: Theme, palette?: ReaderThemePalette) {
   const textAlignment = Platform.OS === 'web' ? 'right' : 'left';
   const onAccent = LIGHT_THEME.colors.surface;
@@ -10,14 +12,6 @@ export function createChavrutaTextContainerStyles(theme: Theme, palette?: Reader
   const mutedColor = palette ? palette.subTextColor : theme.colors.textMuted;
   const accentColor = palette ? palette.accentColor : theme.colors.accent;
   const borderColor = palette ? palette.borderColor : theme.colors.border;
-  const mishnahBorder = palette
-    ? palette.isSepia
-      ? 'rgba(180, 83, 9, 0.40)'
-      : palette.isDark
-      ? 'rgba(201, 150, 60, 0.45)'
-      : 'rgba(180, 83, 9, 0.30)'
-    : theme.colors.accentBorder;
-
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -31,7 +25,7 @@ export function createChavrutaTextContainerStyles(theme: Theme, palette?: Reader
       paddingHorizontal: 16,
       paddingVertical: 16,
       paddingBottom: 32,
-      gap: 14,
+      gap: CHAVRUTA_TEXT_SCROLL_GAP,
     },
     centerContainer: {
       flex: 1,
@@ -90,11 +84,6 @@ export function createChavrutaTextContainerStyles(theme: Theme, palette?: Reader
       gap: 8,
       alignSelf: 'stretch',
       width: '100%',
-    },
-    mishnahParagraph: {
-      borderRightWidth: 3,
-      borderRightColor: mishnahBorder,
-      paddingRight: 10,
     },
     paragraphText: {
       textAlign: textAlignment,

@@ -15,6 +15,7 @@ import type { ReaderTheme } from './ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useTheme } from '../../theme';
 import { mishnahSpanFlags } from '../../utils/commentaryEmphasis';
+import { mishnahJoinRoles } from '../../utils/mishnahJoin';
 import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
 import { classicCommentatorKeysForTref, filterCommentaries } from '../../utils/sefariaCommentators';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
@@ -118,6 +119,7 @@ export default function SefariaTextContainer({
     () => mishnahSpanFlags(blocks.map((block) => (block.kind === 'paragraph' ? block.item.he : null))),
     [blocks],
   );
+  const mishnahJoins = useMemo(() => mishnahJoinRoles(mishnahMarks), [mishnahMarks]);
 
   const nextSegmentIndexByIndex = useMemo(() => {
     const map = new Map<number, number>();
@@ -263,6 +265,8 @@ export default function SefariaTextContainer({
               isSepia={palette.isSepia}
               isDark={palette.isDark}
               markAsMishnah={mishnahMarks[index]}
+              mishnahJoinRole={mishnahJoins[index]}
+              mishnahSurfaceColor={palette.mishnahSurfaceColor}
             />
           );
         })}

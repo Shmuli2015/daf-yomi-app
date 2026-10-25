@@ -16,12 +16,17 @@ import { insertChapterBoundaries } from '../../utils/chapterBoundaries';
 import { collectCommentariesWithIndex } from '../../utils/sefariaCommentators';
 import { useTheme } from '../../theme';
 import { mishnahSpanFlags } from '../../utils/commentaryEmphasis';
+import { mishnahJoinRoles } from '../../utils/mishnahJoin';
 import type { ReaderTheme } from './ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
 import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
-import { createSteinsaltzTextContainerStyles } from './SteinsaltzTextContainer.styles';
+import { createMishnahJoinStyles, mishnahStartBorderColor } from './mishnahJoin.styles';
+import {
+  createSteinsaltzTextContainerStyles,
+  STEINSALTZ_TEXT_SCROLL_GAP,
+} from './SteinsaltzTextContainer.styles';
 
 interface SteinsaltzTextContainerProps {
   data: SefariaPageData | null;
@@ -60,6 +65,10 @@ export default function SteinsaltzTextContainer({
 }: SteinsaltzTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSteinsaltzTextContainerStyles(theme), [theme]);
+  const mishnahJoinStyles = useMemo(
+    () => createMishnahJoinStyles(theme, STEINSALTZ_TEXT_SCROLL_GAP),
+    [theme],
+  );
 
   const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop } =
     useScrollProgress({
@@ -101,6 +110,7 @@ export default function SteinsaltzTextContainer({
     () => mishnahSpanFlags(blocks.map((block) => (block.kind === 'paragraph' ? block.item.he : null))),
     [blocks],
   );
+  const mishnahJoins = useMemo(() => mishnahJoinRoles(mishnahMarks), [mishnahMarks]);
 
   if (loading) {
     return (
@@ -175,14 +185,18 @@ export default function SteinsaltzTextContainer({
               />
             );
           }
-          const isMishnah = mishnahMarks[index];
+          const joinRole = mishnahJoins[index];
           return (
             <View
               key={`${block.item.ref}-${index}`}
               onLayout={(event) => registerAnchor(index, event.nativeEvent.layout.y)}
               style={[
                 styles.paragraph,
-                isMishnah && [styles.mishnahParagraph, { borderRightColor: palette.accentColor }],
+                joinRole && [
+                  mishnahJoinStyles[joinRole],
+                  mishnahStartBorderColor(palette.accentColor),
+                  { backgroundColor: palette.mishnahSurfaceColor },
+                ],
               ]}
             >
               <CommentaryBodyText

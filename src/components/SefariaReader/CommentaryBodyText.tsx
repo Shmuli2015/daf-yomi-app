@@ -4,7 +4,9 @@ import {
   emphasizeRashiDibur,
   parseCommentaryRuns,
   stripEmDash,
+  stripSteinsaltzSectionLetters,
 } from '../../utils/commentaryEmphasis';
+import { rtlBodyTextProps, rtlNestedRunStyle } from '../../utils/rtlBodyText';
 import type { SefariaCommentatorKey } from '../../utils/sefariaCommentators';
 
 interface CommentaryBodyTextProps {
@@ -21,29 +23,29 @@ export default function CommentaryBodyText({
   accentColor,
 }: CommentaryBodyTextProps) {
   const sanitized = stripEmDash(text);
-  const prepared = commentator && commentator !== 'steinsaltz' ? emphasizeRashiDibur(sanitized) : sanitized;
+  const prepared =
+    commentator === 'steinsaltz'
+      ? stripSteinsaltzSectionLetters(sanitized)
+      : commentator
+        ? emphasizeRashiDibur(sanitized)
+        : sanitized;
   const runs = parseCommentaryRuns(prepared);
 
   return (
-    <Text style={baseStyle} selectable>
+    <Text style={baseStyle} selectable {...rtlBodyTextProps}>
       {'\u200F'}
-      {runs.map((run, index) =>
-        run.isGemara ? (
-          <Text
-            key={index}
-            style={[
-              styles.gemaraRun,
-              {
-                color: accentColor,
-              },
-            ]}
-          >
-            {run.text}
-          </Text>
-        ) : (
-          run.text
-        ),
-      )}
+      {runs.map((run, index) => (
+        <Text
+          key={index}
+          style={[
+            rtlNestedRunStyle,
+            run.isGemara && styles.gemaraRun,
+            run.isGemara && { color: accentColor },
+          ]}
+        >
+          {run.text}
+        </Text>
+      ))}
     </Text>
   );
 }

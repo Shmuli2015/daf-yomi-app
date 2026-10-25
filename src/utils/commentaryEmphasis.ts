@@ -34,6 +34,11 @@ const HEBREW_LETTER_PREFIX = '(?:[\\u05D0-\\u05EA]\\s+)?';
 
 const STEINSALTZ_MISHNAH_RE = new RegExp(`\\*\\*${HEBREW_LETTER_PREFIX}${heLetters('משנה')}\\*\\*`);
 const STEINSALTZ_GEMARA_RE = new RegExp(`\\*\\*${HEBREW_LETTER_PREFIX}${heLetters('גמרא')}\\*\\*`);
+const STEINSALTZ_LETTER_HEADING_RE = new RegExp(
+  `^\\u200F?\\*\\*[\\u05D0-\\u05EA](?:[\\.\\u05F3'\\u05F4])?\\s+(${heLetters('משנה')}|${heLetters('גמרא')})\\*\\*`,
+);
+const STEINSALTZ_LETTER_BOLD_RE = /^\u200F?\*\*[\u05D0-\u05EA](?:[\.\u05F3'\u05F4])?\*\*\s*/;
+const STEINSALTZ_LETTER_PLAIN_RE = /^\u200F?[\u05D0-\u05EA](?:[\.\u05F3'\u05F4])?\s+/;
 
 const MISHNAH_SPAN_OPEN_RE = new RegExp(
   `^(?:${heLetters('מתני')}${GERESH}|${heLetters('משנה')}\\s*:|${HEBREW_LETTER_PREFIX}${heLetters('משנה')}\\*\\*)`,
@@ -198,12 +203,34 @@ function emphasizeRashiDiburBlock(block: string): string {
   return block;
 }
 
+function stripSteinsaltzSectionLetter(block: string): string {
+  const headingMatch = block.match(STEINSALTZ_LETTER_HEADING_RE);
+  if (headingMatch) {
+    return `**${headingMatch[1]}**${block.slice(headingMatch[0].length)}`;
+  }
+  if (STEINSALTZ_LETTER_BOLD_RE.test(block)) {
+    return block.replace(STEINSALTZ_LETTER_BOLD_RE, '');
+  }
+  return block.replace(STEINSALTZ_LETTER_PLAIN_RE, '');
+}
+
+export function stripSteinsaltzSectionLetters(text: string): string {
+  if (!text) return '';
+  return text
+    .split('\n\n')
+    .map((block) => stripSteinsaltzSectionLetter(block))
+    .join('\n\n');
+}
+
 export function prepareCommentaryText(
   html: string,
   commentator: SefariaCommentatorKey,
 ): string {
   const cleaned = cleanCommentaryHtml(html);
-  return commentator === 'steinsaltz' ? cleaned : emphasizeRashiDibur(cleaned);
+  if (commentator === 'steinsaltz') {
+    return stripSteinsaltzSectionLetters(cleaned);
+  }
+  return emphasizeRashiDibur(cleaned);
 }
 
 export function parseCommentaryRuns(text: string): CommentaryRun[] {

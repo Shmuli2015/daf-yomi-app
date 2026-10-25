@@ -1,6 +1,7 @@
 import {
   getNextReaderTheme,
   getReaderThemeLabel,
+  getReaderThemePalette,
   resolveEffectiveReaderTheme,
 } from '../readerTheme';
 
@@ -33,5 +34,13 @@ describe('getReaderThemeLabel', () => {
     expect(getReaderThemeLabel('light')).toBe('בהיר');
     expect(getReaderThemeLabel('sepia')).toBe('ספיה');
     expect(getReaderThemeLabel('dark')).toBe('כהה');
+  });
+});
+
+describe('getReaderThemePalette', () => {
+  it('includes a mishnah surface tint for each reader theme', () => {
+    expect(getReaderThemePalette('light').mishnahSurfaceColor).toBe('rgba(180, 83, 9, 0.10)');
+    expect(getReaderThemePalette('sepia').mishnahSurfaceColor).toBe('rgba(180, 83, 9, 0.12)');
+    expect(getReaderThemePalette('dark').mishnahSurfaceColor).toBe('rgba(201, 150, 60, 0.16)');
   });
 });

@@ -7,12 +7,15 @@ import { useTheme } from '../../theme';
 import { triggerImpact } from '../../utils/haptics';
 import { formatCommentaryBadgeLabel } from '../../utils/commentaryFilters';
 import { isMishnahHeading } from '../../utils/commentaryEmphasis';
+import type { MishnahJoinRole } from '../../utils/mishnahJoin';
 import { useGuideSectionAnimation } from '../Guide/useGuideSectionAnimation';
 import AccordionSlideContent from '../AccordionSlideContent';
 import type { AccordionCollapseScroll } from '../../hooks/useAccordionSlide';
 import CommentaryBodyText from './CommentaryBodyText';
 import InlineCommentarySection from './InlineCommentarySection';
+import { createMishnahJoinStyles, mishnahStartBorderColor } from './mishnahJoin.styles';
 import { createSegmentCardStyles } from './SegmentCard.styles';
+import { SEFARIA_TEXT_SCROLL_GAP } from './SefariaTextContainer.styles';
 
 interface SegmentCardProps {
   segment: SefariaSegment;
@@ -28,6 +31,8 @@ interface SegmentCardProps {
   isSepia?: boolean;
   isDark?: boolean;
   markAsMishnah?: boolean;
+  mishnahJoinRole?: MishnahJoinRole | null;
+  mishnahSurfaceColor?: string;
 }
 
 const SegmentCard = React.memo(function SegmentCard({
@@ -44,14 +49,21 @@ const SegmentCard = React.memo(function SegmentCard({
   isSepia,
   isDark,
   markAsMishnah = false,
+  mishnahJoinRole = null,
+  mishnahSurfaceColor,
 }: SegmentCardProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSegmentCardStyles(theme), [theme]);
+  const mishnahJoinStyles = useMemo(
+    () => createMishnahJoinStyles(theme, SEFARIA_TEXT_SCROLL_GAP),
+    [theme],
+  );
   const { animatedChevronStyle } = useGuideSectionAnimation(isExpanded);
 
   const hasCommentary = commentaries.length > 0;
   const isMishnahStart = Boolean(segment.mishnahLabel) || isMishnahHeading(segment.he);
   const showMishnahMark = markAsMishnah || isMishnahStart;
+  const joinRole = mishnahJoinRole ?? (showMishnahMark ? 'solo' : null);
 
   const textColor = isSepia
     ? '#2C221E'
@@ -88,7 +100,14 @@ const SegmentCard = React.memo(function SegmentCard({
 
   return (
     <TouchableOpacity
-      style={[styles.card, showMishnahMark && styles.mishnahCard]}
+      style={[
+        styles.card,
+        joinRole && [
+          mishnahJoinStyles[joinRole],
+          mishnahStartBorderColor(accentColor),
+          { backgroundColor: mishnahSurfaceColor },
+        ],
+      ]}
       onPress={handleToggle}
       onLayout={handleCardLayout}
       activeOpacity={hasCommentary ? 0.75 : 1}

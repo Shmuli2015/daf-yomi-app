@@ -7,6 +7,7 @@ import {
   prepareCommentaryText,
   prepareGemaraText,
   stripEmDash,
+  stripSteinsaltzSectionLetters,
 } from '../commentaryEmphasis';
 
 describe('stripEmDash', () => {
@@ -164,6 +165,31 @@ describe('prepareCommentaryText', () => {
     expect(prepareCommentaryText(html, 'tosafot')).toBe(
       '**מאימתי קורין את שמע בערבין.** – כהנים שנטמאו',
     );
+  });
+
+  it('strips sefaria letter prefixes from steinsaltz headings', () => {
+    expect(prepareCommentaryText('<big>ב משנה</big> השוחט את הבכור', 'steinsaltz')).toBe(
+      '**משנה** השוחט את הבכור',
+    );
+    expect(prepareCommentaryText('<big>ג גמרא</big> תנו רבנן', 'steinsaltz')).toBe(
+      '**גמרא** תנו רבנן',
+    );
+    expect(prepareCommentaryText('<big>א</big> שנינו במשנה', 'steinsaltz')).toBe('שנינו במשנה');
+  });
+});
+
+describe('stripSteinsaltzSectionLetters', () => {
+  it('keeps mishnah and gemara labels after removing the letter', () => {
+    expect(stripSteinsaltzSectionLetters('**א משנה** על אלו מומין')).toBe('**משנה** על אלו מומין');
+    expect(stripSteinsaltzSectionLetters('**ב גמרא** אמאי')).toBe('**גמרא** אמאי');
+  });
+
+  it('strips a standalone letter run at the start of a paragraph', () => {
+    expect(stripSteinsaltzSectionLetters('**א** שנינו במשנה')).toBe('שנינו במשנה');
+  });
+
+  it('does not strip a letter that is part of the commentary', () => {
+    expect(stripSteinsaltzSectionLetters('אמר רב חננאל')).toBe('אמר רב חננאל');
   });
 });
 
