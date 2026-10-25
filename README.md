@@ -184,6 +184,7 @@ GitHub Actions workflows:
 | [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) | Pull requests and pushes to `master` | Runs the shared quality workflow |
 | [`.github/workflows/build-android.yml`](./.github/workflows/build-android.yml) | Push to `release/**`, tags `v*.*.*`, or manual dispatch | EAS local APK (+ AAB when needed), GitHub Release, optional Google Play upload |
 | [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) | After Android release or manual dispatch | Update [`docs/latest.json`](./docs/latest.json) and deploy [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) |
+| [`.github/workflows/promote-play-production.yml`](./.github/workflows/promote-play-production.yml) | Manual dispatch | Promote the Play alpha release to production and attach Hebrew what's new |
 
 **Quality checks** (`quality.yml` via `ci.yml`): runs `tsc --noEmit`, tests, and `expo-doctor` on every PR and `master` push. The same checks run again before a release build. Locally: `npm run ci`.
 
@@ -192,6 +193,8 @@ GitHub Actions workflows:
 - Builds an AAB (`production` profile) when uploading to Google Play, or when target is `aab` / `both`. APK and AAB run in parallel.
 - Publishes GitHub Release `vX.Y.Z` with the APK (and AAB when built), then uploads to Play if `play_track` is not `none`.
 - On automatic pushes, Play track defaults to `alpha`. Use **Run workflow** with `play_track: none` to skip Play.
+- Alpha uploads set the Play release name to the app version so a later promotion can find it.
+- After testing, **Actions → Promote Play to Production → Run workflow** copies that alpha release to production and fills the Hebrew store notes from [`src/data/whatsNew.ts`](./src/data/whatsNew.ts). Leave the version field empty to use `package.json`.
 - If Play fails after GitHub succeeds, the APK remains available; the job summary explains what failed.
 - Older GitHub Releases are removed so `/releases/latest` stays a single current release.
 - Requires `EXPO_TOKEN` (and `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` when uploading to Play).
@@ -203,10 +206,12 @@ GitHub Actions workflows:
 **Maintainer checklist for a release**
 
 1. Add a `WHATS_NEW` entry for the next version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts).
-2. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the Android release workflow on that branch).
-3. Open a pull request from `release/X.Y.Z` into `master` and merge after the **CI** quality check passes.
-4. Confirm the GitHub Release published with `{releaseApkBasename}-X.Y.Z.apk` (and `.aab` when Play was targeted), and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
-5. Optional first verification after workflow changes: **Actions → Build Android Release → Run workflow** with `play_track: none`.
+2. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the Android release workflow on that branch). After the push it also builds a local debug APK on this machine. That file is not uploaded.
+3. Install the local debug APK beside the Play app. It is a separate app named **מסע דף (בדיקה)** (`com.masadaf.app.debug`), so production from Play stays installed. Keep the daily Google account out of the Play testing program so the store listing stays on production. Rebuild only the debug APK with `npm run build:apk:debug`.
+4. Open a pull request from `release/X.Y.Z` into `master` and merge after the **CI** quality check passes.
+5. Confirm the GitHub Release published with `{releaseApkBasename}-X.Y.Z.apk` (and `.aab` when Play was targeted), and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
+6. When the debug build looks right, run **Actions → Promote Play to Production**. That publishes the alpha build to the store and fills What's new. No version picker and no typing in Play Console.
+7. Optional first verification after workflow changes: **Actions → Build Android Release → Run workflow** with `play_track: none`.
 
 ---
 

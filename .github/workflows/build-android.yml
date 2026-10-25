@@ -409,6 +409,7 @@ jobs:
           packageName: com.masadaf.app
           releaseFiles: ${{ needs.gate.outputs.aab_filename }}
           track: ${{ needs.gate.outputs.play_track }}
+          releaseName: ${{ needs.gate.outputs.version }}
           status: completed
           whatsNewDirectory: play-whatsnew
           mappingFile: mapping.txt

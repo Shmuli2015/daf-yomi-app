@@ -43,3 +43,5 @@ yarn-error.*
 
 whats-new-release-body.md
 play-whatsnew/
+*.apk
+*.aab
