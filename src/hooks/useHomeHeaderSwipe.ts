@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { PanResponder } from 'react-native';
+import { scheduleOnRN } from 'react-native-worklets';
 import {
   useSharedValue,
   useAnimatedStyle,
@@ -7,7 +8,6 @@ import {
   withSpring,
   withSequence,
   Easing,
-  runOnJS,
 } from 'react-native-reanimated';
 
 interface UseHomeHeaderSwipeParams {
@@ -77,17 +77,17 @@ export function useHomeHeaderSwipe({
           if (!finished) {
             swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
             swipeOpacity.value = withTiming(1, { duration: 120 });
-            runOnJS(finishSwipe)();
+            scheduleOnRN(finishSwipe);
             return;
           }
           swipeTranslateX.value = inn;
-          runOnJS(changeDay)(direction);
+          scheduleOnRN(changeDay, direction);
           swipeOpacity.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.cubic) });
           swipeTranslateX.value = withTiming(
             0,
             { duration: 180, easing: Easing.out(Easing.cubic) },
             (done) => {
-              runOnJS(finishSwipe)();
+              scheduleOnRN(finishSwipe);
               if (!done) {
                 swipeTranslateX.value = 0;
                 swipeOpacity.value = 1;
