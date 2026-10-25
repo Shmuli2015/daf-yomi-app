@@ -14,6 +14,7 @@ import {
 } from '../../../utils/settingsSearchCatalog';
 
 type SettingsHelpSectionProps = SettingsSectionChrome & {
+  showTrailingDivider?: boolean;
   onGuideModalOpen: () => void;
   onSupportPress: () => void;
   onSupportLongPress: () => void;
@@ -36,6 +37,7 @@ export default function SettingsHelpSection({
   searchQuery,
   isFirst,
   embedded,
+  showTrailingDivider = false,
   onGuideModalOpen,
   onSupportPress,
   onSupportLongPress,
@@ -109,6 +111,7 @@ export default function SettingsHelpSection({
           />
         ) : null}
       </View>
+      {showTrailingDivider ? <View style={styles.itemDivider} /> : null}
     </>
   );
 }
