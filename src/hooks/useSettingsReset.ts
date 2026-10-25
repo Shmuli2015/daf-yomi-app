@@ -1,27 +1,29 @@
 import { useState, useMemo, useCallback } from 'react';
 import type { ResetOptionType } from '../components/Settings/Modals/ResetOptionsModal.types';
-import { getResetConfirmTexts, getResetSuccessFeedback, type ResetTexts } from '../utils/settingsReset';
+import type { SettingsFeedback } from './useSettingsFeedback';
+import { getResetConfirmTexts, getResetSuccessToast, runResetAction } from '../utils/settingsReset';
 
 interface UseSettingsResetParams {
   resetDafYomiState: () => void;
   resetPersonalTrackState: () => void;
+  clearReaderPositionsState: () => void;
   resetAllState: () => void;
+  onFeedback: (feedback: SettingsFeedback) => void;
 }
 
 export function useSettingsReset({
   resetDafYomiState,
   resetPersonalTrackState,
+  clearReaderPositionsState,
   resetAllState,
+  onFeedback,
 }: UseSettingsResetParams) {
   const [showResetModal, setShowResetModal] = useState(false);
   const [showResetConfirmModal, setShowResetConfirmModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [pendingResetType, setPendingResetType] = useState<ResetOptionType | null>(null);
-  const [resetSuccessFeedback, setResetSuccessFeedback] = useState<ResetTexts | null>(null);
 
   const openResetModal = useCallback(() => setShowResetModal(true), []);
   const closeResetModal = useCallback(() => setShowResetModal(false), []);
-  const closeSuccessModal = useCallback(() => setShowSuccessModal(false), []);
 
   const handleSelectResetOption = useCallback((type: ResetOptionType) => {
     setPendingResetType(type);
@@ -36,30 +38,32 @@ export function useSettingsReset({
 
   const handleExecuteReset = useCallback(() => {
     if (!pendingResetType) return;
-    if (pendingResetType === 'dafYomi') {
-      resetDafYomiState();
-    } else if (pendingResetType === 'personalTrack') {
-      resetPersonalTrackState();
-    } else {
-      resetAllState();
-    }
-    setResetSuccessFeedback(getResetSuccessFeedback(pendingResetType));
+    runResetAction(pendingResetType, {
+      resetDafYomiState,
+      resetPersonalTrackState,
+      clearReaderPositionsState,
+      resetAllState,
+    });
     setShowResetConfirmModal(false);
     setPendingResetType(null);
-    setShowSuccessModal(true);
-  }, [pendingResetType, resetDafYomiState, resetPersonalTrackState, resetAllState]);
+    onFeedback(getResetSuccessToast(pendingResetType));
+  }, [
+    pendingResetType,
+    resetDafYomiState,
+    resetPersonalTrackState,
+    clearReaderPositionsState,
+    resetAllState,
+    onFeedback,
+  ]);
 
   const resetConfirmTexts = useMemo(() => getResetConfirmTexts(pendingResetType), [pendingResetType]);
 
   return {
     showResetModal,
     showResetConfirmModal,
-    showSuccessModal,
     resetConfirmTexts,
-    resetSuccessFeedback,
     openResetModal,
     closeResetModal,
-    closeSuccessModal,
     handleSelectResetOption,
     handleCancelResetConfirm,
     handleExecuteReset,

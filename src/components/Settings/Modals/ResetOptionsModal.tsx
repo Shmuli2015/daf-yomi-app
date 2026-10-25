@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../../theme';
 import { ResetOptionType, ResetOptionItem, ResetOptionsModalProps } from './ResetOptionsModal.types';
@@ -18,6 +18,12 @@ const RESET_OPTIONS: ResetOptionItem[] = [
     title: 'ניקוי מסלול אישי בלבד',
     description: 'מחיקת כל הדפים שסומנו במסלול האישי וההתקדמות במסכתות. הדף היומי וההגדרות יישמרו.',
     icon: 'bookmark-outline',
+  },
+  {
+    id: 'readerPositions',
+    title: 'ניקוי מיקומי קריאה',
+    description: 'מחיקת מיקום הקריאה השמור בכל הדפים. סימוני הלימוד וההגדרות יישמרו.',
+    icon: 'navigate-outline',
   },
   {
     id: 'all',
@@ -44,7 +50,9 @@ export default function ResetOptionsModal({ visible, onClose, onConfirm }: Reset
       ? 'המשך לאיפוס דף יומי'
       : selectedType === 'personalTrack'
         ? 'המשך לאיפוס מסלול אישי'
-        : 'המשך לאיפוס כללי';
+        : selectedType === 'readerPositions'
+          ? 'המשך לניקוי מיקומי קריאה'
+          : 'המשך לאיפוס כללי';
 
   return (
     <BottomSheetModal visible={visible} onClose={onClose}>
@@ -63,7 +71,12 @@ export default function ResetOptionsModal({ visible, onClose, onConfirm }: Reset
 
       <Text style={styles.subtitle}>בחר איזה מידע ברצונך למחוק מהאפליקציה:</Text>
 
-      <View style={styles.optionsList}>
+      <ScrollView
+        style={styles.optionsScroll}
+        contentContainerStyle={styles.optionsList}
+        showsVerticalScrollIndicator
+        nestedScrollEnabled
+      >
         {RESET_OPTIONS.map((opt) => {
           const isSelected = selectedType === opt.id;
           const isDangerOption = opt.isDestructiveAll;
@@ -123,7 +136,7 @@ export default function ResetOptionsModal({ visible, onClose, onConfirm }: Reset
             </TouchableOpacity>
           );
         })}
-      </View>
+      </ScrollView>
 
       <View style={styles.warningBox}>
         <Ionicons name="warning-outline" size={18} color={theme.colors.danger} />

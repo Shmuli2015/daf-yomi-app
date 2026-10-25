@@ -10,7 +10,6 @@ import { GuideModal } from '../../Guide/GuideModal';
 import { TimePickerModal } from '../Schedule/TimePickerModal';
 import ResetOptionsModal from './ResetOptionsModal';
 import { ResetOptionType } from './ResetOptionsModal.types';
-import SuccessModal from '../../SuccessModal';
 import ResetConfirmModal from './ResetConfirmModal';
 import BackupImportModal from './BackupImportModal';
 import type { BackupPreview } from '../../../services/backup';
@@ -51,10 +50,6 @@ export type SettingsModalsProps = {
   resetConfirmMessage: string;
   onResetConfirmClose: () => void;
   onExecuteReset: () => void;
-  showSuccessModal: boolean;
-  resetSuccessTitle?: string;
-  resetSuccessMessage?: string;
-  onSuccessModalClose: () => void;
   showBackupImportModal: boolean;
   backupPreview: BackupPreview | null;
   onBackupImportMerge: () => void;
@@ -109,10 +104,6 @@ export default function SettingsModals({
   resetConfirmMessage,
   onResetConfirmClose,
   onExecuteReset,
-  showSuccessModal,
-  resetSuccessTitle,
-  resetSuccessMessage,
-  onSuccessModalClose,
   showBackupImportModal,
   backupPreview,
   onBackupImportMerge,
@@ -220,12 +211,6 @@ export default function SettingsModals({
         message={resetConfirmMessage}
         onConfirm={onExecuteReset}
         onClose={onResetConfirmClose}
-      />
-      <SuccessModal
-        visible={showSuccessModal}
-        title={resetSuccessTitle || 'האיפוס הושלם'}
-        message={resetSuccessMessage || 'הנתונים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי.'}
-        onClose={onSuccessModalClose}
       />
       <BackupImportModal
         visible={showBackupImportModal}
