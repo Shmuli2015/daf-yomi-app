@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, type MutableRefObject } from 'react';
-import { AppState, type ScrollView } from 'react-native';
+import { AppState, type ScrollViewInstance } from 'react-native';
 import { clearReaderPosition, getReaderPosition, saveReaderPosition } from '../db/database';
 import { captureException } from '../services/sentry';
 import { RESTORE_TOP_PADDING_PX, findTopAnchorIndex } from '../utils/readerPositionAnchors';
 
 interface UseReaderPositionOptions {
   positionKey?: string;
-  scrollViewRef: { current: Pick<ScrollView, 'scrollTo'> | null };
+  scrollViewRef: { current: Pick<ScrollViewInstance, 'scrollTo'> | null };
   scrollYRef: MutableRefObject<number>;
   skipRestore?: boolean;
 }

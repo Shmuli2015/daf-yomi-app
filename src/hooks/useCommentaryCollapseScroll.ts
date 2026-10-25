@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
-import type { ScrollView } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import { useSharedValue, type AnimatedRef } from 'react-native-reanimated';
 import type { AccordionCollapseScroll } from './useAccordionSlide';
 
@@ -9,7 +9,7 @@ interface CardLayout {
 }
 
 interface UseCommentaryCollapseScrollOptions {
-  scrollViewRef: AnimatedRef<ScrollView>;
+  scrollViewRef: AnimatedRef<ScrollViewInstance>;
   scrollYRef: RefObject<number>;
   resetKey?: string;
 }

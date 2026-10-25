@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import type { ScrollView } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 import {
   scrollTo,
   useAnimatedRef,
@@ -34,7 +34,7 @@ export function useSettingsSectionScroll({
   isSearching,
   offlineStaysOpen,
 }: UseSettingsSectionScrollOptions) {
-  const scrollRef = useAnimatedRef<ScrollView>();
+  const scrollRef = useAnimatedRef<ScrollViewInstance>();
   const scrollY = useSharedValue(0);
   const active = useSharedValue(0);
   const index = useSharedValue(-1);

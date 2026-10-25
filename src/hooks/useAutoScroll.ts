@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { ScrollView } from 'react-native';
+import type { ScrollViewInstance } from 'react-native';
 
 export type AutoScrollSpeedLevel = 1 | 2 | 3 | 4 | 5;
 
@@ -12,7 +12,7 @@ const SPEED_LEVEL_MAP: Record<AutoScrollSpeedLevel, number> = {
 };
 
 interface UseAutoScrollOptions {
-  scrollViewRef: React.RefObject<ScrollView | null>;
+  scrollViewRef: { current: ScrollViewInstance | null };
   scrollYRef: React.MutableRefObject<number>;
   active: boolean;
   level: AutoScrollSpeedLevel;

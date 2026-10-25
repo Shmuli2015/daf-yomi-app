@@ -1,5 +1,5 @@
 import React, { forwardRef, useMemo } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, type ViewInstance, Text, Image } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LIGHT_THEME } from '../../theme';
@@ -11,7 +11,7 @@ interface SiyumShareCardProps {
   onLayout?: (e: LayoutChangeEvent) => void;
 }
 
-const SiyumShareCard = forwardRef<View, SiyumShareCardProps>(function SiyumShareCard(
+const SiyumShareCard = forwardRef<ViewInstance, SiyumShareCardProps>(function SiyumShareCard(
   { masechetHe, totalPages, onLayout },
   ref,
 ) {

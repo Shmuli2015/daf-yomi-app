@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { AppState, Platform, type AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import type { EventSubscription } from 'expo-modules-core';
+import type { EventSubscription } from 'expo';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { getSettings } from '../db/database';
 import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';

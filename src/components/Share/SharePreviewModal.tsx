@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
+  type ViewInstance,
   Text,
   StyleSheet,
   TouchableOpacity,
@@ -24,7 +25,7 @@ interface SharePreviewModalProps {
 export default function SharePreviewModal({ visible, onClose, data }: SharePreviewModalProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const captureRef = useRef<View>(null);
+  const captureRef = useRef<ViewInstance>(null);
   const [sharing, setSharing] = useState(false);
   const [captureLaidOut, setCaptureLaidOut] = useState(false);
 
