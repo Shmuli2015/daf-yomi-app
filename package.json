@@ -14,6 +14,7 @@
     "release:major": "node scripts/release.js major",
     "discover:chavruta": "node scripts/discover-chavruta-ids.js",
     "build:apk": "eas build --platform android --profile preview --local",
+    "build:apk:debug": "eas build --platform android --profile debug --local",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "ci": "npm run typecheck && npm test && npx expo-doctor"

@@ -1,12 +1,15 @@
 const { version } = require('./package.json');
 
-const isPreviewBuild = process.env.EAS_BUILD_PROFILE === 'preview';
+const buildProfile = process.env.EAS_BUILD_PROFILE;
+const isPreviewBuild = buildProfile === 'preview';
+const isDebugBuild = buildProfile === 'debug';
+const isSideloadBuild = isPreviewBuild || isDebugBuild;
 
 module.exports = {
   expo: {
-    name: 'מסע דף',
+    name: isDebugBuild ? 'מסע דף (בדיקה)' : 'מסע דף',
     slug: 'daf-yomi-app',
-    scheme: 'dafyomi',
+    scheme: isDebugBuild ? 'dafyomi-debug' : 'dafyomi',
     version,
     orientation: 'portrait',
     icon: './assets/icon.png',
@@ -20,13 +23,13 @@ module.exports = {
       supportsTablet: true,
     },
     android: {
-      package: 'com.masadaf.app',
+      package: isDebugBuild ? 'com.masadaf.app.debug' : 'com.masadaf.app',
       adaptiveIcon: {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#ffffff',
       },
       predictiveBackGestureEnabled: false,
-      permissions: isPreviewBuild
+      permissions: isSideloadBuild
         ? ['SCHEDULE_EXACT_ALARM', 'REQUEST_INSTALL_PACKAGES']
         : ['SCHEDULE_EXACT_ALARM'],
     },
