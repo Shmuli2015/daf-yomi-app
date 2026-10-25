@@ -28,10 +28,12 @@ export function useDailyQuoteAnimation() {
 
     quoteOpacity.value = withTiming(0, { duration: 120 }, (finished) => {
       if (finished) {
-        scheduleOnRN(onUpdate);
-        quoteTranslateY.value = 6;
-        quoteOpacity.value = withTiming(1, { duration: 240 });
-        quoteTranslateY.value = withSpring(0, { damping: 14, stiffness: 120 });
+        scheduleOnRN(() => {
+          onUpdate();
+          quoteTranslateY.value = 8;
+          quoteOpacity.value = withTiming(1, { duration: 220 });
+          quoteTranslateY.value = withSpring(0, { damping: 14, stiffness: 120 });
+        });
       }
     });
   }, [quoteOpacity, quoteTranslateY, shuffleRotation]);

@@ -133,7 +133,6 @@ export function useAccordionSlide(
     if (!isHeightLocked) {
       animatedHeight.value = measuredHeight.value;
       setIsHeightLocked(true);
-      return;
     }
 
     setIsAnimating(true);

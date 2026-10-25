@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { PanResponder } from 'react-native';
+import { Dimensions, PanResponder } from 'react-native';
 import { scheduleOnRN } from 'react-native-worklets';
 import {
   useSharedValue,
@@ -47,7 +47,9 @@ export function useHomeHeaderSwipe({
   currentDateRef.current = currentDate;
 
   const SWIPE_THRESHOLD = 50;
-  const SLIDE_PX = 28;
+  const SWIPE_VELOCITY = 0.45;
+  const SLIDE_PX = Dimensions.get('window').width * 0.4;
+  const ENTER_PX = Dimensions.get('window').width * 0.25;
 
   const finishSwipe = useCallback(() => {
     isAnimatingRef.current = false;
@@ -66,13 +68,13 @@ export function useHomeHeaderSwipe({
       if (isAnimatingRef.current) return;
       isAnimatingRef.current = true;
 
-      const out = direction === 'prev' ? -SLIDE_PX : SLIDE_PX;
-      const inn = direction === 'prev' ? SLIDE_PX : -SLIDE_PX;
+      const out = direction === 'next' ? -SLIDE_PX : SLIDE_PX;
+      const inn = direction === 'next' ? ENTER_PX : -ENTER_PX;
 
-      swipeOpacity.value = withTiming(0, { duration: 100, easing: Easing.in(Easing.cubic) });
+      swipeOpacity.value = withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) });
       swipeTranslateX.value = withTiming(
         out,
-        { duration: 100, easing: Easing.in(Easing.cubic) },
+        { duration: 120, easing: Easing.out(Easing.quad) },
         (finished) => {
           if (!finished) {
             swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
@@ -82,10 +84,10 @@ export function useHomeHeaderSwipe({
           }
           swipeTranslateX.value = inn;
           scheduleOnRN(changeDay, direction);
-          swipeOpacity.value = withTiming(1, { duration: 180, easing: Easing.out(Easing.cubic) });
-          swipeTranslateX.value = withTiming(
+          swipeOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
+          swipeTranslateX.value = withSpring(
             0,
-            { duration: 180, easing: Easing.out(Easing.cubic) },
+            { damping: 22, stiffness: 240, mass: 0.8 },
             (done) => {
               scheduleOnRN(finishSwipe);
               if (!done) {
@@ -97,7 +99,7 @@ export function useHomeHeaderSwipe({
         },
       );
     },
-    [changeDay, finishSwipe, swipeOpacity, swipeTranslateX],
+    [changeDay, finishSwipe, swipeOpacity, swipeTranslateX, ENTER_PX, SLIDE_PX],
   );
 
   const triggerSwipeRef = useRef(triggerSwipe);
@@ -111,22 +113,28 @@ export function useHomeHeaderSwipe({
           Math.abs(gs.dx) > 10 &&
           Math.abs(gs.dx) > Math.abs(gs.dy) * 1.5,
         onPanResponderMove: (_, gs) => {
-          swipeTranslateX.value = gs.dx * 0.15;
+          swipeTranslateX.value = gs.dx * 0.75;
+          swipeOpacity.value = 1 - Math.min(Math.abs(gs.dx) / 360, 0.4);
         },
         onPanResponderRelease: (_, gs) => {
-          if (gs.dx < -SWIPE_THRESHOLD) {
-            triggerSwipeRef.current('prev');
-          } else if (gs.dx > SWIPE_THRESHOLD) {
+          const isFlickLeft = gs.dx < -20 && gs.vx < -SWIPE_VELOCITY;
+          const isFlickRight = gs.dx > 20 && gs.vx > SWIPE_VELOCITY;
+
+          if (gs.dx < -SWIPE_THRESHOLD || isFlickLeft) {
             triggerSwipeRef.current('next');
+          } else if (gs.dx > SWIPE_THRESHOLD || isFlickRight) {
+            triggerSwipeRef.current('prev');
           } else {
             swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
+            swipeOpacity.value = withTiming(1, { duration: 140 });
           }
         },
         onPanResponderTerminate: () => {
           swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
+          swipeOpacity.value = withTiming(1, { duration: 140 });
         },
       }),
-    [swipeTranslateX],
+    [swipeTranslateX, swipeOpacity],
   );
 
   useEffect(() => {
