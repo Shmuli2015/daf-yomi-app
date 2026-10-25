@@ -378,9 +378,10 @@ jobs:
           done < <(gh release list --limit 100 --json tagName --jq '.[].tagName')
 
       - name: Trigger Pages deploy
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run "Deploy GitHub Pages" --ref "${{ github.ref_name }}"
+        run: gh workflow run "Deploy GitHub Pages" --ref master
 
       - name: Write publish summary (GitHub ok)
         shell: bash
