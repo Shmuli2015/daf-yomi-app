@@ -129,6 +129,7 @@ function cleanText(html: string): string {
   return decodeEntities(withBreaks)
     .replace(/\u2014/g, '-')
     .replace(/--+/g, '-')
+    .replace(/קפ\s+וסאי/g, 'קפוסאי')
     .replace(/\s+/g, ' ')
     .trim();
 }
