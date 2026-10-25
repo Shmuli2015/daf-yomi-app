@@ -391,6 +391,16 @@ describe('parseChavrutaDocument', () => {
     expect(amud?.paragraphs[1].text).toContain(buildFootnoteToken(amud?.footnotes[2].id ?? 0));
     expect(amud?.paragraphs[1].text).not.toContain('3ב');
   });
+
+  it('fixes erroneous space in rabbi yehoshua ben kapusai', () => {
+    const html = `
+      <u>דף לה - ב</u>
+      <span style='font-size:17px; line-height: 140%; color:RGB(0,0,0);'><b style='font-size:20px; color:RGB(0,0,0);'>ומתרצינן: איכא בינייהו דרבי יהושע בן קפ וסאי.</b></span>
+    `;
+    const amud = findChavrutaAmud(parseChavrutaDocument(html), 35, 'b');
+    expect(amud?.paragraphs[0].text).toContain('קפוסאי');
+    expect(amud?.paragraphs[0].text).not.toContain('קפ וסאי');
+  });
 });
 
 describe('parseChavrutaBodyParts', () => {
