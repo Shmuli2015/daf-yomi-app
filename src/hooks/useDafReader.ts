@@ -21,6 +21,7 @@ import { useReaderFontSize } from './useReaderFontSize';
 import { useAppStore } from '../store/useAppStore';
 import { clampReaderViewMode } from '../utils/readerViewMode';
 import { describeSefariaLoadError } from '../utils/sefariaLoadErrorMessage';
+import { useReaderPrefetch } from './useReaderPrefetch';
 
 export type NavDirection = 'next' | 'prev' | null;
 
@@ -73,16 +74,11 @@ export function useDafReader(initialLocation: DafLocation) {
     }
   }, [gemaraNikud, nikudAvailable]);
 
-  const prefetchAdjacentPages = useCallback((loc: DafLocation) => {
-    const nextLoc = getNextAmud(loc);
-    if (!nextLoc) return;
-    fetchSefariaPageText(nextLoc.masechetEn, nextLoc.dafNum, nextLoc.amud, gemaraNikud).catch(() => {});
-  }, [gemaraNikud]);
+  useReaderPrefetch(location, gemaraNikud, chavrutaAvailable);
 
   useEffect(() => {
     void loadSefariaText(location);
-    prefetchAdjacentPages(location);
-  }, [location, loadSefariaText, prefetchAdjacentPages]);
+  }, [location, loadSefariaText]);
 
   const handleToggleViewMode = useCallback((mode: ViewMode) => {
     if (mode === viewMode) {
