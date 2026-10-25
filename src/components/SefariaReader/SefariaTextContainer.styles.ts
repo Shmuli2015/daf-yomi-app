@@ -1,6 +1,8 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '../../theme';
 
+export const SEFARIA_TEXT_SCROLL_GAP = 8;
+
 export function createSefariaTextContainerStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
@@ -14,7 +16,7 @@ export function createSefariaTextContainerStyles(theme: Theme) {
       paddingHorizontal: 16,
       paddingVertical: 12,
       paddingBottom: 32,
-      gap: 8,
+      gap: SEFARIA_TEXT_SCROLL_GAP,
     },
     centerContainer: {
       flex: 1,

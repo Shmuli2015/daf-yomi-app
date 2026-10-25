@@ -18,11 +18,6 @@ export function createSegmentCardStyles(theme: Theme) {
       alignItems: 'stretch',
     },
     cardExpanded: {},
-    mishnahCard: {
-      borderRightWidth: 3,
-      borderRightColor: theme.colors.accentBorder,
-      paddingRight: 8,
-    },
     mishnahLabel: {
       fontSize: 16,
       fontWeight: '800',

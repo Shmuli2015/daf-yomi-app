@@ -6,6 +6,7 @@ export interface ReaderThemePalette {
   isSepia: boolean;
   backgroundColor: string;
   surfaceColor: string;
+  mishnahSurfaceColor: string;
   textColor: string;
   subTextColor: string;
   accentColor: string;
@@ -45,6 +46,7 @@ export function getReaderThemePalette(
       isSepia: true,
       backgroundColor: '#FBF0D9',
       surfaceColor: '#F4E6C8',
+      mishnahSurfaceColor: 'rgba(180, 83, 9, 0.12)',
       textColor: '#2C221E',
       subTextColor: '#8C7462',
       accentColor: '#92400E',
@@ -59,6 +61,7 @@ export function getReaderThemePalette(
       isSepia: false,
       backgroundColor: '#121212',
       surfaceColor: '#1E1E1E',
+      mishnahSurfaceColor: 'rgba(201, 150, 60, 0.16)',
       textColor: '#FFFFFF',
       subTextColor: '#A1A1AA',
       accentColor: appAccentColor || '#C9963C',
@@ -72,6 +75,7 @@ export function getReaderThemePalette(
     isSepia: false,
     backgroundColor: '#FFFFFF',
     surfaceColor: '#F8FAFC',
+    mishnahSurfaceColor: 'rgba(180, 83, 9, 0.10)',
     textColor: '#0F172A',
     subTextColor: '#64748B',
     accentColor: appAccentColor || '#B45309',

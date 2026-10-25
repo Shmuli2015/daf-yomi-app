@@ -14,6 +14,7 @@ import type { ReaderTheme } from '../SefariaReader/ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useTheme } from '../../theme';
 import type { ChavrutaBlock, ChavrutaFootnote, ChavrutaPageData } from '../../services/chavrutaApi';
+import { mishnahJoinRoles } from '../../utils/mishnahJoin';
 import { chavrutaMishnahFlags } from '../../utils/parseChavrutaHtml';
 import ChavrutaBodyText from './ChavrutaBodyText';
 import ChavrutaFootnoteSheet from './ChavrutaFootnoteSheet';
@@ -21,7 +22,11 @@ import ChavrutaSectionHeader from './ChavrutaSectionHeader';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
 import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
-import { createChavrutaTextContainerStyles } from './ChavrutaTextContainer.styles';
+import { createMishnahJoinStyles, mishnahStartBorderColor } from '../SefariaReader/mishnahJoin.styles';
+import {
+  CHAVRUTA_TEXT_SCROLL_GAP,
+  createChavrutaTextContainerStyles,
+} from './ChavrutaTextContainer.styles';
 
 interface ChavrutaTextContainerProps {
   data: ChavrutaPageData | null;
@@ -69,6 +74,10 @@ export default function ChavrutaTextContainer({
     () => createChavrutaTextContainerStyles(theme, palette),
     [theme, palette],
   );
+  const mishnahJoinStyles = useMemo(
+    () => createMishnahJoinStyles(theme, CHAVRUTA_TEXT_SCROLL_GAP),
+    [theme],
+  );
   const [activeFootnoteIndex, setActiveFootnoteIndex] = useState<number | null>(null);
 
   const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
@@ -107,6 +116,7 @@ export default function ChavrutaTextContainer({
   }, [data?.blocks, data?.paragraphs]);
 
   const mishnahFlags = useMemo(() => chavrutaMishnahFlags(renderBlocks), [renderBlocks]);
+  const mishnahJoins = useMemo(() => mishnahJoinRoles(mishnahFlags), [mishnahFlags]);
 
   useEffect(() => {
     setActiveFootnoteIndex(null);
@@ -197,12 +207,19 @@ export default function ChavrutaTextContainer({
               />
             );
           }
-          const isMishnahParagraph = mishnahFlags[index];
+          const joinRole = mishnahJoins[index];
           return (
             <View
               key={`paragraph-${index}`}
               onLayout={(event) => registerAnchor(index, event.nativeEvent.layout.y)}
-              style={[styles.paragraph, isMishnahParagraph && styles.mishnahParagraph]}
+              style={[
+                styles.paragraph,
+                joinRole && [
+                  mishnahJoinStyles[joinRole],
+                  mishnahStartBorderColor(palette.accentColor),
+                  { backgroundColor: palette.mishnahSurfaceColor },
+                ],
+              ]}
             >
               <ChavrutaBodyText
                 text={block.text}

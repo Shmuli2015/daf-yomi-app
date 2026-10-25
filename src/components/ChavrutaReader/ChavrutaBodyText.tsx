@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Text, type StyleProp, type TextStyle } from 'react-native';
 import { useTheme } from '../../theme';
 import { chavrutaFootnoteLabel, parseChavrutaBodyParts } from '../../utils/parseChavrutaHtml';
+import { rtlBodyTextProps, rtlNestedRunStyle } from '../../utils/rtlBodyText';
 import type { ChavrutaFootnote } from '../../services/chavrutaApi';
 import ChavrutaFootnoteMark from './ChavrutaFootnoteMark';
 import { createChavrutaBodyTextStyles } from './ChavrutaBodyText.styles';
@@ -31,7 +32,7 @@ export default function ChavrutaBodyText({
   const markSize = Math.max(13, Math.round(fontSize * 0.82));
 
   return (
-    <Text style={baseStyle} selectable>
+    <Text style={baseStyle} selectable {...rtlBodyTextProps}>
       {'\u200F'}
       {parts.map((part, index) => {
         if (part.kind === 'footnote') {
@@ -60,6 +61,7 @@ export default function ChavrutaBodyText({
             <Text
               key={`gemara-${index}`}
               style={[
+                rtlNestedRunStyle,
                 styles.gemaraRun,
                 { color: accentColor },
               ]}
@@ -69,7 +71,11 @@ export default function ChavrutaBodyText({
           );
         }
 
-        return <Text key={`text-${index}`}>{part.text}</Text>;
+        return (
+          <Text key={`text-${index}`} style={rtlNestedRunStyle}>
+            {part.text}
+          </Text>
+        );
       })}
     </Text>
   );
