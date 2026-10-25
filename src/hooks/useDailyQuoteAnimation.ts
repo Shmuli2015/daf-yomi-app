@@ -1,10 +1,10 @@
 import { useCallback } from 'react';
+import { scheduleOnRN } from 'react-native-worklets';
 import {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withSpring,
-  runOnJS,
 } from 'react-native-reanimated';
 
 export function useDailyQuoteAnimation() {
@@ -28,7 +28,7 @@ export function useDailyQuoteAnimation() {
 
     quoteOpacity.value = withTiming(0, { duration: 120 }, (finished) => {
       if (finished) {
-        runOnJS(onUpdate)();
+        scheduleOnRN(onUpdate);
         quoteTranslateY.value = 6;
         quoteOpacity.value = withTiming(1, { duration: 240 });
         quoteTranslateY.value = withSpring(0, { damping: 14, stiffness: 120 });

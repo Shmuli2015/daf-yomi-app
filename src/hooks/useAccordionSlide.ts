@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { LayoutChangeEvent } from 'react-native';
 import type { ScrollView } from 'react-native';
+import { scheduleOnRN } from 'react-native-worklets';
 import {
   Easing,
-  runOnJS,
   scrollTo,
   useAnimatedReaction,
   useAnimatedStyle,
@@ -89,7 +89,7 @@ export function useAccordionSlide(
       if (height <= 0.5) {
         collapseScroll.active.value = 0;
         if (collapseOnEnd) {
-          runOnJS(collapseOnEnd)();
+          scheduleOnRN(collapseOnEnd);
         }
       }
     },
@@ -122,7 +122,7 @@ export function useAccordionSlide(
           },
           (finished) => {
             if (finished) {
-              runOnJS(finishOpen)();
+              scheduleOnRN(finishOpen);
             }
           },
         );
@@ -145,7 +145,7 @@ export function useAccordionSlide(
       },
       (finished) => {
         if (finished) {
-          runOnJS(finishClose)();
+          scheduleOnRN(finishClose);
         }
       },
     );
@@ -186,7 +186,7 @@ export function useAccordionSlide(
         },
         (finished) => {
           if (finished) {
-            runOnJS(finishOpen)();
+            scheduleOnRN(finishOpen);
           }
         },
       );
