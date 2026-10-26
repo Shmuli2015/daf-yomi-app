@@ -1,6 +1,7 @@
 import * as FileSystem from 'expo-file-system/legacy';
 import { SHAS_MASECHTOT } from '../data/shas';
 import { prepareCommentaryText, prepareGemaraText } from '../utils/commentaryEmphasis';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import {
   getChapterEventsForAmud,
   type SefariaChapterEvent,
@@ -168,7 +169,7 @@ function appendCommentary(
 }
 
 async function fetchJson(url: string): Promise<any> {
-  const response = await fetch(url);
+  const response = await fetchWithTimeout(url);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
   }

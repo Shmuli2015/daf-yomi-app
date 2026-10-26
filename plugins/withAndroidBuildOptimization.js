@@ -1,8 +1,16 @@
-const { withAppBuildGradle, withGradleProperties, withDangerousMod } = require('@expo/config-plugins');
+const { withAppBuildGradle, withGradleProperties, withDangerousMod, withAndroidManifest } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
 function withAndroidBuildOptimization(config) {
+  config = withAndroidManifest(config, (mod) => {
+    const mainApplication = mod.modResults.manifest.application?.[0];
+    if (mainApplication) {
+      mainApplication.$['android:usesCleartextTraffic'] = 'false';
+    }
+    return mod;
+  });
+
   config = withDangerousMod(config, [
     'android',
     async (mod) => {

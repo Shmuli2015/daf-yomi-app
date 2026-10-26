@@ -36,6 +36,15 @@ function resolveSentryRelease(): string | undefined {
   return undefined;
 }
 
+type SentryBeforeSendEvent = Parameters<NonNullable<Sentry.ReactNativeOptions['beforeSend']>>[0];
+
+function sanitizeSentryEvent(event: SentryBeforeSendEvent): SentryBeforeSendEvent {
+  if (event.request?.url) {
+    event.request.url = event.request.url.split('?')[0];
+  }
+  return event;
+}
+
 export function initSentry(): boolean {
   const dsn = resolveSentryDsn();
   if (!dsn || isExpoGo) {
@@ -48,6 +57,7 @@ export function initSentry(): boolean {
     release: resolveSentryRelease(),
     sendDefaultPii: false,
     tracesSampleRate: 0,
+    beforeSend: sanitizeSentryEvent,
   });
   return true;
 }

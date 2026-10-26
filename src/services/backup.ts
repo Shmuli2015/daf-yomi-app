@@ -17,6 +17,10 @@ import {
 import { toFileSharingUrl } from '../utils/shareProgressImage';
 import { normalizeAutoBackupInterval } from '../utils/autoBackupInterval';
 import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
+import {
+  computeBackupChecksum,
+  buildBackupCanonicalPayload,
+} from '../utils/backupChecksum';
 
 export const CURRENT_BACKUP_VERSION = 2;
 export const MAX_BACKUP_SIZE_BYTES = 5 * 1024 * 1024;
@@ -33,6 +37,7 @@ export type BackupData = {
   records: BackupRecord[];
   settings: BackupSettings;
   personalTrackRecords?: PersonalTrackRecord[];
+  checksum?: string;
 };
 
 export type BackupPreview = {
@@ -59,13 +64,21 @@ function stripSettingsId(settings: SettingsRecord): BackupSettings {
 }
 
 export function buildBackupData(): BackupData {
+  const records = getAllRecords().map(stripRecordId);
+  const settings = settingsForExport(stripSettingsId(getSettings()));
+  const personalTrackRecords = getPersonalTrackRecords();
+  const checksum = computeBackupChecksum(
+    buildBackupCanonicalPayload(records, settings, personalTrackRecords),
+  );
+
   return {
     backupVersion: CURRENT_BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     appVersion: Constants.expoConfig?.version ?? 'unknown',
-    records: getAllRecords().map(stripRecordId),
-    settings: settingsForExport(stripSettingsId(getSettings())),
-    personalTrackRecords: getPersonalTrackRecords(),
+    records,
+    settings,
+    personalTrackRecords,
+    checksum,
   };
 }
 
@@ -225,6 +238,14 @@ function migrateBackup(raw: Record<string, unknown>): BackupData | null {
     }
   }
 
+  if (typeof raw.checksum === 'string' && raw.checksum.length > 0) {
+    const canonicalPayload = buildBackupCanonicalPayload(records, settings, personalTrackRecords);
+    const expectedChecksum = computeBackupChecksum(canonicalPayload);
+    if (raw.checksum !== expectedChecksum) {
+      return null;
+    }
+  }
+
   return {
     backupVersion: version,
     exportedAt:
@@ -233,6 +254,7 @@ function migrateBackup(raw: Record<string, unknown>): BackupData | null {
     records,
     settings,
     ...(personalTrackRecords ? { personalTrackRecords } : {}),
+    ...(typeof raw.checksum === 'string' ? { checksum: raw.checksum } : {}),
   };
 }
 
