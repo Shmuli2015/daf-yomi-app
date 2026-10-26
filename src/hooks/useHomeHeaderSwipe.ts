@@ -68,8 +68,8 @@ export function useHomeHeaderSwipe({
       if (isAnimatingRef.current) return;
       isAnimatingRef.current = true;
 
-      const out = direction === 'next' ? -SLIDE_PX : SLIDE_PX;
-      const inn = direction === 'next' ? ENTER_PX : -ENTER_PX;
+      const out = direction === 'next' ? SLIDE_PX : -SLIDE_PX;
+      const inn = direction === 'next' ? -ENTER_PX : ENTER_PX;
 
       swipeOpacity.value = withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) });
       swipeTranslateX.value = withTiming(
@@ -120,9 +120,9 @@ export function useHomeHeaderSwipe({
           const isFlickLeft = gs.dx < -20 && gs.vx < -SWIPE_VELOCITY;
           const isFlickRight = gs.dx > 20 && gs.vx > SWIPE_VELOCITY;
 
-          if (gs.dx < -SWIPE_THRESHOLD || isFlickLeft) {
+          if (gs.dx > SWIPE_THRESHOLD || isFlickRight) {
             triggerSwipeRef.current('next');
-          } else if (gs.dx > SWIPE_THRESHOLD || isFlickRight) {
+          } else if (gs.dx < -SWIPE_THRESHOLD || isFlickLeft) {
             triggerSwipeRef.current('prev');
           } else {
             swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
