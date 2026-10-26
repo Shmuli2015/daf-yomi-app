@@ -6,9 +6,7 @@ import {
   type SefariaChapterEvent,
 } from '../utils/chapterBoundaries';
 import {
-  COMMENTATOR_TITLE_HE,
   commentatorFetchSpecs,
-  identifySefariaCommentator,
   type SefariaCommentatorKey,
 } from '../utils/sefariaCommentators';
 import {
@@ -64,9 +62,15 @@ export interface SefariaPageData {
 }
 
 const CACHE_DIR = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? ''}sefaria-text/`;
-const SEFARIA_TEXT_CACHE_VERSION = 19;
-const MEMORY_CACHE_MAX = 5;
+export const SEFARIA_TEXT_CACHE_VERSION = 20;
+const MEMORY_CACHE_MAX = 24;
 const memoryCache = new Map<string, SefariaPageData>();
+const inFlight = new Map<string, Promise<SefariaLoadResult>>();
+
+interface SefariaLoadResult {
+  data: SefariaPageData;
+  savedToDisk: boolean;
+}
 
 function memoryCacheKey(tref: string, plainGemara: boolean): string {
   return `${tref}${plainGemara ? '.plain' : ''}`;
@@ -94,6 +98,7 @@ function writeMemoryCache(key: string, data: SefariaPageData): void {
 
 export function invalidateSefariaTextMemoryCache(): void {
   memoryCache.clear();
+  inFlight.clear();
 }
 
 async function ensureCacheDir(): Promise<string> {
@@ -140,6 +145,36 @@ interface FetchFromNetworkOptions {
   plainGemara?: boolean;
 }
 
+function appendCommentary(
+  commentaries: Record<number, SefariaCommentaryItem[]>,
+  segIdx: number,
+  item: SefariaCommentaryItem,
+): void {
+  if (!commentaries[segIdx]) {
+    commentaries[segIdx] = [];
+  }
+
+  const existingIndex = commentaries[segIdx].findIndex(
+    (entry) => entry.commentator === item.commentator,
+  );
+  if (existingIndex >= 0) {
+    if (!commentaries[segIdx][existingIndex].he.includes(item.he)) {
+      commentaries[segIdx][existingIndex].he += '\n\n' + item.he;
+    }
+    return;
+  }
+
+  commentaries[segIdx].push(item);
+}
+
+async function fetchJson(url: string): Promise<any> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
 async function fetchFromNetwork(
   tref: string,
   options: FetchFromNetworkOptions = {},
@@ -147,12 +182,22 @@ async function fetchFromNetwork(
   const versionQuery = options.plainGemara
     ? `&vhe=${encodeURIComponent(UNVOCALIZED_GEMARA_VERSION)}`
     : '';
-  const mainUrl = `https://www.sefaria.org/api/texts/${encodeURI(tref)}?context=0&commentary=1${versionQuery}`;
-  const mainRes = await fetch(mainUrl);
-  if (!mainRes.ok) {
-    throw new Error(`Failed to fetch text for ${tref}: HTTP ${mainRes.status}`);
-  }
-  const mainJson = await mainRes.json();
+  const mainUrl = `https://www.sefaria.org/api/texts/${encodeURI(tref)}?context=0&commentary=0${versionQuery}`;
+  const shekalim = Boolean(options.shekalimLocation);
+  const commTypes = commentatorFetchSpecs(tref, shekalim);
+
+  const mainPromise = fetchJson(mainUrl);
+  const commPromises = commTypes.map(async (comm) => {
+    try {
+      const commUrl = `https://www.sefaria.org/api/texts/${encodeURI(comm.prefix)}?context=0`;
+      const json = await fetchJson(commUrl);
+      return { comm, json };
+    } catch {
+      return { comm, json: null };
+    }
+  });
+
+  const [mainJson, ...commResults] = await Promise.all([mainPromise, ...commPromises]);
 
   const titleHe = options.displayTitleHe || mainJson.heTitle || mainJson.ref || tref;
   const titleEn = mainJson.ref || tref;
@@ -175,56 +220,6 @@ async function fetchFromNetwork(
   }));
 
   const commentaries: Record<number, SefariaCommentaryItem[]> = {};
-  const shekalim = Boolean(options.shekalimLocation);
-  const mishnah = Boolean(options.mishnahLocation);
-
-  if (!shekalim && !mishnah) {
-    const rawCommentaryList = Array.isArray(mainJson.commentary)
-      ? mainJson.commentary
-      : Array.isArray(mainJson.commentaries)
-        ? mainJson.commentaries
-        : [];
-
-    rawCommentaryList.forEach((item: any) => {
-      if (!item || !item.he) return;
-
-      const key = identifySefariaCommentator(item);
-      if (!key) return;
-
-      const titleHe = COMMENTATOR_TITLE_HE[key];
-
-      const anchor = item.anchorRef || item.anchorRefExpanded?.[0] || item.sourceRef || '';
-      const match = anchor.match(/:(\d+)$/);
-      if (!match) return;
-
-      const segNum = parseInt(match[1], 10);
-      if (isNaN(segNum) || segNum < 1) return;
-      const segIdx = segNum - 1;
-
-      const textStr = typeof item.he === 'string' ? item.he : flattenTextArray(item.he).join('\n');
-      const clean = prepareCommentaryText(textStr, key);
-      if (!clean) return;
-
-      if (!commentaries[segIdx]) {
-        commentaries[segIdx] = [];
-      }
-
-      const existingIndex = commentaries[segIdx].findIndex((c) => c.commentator === key);
-      if (existingIndex >= 0) {
-        if (!commentaries[segIdx][existingIndex].he.includes(clean)) {
-          commentaries[segIdx][existingIndex].he += '\n\n' + clean;
-        }
-      } else {
-        commentaries[segIdx].push({
-          commentator: key,
-          titleHe,
-          ref: item.ref || `${key}:${segNum}`,
-          he: clean,
-        });
-      }
-    });
-  }
-
   const gemaraAddresses = shekalim
     ? gemaraAddressesForPage(
         segments.length,
@@ -234,71 +229,49 @@ async function fetchFromNetwork(
       )
     : [];
 
-  const commTypes = commentatorFetchSpecs(tref, shekalim);
+  for (const { comm, json: commJson } of commResults) {
+    if (!commJson || commJson.he == null) {
+      continue;
+    }
 
-  await Promise.all(
-    commTypes.map(async (comm) => {
-      try {
-        const commUrl = `https://www.sefaria.org/api/texts/${encodeURI(comm.prefix)}?context=0`;
-        const commRes = await fetch(commUrl);
-        if (!commRes.ok) return;
-        const commJson = await commRes.json();
+    const commentarySegments: Array<{ segIdx: number; texts: string[] }> =
+      comm.mode === 'flatten'
+        ? flattenTextArray(commJson.he).map((segText, segIdx) => ({
+            segIdx,
+            texts: [segText],
+          }))
+        : comm.mode === 'yerushalmi'
+          ? alignCommentaryToSegments(
+              commJson.he,
+              segments.length,
+              gemaraAddresses,
+              commJson.spanningRefs,
+            )
+          : comm.mode === 'mishnah'
+            ? collectCommentarySegmentGroups(commJson.he)
+                .map((texts, segIdx) => ({ segIdx, texts }))
+                .filter((entry) => entry.segIdx < segments.length)
+            : (Array.isArray(commJson.he) ? commJson.he : []).map(
+                (segComm: unknown, segIdx: number) => ({
+                  segIdx,
+                  texts: flattenTextArray(segComm),
+                }),
+              );
 
-        if (commJson.he == null) return;
+    commentarySegments.forEach(({ segIdx, texts }) => {
+      const prepared = texts
+        .map((segText) => prepareCommentaryText(segText, comm.key))
+        .filter(Boolean);
+      if (prepared.length === 0) return;
 
-        const commentarySegments: Array<{ segIdx: number; texts: string[] }> =
-          comm.mode === 'flatten'
-            ? flattenTextArray(commJson.he).map((segText, segIdx) => ({
-                segIdx,
-                texts: [segText],
-              }))
-            : comm.mode === 'yerushalmi'
-              ? alignCommentaryToSegments(
-                  commJson.he,
-                  segments.length,
-                  gemaraAddresses,
-                  commJson.spanningRefs,
-                )
-              : comm.mode === 'mishnah'
-                ? collectCommentarySegmentGroups(commJson.he)
-                    .map((texts, segIdx) => ({ segIdx, texts }))
-                    .filter((entry) => entry.segIdx < segments.length)
-              : (Array.isArray(commJson.he) ? commJson.he : []).map(
-                  (segComm: unknown, segIdx: number) => ({
-                    segIdx,
-                    texts: flattenTextArray(segComm),
-                  }),
-                );
-
-        commentarySegments.forEach(({ segIdx, texts }) => {
-          const prepared = texts
-            .map((segText) => prepareCommentaryText(segText, comm.key))
-            .filter(Boolean);
-          if (prepared.length === 0) return;
-
-          const combinedText = prepared.join('\n\n');
-          if (!commentaries[segIdx]) {
-            commentaries[segIdx] = [];
-          }
-
-          const existingIndex = commentaries[segIdx].findIndex((c) => c.commentator === comm.key);
-          if (existingIndex >= 0) {
-            if (!commentaries[segIdx][existingIndex].he.includes(combinedText)) {
-              commentaries[segIdx][existingIndex].he += '\n\n' + combinedText;
-            }
-          } else {
-            commentaries[segIdx].push({
-              commentator: comm.key,
-              titleHe: comm.titleHe,
-              ref: `${comm.prefix}:${segIdx + 1}`,
-              he: combinedText,
-            });
-          }
-        });
-      } catch {
-      }
-    })
-  );
+      appendCommentary(commentaries, segIdx, {
+        commentator: comm.key,
+        titleHe: comm.titleHe,
+        ref: `${comm.prefix}:${segIdx + 1}`,
+        he: prepared.join('\n\n'),
+      });
+    });
+  }
 
   const shekalimLocation = options.shekalimLocation;
   const mishnahLocation = options.mishnahLocation;
@@ -400,44 +373,41 @@ export interface FetchSefariaPageTextOptions {
   requireDiskCache?: boolean;
 }
 
-export async function fetchSefariaPageText(
+function readDiskPage(
+  parsed: SefariaPageData & { v?: number },
+): SefariaPageData | null {
+  if (
+    !parsed ||
+    parsed.v !== SEFARIA_TEXT_CACHE_VERSION ||
+    !Array.isArray(parsed.segments) ||
+    parsed.segments.length === 0
+  ) {
+    return null;
+  }
+  return {
+    ...parsed,
+    chapterEvents: Array.isArray(parsed.chapterEvents) ? parsed.chapterEvents : [],
+  };
+}
+
+async function loadSefariaPage(
   masechetEn: string,
   dafNum: number,
   amud: Amud,
-  gemaraNikud = true,
-  options: FetchSefariaPageTextOptions = {},
-): Promise<SefariaPageData> {
-  const identity = resolveSefariaCacheIdentity(masechetEn, dafNum, amud, gemaraNikud);
-  if (!identity) {
-    const shekalim = isShekalimMasechet(masechetEn);
-    throw new Error(shekalim ? 'לא נמצא טקסט לשקלים לעמוד זה' : 'לא נמצא טקסט לדף זה');
-  }
+  identity: NonNullable<ReturnType<typeof resolveSefariaCacheIdentity>>,
+): Promise<SefariaLoadResult> {
   const { tref, plainGemara, shekalim, mishnah, sharedAmud } = identity;
   const memKey = memoryCacheKey(tref, plainGemara);
-  const remembered = readMemoryCache(memKey);
-  if (remembered && !options.requireDiskCache) {
-    return remembered;
-  }
-
   const cachePath = getCacheFilePath(tref, plainGemara);
 
   try {
     const fileInfo = await FileSystem.getInfoAsync(cachePath);
     if (fileInfo.exists && (fileInfo.size ?? 0) > 100) {
       const content = await FileSystem.readAsStringAsync(cachePath);
-      const parsed = JSON.parse(content) as SefariaPageData & { v?: number };
-      if (
-        parsed &&
-        parsed.v === SEFARIA_TEXT_CACHE_VERSION &&
-        Array.isArray(parsed.segments) &&
-        parsed.segments.length > 0
-      ) {
-        const page = {
-          ...parsed,
-          chapterEvents: Array.isArray(parsed.chapterEvents) ? parsed.chapterEvents : [],
-        };
+      const page = readDiskPage(JSON.parse(content) as SefariaPageData & { v?: number });
+      if (page) {
         writeMemoryCache(memKey, page);
-        return page;
+        return { data: page, savedToDisk: true };
       }
     }
   } catch {
@@ -489,10 +459,44 @@ export async function fetchSefariaPageText(
   }
 
   writeMemoryCache(memKey, data);
-  if (!savedToDisk && options.requireDiskCache) {
-    throw new SefariaDiskWriteError();
+  return { data, savedToDisk };
+}
+
+export async function fetchSefariaPageText(
+  masechetEn: string,
+  dafNum: number,
+  amud: Amud,
+  gemaraNikud = true,
+  options: FetchSefariaPageTextOptions = {},
+): Promise<SefariaPageData> {
+  const identity = resolveSefariaCacheIdentity(masechetEn, dafNum, amud, gemaraNikud);
+  if (!identity) {
+    const shekalim = isShekalimMasechet(masechetEn);
+    throw new Error(shekalim ? 'לא נמצא טקסט לשקלים לעמוד זה' : 'לא נמצא טקסט לדף זה');
   }
-  return data;
+  const memKey = memoryCacheKey(identity.tref, identity.plainGemara);
+  const remembered = readMemoryCache(memKey);
+  if (remembered && !options.requireDiskCache) {
+    return remembered;
+  }
+
+  const pending = inFlight.get(memKey);
+  const promise = pending ?? loadSefariaPage(masechetEn, dafNum, amud, identity);
+  if (!pending) {
+    inFlight.set(memKey, promise);
+  }
+
+  try {
+    const result = await promise;
+    if (!result.savedToDisk && options.requireDiskCache) {
+      throw new SefariaDiskWriteError();
+    }
+    return result.data;
+  } finally {
+    if (inFlight.get(memKey) === promise) {
+      inFlight.delete(memKey);
+    }
+  }
 }
 
 export async function clearSefariaTextCache(): Promise<void> {

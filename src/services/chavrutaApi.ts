@@ -7,6 +7,7 @@ import { normalizeMasechetEn, type Amud } from '../utils/dafNavigation';
 import { resolveChavrutaLocation } from '../utils/mishnahOnlySefaria';
 import {
   findChavrutaAmud,
+  parseChavrutaAmudFromHtml,
   parseChavrutaDocument,
   type ChavrutaAmud,
 } from '../utils/parseChavrutaHtml';
@@ -37,7 +38,40 @@ interface FetchChavrutaAmudOptions {
 
 const CACHE_DIR = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? ''}chavruta/`;
 const memoryCache = new Map<string, ChavrutaMasechetCache>();
-const inFlight = new Map<string, Promise<ChavrutaMasechetCache>>();
+const rawHtml = new Map<string, string>();
+const htmlInFlight = new Map<string, Promise<string>>();
+const fullParseInFlight = new Map<string, Promise<ChavrutaMasechetCache>>();
+const parseTokens = new Map<string, { cancelled: boolean }>();
+const writeChain = new Map<string, Promise<void>>();
+
+function cancelParseToken(masechetEn?: string): void {
+  if (masechetEn) {
+    const token = parseTokens.get(masechetEn);
+    if (token) {
+      token.cancelled = true;
+    }
+    parseTokens.delete(masechetEn);
+    return;
+  }
+
+  for (const token of parseTokens.values()) {
+    token.cancelled = true;
+  }
+  parseTokens.clear();
+}
+
+function enqueueMasechetWrite(masechetEn: string, work: () => Promise<void>): Promise<void> {
+  const previous = writeChain.get(masechetEn) ?? Promise.resolve();
+  const next = previous.then(work, work);
+  writeChain.set(
+    masechetEn,
+    next.then(
+      () => undefined,
+      () => undefined,
+    ),
+  );
+  return next;
+}
 
 async function ensureCacheDir(): Promise<string> {
   const info = await FileSystem.getInfoAsync(CACHE_DIR);
@@ -55,13 +89,19 @@ function getCacheFilePath(masechetEn: string): string {
 export function invalidateChavrutaMemoryCache(masechetEn?: string): void {
   if (masechetEn) {
     const normalized = normalizeMasechetEn(masechetEn);
+    cancelParseToken(normalized);
     memoryCache.delete(normalized);
-    inFlight.delete(normalized);
+    rawHtml.delete(normalized);
+    htmlInFlight.delete(normalized);
+    fullParseInFlight.delete(normalized);
     return;
   }
 
+  cancelParseToken();
   memoryCache.clear();
-  inFlight.clear();
+  rawHtml.clear();
+  htmlInFlight.clear();
+  fullParseInFlight.clear();
 }
 
 export async function hasCachedChavrutaMasechet(masechetEn: string): Promise<boolean> {
@@ -117,7 +157,7 @@ async function deleteCachedMasechet(masechetEn: string): Promise<void> {
   }
 }
 
-async function fetchMasechetFromNetwork(masechetEn: string): Promise<ChavrutaMasechetCache> {
+async function fetchMasechetHtml(masechetEn: string): Promise<string> {
   const source = getChavrutaSource(masechetEn);
   if (!source) {
     throw new Error('אין ביאור חברותא למסכת זו');
@@ -129,57 +169,113 @@ async function fetchMasechetFromNetwork(masechetEn: string): Promise<ChavrutaMas
   }
 
   const bytes = new Uint8Array(await response.arrayBuffer());
-  const html = decodeHtmlBytes(bytes);
-  const amudim = parseChavrutaDocument(html);
-  if (amudim.length === 0) {
-    throw new Error('לא ניתן לפענח את ביאור חברותא למסכת זו');
-  }
-
-  return {
-    v: CHAVRUTA_CACHE_VERSION,
-    masechetEn,
-    amudim,
-  };
+  return decodeHtmlBytes(bytes);
 }
 
-async function loadMasechet(
-  masechetEn: string,
-  forceRefresh = false
-): Promise<ChavrutaMasechetCache> {
-  if (forceRefresh) {
-    invalidateChavrutaMemoryCache(masechetEn);
-    await deleteCachedMasechet(masechetEn);
-  } else {
-    const remembered = memoryCache.get(masechetEn);
-    if (remembered) {
-      return remembered;
+async function getMasechetHtml(masechetEn: string, forceRefresh: boolean): Promise<string> {
+  if (!forceRefresh) {
+    const existing = rawHtml.get(masechetEn);
+    if (existing) {
+      return existing;
     }
-
-    const pending = inFlight.get(masechetEn);
+    const pending = htmlInFlight.get(masechetEn);
     if (pending) {
       return pending;
     }
   }
 
-  const promise = (async () => {
-    const cached = forceRefresh ? null : await readCachedMasechet(masechetEn);
-    if (cached) {
-      memoryCache.set(masechetEn, cached);
-      return cached;
+  const promise = fetchMasechetHtml(masechetEn);
+  htmlInFlight.set(masechetEn, promise);
+  try {
+    const html = await promise;
+    if (htmlInFlight.get(masechetEn) === promise) {
+      rawHtml.set(masechetEn, html);
     }
+    return html;
+  } finally {
+    if (htmlInFlight.get(masechetEn) === promise) {
+      htmlInFlight.delete(masechetEn);
+    }
+  }
+}
 
-    const fetched = await fetchMasechetFromNetwork(masechetEn);
-    memoryCache.set(masechetEn, fetched);
-    await writeCachedMasechet(fetched);
-    return fetched;
+function startFullParse(masechetEn: string, html: string): Promise<ChavrutaMasechetCache> {
+  const pending = fullParseInFlight.get(masechetEn);
+  if (pending) {
+    return pending;
+  }
+
+  const previousToken = parseTokens.get(masechetEn);
+  if (previousToken) {
+    previousToken.cancelled = true;
+  }
+  const token = { cancelled: false };
+  parseTokens.set(masechetEn, token);
+
+  const promise = (async () => {
+    await Promise.resolve();
+    if (token.cancelled) {
+      return {
+        v: CHAVRUTA_CACHE_VERSION,
+        masechetEn,
+        amudim: [],
+      };
+    }
+    const amudim = parseChavrutaDocument(html);
+    if (amudim.length === 0) {
+      throw new Error('לא ניתן לפענח את ביאור חברותא למסכת זו');
+    }
+    const cache: ChavrutaMasechetCache = {
+      v: CHAVRUTA_CACHE_VERSION,
+      masechetEn,
+      amudim,
+    };
+    await enqueueMasechetWrite(masechetEn, async () => {
+      if (token.cancelled) {
+        return;
+      }
+      await writeCachedMasechet(cache);
+      if (token.cancelled) {
+        if (parseTokens.get(masechetEn) === token || !parseTokens.has(masechetEn)) {
+          await deleteCachedMasechet(masechetEn);
+          memoryCache.delete(masechetEn);
+        }
+        return;
+      }
+      memoryCache.set(masechetEn, cache);
+      rawHtml.delete(masechetEn);
+    });
+    if (token.cancelled) {
+      return {
+        v: CHAVRUTA_CACHE_VERSION,
+        masechetEn,
+        amudim: [],
+      };
+    }
+    return cache;
   })();
 
-  inFlight.set(masechetEn, promise);
-  try {
-    return await promise;
-  } finally {
-    inFlight.delete(masechetEn);
-  }
+  fullParseInFlight.set(masechetEn, promise);
+  void promise.then(
+    () => {
+      if (fullParseInFlight.get(masechetEn) === promise) {
+        fullParseInFlight.delete(masechetEn);
+      }
+    },
+    () => {
+      if (fullParseInFlight.get(masechetEn) === promise) {
+        fullParseInFlight.delete(masechetEn);
+      }
+    },
+  );
+  return promise;
+}
+
+function toPageData(masechetEn: string, page: ChavrutaAmud): ChavrutaPageData {
+  return {
+    ...page,
+    masechetEn,
+  };
 }
 
 export async function fetchChavrutaAmud(
@@ -194,16 +290,40 @@ export async function fetchChavrutaAmud(
     throw new Error('אין ביאור חברותא למסכת זו');
   }
 
-  const masechet = await loadMasechet(normalized, options.forceRefresh === true);
-  const page = findChavrutaAmud(masechet.amudim, resolved.dafNum, resolved.amud);
+  const forceRefresh = options.forceRefresh === true;
+  if (forceRefresh) {
+    invalidateChavrutaMemoryCache(normalized);
+    await deleteCachedMasechet(normalized);
+  } else {
+    const remembered = memoryCache.get(normalized);
+    if (remembered) {
+      const page = findChavrutaAmud(remembered.amudim, resolved.dafNum, resolved.amud);
+      if (!page) {
+        throw new Error('לא נמצא ביאור חברותא לעמוד זה');
+      }
+      return toPageData(normalized, page);
+    }
+
+    const cached = await readCachedMasechet(normalized);
+    if (cached) {
+      memoryCache.set(normalized, cached);
+      const page = findChavrutaAmud(cached.amudim, resolved.dafNum, resolved.amud);
+      if (!page) {
+        throw new Error('לא נמצא ביאור חברותא לעמוד זה');
+      }
+      return toPageData(normalized, page);
+    }
+  }
+
+  const html = await getMasechetHtml(normalized, forceRefresh);
+  const page = parseChavrutaAmudFromHtml(html, resolved.dafNum, resolved.amud);
   if (!page) {
+    void startFullParse(normalized, html);
     throw new Error('לא נמצא ביאור חברותא לעמוד זה');
   }
 
-  return {
-    ...page,
-    masechetEn: normalized,
-  };
+  void startFullParse(normalized, html);
+  return toPageData(normalized, page);
 }
 
 export async function clearChavrutaCache(): Promise<void> {

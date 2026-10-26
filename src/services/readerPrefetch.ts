@@ -17,6 +17,72 @@ export function clearReaderPrefetchInFlight(): void {
   inFlightChavruta.clear();
 }
 
+function chavrutaPrefetchLocations(
+  loc: DafLocation,
+  targets: DafLocation[],
+): DafLocation[] {
+  const ordered = [loc, ...targets];
+  const seen = new Set<string>();
+  const locations: DafLocation[] = [];
+
+  for (const candidate of ordered) {
+    const masechetEn = normalizeMasechetEn(candidate.masechetEn);
+    if (seen.has(masechetEn)) {
+      continue;
+    }
+    if (!getChavrutaSource(masechetEn)) {
+      continue;
+    }
+    seen.add(masechetEn);
+    locations.push({
+      masechetEn,
+      dafNum: candidate.dafNum,
+      amud: candidate.amud,
+    });
+  }
+
+  return locations;
+}
+
+async function prefetchSefariaTarget(
+  target: DafLocation,
+  gemaraNikud: boolean,
+): Promise<void> {
+  const key = `${target.masechetEn}:${target.dafNum}:${target.amud}:${gemaraNikud}`;
+  if (inFlightSefaria.has(key)) {
+    return;
+  }
+  inFlightSefaria.add(key);
+  try {
+    await fetchSefariaPageText(
+      target.masechetEn,
+      target.dafNum,
+      target.amud,
+      gemaraNikud,
+      { requireDiskCache: true },
+    );
+  } catch {
+  } finally {
+    inFlightSefaria.delete(key);
+  }
+}
+
+async function prefetchChavrutaLocation(loc: DafLocation): Promise<void> {
+  if (inFlightChavruta.has(loc.masechetEn)) {
+    return;
+  }
+  inFlightChavruta.add(loc.masechetEn);
+  try {
+    const isCached = await hasCachedChavrutaMasechet(loc.masechetEn);
+    if (!isCached) {
+      await fetchChavrutaAmud(loc.masechetEn, loc.dafNum, loc.amud);
+    }
+  } catch {
+  } finally {
+    inFlightChavruta.delete(loc.masechetEn);
+  }
+}
+
 export async function prefetchNextDaf(
   loc: DafLocation,
   options: PrefetchNextDafOptions = {},
@@ -25,61 +91,16 @@ export async function prefetchNextDaf(
   const includeChavruta = options.includeChavruta ?? true;
   const targets = getNextDafPrefetchTargets(loc);
 
-  if (targets.length === 0) {
-    return;
-  }
+  const sefariaWork = Promise.all(
+    targets.map((target) => prefetchSefariaTarget(target, gemaraNikud)),
+  );
+  const chavrutaWork = includeChavruta
+    ? Promise.all(
+        chavrutaPrefetchLocations(loc, targets).map((location) =>
+          prefetchChavrutaLocation(location),
+        ),
+      )
+    : Promise.resolve();
 
-  for (const target of targets) {
-    const key = `${target.masechetEn}:${target.dafNum}:${target.amud}:${gemaraNikud}`;
-    if (inFlightSefaria.has(key)) {
-      continue;
-    }
-    inFlightSefaria.add(key);
-    try {
-      await fetchSefariaPageText(
-        target.masechetEn,
-        target.dafNum,
-        target.amud,
-        gemaraNikud,
-        { requireDiskCache: true },
-      );
-    } catch {
-    } finally {
-      inFlightSefaria.delete(key);
-    }
-  }
-
-  if (includeChavruta) {
-    const distinctMasechtot = Array.from(
-      new Set(targets.map((t) => normalizeMasechetEn(t.masechetEn))),
-    );
-
-    for (const masechetEn of distinctMasechtot) {
-      if (!getChavrutaSource(masechetEn)) {
-        continue;
-      }
-      if (inFlightChavruta.has(masechetEn)) {
-        continue;
-      }
-      inFlightChavruta.add(masechetEn);
-      try {
-        const isCached = await hasCachedChavrutaMasechet(masechetEn);
-        if (!isCached) {
-          const firstTarget = targets.find(
-            (t) => normalizeMasechetEn(t.masechetEn) === masechetEn,
-          );
-          if (firstTarget) {
-            await fetchChavrutaAmud(
-              firstTarget.masechetEn,
-              firstTarget.dafNum,
-              firstTarget.amud,
-            );
-          }
-        }
-      } catch {
-      } finally {
-        inFlightChavruta.delete(masechetEn);
-      }
-    }
-  }
+  await Promise.all([sefariaWork, chavrutaWork]);
 }

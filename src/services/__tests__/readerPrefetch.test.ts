@@ -36,24 +36,21 @@ describe('readerPrefetch', () => {
     );
 
     expect(fetchSefariaPageText).toHaveBeenCalledTimes(3);
-    expect(fetchSefariaPageText).toHaveBeenNthCalledWith(
-      1,
+    expect(fetchSefariaPageText).toHaveBeenCalledWith(
       'Berachot',
       2,
       'b',
       true,
       { requireDiskCache: true },
     );
-    expect(fetchSefariaPageText).toHaveBeenNthCalledWith(
-      2,
+    expect(fetchSefariaPageText).toHaveBeenCalledWith(
       'Berachot',
       3,
       'a',
       true,
       { requireDiskCache: true },
     );
-    expect(fetchSefariaPageText).toHaveBeenNthCalledWith(
-      3,
+    expect(fetchSefariaPageText).toHaveBeenCalledWith(
       'Berachot',
       3,
       'b',
@@ -62,7 +59,7 @@ describe('readerPrefetch', () => {
     );
   });
 
-  it('prefetches chavruta masechet when available and not yet cached', async () => {
+  it('prefetches chavruta for the current masechet when available and not yet cached', async () => {
     (getChavrutaSource as jest.Mock).mockImplementation((masechetEn: string) =>
       masechetEn === 'Berachot' ? { masechetEn, fileId: 'f_1' } : null,
     );
@@ -73,7 +70,46 @@ describe('readerPrefetch', () => {
       { gemaraNikud: false, includeChavruta: true },
     );
 
-    expect(fetchChavrutaAmud).toHaveBeenCalledWith('Berachot', 3, 'a');
+    expect(fetchChavrutaAmud).toHaveBeenCalledTimes(1);
+    expect(fetchChavrutaAmud).toHaveBeenCalledWith('Berachot', 2, 'b');
+  });
+
+  it('starts chavruta prefetch without waiting for sefaria pages', async () => {
+    let releaseSefaria!: () => void;
+    const sefariaGate = new Promise<void>((resolve) => {
+      releaseSefaria = resolve;
+    });
+    (fetchSefariaPageText as jest.Mock).mockReturnValue(sefariaGate);
+    (getChavrutaSource as jest.Mock).mockImplementation((masechetEn: string) =>
+      masechetEn === 'Berachot' ? { masechetEn, fileId: 'f_1' } : null,
+    );
+
+    const prefetchPromise = prefetchNextDaf(
+      { masechetEn: 'Berachot', dafNum: 2, amud: 'a' },
+      { includeChavruta: true },
+    );
+
+    for (let i = 0; i < 20 && (fetchChavrutaAmud as jest.Mock).mock.calls.length === 0; i += 1) {
+      await Promise.resolve();
+    }
+    expect(fetchChavrutaAmud).toHaveBeenCalledWith('Berachot', 2, 'a');
+
+    releaseSefaria();
+    await prefetchPromise;
+  });
+
+  it('prefetches current chavruta masechet even when there is no next daf', async () => {
+    (getChavrutaSource as jest.Mock).mockImplementation((masechetEn: string) =>
+      masechetEn === 'Niddah' ? { masechetEn, fileId: 'f_1' } : null,
+    );
+
+    await prefetchNextDaf(
+      { masechetEn: 'Niddah', dafNum: 73, amud: 'a' },
+      { includeChavruta: true },
+    );
+
+    expect(fetchSefariaPageText).not.toHaveBeenCalled();
+    expect(fetchChavrutaAmud).toHaveBeenCalledWith('Niddah', 73, 'a');
   });
 
   it('skips chavruta download when tractate is already cached', async () => {

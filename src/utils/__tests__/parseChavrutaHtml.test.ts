@@ -4,6 +4,7 @@ import {
   chavrutaMishnahFlags,
   findChavrutaAmud,
   gematriaToNumber,
+  parseChavrutaAmudFromHtml,
   parseChavrutaBodyParts,
   parseChavrutaDocument,
 } from '../parseChavrutaHtml';
@@ -54,6 +55,24 @@ describe('gematriaToNumber', () => {
   it('ignores gershayim and quotes', () => {
     expect(gematriaToNumber('ט"ו')).toBe(15);
     expect(gematriaToNumber("ב'")).toBe(2);
+  });
+});
+
+describe('parseChavrutaAmudFromHtml', () => {
+  it('parses only the requested amud', () => {
+    const amudB = parseChavrutaAmudFromHtml(FIXTURE, 2, 'b');
+    expect(amudB?.dafNum).toBe(2);
+    expect(amudB?.amud).toBe('b');
+    expect(amudB?.paragraphs.some((paragraph) => paragraph.text.includes('מכדי כהנים'))).toBe(
+      true,
+    );
+    expect(amudB?.paragraphs.some((paragraph) => paragraph.text.includes('מאימתי קורין'))).toBe(
+      false,
+    );
+  });
+
+  it('returns null when the amud is missing', () => {
+    expect(parseChavrutaAmudFromHtml(FIXTURE, 3, 'a')).toBeNull();
   });
 });
 
