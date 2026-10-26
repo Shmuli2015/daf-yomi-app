@@ -35,6 +35,13 @@ function chavrutaHtml(body = 'שלום עולם'): string {
   return `<u>דף ב - א</u><span style='font-size:17px; line-height: 140%; color:RGB(0,0,0);'>${body}</span>`;
 }
 
+function twoAmudHtml(): string {
+  return (
+    `<u>דף ב - א</u><span style='font-size:17px; line-height: 140%; color:RGB(0,0,0);'>עמוד א</span>` +
+    `<u>דף ב - ב</u><span style='font-size:17px; line-height: 140%; color:RGB(0,0,0);'>עמוד ב</span>`
+  );
+}
+
 function mockFetchHtml(html: string): void {
   globalThis.fetch = jest.fn(async () => ({
     ok: true,
@@ -103,6 +110,32 @@ describe('chavrutaApi', () => {
 
     const second = await fetchChavrutaAmud('Berachot', 2, 'a');
     expect(second.paragraphs[0].text).toContain('שלום עולם');
+    expect(globalThis.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns the requested amud before the full masechet cache is written', async () => {
+    mockFetchHtml(chavrutaHtml('דף ראשון'));
+    let wrote = false;
+    (FileSystem.writeAsStringAsync as jest.Mock).mockImplementation(async (path: string, content: string) => {
+      await new Promise((resolve) => setTimeout(resolve, 40));
+      wrote = true;
+      files.set(path, content);
+    });
+
+    const page = await fetchChavrutaAmud('Berachot', 2, 'a');
+    expect(page.paragraphs[0].text).toContain('דף ראשון');
+    expect(wrote).toBe(false);
+    await new Promise((resolve) => setTimeout(resolve, 60));
+  });
+
+  it('parses another amud from the same download without a second fetch', async () => {
+    mockFetchHtml(twoAmudHtml());
+
+    const first = await fetchChavrutaAmud('Berachot', 2, 'a');
+    const second = await fetchChavrutaAmud('Berachot', 2, 'b');
+
+    expect(first.paragraphs[0].text).toContain('עמוד א');
+    expect(second.paragraphs[0].text).toContain('עמוד ב');
     expect(globalThis.fetch).toHaveBeenCalledTimes(1);
   });
 

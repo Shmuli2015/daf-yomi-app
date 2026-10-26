@@ -726,14 +726,16 @@ function firstSectionStart(
   return preambleStart < heading.matchIndex ? preambleStart : heading.contentStart;
 }
 
-export function parseChavrutaDocument(html: string): ChavrutaAmud[] {
-  const headings: Array<{
-    dafNum: number;
-    amud: Amud;
-    titleHe: string;
-    matchIndex: number;
-    contentStart: number;
-  }> = [];
+interface ChavrutaHeading {
+  dafNum: number;
+  amud: Amud;
+  titleHe: string;
+  matchIndex: number;
+  contentStart: number;
+}
+
+function collectChavrutaHeadings(html: string): ChavrutaHeading[] {
+  const headings: ChavrutaHeading[] = [];
   const pattern = new RegExp(DAF_HEADING_PATTERN.source, DAF_HEADING_PATTERN.flags);
   let match: RegExpExecArray | null;
 
@@ -749,6 +751,53 @@ export function parseChavrutaDocument(html: string): ChavrutaAmud[] {
       contentStart: match.index + match[0].length,
     });
   }
+
+  return headings;
+}
+
+function parseHeadingSection(
+  html: string,
+  headings: ChavrutaHeading[],
+  index: number,
+): ParsedSection {
+  const heading = headings[index];
+  const sectionEnd = index + 1 < headings.length ? headings[index + 1].matchIndex : html.length;
+  const sectionStart = index === 0 ? firstSectionStart(html, heading) : heading.contentStart;
+  return parseSectionWithBoundaries(html.slice(sectionStart, sectionEnd));
+}
+
+export function parseChavrutaAmudFromHtml(
+  html: string,
+  dafNum: number,
+  amud: Amud,
+): ChavrutaAmud | null {
+  const headings = collectChavrutaHeadings(html);
+  const matching = headings
+    .map((heading, index) => ({ heading, index }))
+    .filter(({ heading }) => heading.dafNum === dafNum && heading.amud === amud);
+
+  if (matching.length === 0) {
+    return null;
+  }
+
+  const sections: ParsedSection[] = [];
+  for (const { index } of matching) {
+    const parsed = parseHeadingSection(html, headings, index);
+    if (parsed.blocks.length === 0 && parsed.footnotes.length === 0) {
+      continue;
+    }
+    sections.push(parsed);
+  }
+
+  if (sections.length === 0) {
+    return null;
+  }
+
+  return mergeSections(dafNum, amud, matching[0].heading.titleHe, sections);
+}
+
+export function parseChavrutaDocument(html: string): ChavrutaAmud[] {
+  const headings = collectChavrutaHeadings(html);
 
   type GroupedAmud = {
     dafNum: number;
@@ -769,9 +818,7 @@ export function parseChavrutaDocument(html: string): ChavrutaAmud[] {
   };
 
   headings.forEach((heading, index) => {
-    const sectionEnd = index + 1 < headings.length ? headings[index + 1].matchIndex : html.length;
-    const sectionStart = index === 0 ? firstSectionStart(html, heading) : heading.contentStart;
-    const parsed = parseSectionWithBoundaries(html.slice(sectionStart, sectionEnd));
+    const parsed = parseHeadingSection(html, headings, index);
     if (parsed.blocks.length === 0 && parsed.footnotes.length === 0) return;
 
     const key = buildAmudKey(heading.dafNum, heading.amud);
