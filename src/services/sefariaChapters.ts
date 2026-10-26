@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import {
   parseSefariaChaptersIndex,
   type SefariaChapter,
@@ -80,7 +81,7 @@ async function writeCachedChapters(masechetEn: string, chapters: SefariaChapter[
 
 async function fetchChaptersFromNetwork(masechetEn: string): Promise<SefariaChapter[]> {
   const bookTitle = getSefariaBookTitle(masechetEn);
-  const response = await fetch(`https://www.sefaria.org/api/v2/index/${bookTitle}`);
+  const response = await fetchWithTimeout(`https://www.sefaria.org/api/v2/index/${bookTitle}`);
   if (!response.ok) {
     throw new Error(`Failed to fetch chapters for ${bookTitle}: HTTP ${response.status}`);
   }

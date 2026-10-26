@@ -35,6 +35,10 @@ import {
   CURRENT_BACKUP_VERSION,
   type BackupData,
 } from '../backup';
+import {
+  computeBackupChecksum,
+  buildBackupCanonicalPayload,
+} from '../../utils/backupChecksum';
 
 describe('backup security and validation', () => {
   const validBackup: BackupData = {
@@ -222,6 +226,30 @@ describe('backup security and validation', () => {
       backupVersion: 999,
     };
     const result = parseBackupJson(JSON.stringify(futureData));
+    expect(result.ok).toBe(false);
+  });
+
+  it('accepts backup with valid checksum', () => {
+    const payload = buildBackupCanonicalPayload(
+      validBackup.records,
+      validBackup.settings,
+      validBackup.personalTrackRecords,
+    );
+    const checksum = computeBackupChecksum(payload);
+    const dataWithChecksum = {
+      ...validBackup,
+      checksum,
+    };
+    const result = parseBackupJson(JSON.stringify(dataWithChecksum));
+    expect(result.ok).toBe(true);
+  });
+
+  it('rejects backup with tampered checksum', () => {
+    const dataWithBadChecksum = {
+      ...validBackup,
+      checksum: 'badchecksum12345',
+    };
+    const result = parseBackupJson(JSON.stringify(dataWithBadChecksum));
     expect(result.ok).toBe(false);
   });
 });

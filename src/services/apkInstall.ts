@@ -27,6 +27,14 @@ export class ApkInstallError extends Error {
   }
 }
 
+const TRUSTED_RELEASE_DOWNLOAD_PREFIX = 'https://github.com/Shmuli2015/daf-yomi-app/releases/download/';
+const MINIMUM_VALID_APK_SIZE_BYTES = 5 * 1024 * 1024;
+
+export function isTrustedApkDownloadUrl(url: string): boolean {
+  if (typeof url !== 'string') return false;
+  return url.startsWith(TRUSTED_RELEASE_DOWNLOAD_PREFIX);
+}
+
 export function getDownloadPageUrl(): string {
   const extra = Constants.expoConfig?.extra as { downloadPageUrl?: string } | undefined;
   return extra?.downloadPageUrl ?? 'https://shmuli2015.github.io/daf-yomi-app/';
@@ -68,6 +76,10 @@ export async function downloadApk(
   fileName: string,
   onProgress?: (progress: DownloadProgress) => void,
 ): Promise<string> {
+  if (!isTrustedApkDownloadUrl(url)) {
+    throw new ApkInstallError('download_failed', 'כתובת ההורדה אינה מאושרת.');
+  }
+
   await ensureUpdatesDir();
   await cleanupOldApkDownloads(fileName);
 
@@ -89,6 +101,13 @@ export async function downloadApk(
   if (!result?.uri) {
     throw new ApkInstallError('download_failed', 'ההורדה נכשלה. נסו שוב או הורידו מהדפדפן.');
   }
+
+  const downloadedInfo = await FileSystem.getInfoAsync(result.uri);
+  if (!downloadedInfo.exists || (downloadedInfo.size ?? 0) < MINIMUM_VALID_APK_SIZE_BYTES) {
+    await FileSystem.deleteAsync(result.uri, { idempotent: true });
+    throw new ApkInstallError('download_failed', 'קובץ ההתקנה שהורד פגום או לא שלם.');
+  }
+
   return result.uri;
 }
 

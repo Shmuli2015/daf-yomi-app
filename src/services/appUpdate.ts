@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { filterReleaseHighlightsForUpdate, parseReleaseNotesBody } from '../data/whatsNew';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 
 export type AppExtraConfig = {
   githubOwner?: string;
@@ -102,12 +103,16 @@ export async function fetchLatestGitHubRelease(
 ): Promise<GithubReleaseJson | null> {
   const url = `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases/latest`;
   try {
-    const res = await fetch(url, {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        'User-Agent': 'MasaDaf-Android',
+    const res = await fetchWithTimeout(
+      url,
+      {
+        headers: {
+          Accept: 'application/vnd.github+json',
+          'User-Agent': 'MasaDaf-Android',
+        },
       },
-    });
+      15000,
+    );
     if (!res.ok) {
       if (__DEV__ && res.status !== 404) {
         console.warn('[appUpdate] releases/latest HTTP', res.status);

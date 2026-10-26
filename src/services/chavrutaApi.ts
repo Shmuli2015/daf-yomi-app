@@ -1,4 +1,5 @@
 import * as FileSystem from 'expo-file-system/legacy';
+import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import {
   buildChavrutaUrl,
   getChavrutaSource,
@@ -163,7 +164,7 @@ async function fetchMasechetHtml(masechetEn: string): Promise<string> {
     throw new Error('אין ביאור חברותא למסכת זו');
   }
 
-  const response = await fetch(buildChavrutaUrl(source));
+  const response = await fetchWithTimeout(buildChavrutaUrl(source), {}, 35000);
   if (!response.ok) {
     throw new Error('לא ניתן לטעון את ביאור חברותא. בדקו את החיבור לרשת.');
   }
