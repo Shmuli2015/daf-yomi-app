@@ -47,9 +47,8 @@ export function useHomeHeaderSwipe({
   currentDateRef.current = currentDate;
 
   const SWIPE_THRESHOLD = 50;
-  const SWIPE_VELOCITY = 0.45;
-  const SLIDE_PX = Dimensions.get('window').width * 0.4;
-  const ENTER_PX = Dimensions.get('window').width * 0.25;
+  const SWIPE_VELOCITY = 0.4;
+  const SLIDE_PX = Dimensions.get('window').width * 0.45;
 
   const finishSwipe = useCallback(() => {
     isAnimatingRef.current = false;
@@ -68,13 +67,17 @@ export function useHomeHeaderSwipe({
       if (isAnimatingRef.current) return;
       isAnimatingRef.current = true;
 
-      const out = direction === 'next' ? SLIDE_PX : -SLIDE_PX;
-      const inn = direction === 'next' ? -ENTER_PX : ENTER_PX;
+      const isDrag = Math.abs(swipeTranslateX.value) > 10;
+      const dirSign = direction === 'next' ? 1 : -1;
+      const outDistance = isDrag
+        ? Math.max(Math.abs(swipeTranslateX.value) + 70, SLIDE_PX) * dirSign
+        : 32 * dirSign;
+      const enterDistance = -36 * dirSign;
 
-      swipeOpacity.value = withTiming(0, { duration: 120, easing: Easing.out(Easing.quad) });
+      swipeOpacity.value = withTiming(0, { duration: 110, easing: Easing.out(Easing.quad) });
       swipeTranslateX.value = withTiming(
-        out,
-        { duration: 120, easing: Easing.out(Easing.quad) },
+        outDistance,
+        { duration: 110, easing: Easing.out(Easing.quad) },
         (finished) => {
           if (!finished) {
             swipeTranslateX.value = withSpring(0, { damping: 20, stiffness: 260 });
@@ -82,12 +85,12 @@ export function useHomeHeaderSwipe({
             scheduleOnRN(finishSwipe);
             return;
           }
-          swipeTranslateX.value = inn;
+          swipeTranslateX.value = enterDistance;
           scheduleOnRN(changeDay, direction);
-          swipeOpacity.value = withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) });
-          swipeTranslateX.value = withSpring(
+          swipeOpacity.value = withTiming(1, { duration: 170, easing: Easing.out(Easing.cubic) });
+          swipeTranslateX.value = withTiming(
             0,
-            { damping: 22, stiffness: 240, mass: 0.8 },
+            { duration: 170, easing: Easing.out(Easing.cubic) },
             (done) => {
               scheduleOnRN(finishSwipe);
               if (!done) {
@@ -99,7 +102,7 @@ export function useHomeHeaderSwipe({
         },
       );
     },
-    [changeDay, finishSwipe, swipeOpacity, swipeTranslateX, ENTER_PX, SLIDE_PX],
+    [changeDay, finishSwipe, swipeOpacity, swipeTranslateX, SLIDE_PX],
   );
 
   const triggerSwipeRef = useRef(triggerSwipe);
@@ -114,7 +117,7 @@ export function useHomeHeaderSwipe({
           Math.abs(gs.dx) > Math.abs(gs.dy) * 1.5,
         onPanResponderMove: (_, gs) => {
           swipeTranslateX.value = gs.dx * 0.75;
-          swipeOpacity.value = 1 - Math.min(Math.abs(gs.dx) / 360, 0.4);
+          swipeOpacity.value = 1 - Math.min(Math.abs(gs.dx) / 450, 0.25);
         },
         onPanResponderRelease: (_, gs) => {
           const isFlickLeft = gs.dx < -20 && gs.vx < -SWIPE_VELOCITY;
