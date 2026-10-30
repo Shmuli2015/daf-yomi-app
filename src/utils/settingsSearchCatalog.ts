@@ -230,8 +230,8 @@ export const OFFLINE_SEARCH_ITEMS: SearchableSetting[] = [OFFLINE_PREFETCH_ITEM,
 
 export const RESET_ITEM: SearchableSetting = {
   title: 'איפוס נתונים',
-  description: 'מחיקת נתוני דף יומי, מסלול אישי, מיקומי קריאה או איפוס כללי',
-  synonyms: ['מחיקה', 'איפוס', 'אתחול', 'מיקום', 'קריאה'],
+  description: 'מחיקת נתוני דף יומי, מסלול אישי, מיקומי קריאה, קבצים שמורים או איפוס כללי',
+  synonyms: ['מחיקה', 'איפוס', 'אתחול', 'מיקום', 'קריאה', 'מטמון', 'קאש', 'הורדה', 'גמרא'],
 };
 
 export const DATA_SEARCH_ITEMS: SearchableSetting[] = [RESET_ITEM];

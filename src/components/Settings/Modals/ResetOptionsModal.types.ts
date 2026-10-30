@@ -1,10 +1,20 @@
-export type ResetOptionType = 'dafYomi' | 'personalTrack' | 'readerPositions' | 'all';
+export type ResetOptionType =
+  | 'dafYomi'
+  | 'personalTrack'
+  | 'readerPositions'
+  | 'savedTexts'
+  | 'all';
 
 export interface ResetOptionItem {
   id: ResetOptionType;
   title: string;
   description: string;
-  icon: 'calendar-outline' | 'bookmark-outline' | 'navigate-outline' | 'trash-outline';
+  icon:
+    | 'calendar-outline'
+    | 'bookmark-outline'
+    | 'navigate-outline'
+    | 'folder-open-outline'
+    | 'trash-outline';
   isDestructiveAll?: boolean;
 }
 

@@ -7,6 +7,7 @@ interface UseSettingsResetParams {
   resetDafYomiState: () => void;
   resetPersonalTrackState: () => void;
   clearReaderPositionsState: () => void;
+  clearSavedTextsState: () => void | Promise<void>;
   resetAllState: () => void;
   onFeedback: (feedback: SettingsFeedback) => void;
 }
@@ -15,6 +16,7 @@ export function useSettingsReset({
   resetDafYomiState,
   resetPersonalTrackState,
   clearReaderPositionsState,
+  clearSavedTextsState,
   resetAllState,
   onFeedback,
 }: UseSettingsResetParams) {
@@ -36,22 +38,34 @@ export function useSettingsReset({
     setPendingResetType(null);
   }, []);
 
-  const handleExecuteReset = useCallback(() => {
+  const handleExecuteReset = useCallback(async () => {
     if (!pendingResetType) return;
-    runResetAction(pendingResetType, {
-      resetDafYomiState,
-      resetPersonalTrackState,
-      clearReaderPositionsState,
-      resetAllState,
-    });
-    setShowResetConfirmModal(false);
-    setPendingResetType(null);
-    onFeedback(getResetSuccessToast(pendingResetType));
+    try {
+      await runResetAction(pendingResetType, {
+        resetDafYomiState,
+        resetPersonalTrackState,
+        clearReaderPositionsState,
+        clearSavedTextsState,
+        resetAllState,
+      });
+      onFeedback(getResetSuccessToast(pendingResetType));
+    } catch {
+      onFeedback({
+        title: 'הפעולה נכשלה',
+        message: 'לא הצלחנו להשלים את המחיקה. נסו שוב.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    } finally {
+      setShowResetConfirmModal(false);
+      setPendingResetType(null);
+    }
   }, [
     pendingResetType,
     resetDafYomiState,
     resetPersonalTrackState,
     clearReaderPositionsState,
+    clearSavedTextsState,
     resetAllState,
     onFeedback,
   ]);

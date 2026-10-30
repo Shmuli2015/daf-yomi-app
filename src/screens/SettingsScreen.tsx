@@ -191,23 +191,6 @@ export default function SettingsScreen() {
   });
 
   const {
-    showResetModal,
-    showResetConfirmModal,
-    resetConfirmTexts,
-    openResetModal,
-    closeResetModal,
-    handleSelectResetOption,
-    handleCancelResetConfirm,
-    handleExecuteReset,
-  } = useSettingsReset({
-    resetDafYomiState,
-    resetPersonalTrackState,
-    clearReaderPositionsState,
-    resetAllState,
-    onFeedback: showFeedback,
-  });
-
-  const {
     updatesConfigured,
     probeGithubRelease,
     handleUpdateAutoPromptToggle,
@@ -227,7 +210,26 @@ export default function SettingsScreen() {
     closeClearCacheModal,
     handleClearCacheConfirm,
     refreshStorageSize,
+    executeClearCache,
   } = useStorageCache({
+    onFeedback: showFeedback,
+  });
+
+  const {
+    showResetModal,
+    showResetConfirmModal,
+    resetConfirmTexts,
+    openResetModal,
+    closeResetModal,
+    handleSelectResetOption,
+    handleCancelResetConfirm,
+    handleExecuteReset,
+  } = useSettingsReset({
+    resetDafYomiState,
+    resetPersonalTrackState,
+    clearReaderPositionsState,
+    clearSavedTextsState: executeClearCache,
+    resetAllState,
     onFeedback: showFeedback,
   });
 
@@ -255,6 +257,12 @@ export default function SettingsScreen() {
     await handleClearCacheConfirm();
     await refreshPrefetchStatus();
   }, [handleClearCacheConfirm, refreshPrefetchStatus]);
+
+  const handleExecuteResetAndRefresh = useCallback(async () => {
+    await handleExecuteReset();
+    await refreshPrefetchStatus();
+    await refreshStorageSize();
+  }, [handleExecuteReset, refreshPrefetchStatus, refreshStorageSize]);
 
   if (!settings) {
     return <SettingsLoadingView />;
@@ -420,7 +428,7 @@ export default function SettingsScreen() {
           resetConfirmTitle={resetConfirmTexts.title}
           resetConfirmMessage={resetConfirmTexts.message}
           onResetConfirmClose={handleCancelResetConfirm}
-          onExecuteReset={handleExecuteReset}
+          onExecuteReset={handleExecuteResetAndRefresh}
           showBackupImportModal={showBackupImportModal}
           backupPreview={backupPreview}
           onBackupImportMerge={handleBackupImportMerge}
