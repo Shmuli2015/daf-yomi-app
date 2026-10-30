@@ -55,7 +55,9 @@ export function useSettingsBackup({
     }
 
     const settings = getSettings();
-    const hasFolder = Boolean(settings.auto_backup_file_uri);
+    const hasFolder = Boolean(
+      settings.auto_backup_file_uri || settings.auto_backup_directory_uri,
+    );
     try {
       const result = hasFolder
         ? await enableExistingAutoBackup()

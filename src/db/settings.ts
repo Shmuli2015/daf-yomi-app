@@ -77,6 +77,7 @@ function createDefaultSettingsRecord(): SettingsRecord {
     auto_backup_interval: 'weekly',
     auto_backup_file_uri: null,
     auto_backup_previous_file_uri: null,
+    auto_backup_directory_uri: null,
     auto_backup_failed: 0,
     auto_backup_issue: null,
   };
@@ -116,6 +117,7 @@ function normalizeSettingsRecord(row: SettingsRecord): SettingsRecord {
     auto_backup_interval: normalizeAutoBackupInterval(row.auto_backup_interval),
     auto_backup_file_uri: row.auto_backup_file_uri || null,
     auto_backup_previous_file_uri: row.auto_backup_previous_file_uri || null,
+    auto_backup_directory_uri: row.auto_backup_directory_uri || null,
     auto_backup_failed: row.auto_backup_failed === 1 ? 1 : 0,
     auto_backup_issue: normalizeAutoBackupIssue(row.auto_backup_issue),
   };
@@ -225,10 +227,14 @@ export function setAutoBackupInterval(interval: string) {
   ]);
 }
 
-export function saveAutoBackupLocation(currentUri: string, previousUri: string | null) {
+export function saveAutoBackupLocation(
+  currentUri: string,
+  previousUri: string | null,
+  directoryUri: string | null,
+) {
   db.runSync(
-    'UPDATE settings SET auto_backup_file_uri = ?, auto_backup_previous_file_uri = ?, auto_backup_enabled = 1, auto_backup_failed = 0, auto_backup_issue = NULL WHERE id = 1',
-    [currentUri, previousUri],
+    'UPDATE settings SET auto_backup_file_uri = ?, auto_backup_previous_file_uri = ?, auto_backup_directory_uri = ?, auto_backup_enabled = 1, auto_backup_failed = 0, auto_backup_issue = NULL WHERE id = 1',
+    [currentUri, previousUri, directoryUri],
   );
 }
 

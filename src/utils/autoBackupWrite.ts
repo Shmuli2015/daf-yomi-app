@@ -20,13 +20,13 @@ export function rotateAndWriteBackup(
   previous: BackupFileAccess,
   nextContents: string,
 ): RotateBackupResult {
-  if (!current.exists) return 'write_failed';
-
   let existing = '';
-  try {
-    existing = current.read();
-  } catch {
-    return 'rotate_failed';
+  if (current.exists) {
+    try {
+      existing = current.read();
+    } catch {
+      return 'rotate_failed';
+    }
   }
 
   if (existing.length > 0) {

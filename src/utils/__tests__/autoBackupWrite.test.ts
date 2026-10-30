@@ -72,9 +72,12 @@ describe('rotateAndWriteBackup', () => {
     expect(broken.read()).toBe('not-json');
   });
 
-  it('fails when the current file is missing', () => {
+  it('writes the first backup when the current file does not exist yet', () => {
     const current = memoryFile(null);
-    const previous = memoryFile('');
-    expect(rotateAndWriteBackup(current, previous, '{}')).toBe('write_failed');
+    const previous = memoryFile(null);
+    const next = '{"backupVersion":2}';
+    expect(rotateAndWriteBackup(current, previous, next)).toBe('written');
+    expect(current.value).toBe(next);
+    expect(previous.value).toBeNull();
   });
 });

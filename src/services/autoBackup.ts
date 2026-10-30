@@ -20,7 +20,6 @@ export type AutoBackupRunResult = 'skipped' | 'written' | 'failed' | 'restored' 
 export type AutoBackupEnableResult = 'enabled' | 'cancelled' | 'error';
 
 let backupQueue: Promise<void> = Promise.resolve();
-let restoredInThisProcess = false;
 
 function withBackupWriteLock<T>(work: () => Promise<T>): Promise<T> {
   const run = backupQueue.then(work, work);
@@ -51,7 +50,7 @@ function fileAccess(uri: string): BackupFileAccess {
       return file.textSync();
     },
     write(content: string) {
-      file.write(content);
+      file.writeSync(content);
     },
   };
 }
@@ -67,25 +66,50 @@ function displayNameFromUri(uri: string): string | null {
   }
 }
 
+function fileNameOf(file: File): string {
+  try {
+    if (typeof file.name === 'string' && file.name.length > 0) {
+      return file.name;
+    }
+  } catch {
+    return displayNameFromUri(file.uri) ?? '';
+  }
+  return displayNameFromUri(file.uri) ?? '';
+}
+
+function findFile(directory: Directory, name: string): File | null {
+  try {
+    const existing = directory
+      .list()
+      .find(entry => entry instanceof File && fileNameOf(entry) === name);
+    return existing instanceof File ? existing : null;
+  } catch {
+    return null;
+  }
+}
+
 function findOrCreateFile(directory: Directory, name: string): File {
-  const existing = directory
-    .list()
-    .find(entry => entry instanceof File && displayNameFromUri(entry.uri) === name);
-  if (existing instanceof File) return existing;
+  const existing = findFile(directory, name);
+  if (existing) return existing;
   return directory.createFile(name, 'application/json');
 }
 
-function readExisting(uri: string): string | null {
+function readExistingOrEmpty(uri: string): string | null {
   try {
     const file = new File(uri);
-    if (!file.exists) return null;
+    if (!file.exists) return '';
     return file.textSync();
   } catch {
     return null;
   }
 }
 
-function previousForRotation(currentUri: string, previousUri: string | null, existing: string): {
+function previousForRotation(
+  currentUri: string,
+  previousUri: string | null,
+  existing: string,
+  directoryUri: string | null,
+): {
   uri: string | null;
   access: BackupFileAccess;
 } {
@@ -102,21 +126,41 @@ function previousForRotation(currentUri: string, previousUri: string | null, exi
       },
     };
   }
-  const uri =
-    previousUri && fileExists(previousUri)
-      ? previousUri
-      : findOrCreateFile(new File(currentUri).parentDirectory, AUTO_BACKUP_PREVIOUS_FILE_NAME).uri;
-  return { uri, access: fileAccess(uri) };
+  if (previousUri && fileExists(previousUri)) {
+    return { uri: previousUri, access: fileAccess(previousUri) };
+  }
+  try {
+    const directory = directoryUri
+      ? new Directory(directoryUri)
+      : new File(currentUri).parentDirectory;
+    const uri = findOrCreateFile(directory, AUTO_BACKUP_PREVIOUS_FILE_NAME).uri;
+    return { uri, access: fileAccess(uri) };
+  } catch {
+    return {
+      uri: null,
+      access: {
+        exists: false,
+        read: () => '',
+        write() {
+          throw new Error('previous file could not be created');
+        },
+      },
+    };
+  }
 }
 
-function writeBoundFiles(currentUri: string, previousUri: string | null): boolean {
-  const existing = readExisting(currentUri);
+function writeBoundFiles(
+  currentUri: string,
+  previousUri: string | null,
+  directoryUri: string | null,
+): boolean {
+  const existing = readExistingOrEmpty(currentUri);
   if (existing === null) return false;
-  const previous = previousForRotation(currentUri, previousUri, existing);
+  const previous = previousForRotation(currentUri, previousUri, existing, directoryUri);
   const json = JSON.stringify(buildBackupData(), null, 2);
   const result = rotateAndWriteBackup(fileAccess(currentUri), previous.access, json);
   if (result !== 'written') return false;
-  saveAutoBackupLocation(currentUri, previous.uri);
+  saveAutoBackupLocation(currentUri, previous.uri, directoryUri);
   setLastBackupAt(new Date().toISOString());
   return true;
 }
@@ -134,24 +178,35 @@ function missingIssue(previousUri: string | null): 'missing' | 'missing_previous
 }
 
 function markIssue(issue: AutoBackupIssue | null) {
-  if (issue === 'restored') restoredInThisProcess = true;
   setAutoBackupIssue(issue);
 }
 
-function recreateMissingBackup(currentUri: string, previousUri: string | null): boolean {
+function recreateMissingBackup(
+  currentUri: string,
+  previousUri: string | null,
+  directoryUri: string | null,
+): boolean {
   try {
-    const directory = new File(currentUri).parentDirectory;
+    const directory = directoryUri
+      ? new Directory(directoryUri)
+      : new File(currentUri).parentDirectory;
     if (!directory.exists) return false;
     const nextCurrent = findOrCreateFile(directory, AUTO_BACKUP_FILE_NAME);
-    const keptPrevious = previousUri && fileExists(previousUri) ? previousUri : null;
-    return writeBoundFiles(nextCurrent.uri, keptPrevious);
+    const foundPrevious = findFile(directory, AUTO_BACKUP_PREVIOUS_FILE_NAME);
+    const keptPrevious =
+      foundPrevious?.uri ?? (previousUri && fileExists(previousUri) ? previousUri : null);
+    return writeBoundFiles(nextCurrent.uri, keptPrevious, directory.uri);
   } catch {
     return false;
   }
 }
 
-function restoreMissingBackup(currentUri: string, previousUri: string | null): boolean {
-  if (!recreateMissingBackup(currentUri, previousUri)) {
+function restoreMissingBackup(
+  currentUri: string,
+  previousUri: string | null,
+  directoryUri: string | null,
+): boolean {
+  if (!recreateMissingBackup(currentUri, previousUri, directoryUri)) {
     markIssue(missingIssue(previousUri));
     return false;
   }
@@ -160,15 +215,38 @@ function restoreMissingBackup(currentUri: string, previousUri: string | null): b
 }
 
 function clearResolvedIssue(issue: AutoBackupIssue | null): boolean {
-  if (issue === 'restored' && !restoredInThisProcess) {
-    markIssue(null);
-    return true;
-  }
-  if (issue === 'missing' || issue === 'missing_previous') {
+  if (issue === 'restored' || issue === 'missing' || issue === 'missing_previous') {
     markIssue(null);
     return true;
   }
   return false;
+}
+
+function runBoundBackup(
+  currentUri: string | null,
+  previousUri: string | null,
+  directoryUri: string | null,
+  lastBackupAt: string | null,
+  interval: string,
+  issue: AutoBackupIssue | null,
+): AutoBackupRunResult {
+  if (!currentUri || !fileExists(currentUri)) {
+    return restoreMissingBackup(currentUri ?? '', previousUri, directoryUri)
+      ? 'restored'
+      : 'failed';
+  }
+  const cleared = clearResolvedIssue(issue);
+  if (!isAutoBackupDue(lastBackupAt, interval)) {
+    return cleared ? 'cleared' : 'skipped';
+  }
+  if (!writeBoundFiles(currentUri, previousUri, directoryUri)) {
+    if (!fileExists(currentUri)) {
+      return restoreMissingBackup(currentUri, previousUri, directoryUri) ? 'restored' : 'failed';
+    }
+    markIssue('failed');
+    return 'failed';
+  }
+  return 'written';
 }
 
 export function disableAutoBackup() {
@@ -193,8 +271,11 @@ export async function enableAutoBackupWithPicker(): Promise<AutoBackupEnableResu
   return withBackupWriteLock(async () => {
     try {
       const current = findOrCreateFile(directory, AUTO_BACKUP_FILE_NAME);
-      return writeBoundFiles(current.uri, null) ? 'enabled' : 'error';
+      if (writeBoundFiles(current.uri, null, directory.uri)) return 'enabled';
+      markIssue('failed');
+      return 'error';
     } catch {
+      markIssue('failed');
       return 'error';
     }
   });
@@ -203,28 +284,45 @@ export async function enableAutoBackupWithPicker(): Promise<AutoBackupEnableResu
 async function performAutoBackup(): Promise<AutoBackupRunResult> {
   const settings = getSettings();
   if (settings.auto_backup_enabled !== 1) return 'skipped';
+  const directoryUri = settings.auto_backup_directory_uri;
   const currentUri = settings.auto_backup_file_uri;
   const previousUri = settings.auto_backup_previous_file_uri;
+  const issue = normalizeAutoBackupIssue(settings.auto_backup_issue);
+
+  if (directoryUri) {
+    try {
+      const directory = new Directory(directoryUri);
+      if (!directory.exists) {
+        markIssue('failed');
+        return 'failed';
+      }
+      const current = findFile(directory, AUTO_BACKUP_FILE_NAME);
+      return runBoundBackup(
+        current?.uri ?? null,
+        previousUri,
+        directoryUri,
+        settings.last_backup_at,
+        settings.auto_backup_interval,
+        issue,
+      );
+    } catch {
+      markIssue('failed');
+      return 'failed';
+    }
+  }
+
   if (!currentUri) {
     markIssue('failed');
     return 'failed';
   }
-  const issue = normalizeAutoBackupIssue(settings.auto_backup_issue);
-  if (!fileExists(currentUri)) {
-    return restoreMissingBackup(currentUri, previousUri) ? 'restored' : 'failed';
-  }
-  const cleared = clearResolvedIssue(issue);
-  if (!isAutoBackupDue(settings.last_backup_at, settings.auto_backup_interval)) {
-    return cleared ? 'cleared' : 'skipped';
-  }
-  if (!writeBoundFiles(currentUri, previousUri)) {
-    if (!fileExists(currentUri)) {
-      return restoreMissingBackup(currentUri, previousUri) ? 'restored' : 'failed';
-    }
-    markIssue('failed');
-    return 'failed';
-  }
-  return 'written';
+  return runBoundBackup(
+    currentUri,
+    previousUri,
+    null,
+    settings.last_backup_at,
+    settings.auto_backup_interval,
+    issue,
+  );
 }
 
 export async function enableExistingAutoBackup(): Promise<AutoBackupEnableResult> {
@@ -232,17 +330,8 @@ export async function enableExistingAutoBackup(): Promise<AutoBackupEnableResult
   return withBackupWriteLock(async () => {
     try {
       const settings = getSettings();
-      if (!settings.auto_backup_file_uri) return 'error';
+      if (!settings.auto_backup_file_uri && !settings.auto_backup_directory_uri) return 'error';
       setAutoBackupEnabled(true);
-      if (!fileExists(settings.auto_backup_file_uri)) {
-        return restoreMissingBackup(
-          settings.auto_backup_file_uri,
-          settings.auto_backup_previous_file_uri,
-        )
-          ? 'enabled'
-          : 'error';
-      }
-      clearResolvedIssue(normalizeAutoBackupIssue(settings.auto_backup_issue));
       const result = await performAutoBackup();
       return result === 'failed' ? 'error' : 'enabled';
     } catch {

@@ -95,6 +95,7 @@ describe('backup security and validation', () => {
       auto_backup_interval: 'weekly',
       auto_backup_file_uri: null,
       auto_backup_previous_file_uri: null,
+      auto_backup_directory_uri: null,
       auto_backup_failed: 0,
       auto_backup_issue: null,
     },
@@ -129,6 +130,7 @@ describe('backup security and validation', () => {
         auto_backup_interval: 'daily',
         auto_backup_file_uri: 'content://device/current',
         auto_backup_previous_file_uri: 'content://device/previous',
+        auto_backup_directory_uri: 'content://device/tree',
         auto_backup_failed: 1,
         auto_backup_issue: 'missing',
       },
@@ -140,6 +142,7 @@ describe('backup security and validation', () => {
       expect(result.data.settings.auto_backup_interval).toBe('daily');
       expect(result.data.settings.auto_backup_file_uri).toBeNull();
       expect(result.data.settings.auto_backup_previous_file_uri).toBeNull();
+      expect(result.data.settings.auto_backup_directory_uri).toBeNull();
       expect(result.data.settings.auto_backup_failed).toBe(0);
       expect(result.data.settings.auto_backup_issue).toBeNull();
     }
