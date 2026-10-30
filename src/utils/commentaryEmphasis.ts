@@ -111,6 +111,7 @@ function stripHtmlToText(html: string): string {
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    .replace(/[ \t\u00A0\u2000-\u200A\u202F\u205F\u3000]{2,}/g, ' ')
     .trim();
   return stripEmDash(stripped);
 }
