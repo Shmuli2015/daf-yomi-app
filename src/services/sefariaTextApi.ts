@@ -63,7 +63,7 @@ export interface SefariaPageData {
 }
 
 const CACHE_DIR = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? ''}sefaria-text/`;
-export const SEFARIA_TEXT_CACHE_VERSION = 20;
+export const SEFARIA_TEXT_CACHE_VERSION = 21;
 const MEMORY_CACHE_MAX = 24;
 const memoryCache = new Map<string, SefariaPageData>();
 const inFlight = new Map<string, Promise<SefariaLoadResult>>();

@@ -57,6 +57,16 @@ describe('cleanCommentaryHtml', () => {
   it('decodes ndash entities before splitting', () => {
     expect(cleanCommentaryHtml('דיבור &ndash; פירוש')).toBe('דיבור – פירוש');
   });
+
+  it('collapses a run of spaces after a mishnah dash', () => {
+    expect(cleanCommentaryHtml('<b>ומה שלא אכלו</b> \u2014        <b>הבשר יקבר</b>')).toBe(
+      '**ומה שלא אכלו** - **הבשר יקבר**',
+    );
+  });
+
+  it('keeps paragraph breaks while collapsing wide spaces', () => {
+    expect(cleanCommentaryHtml('א  ב<br><br>ג\u2003\u2003ד')).toBe('א ב\n\nג ד');
+  });
 });
 
 describe('emphasizeGemaraSectionLabels', () => {
