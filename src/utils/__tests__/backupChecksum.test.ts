@@ -24,4 +24,16 @@ describe('backupChecksum', () => {
     expect(typeof hash).toBe('string');
     expect(hash).toHaveLength(16);
   });
+
+  it('ignores auto_backup_directory_uri so older checksums still match', () => {
+    const withoutDirectory = { theme: 'dark', auto_backup_file_uri: null };
+    const withDirectory = {
+      ...withoutDirectory,
+      auto_backup_directory_uri: 'content://tree',
+    };
+
+    expect(buildBackupCanonicalPayload([], withDirectory)).toBe(
+      buildBackupCanonicalPayload([], withoutDirectory),
+    );
+  });
 });

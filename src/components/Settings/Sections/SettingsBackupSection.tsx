@@ -105,7 +105,9 @@ export default function SettingsBackupSection({
   const showShare = onShareBackup != null && matchesSetting(searchQuery, SHARE_BACKUP_ITEM);
   const showImport = onImportBackup != null && matchesSetting(searchQuery, IMPORT_ITEM);
   const flags = [showAuto, showInterval, showFolder, showSave, showShare, showImport];
-  if (!flags.some(Boolean) && !showIntervalModal) return null;
+  const showIssue = Boolean(issueMessage && !searchQuery.trim());
+  const showReminder = Boolean(reminder && !autoBackupEnabled && !searchQuery.trim());
+  if (!flags.some(Boolean) && !showIssue && !showReminder && !showIntervalModal) return null;
 
   return (
     <>
@@ -117,7 +119,7 @@ export default function SettingsBackupSection({
           accentColor={theme.colors.success}
         />
       ) : null}
-      {flags.some(Boolean) ? (
+      {flags.some(Boolean) || showIssue || showReminder ? (
         <View style={embedded ? styles.embeddedCard : styles.card}>
           {showAuto ? (
             <SettingItem
@@ -188,15 +190,13 @@ export default function SettingsBackupSection({
               highlightText={searchQuery}
             />
           ) : null}
+          {showIssue ? (
+            <Text style={issue === 'restored' ? styles.backupHint : styles.backupError}>
+              {issueMessage}
+            </Text>
+          ) : null}
+          {showReminder ? <Text style={styles.backupHint}>{reminder}</Text> : null}
         </View>
-      ) : null}
-      {issueMessage && !searchQuery.trim() ? (
-        <Text style={issue === 'restored' ? styles.backupHint : styles.backupError}>
-          {issueMessage}
-        </Text>
-      ) : null}
-      {reminder && !autoBackupEnabled && !searchQuery.trim() ? (
-        <Text style={styles.backupHint}>{reminder}</Text>
       ) : null}
       {showTrailingDivider ? <View style={styles.itemDivider} /> : null}
       <SettingsChoiceModal

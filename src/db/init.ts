@@ -152,6 +152,9 @@ export function initDB() {
   if (!columns.includes('auto_backup_previous_file_uri')) {
     db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_previous_file_uri TEXT DEFAULT NULL;');
   }
+  if (!columns.includes('auto_backup_directory_uri')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_directory_uri TEXT DEFAULT NULL;');
+  }
   if (!columns.includes('auto_backup_failed')) {
     db.execSync('ALTER TABLE settings ADD COLUMN auto_backup_failed INTEGER DEFAULT 0;');
   }

@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import type { Theme } from '../../theme';
 
 export function createSettingsScreenStyles(theme: Theme) {
@@ -80,21 +80,23 @@ export function createSettingsScreenStyles(theme: Theme) {
     backupHint: {
       color: theme.colors.textMuted,
       fontSize: 12,
-      textAlign: 'center',
-      marginTop: 10,
-      marginHorizontal: 28,
+      textAlign: Platform.OS === 'web' ? 'right' : 'left',
+      writingDirection: 'rtl',
+      paddingHorizontal: 18,
+      paddingTop: 4,
+      paddingBottom: 12,
       lineHeight: 18,
-      width: '100%',
       alignSelf: 'stretch',
     },
     backupError: {
       color: theme.colors.danger,
       fontSize: 12,
-      textAlign: 'center',
-      marginTop: 10,
-      marginHorizontal: 28,
+      textAlign: Platform.OS === 'web' ? 'right' : 'left',
+      writingDirection: 'rtl',
+      paddingHorizontal: 18,
+      paddingTop: 4,
+      paddingBottom: 12,
       lineHeight: 18,
-      width: '100%',
       alignSelf: 'stretch',
     },
     noResultsContainer: {

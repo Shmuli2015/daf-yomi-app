@@ -1,3 +1,14 @@
+function settingsForChecksum(settings: unknown): unknown {
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+    return settings;
+  }
+  const { auto_backup_directory_uri: _directoryUri, ...rest } = settings as Record<
+    string,
+    unknown
+  >;
+  return rest;
+}
+
 function sortObjectKeys(obj: unknown): unknown {
   if (Array.isArray(obj)) {
     return obj.map(sortObjectKeys);
@@ -34,6 +45,6 @@ export function buildBackupCanonicalPayload(
   return JSON.stringify({
     p: sortObjectKeys(personalTrackRecords ?? []),
     r: sortObjectKeys(records),
-    s: sortObjectKeys(settings),
+    s: sortObjectKeys(settingsForChecksum(settings)),
   });
 }

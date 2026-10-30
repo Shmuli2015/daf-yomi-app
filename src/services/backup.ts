@@ -172,6 +172,7 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     auto_backup_interval: normalizeAutoBackupInterval(s.auto_backup_interval),
     auto_backup_file_uri: null,
     auto_backup_previous_file_uri: null,
+    auto_backup_directory_uri: null,
     auto_backup_failed: 0,
     auto_backup_issue: null,
   };
@@ -183,6 +184,7 @@ function settingsForExport(settings: BackupSettings): BackupSettings {
     auto_backup_enabled: 0,
     auto_backup_file_uri: null,
     auto_backup_previous_file_uri: null,
+    auto_backup_directory_uri: null,
     auto_backup_failed: 0,
     auto_backup_issue: null,
   };
@@ -350,7 +352,7 @@ export async function saveBackupToDevice(): Promise<BackupExportResult> {
       file = directory.createFile(savedFileName, 'application/json');
     }
 
-    file.write(json);
+    file.writeSync(json);
     return { status: 'success', fileName: savedFileName };
   } catch (error) {
     if (isUserCancel(error)) {
@@ -403,7 +405,7 @@ export async function pickAndReadBackupFile(): Promise<
 > {
   try {
     const result = await DocumentPicker.getDocumentAsync({
-      type: 'application/json',
+      type: ['application/json', 'application/octet-stream'],
       copyToCacheDirectory: true,
     });
 
