@@ -186,7 +186,7 @@ GitHub Actions workflows:
 | [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) | After Android release or manual dispatch | Update [`docs/latest.json`](./docs/latest.json) and deploy [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) |
 | [`.github/workflows/promote-play-production.yml`](./.github/workflows/promote-play-production.yml) | Manual dispatch | Promote the Play alpha release to production and attach Hebrew what's new |
 
-**Quality checks** (`quality.yml` via `ci.yml`): runs `tsc --noEmit`, tests, and `expo-doctor` on every PR and `master` push. The same checks run again before a release build. Locally: `npm run ci`.
+**Quality checks** (`quality.yml` via `ci.yml`): runs `tsc --noEmit`, tests, and `expo-doctor` on every PR and `master` push. Protect Master requires the PR check `quality / quality` to pass before merge. The same checks run again on `master` after merge, and before a release build. Locally: `npm run ci`.
 
 **Android release** (`build-android.yml`):
 - Always builds an APK (`preview` profile) for GitHub Releases, the download page, and in-app update checks (sideload builds only; `updateCheckEnabled` is true when `EAS_BUILD_PROFILE=preview`).
@@ -208,7 +208,7 @@ GitHub Actions workflows:
 1. Add a `WHATS_NEW` entry for the next version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts).
 2. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the Android release workflow on that branch). After the push it also builds a local debug APK on this machine into `local-builds/masa-daf-X.Y.Z-debug.apk`. That file is not uploaded. The local build runs `expo prebuild --clean` and Gradle directly (works on Windows, macOS, and Linux) and needs a JDK and the Android SDK. It regenerates `android/` for the debug package, so run `npx expo prebuild --clean` again before a regular `expo run:android`.
 3. Install the local debug APK beside the Play app. It is a separate app named **מסע דף (בדיקה)** (`com.masadaf.app.debug`), so production from Play stays installed. Keep the daily Google account out of the Play testing program so the store listing stays on production. Rebuild only the debug APK with `npm run build:apk:debug` (or a sideload preview APK with `npm run build:apk`).
-4. Open a pull request from `release/X.Y.Z` into `master` and merge after the **CI** quality check passes.
+4. Open a pull request from `release/X.Y.Z` into `master`. GitHub blocks merge until the **CI** check `quality / quality` passes.
 5. Confirm the GitHub Release published with `{releaseApkBasename}-X.Y.Z.apk` (and `.aab` when Play was targeted), and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
 6. When the debug build looks right, run **Actions → Promote Play to Production**. That publishes the alpha build to the store and fills What's new. No version picker and no typing in Play Console.
 7. Optional first verification after workflow changes: **Actions → Build Android Release → Run workflow** with `play_track: none`.
