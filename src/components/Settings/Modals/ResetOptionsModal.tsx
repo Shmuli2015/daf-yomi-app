@@ -5,6 +5,7 @@ import { useTheme } from '../../../theme';
 import { ResetOptionType, ResetOptionItem, ResetOptionsModalProps } from './ResetOptionsModal.types';
 import { createResetOptionsModalStyles } from './ResetOptionsModal.styles';
 import BottomSheetModal from '../../BottomSheetModal';
+import { getResetContinueLabel } from '../../../utils/settingsReset';
 
 const RESET_OPTIONS: ResetOptionItem[] = [
   {
@@ -26,9 +27,15 @@ const RESET_OPTIONS: ResetOptionItem[] = [
     icon: 'navigate-outline',
   },
   {
+    id: 'savedTexts',
+    title: 'ניקוי קבצים שמורים',
+    description: 'מחיקת טקסטים של גמרא, שטיינזלץ וחברותא שהורדו למכשיר. סימוני הלימוד וההגדרות יישמרו.',
+    icon: 'folder-open-outline',
+  },
+  {
     id: 'all',
     title: 'איפוס כללי מלא',
-    description: 'מחיקה מוחלטת של כל הנתונים (דף יומי ומסלול אישי) והחזרת ההגדרות למצב התחלתי.',
+    description: 'מחיקה מוחלטת של כל הנתונים (דף יומי ומסלול אישי), הטקסטים שהורדו, והחזרת ההגדרות למצב התחלתי.',
     icon: 'trash-outline',
     isDestructiveAll: true,
   },
@@ -45,14 +52,7 @@ export default function ResetOptionsModal({ visible, onClose, onConfirm }: Reset
     }
   }, [visible]);
 
-  const confirmButtonLabel =
-    selectedType === 'dafYomi'
-      ? 'המשך לאיפוס דף יומי'
-      : selectedType === 'personalTrack'
-        ? 'המשך לאיפוס מסלול אישי'
-        : selectedType === 'readerPositions'
-          ? 'המשך לניקוי מיקומי קריאה'
-          : 'המשך לאיפוס כללי';
+  const confirmButtonLabel = getResetContinueLabel(selectedType);
 
   return (
     <BottomSheetModal visible={visible} onClose={onClose}>

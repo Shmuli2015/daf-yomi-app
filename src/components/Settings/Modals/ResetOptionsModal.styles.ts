@@ -44,7 +44,7 @@ export function createResetOptionsModalStyles(theme: Theme) {
       marginBottom: 16,
     },
     optionsScroll: {
-      maxHeight: 340,
+      maxHeight: 400,
       marginBottom: 16,
       flexGrow: 0,
     },

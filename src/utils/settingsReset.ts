@@ -9,6 +9,7 @@ export interface ResetActions {
   resetDafYomiState: () => void;
   resetPersonalTrackState: () => void;
   clearReaderPositionsState: () => void;
+  clearSavedTextsState: () => void | Promise<void>;
   resetAllState: () => void;
 }
 
@@ -35,11 +36,16 @@ export function getResetConfirmTexts(type: ResetOptionType | null): ResetTexts {
         title: 'אישור ניקוי מיקומי קריאה',
         message: 'פעולה זו תמחק את מיקומי הקריאה השמורים בכל הדפים. סימוני הלימוד וההגדרות יישמרו. פעולה זו אינה ניתנת לביטול.',
       };
+    case 'savedTexts':
+      return {
+        title: 'אישור ניקוי קבצים שמורים',
+        message: 'פעולה זו תמחק טקסטים של גמרא, שטיינזלץ וחברותא שהורדו למכשיר. סימוני הלימוד, הרצף וההגדרות יישמרו. פעולה זו אינה ניתנת לביטול.',
+      };
     case 'all':
     default:
       return {
         title: 'אישור איפוס כללי',
-        message: 'פעולה זו תמחק את כל הנתונים ותאפס את כל הגדרות האפליקציה למצב ההתחלתי. פעולה זו אינה ניתנת לביטול.',
+        message: 'פעולה זו תמחק את כל הנתונים, את הטקסטים שהורדו למכשיר, ותאפס את כל הגדרות האפליקציה למצב ההתחלתי. פעולה זו אינה ניתנת לביטול.',
       };
   }
 }
@@ -61,16 +67,36 @@ export function getResetSuccessFeedback(type: ResetOptionType): ResetTexts {
         title: 'מיקומי הקריאה נוקו',
         message: 'כל מיקומי הקריאה השמורים נמחקו. סימוני הלימוד וההגדרות נשמרו.',
       };
+    case 'savedTexts':
+      return {
+        title: 'הקבצים השמורים נוקו',
+        message: 'כל הטקסטים השמורים נמחקו בהצלחה. סימוני הלימוד וההגדרות שלך נשמרו.',
+      };
     case 'all':
     default:
       return {
         title: 'איפוס כללי הושלם',
-        message: 'כל הנתונים וההגדרות נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי.',
+        message: 'כל הנתונים, ההגדרות והטקסטים השמורים נמחקו בהצלחה. האפליקציה חזרה למצבה ההתחלתי.',
       };
   }
 }
 
-export function runResetAction(type: ResetOptionType, actions: ResetActions) {
+export function getResetContinueLabel(type: ResetOptionType): string {
+  switch (type) {
+    case 'dafYomi':
+      return 'המשך לאיפוס דף יומי';
+    case 'personalTrack':
+      return 'המשך לאיפוס מסלול אישי';
+    case 'readerPositions':
+      return 'המשך לניקוי מיקומי קריאה';
+    case 'savedTexts':
+      return 'המשך לניקוי קבצים שמורים';
+    case 'all':
+      return 'המשך לאיפוס כללי';
+  }
+}
+
+export async function runResetAction(type: ResetOptionType, actions: ResetActions): Promise<void> {
   switch (type) {
     case 'dafYomi':
       actions.resetDafYomiState();
@@ -81,8 +107,12 @@ export function runResetAction(type: ResetOptionType, actions: ResetActions) {
     case 'readerPositions':
       actions.clearReaderPositionsState();
       return;
+    case 'savedTexts':
+      await actions.clearSavedTextsState();
+      return;
     case 'all':
       actions.resetAllState();
+      await actions.clearSavedTextsState();
       return;
   }
 }

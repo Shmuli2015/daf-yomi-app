@@ -78,10 +78,12 @@ describe('settingsVisibleSearch', () => {
     ).toBe(false);
   });
 
-  it('shows clear cache in offline section', () => {
+  it('shows clear cache in offline section and reset data', () => {
     expect(hasVisibleSectionMatch('מטמון', 'offline', baseCtx)).toBe(true);
-    expect(hasVisibleSectionMatch('מטמון', 'backup_data', baseCtx)).toBe(false);
-    expect(getMatchingSectionKeys('מטמון', baseCtx)).toEqual(['offline']);
+    expect(hasVisibleSectionMatch('מטמון', 'backup_data', baseCtx)).toBe(true);
+    expect(getMatchingSectionKeys('מטמון', baseCtx)).toEqual(['offline', 'backup_data']);
+    expect(hasVisibleSectionMatch('ניקוי קבצים שמורים', 'offline', baseCtx)).toBe(true);
+    expect(hasVisibleSectionMatch('ניקוי קבצים שמורים', 'backup_data', baseCtx)).toBe(false);
   });
 
   it('shows automatic backup rows only when the feature is available', () => {
