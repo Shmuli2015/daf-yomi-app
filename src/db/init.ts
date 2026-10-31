@@ -182,5 +182,6 @@ export function resetDB() {
   db.execSync('DROP TABLE IF EXISTS daily_daf;');
   db.execSync('DROP TABLE IF EXISTS personal_track_daf;');
   db.execSync('DROP TABLE IF EXISTS reader_position;');
+  db.execSync('DROP TABLE IF EXISTS settings;');
   initDB();
 }

@@ -36,7 +36,7 @@ export function getSettings(): SettingsRecord {
   return normalizeSettingsRecord(row);
 }
 
-function createDefaultSettingsRecord(): SettingsRecord {
+export function createDefaultSettingsRecord(): SettingsRecord {
   return {
     id: 1,
     notification_hour: 7,

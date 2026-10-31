@@ -8,7 +8,7 @@ interface UseSettingsResetParams {
   resetPersonalTrackState: () => void;
   clearReaderPositionsState: () => void;
   clearSavedTextsState: () => void | Promise<void>;
-  resetAllState: () => void;
+  resetAllState: () => void | Promise<void>;
   onFeedback: (feedback: SettingsFeedback) => void;
 }
 

@@ -25,6 +25,7 @@ export {
 } from './dailyRecords';
 
 export {
+  createDefaultSettingsRecord,
   ensureDafDayStartSchedulesFromCurrentHour,
   getSettings,
   markStoreReviewPrompted,

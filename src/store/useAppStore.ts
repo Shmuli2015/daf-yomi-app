@@ -13,9 +13,11 @@ import type { BackupData } from '../services/backup';
 import { getDafDayDate } from '../utils/dafDayBoundary';
 import type { DafDayStartDaySchedule } from '../utils/dafDayBoundary';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
+import { DEFAULT_SCHEDULES, scheduleNotifications } from '../utils/notifications';
 import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from '../utils/progressCache';
 import { resolveAmudMark, type AmudSide } from '../utils/dafStatus';
 import { isPersonalTrackEnabled } from '../utils/personalTrack';
+import { captureException } from '../services/sentry';
 
 function derivePinnedState(settings: SettingsRecord | null | undefined) {
   const pinned = parsePinnedPersonalMasechtot(
@@ -145,8 +147,8 @@ interface AppState {
   resetDafYomiState: () => void;
   resetPersonalTrackState: () => void;
   clearReaderPositionsState: () => void;
-  resetAllState: () => void;
-  resetAppState: () => void;
+  resetAllState: () => void | Promise<void>;
+  resetAppState: () => void | Promise<void>;
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -589,7 +591,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     clearAllReaderPositions();
   },
 
-  resetAllState: () => {
+  resetAllState: async () => {
     resetDB();
     const settings = getSettings();
     const today = getDafDayDate(new Date(), settings);
@@ -612,9 +614,29 @@ export const useAppStore = create<AppState>((set, get) => ({
       streak: 0,
       progressCache: cache,
     });
+    try {
+      let schedules = DEFAULT_SCHEDULES;
+      if (settings.day_schedules) {
+        try {
+          schedules = JSON.parse(settings.day_schedules);
+        } catch {
+          schedules = DEFAULT_SCHEDULES;
+        }
+      }
+      await scheduleNotifications(
+        settings.notification_hour,
+        settings.notification_minute,
+        (settings.notif_mode as 'daily' | 'custom') || 'daily',
+        schedules,
+        settings.notifications_enabled === 1,
+        { sound: settings.notification_sound_enabled !== 0 },
+      );
+    } catch (error) {
+      captureException(error);
+    }
   },
 
   resetAppState: () => {
-    get().resetAllState();
+    return get().resetAllState();
   },
 }));
