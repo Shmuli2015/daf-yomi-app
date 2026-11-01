@@ -1,7 +1,10 @@
 import type { ComponentProps } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { ThemeMode } from '../theme';
-import { DaySchedule, DEFAULT_SCHEDULES } from './notifications';
+import { DEFAULT_SCHEDULES } from './notifications';
+import type { DaySchedule } from './reminderSchedule';
+
+export { parseDaySchedulesJson } from './reminderSchedule';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 
@@ -33,15 +36,6 @@ export function getDafDayStartModeDisplay(
     return { icon: 'calendar-outline', label: 'לפי ימים' };
   }
   return { icon: 'moon-outline', label: 'בחצות' };
-}
-
-export function parseDaySchedulesJson(json: string | null | undefined): DaySchedule[] {
-  if (!json) return DEFAULT_SCHEDULES;
-  try {
-    return JSON.parse(json) as DaySchedule[];
-  } catch {
-    return DEFAULT_SCHEDULES;
-  }
 }
 
 export function schedulesUseDefaultTimes(schedules: DaySchedule[]): boolean {

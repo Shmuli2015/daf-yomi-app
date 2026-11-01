@@ -1,29 +1,19 @@
 import * as Notifications from 'expo-notifications';
 import { getSettings } from '../db/database';
 import {
-  DEFAULT_SCHEDULES,
   REMINDER_WINDOW_DAYS,
-  type DaySchedule,
   getScheduledForFromContentData,
+  reminderModeFromSettings,
   resolveReminderTime,
   scheduleReminderWindow,
   scheduleStudyReminderAt,
+  schedulesForReminderSettings,
   type ReminderConfig,
 } from './reminderSchedule';
 import { withReminderScheduleLock } from './reminderScheduleLock';
 import { isSnoozeReminderId } from './snoozeConstants';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function parseSchedules(json: string | null | undefined): DaySchedule[] {
-  if (!json) return DEFAULT_SCHEDULES;
-  try {
-    const parsed: unknown = JSON.parse(json);
-    return Array.isArray(parsed) ? (parsed as DaySchedule[]) : DEFAULT_SCHEDULES;
-  } catch {
-    return DEFAULT_SCHEDULES;
-  }
-}
 
 async function getScheduledReminderTimes(): Promise<Set<number>> {
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
@@ -53,11 +43,12 @@ async function runExtension(now: Date): Promise<number> {
   const settings = getSettings();
   if (settings.notifications_enabled !== 1) return 0;
 
+  const reminderMode = reminderModeFromSettings(settings.notif_mode);
   const config: ReminderConfig = {
-    mode: (settings.notif_mode as 'daily' | 'custom') || 'daily',
+    mode: reminderMode,
     hour: settings.notification_hour,
     minute: settings.notification_minute,
-    schedules: parseSchedules(settings.day_schedules),
+    schedules: schedulesForReminderSettings(settings.day_schedules, reminderMode),
   };
   const sound = settings.notification_sound_enabled !== 0;
 

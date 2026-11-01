@@ -12,7 +12,10 @@ import {
   type DafDayStartMode,
 } from '../utils/dafDayBoundary';
 import { getNotificationPermissionStatus } from '../utils/notificationPermission';
-import { parseDaySchedulesJson } from '../utils/settingsScreen';
+import {
+  reminderModeFromSettings,
+  schedulesForReminderSettings,
+} from '../utils/reminderSchedule';
 import { scheduleNotifications } from '../utils/notifications';
 import { scheduleIdleTask } from '../utils/scheduleIdleTask';
 import { DAY_LABELS } from '../components/Settings/Schedule/DayScheduleList.constants';
@@ -32,11 +35,12 @@ interface UseSettingsDisplayPrefsParams {
 async function rescheduleStudyReminders() {
   const current = getSettings();
   const osStatus = await getNotificationPermissionStatus();
+  const reminderMode = reminderModeFromSettings(current.notif_mode);
   await scheduleNotifications(
     current.notification_hour,
     current.notification_minute,
-    (current.notif_mode as 'daily' | 'custom') || 'daily',
-    parseDaySchedulesJson(current.day_schedules),
+    reminderMode,
+    schedulesForReminderSettings(current.day_schedules, reminderMode),
     current.notifications_enabled === 1 && osStatus === 'granted',
     { sound: current.notification_sound_enabled !== 0 },
   );

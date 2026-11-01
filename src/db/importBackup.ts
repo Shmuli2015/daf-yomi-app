@@ -3,6 +3,7 @@ import {
   normalizeDafDayStartMode,
   parseDafDayStartSchedules,
 } from '../utils/dafDayBoundary';
+import { schedulesForReminderSettings } from '../utils/reminderSchedule';
 import {
   addPinnedPersonalMasechet,
   parsePinnedPersonalMasechtot,
@@ -297,7 +298,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.show_confetti,
       settings.notifications_enabled,
       settings.notif_mode,
-      settings.day_schedules,
+      JSON.stringify(schedulesForReminderSettings(settings.day_schedules, settings.notif_mode)),
       settings.theme_mode,
       settings.last_update_check_at,
       settings.dismissed_update_version,

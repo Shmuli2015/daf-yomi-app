@@ -3,6 +3,15 @@ const mockGetSettings = jest.fn();
 const mockScheduleNotifications = jest.fn(async () => undefined);
 const mockCaptureException = jest.fn();
 
+jest.mock('expo-notifications', () => ({
+  scheduleNotificationAsync: jest.fn(),
+  getAllScheduledNotificationsAsync: jest.fn().mockResolvedValue([]),
+  cancelScheduledNotificationAsync: jest.fn(),
+  SchedulableTriggerInputTypes: { DATE: 'date' },
+  AndroidNotificationPriority: { MAX: 'max' },
+}));
+jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
+
 jest.mock('../../db/database', () => {
   const mocks: Record<string, unknown> = {
     __esModule: true,
