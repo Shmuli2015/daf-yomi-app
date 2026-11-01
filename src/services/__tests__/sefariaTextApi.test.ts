@@ -105,9 +105,10 @@ describe('sefariaTextApi', () => {
 
     expect(urls.some((url: string) => url.includes('commentary=0'))).toBe(true);
     expect(urls.some((url: string) => url.includes('commentary=1'))).toBe(false);
-    expect(urls.some((url: string) => url.includes('Rashi_on_Berakhot.2a'))).toBe(true);
-    expect(urls.some((url: string) => url.includes('Tosafot_on_Berakhot.2a'))).toBe(true);
+    expect(urls.some((url: string) => url.includes('Rashi_on_Berakhot.2a.1-99'))).toBe(true);
+    expect(urls.some((url: string) => url.includes('Tosafot_on_Berakhot.2a.1-99'))).toBe(true);
     expect(urls.some((url: string) => url.includes('Steinsaltz_on_Berakhot.2a'))).toBe(true);
+    expect(urls.some((url: string) => url.includes('Steinsaltz_on_Berakhot.2a.1-99'))).toBe(false);
     expect(page.segments.length).toBeGreaterThan(0);
     expect(page.commentaries[0]?.map((item) => item.commentator).sort()).toEqual(
       ['rashi', 'steinsaltz', 'tosafot'].sort(),
@@ -186,5 +187,41 @@ describe('sefariaTextApi', () => {
     const page = await fetchSefariaPageText('Berachot', 2, 'a');
     expect(page.segments[0].he).toBe('מהדיסק');
     expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
+  it('maps sparse Rashi and Tosafot onto later gemara segments', async () => {
+    const gemaraHe = Array.from({ length: 12 }, (_, index) => `קטע ${index + 1}`);
+    const rashiHe = Array.from({ length: 12 }, () => [] as string[]);
+    rashiHe[1] = ['רש״י על שורה ב'];
+    const tosafotHe = Array.from({ length: 12 }, () => [] as string[]);
+    tosafotHe[9] = ['תוספות על שורה י'];
+
+    globalThis.fetch = jest.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('Rashi_on_')) {
+        return { ok: true, json: async () => ({ he: rashiHe }) };
+      }
+      if (url.includes('Tosafot_on_')) {
+        return { ok: true, json: async () => ({ he: tosafotHe }) };
+      }
+      if (url.includes('Steinsaltz_on_')) {
+        return { ok: true, json: async () => ({ he: gemaraHe.map(() => []) }) };
+      }
+      return {
+        ok: true,
+        json: async () => ({ he: gemaraHe, heTitle: 'בכורות', ref: 'Bekhorot.44a' }),
+      };
+    }) as unknown as typeof fetch;
+
+    const page = await fetchSefariaPageText('Bechorot', 44, 'a');
+    const urls = (globalThis.fetch as jest.Mock).mock.calls.map((call) => String(call[0]));
+
+    expect(urls.some((url: string) => url.includes('Rashi_on_Bekhorot.44a.1-99'))).toBe(true);
+    expect(urls.some((url: string) => url.includes('Tosafot_on_Bekhorot.44a.1-99'))).toBe(true);
+    expect(page.commentaries[0]).toBeUndefined();
+    expect(page.commentaries[1]?.map((item) => item.commentator)).toEqual(['rashi']);
+    expect(page.commentaries[1]?.[0].he).toContain('רש״י על שורה ב');
+    expect(page.commentaries[9]?.map((item) => item.commentator)).toEqual(['tosafot']);
+    expect(page.commentaries[9]?.[0].he).toContain('תוספות על שורה י');
   });
 });

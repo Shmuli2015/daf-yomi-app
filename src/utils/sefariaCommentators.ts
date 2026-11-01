@@ -24,6 +24,8 @@ export const MISHNAH_COMMENTATOR_KEYS: readonly SefariaCommentatorKey[] = ['bart
 
 export const TAMID_COMMENTATOR_KEYS: readonly SefariaCommentatorKey[] = ['mefaresh', 'rosh'];
 
+const BAVLI_COMMENTARY_LINE_RANGE = '1-99';
+
 export const COMMENTATOR_TITLE_HE: Record<SefariaCommentatorKey, string> = {
   rashi: 'רש״י',
   tosafot: 'תוספות',
@@ -121,7 +123,7 @@ export function commentatorFetchSpecs(tref: string, shekalim: boolean): Commenta
     return [
       {
         key: 'mefaresh',
-        prefix: `Mefaresh_on_${tref}.1-99`,
+        prefix: `Mefaresh_on_${tref}.${BAVLI_COMMENTARY_LINE_RANGE}`,
         titleHe: COMMENTATOR_TITLE_HE.mefaresh,
         mode: 'bavli',
       },
@@ -135,10 +137,15 @@ export function commentatorFetchSpecs(tref: string, shekalim: boolean): Commenta
   }
 
   return [
-    { key: 'rashi', prefix: `Rashi_on_${tref}`, titleHe: COMMENTATOR_TITLE_HE.rashi, mode: 'bavli' },
+    {
+      key: 'rashi',
+      prefix: `Rashi_on_${tref}.${BAVLI_COMMENTARY_LINE_RANGE}`,
+      titleHe: COMMENTATOR_TITLE_HE.rashi,
+      mode: 'bavli',
+    },
     {
       key: 'tosafot',
-      prefix: `Tosafot_on_${tref}`,
+      prefix: `Tosafot_on_${tref}.${BAVLI_COMMENTARY_LINE_RANGE}`,
       titleHe: COMMENTATOR_TITLE_HE.tosafot,
       mode: 'bavli',
     },
