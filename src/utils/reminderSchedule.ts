@@ -40,6 +40,28 @@ export function getScheduledForFromContentData(data: unknown): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
 
+export async function scheduleReminderWindow(
+  now: Date,
+  config: ReminderConfig,
+  dafDaySettings: DafDayBoundarySettings,
+  sound: boolean,
+): Promise<number> {
+  const notificationPromises: Promise<string>[] = [];
+
+  for (let dayOffset = 0; dayOffset < REMINDER_WINDOW_DAYS; dayOffset++) {
+    const day = new Date(now);
+    day.setDate(now.getDate() + dayOffset);
+    const reminderTime = resolveReminderTime(day, config);
+    if (!reminderTime || reminderTime.getTime() <= now.getTime()) {
+      continue;
+    }
+    notificationPromises.push(scheduleStudyReminderAt(reminderTime, dafDaySettings, sound));
+  }
+
+  const scheduledIds = await Promise.all(notificationPromises);
+  return scheduledIds.length;
+}
+
 export async function scheduleStudyReminderAt(
   reminderTime: Date,
   dafDaySettings: DafDayBoundarySettings,

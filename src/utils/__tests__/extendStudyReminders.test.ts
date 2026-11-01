@@ -1,23 +1,39 @@
 const mockGetAllScheduled = jest.fn();
-const mockScheduleAt = jest.fn(async () => 'id');
+const mockCancelScheduled = jest.fn(async () => undefined);
+const mockScheduleNotificationAsync = jest.fn(async () => 'id');
 const mockGetSettings = jest.fn();
 
 jest.mock('expo-notifications', () => ({
   getAllScheduledNotificationsAsync: mockGetAllScheduled,
+  cancelScheduledNotificationAsync: mockCancelScheduled,
+  scheduleNotificationAsync: mockScheduleNotificationAsync,
+  SchedulableTriggerInputTypes: { DATE: 'date' },
+  AndroidNotificationPriority: { MAX: 'max' },
 }));
 jest.mock('react-native', () => ({ Platform: { OS: 'android' } }));
 jest.mock('../../db/database', () => ({ getSettings: mockGetSettings }));
-jest.mock('../reminderSchedule', () => {
-  const actual = jest.requireActual('../reminderSchedule');
-  return { ...actual, scheduleStudyReminderAt: mockScheduleAt };
-});
+jest.mock('../dafDayBoundary', () => ({
+  getDafDayDate: (d: Date) => d,
+}));
+jest.mock('../notificationCopy', () => ({
+  getStudyReminderCopy: () => ({ title: 'title', body: 'body' }),
+}));
+jest.mock('../studyReminderTarget', () => ({
+  buildStudyReminderTarget: () => ({ dateStr: '2026-10-15' }),
+}));
 
 import { extendStudyReminders } from '../extendStudyReminders';
+import { REMINDER_WINDOW_DAYS } from '../reminderSchedule';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function reminderAt(time: number, identifier = `r-${time}`) {
   return { identifier, content: { data: { scheduledFor: time } } };
+}
+
+function scheduledForFromCall(call: unknown): number {
+  const payload = (call as [{ content: { data: { scheduledFor: number } } }])[0];
+  return payload.content.data.scheduledFor;
 }
 
 describe('extendStudyReminders', () => {
@@ -45,9 +61,10 @@ describe('extendStudyReminders', () => {
     const added = await extendStudyReminders(now);
 
     expect(added).toBe(1);
-    expect(mockScheduleAt).toHaveBeenCalledTimes(1);
-    const scheduledDate = (mockScheduleAt.mock.calls[0] as unknown as [Date])[0];
-    expect(scheduledDate.getTime()).toBe(new Date(2026, 10, 13, 7, 30, 0, 0).getTime());
+    expect(mockScheduleNotificationAsync).toHaveBeenCalledTimes(1);
+    expect(scheduledForFromCall(mockScheduleNotificationAsync.mock.calls[0])).toBe(
+      new Date(2026, 10, 13, 7, 30, 0, 0).getTime(),
+    );
   });
 
   it('does not add anything when the window is full', async () => {
@@ -58,17 +75,29 @@ describe('extendStudyReminders', () => {
     mockGetAllScheduled.mockResolvedValue(times.map(time => reminderAt(time)));
 
     expect(await extendStudyReminders(now)).toBe(0);
-    expect(mockScheduleAt).not.toHaveBeenCalled();
+    expect(mockScheduleNotificationAsync).not.toHaveBeenCalled();
   });
 
-  it('ignores snooze reminders and does nothing when disabled', async () => {
+  it('rebuilds the daily window when only a snooze reminder is scheduled', async () => {
     mockGetAllScheduled.mockResolvedValue([
       reminderAt(now.getTime() + DAY_MS, 'later-reminder-1'),
     ]);
-    expect(await extendStudyReminders(now)).toBe(0);
 
+    const added = await extendStudyReminders(now);
+
+    expect(added).toBe(REMINDER_WINDOW_DAYS);
+    expect(mockScheduleNotificationAsync).toHaveBeenCalledTimes(REMINDER_WINDOW_DAYS);
+    expect(mockCancelScheduled).not.toHaveBeenCalled();
+  });
+
+  it('does not schedule when notifications are disabled', async () => {
+    mockGetAllScheduled.mockResolvedValue([
+      reminderAt(now.getTime() + DAY_MS),
+      reminderAt(now.getTime() + 2 * DAY_MS, 'later-reminder-1'),
+    ]);
     mockGetSettings.mockReturnValue({ notifications_enabled: 0 });
+
     expect(await extendStudyReminders(now)).toBe(0);
-    expect(mockScheduleAt).not.toHaveBeenCalled();
+    expect(mockScheduleNotificationAsync).not.toHaveBeenCalled();
   });
 });
