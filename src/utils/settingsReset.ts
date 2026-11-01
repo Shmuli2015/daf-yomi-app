@@ -10,7 +10,7 @@ export interface ResetActions {
   resetPersonalTrackState: () => void;
   clearReaderPositionsState: () => void;
   clearSavedTextsState: () => void | Promise<void>;
-  resetAllState: () => void;
+  resetAllState: () => void | Promise<void>;
 }
 
 export interface ResetSuccessToast extends ResetTexts {
@@ -111,7 +111,7 @@ export async function runResetAction(type: ResetOptionType, actions: ResetAction
       await actions.clearSavedTextsState();
       return;
     case 'all':
-      actions.resetAllState();
+      await actions.resetAllState();
       await actions.clearSavedTextsState();
       return;
   }
