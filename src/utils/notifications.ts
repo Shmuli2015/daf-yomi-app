@@ -6,11 +6,11 @@ import { hasExactAlarmPermission, promptForExactAlarmPermission } from './exactA
 import { getStudyReminderCopy } from './notificationCopy';
 import {
   DEFAULT_SCHEDULES,
-  REMINDER_WINDOW_DAYS,
   type DaySchedule,
-  resolveReminderTime,
-  scheduleStudyReminderAt,
+  scheduleReminderWindow,
 } from './reminderSchedule';
+import { withReminderScheduleLock } from './reminderScheduleLock';
+import { isSnoozeReminderId } from './snoozeConstants';
 import { buildStudyReminderTarget } from './studyReminderTarget';
 import { captureException } from '../services/sentry';
 
@@ -21,6 +21,51 @@ export type ScheduleNotificationsOptions = {
   sound?: boolean;
 };
 
+async function cancelScheduledStudyReminders(preserveSnooze: boolean): Promise<void> {
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  const toCancel = scheduled.filter(item =>
+    preserveSnooze ? !isSnoozeReminderId(item.identifier) : true,
+  );
+  await Promise.all(
+    toCancel.map(item =>
+      Notifications.cancelScheduledNotificationAsync(item.identifier).catch(() => {}),
+    ),
+  );
+}
+
+async function scheduleNotificationsUnlocked(
+  globalHour: number,
+  globalMin: number,
+  mode: 'daily' | 'custom',
+  schedules: DaySchedule[],
+  enabled: boolean,
+  options?: ScheduleNotificationsOptions,
+): Promise<number> {
+  if (options?.promptForExactAlarm) {
+    await promptForExactAlarmPermission();
+  }
+
+  const settings = getSettings();
+
+  if (!enabled) {
+    await cancelScheduledStudyReminders(false);
+    return 0;
+  }
+
+  const hasExactAlarm = await hasExactAlarmPermission();
+  if (!hasExactAlarm && __DEV__) {
+    console.log(
+      'Exact alarm permission not granted - reminders will be scheduled with approximate timing',
+    );
+  }
+
+  await cancelScheduledStudyReminders(true);
+
+  const sound = options?.sound !== false;
+  const config = { mode, hour: globalHour, minute: globalMin, schedules };
+  return scheduleReminderWindow(new Date(), config, settings, sound);
+}
+
 export async function scheduleNotifications(
   globalHour: number,
   globalMin: number,
@@ -28,38 +73,11 @@ export async function scheduleNotifications(
   schedules: DaySchedule[],
   enabled: boolean,
   options?: ScheduleNotificationsOptions,
-) {
+): Promise<number> {
   try {
-    await Notifications.cancelAllScheduledNotificationsAsync();
-    if (!enabled) return;
-
-    if (options?.promptForExactAlarm) {
-      await promptForExactAlarmPermission();
-    }
-    const hasExactAlarm = await hasExactAlarmPermission();
-    if (!hasExactAlarm && __DEV__) {
-      console.log(
-        'Exact alarm permission not granted - reminders will be scheduled with approximate timing',
-      );
-    }
-
-    const today = new Date();
-    const sound = options?.sound !== false;
-    const settings = getSettings();
-    const config = { mode, hour: globalHour, minute: globalMin, schedules };
-    const notificationPromises: Promise<string>[] = [];
-
-    for (let dayOffset = 0; dayOffset < REMINDER_WINDOW_DAYS; dayOffset++) {
-      const day = new Date(today);
-      day.setDate(today.getDate() + dayOffset);
-      const reminderTime = resolveReminderTime(day, config);
-      if (!reminderTime || reminderTime.getTime() <= Date.now()) {
-        continue;
-      }
-      notificationPromises.push(scheduleStudyReminderAt(reminderTime, settings, sound));
-    }
-
-    await Promise.all(notificationPromises);
+    return await withReminderScheduleLock(() =>
+      scheduleNotificationsUnlocked(globalHour, globalMin, mode, schedules, enabled, options),
+    );
   } catch (error) {
     captureException(error);
     throw error;

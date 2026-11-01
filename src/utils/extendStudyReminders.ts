@@ -6,9 +6,11 @@ import {
   type DaySchedule,
   getScheduledForFromContentData,
   resolveReminderTime,
+  scheduleReminderWindow,
   scheduleStudyReminderAt,
   type ReminderConfig,
 } from './reminderSchedule';
+import { withReminderScheduleLock } from './reminderScheduleLock';
 import { isSnoozeReminderId } from './snoozeConstants';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -40,7 +42,7 @@ let inFlight: Promise<number> | null = null;
 
 export function extendStudyReminders(now: Date = new Date()): Promise<number> {
   if (!inFlight) {
-    inFlight = runExtension(now).finally(() => {
+    inFlight = withReminderScheduleLock(() => runExtension(now)).finally(() => {
       inFlight = null;
     });
   }
@@ -51,10 +53,6 @@ async function runExtension(now: Date): Promise<number> {
   const settings = getSettings();
   if (settings.notifications_enabled !== 1) return 0;
 
-  const scheduledTimes = await getScheduledReminderTimes();
-  const upcomingTimes = [...scheduledTimes].filter(time => time > now.getTime());
-  if (upcomingTimes.length === 0) return 0;
-
   const config: ReminderConfig = {
     mode: (settings.notif_mode as 'daily' | 'custom') || 'daily',
     hour: settings.notification_hour,
@@ -62,6 +60,13 @@ async function runExtension(now: Date): Promise<number> {
     schedules: parseSchedules(settings.day_schedules),
   };
   const sound = settings.notification_sound_enabled !== 0;
+
+  const scheduledTimes = await getScheduledReminderTimes();
+  const upcomingTimes = [...scheduledTimes].filter(time => time > now.getTime());
+  if (upcomingTimes.length === 0) {
+    return scheduleReminderWindow(now, config, settings, sound);
+  }
+
   const horizon = now.getTime() + REMINDER_WINDOW_DAYS * DAY_MS;
 
   const day = new Date(Math.max(...upcomingTimes));

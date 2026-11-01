@@ -4,13 +4,14 @@ import { getSettings } from '../db/database';
 import { getDafDayDate } from './dafDayBoundary';
 import { getSnoozeReminderCopy } from './notificationCopy';
 import { buildStudyReminderTarget } from './studyReminderTarget';
+import { withReminderScheduleLock } from './reminderScheduleLock';
 
 import { SNOOZE_REMINDER_PREFIX, isSnoozeReminderId } from './snoozeConstants';
 
 const SNOOZE_SECONDS = 3600;
 export { SNOOZE_REMINDER_PREFIX, isSnoozeReminderId };
 
-export async function cancelExistingSnoozeReminders(): Promise<void> {
+async function cancelExistingSnoozeRemindersUnlocked(): Promise<void> {
   try {
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
     const snoozeItems = scheduled.filter(item => isSnoozeReminderId(item.identifier));
@@ -22,36 +23,42 @@ export async function cancelExistingSnoozeReminders(): Promise<void> {
   } catch {}
 }
 
+export async function cancelExistingSnoozeReminders(): Promise<void> {
+  return withReminderScheduleLock(() => cancelExistingSnoozeRemindersUnlocked());
+}
+
 export async function scheduleSnoozeReminder(soundEnabled: boolean): Promise<void> {
-  await cancelExistingSnoozeReminders();
+  return withReminderScheduleLock(async () => {
+    await cancelExistingSnoozeRemindersUnlocked();
 
-  const dafDate = getDafDayDate(new Date(), getSettings());
-  const snoozeCopy = getSnoozeReminderCopy(dafDate);
-  const isAndroid = Platform.OS === 'android';
+    const dafDate = getDafDayDate(new Date(), getSettings());
+    const snoozeCopy = getSnoozeReminderCopy(dafDate);
+    const isAndroid = Platform.OS === 'android';
 
-  const trigger: Notifications.NotificationTriggerInput = isAndroid
-    ? {
-        channelId: 'default',
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: SNOOZE_SECONDS,
-        repeats: false,
-      }
-    : {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: SNOOZE_SECONDS,
-        repeats: false,
-      };
+    const trigger: Notifications.NotificationTriggerInput = isAndroid
+      ? {
+          channelId: 'default',
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: SNOOZE_SECONDS,
+          repeats: false,
+        }
+      : {
+          type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+          seconds: SNOOZE_SECONDS,
+          repeats: false,
+        };
 
-  await Notifications.scheduleNotificationAsync({
-    identifier: `${SNOOZE_REMINDER_PREFIX}-${Date.now()}`,
-    content: {
-      title: snoozeCopy.title,
-      body: snoozeCopy.body,
-      sound: soundEnabled,
-      priority: Notifications.AndroidNotificationPriority.MAX,
-      categoryIdentifier: 'study-reminder',
-      data: buildStudyReminderTarget(dafDate),
-    },
-    trigger,
+    await Notifications.scheduleNotificationAsync({
+      identifier: `${SNOOZE_REMINDER_PREFIX}-${Date.now()}`,
+      content: {
+        title: snoozeCopy.title,
+        body: snoozeCopy.body,
+        sound: soundEnabled,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        categoryIdentifier: 'study-reminder',
+        data: buildStudyReminderTarget(dafDate),
+      },
+      trigger,
+    });
   });
 }
