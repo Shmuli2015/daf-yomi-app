@@ -4,7 +4,11 @@ import * as Notifications from 'expo-notifications';
 import type { EventSubscription } from 'expo';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { getSettings } from '../db/database';
-import { scheduleNotifications, DEFAULT_SCHEDULES, DaySchedule } from '../utils/notifications';
+import { scheduleNotifications } from '../utils/notifications';
+import {
+  reminderModeFromSettings,
+  schedulesForReminderSettings,
+} from '../utils/reminderSchedule';
 import {
   getNotificationPermissionStatus,
   requestNotificationPermission,
@@ -82,15 +86,12 @@ export function useNotificationsSetup() {
         }
 
         if (status === 'granted') {
-          const daySchedules: DaySchedule[] = s.day_schedules
-            ? JSON.parse(s.day_schedules)
-            : DEFAULT_SCHEDULES;
-
+          const reminderMode = reminderModeFromSettings(s.notif_mode);
           await scheduleNotifications(
             s.notification_hour,
             s.notification_minute,
-            (s.notif_mode as 'daily' | 'custom') || 'daily',
-            daySchedules,
+            reminderMode,
+            schedulesForReminderSettings(s.day_schedules, reminderMode),
             s.notifications_enabled === 1,
             { sound: s.notification_sound_enabled !== 0 },
           );

@@ -18,7 +18,7 @@ import {
 } from '../services/backup';
 import { useAppStore } from '../store/useAppStore';
 import type { AutoBackupInterval } from '../utils/autoBackupInterval';
-import { scheduleNotifications } from '../utils/notifications';
+import { applyImportedBackup } from '../utils/settingsBackupApply';
 import type { SettingsFeedback } from './useSettingsFeedback';
 
 interface UseSettingsBackupParams {
@@ -216,40 +216,23 @@ export function useSettingsBackup({
 
   const applyBackup = useCallback(
     async (backup: BackupData, mode: 'merge' | 'replace') => {
-      importBackup(backup, mode);
-      if (mode === 'replace') {
-        await scheduleNotifications(
-          backup.settings.notification_hour,
-          backup.settings.notification_minute,
-          (backup.settings.notif_mode as 'daily' | 'custom') || 'daily',
-          JSON.parse(backup.settings.day_schedules || '[]'),
-          backup.settings.notifications_enabled === 1,
-          { sound: backup.settings.notification_sound_enabled !== 0 },
-        );
-      }
-      onFeedback({
-        title: 'הגיבוי יובא בהצלחה',
-        message:
-          mode === 'merge'
-            ? 'הנתונים מוזגו עם ההיסטוריה הקיימת.'
-            : 'כל הנתונים וההגדרות הוחלפו בגיבוי.',
-        iconName: 'checkmark-circle',
-        compact: true,
-      });
+      const result = await applyImportedBackup(backup, mode, importBackup);
+      onFeedback(result.feedback);
+      return result.imported;
     },
     [importBackup, onFeedback],
   );
 
   const handleBackupImportMerge = useCallback(async () => {
     if (!pendingBackup) return;
-    await applyBackup(pendingBackup, 'merge');
-    clearBackupImportState();
+    const imported = await applyBackup(pendingBackup, 'merge');
+    if (imported) clearBackupImportState();
   }, [pendingBackup, applyBackup, clearBackupImportState]);
 
   const handleBackupImportReplace = useCallback(async () => {
     if (!pendingBackup) return;
-    await applyBackup(pendingBackup, 'replace');
-    clearBackupImportState();
+    const imported = await applyBackup(pendingBackup, 'replace');
+    if (imported) clearBackupImportState();
   }, [pendingBackup, applyBackup, clearBackupImportState]);
 
   return {

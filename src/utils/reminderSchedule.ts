@@ -14,6 +14,41 @@ export const DEFAULT_SCHEDULES: DaySchedule[] = Array.from({ length: 7 }, (_, i)
   minute: 30,
 }));
 
+export function reminderModeFromSettings(mode: string | null | undefined): 'daily' | 'custom' {
+  return mode === 'custom' ? 'custom' : 'daily';
+}
+
+export function parseDaySchedulesJson(json: string | null | undefined): DaySchedule[] {
+  if (!json) return DEFAULT_SCHEDULES;
+  try {
+    const parsed: unknown = JSON.parse(json);
+    if (!Array.isArray(parsed) || parsed.length !== 7) {
+      return DEFAULT_SCHEDULES;
+    }
+    return parsed as DaySchedule[];
+  } catch {
+    return DEFAULT_SCHEDULES;
+  }
+}
+
+export function resolveSchedulesForReminderMode(
+  mode: 'daily' | 'custom',
+  schedules: DaySchedule[],
+): DaySchedule[] {
+  if (mode === 'custom' && !schedules.some(schedule => schedule?.enabled)) {
+    return DEFAULT_SCHEDULES;
+  }
+  return schedules;
+}
+
+export function schedulesForReminderSettings(
+  json: string | null | undefined,
+  mode: string | null | undefined,
+): DaySchedule[] {
+  const reminderMode = reminderModeFromSettings(mode);
+  return resolveSchedulesForReminderMode(reminderMode, parseDaySchedulesJson(json));
+}
+
 export type ReminderConfig = {
   mode: 'daily' | 'custom';
   hour: number;

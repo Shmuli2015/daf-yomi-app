@@ -13,7 +13,11 @@ import type { BackupData } from '../services/backup';
 import { getDafDayDate } from '../utils/dafDayBoundary';
 import type { DafDayStartDaySchedule } from '../utils/dafDayBoundary';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
-import { DEFAULT_SCHEDULES, scheduleNotifications } from '../utils/notifications';
+import { scheduleNotifications } from '../utils/notifications';
+import {
+  reminderModeFromSettings,
+  schedulesForReminderSettings,
+} from '../utils/reminderSchedule';
 import { buildProgressCache, updateMasechetProgressInCache, ProgressCache } from '../utils/progressCache';
 import { resolveAmudMark, type AmudSide } from '../utils/dafStatus';
 import { isPersonalTrackEnabled } from '../utils/personalTrack';
@@ -615,19 +619,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       progressCache: cache,
     });
     try {
-      let schedules = DEFAULT_SCHEDULES;
-      if (settings.day_schedules) {
-        try {
-          schedules = JSON.parse(settings.day_schedules);
-        } catch {
-          schedules = DEFAULT_SCHEDULES;
-        }
-      }
+      const reminderMode = reminderModeFromSettings(settings.notif_mode);
       await scheduleNotifications(
         settings.notification_hour,
         settings.notification_minute,
-        (settings.notif_mode as 'daily' | 'custom') || 'daily',
-        schedules,
+        reminderMode,
+        schedulesForReminderSettings(settings.day_schedules, reminderMode),
         settings.notifications_enabled === 1,
         { sound: settings.notification_sound_enabled !== 0 },
       );
