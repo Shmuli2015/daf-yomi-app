@@ -1,4 +1,4 @@
-import { getDateStr, getUTCDateStr, getDafByDate } from '../dafYomi';
+import { getDateStr, getDafByDate } from '../dafYomi';
 
 describe('dafYomi utils', () => {
   describe('getDateStr', () => {
@@ -13,13 +13,6 @@ describe('dafYomi utils', () => {
     });
   });
 
-  describe('getUTCDateStr', () => {
-    it('formats UTC date correctly', () => {
-      const date = new Date(Date.UTC(2026, 8, 6));
-      expect(getUTCDateStr(date)).toBe('2026-09-06');
-    });
-  });
-
   describe('getDafByDate', () => {
     it('calculates the correct Daf Yomi for a known date', () => {
       const date = new Date(2024, 0, 1, 12, 0, 0);
@@ -29,6 +22,13 @@ describe('dafYomi utils', () => {
       expect(res.masechet).toBeTruthy();
       expect(res.daf).toContain('דף');
       expect(res.dateString).toBe('2024-01-01');
+    });
+
+    it('uses the local civil date after UTC midnight', () => {
+      const date = new Date(2024, 0, 2, 1, 0, 0);
+      const res = getDafByDate(date);
+
+      expect(res.dateString).toBe('2024-01-02');
     });
   });
 });

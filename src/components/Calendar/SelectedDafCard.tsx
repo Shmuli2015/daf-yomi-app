@@ -8,6 +8,7 @@ import { createSelectedDafCardStyles } from './SelectedDafCard.styles';
 import { kinnimTamidCalendarDisplay } from '../../utils/mishnahOnlySefaria';
 import { getHebrewDayEventInfo } from '../../utils/hebrewCalendarEvents';
 import { formatPartialAmudLabel } from '../../utils/dafStatus';
+import { getDateStr } from '../../utils/dafYomi';
 
 interface SelectedDafCardProps {
   selectedDate: HDate;
@@ -46,7 +47,7 @@ export default function SelectedDafCard({
   const theme = useTheme();
   const styles = useMemo(() => createSelectedDafCardStyles(theme), [theme]);
   const showSecularDate = useAppStore((s) => s.settings?.show_secular_date === 1);
-  const isFuture = dafInfo.dateString > new Date().toISOString().split('T')[0];
+  const isFuture = dafInfo.dateString > getDateStr(new Date());
 
   const scale = useRef(new Animated.Value(0.92)).current;
   const opacity = useRef(new Animated.Value(0)).current;
