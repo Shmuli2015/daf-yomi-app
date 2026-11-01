@@ -142,6 +142,14 @@ describe('commentatorFetchSpecs', () => {
     expect(specs[0].mode).toBe('bavli');
     expect(specs[1].prefix).toBe('Steinsaltz_on_Tamid.25b');
   });
+
+  it('requests Rashi and Tosafot across all lines of a Bavli amud', () => {
+    const specs = commentatorFetchSpecs('Bekhorot.44a', false);
+    expect(specs.map((spec) => spec.key)).toEqual(['rashi', 'tosafot', 'steinsaltz']);
+    expect(specs[0].prefix).toBe('Rashi_on_Bekhorot.44a.1-99');
+    expect(specs[1].prefix).toBe('Tosafot_on_Bekhorot.44a.1-99');
+    expect(specs[2].prefix).toBe('Steinsaltz_on_Bekhorot.44a');
+  });
 });
 
 describe('filterCommentaries', () => {
