@@ -9,13 +9,6 @@ export function getDateStr(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export function getUTCDateStr(date: Date): string {
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
 type DafByDateResult = {
   masechet: string;
   daf: string;
@@ -63,7 +56,7 @@ export function getDafByDate(date: Date): DafByDateResult {
     dafNum,
     amud,
     fullText: withoutPrefixHeb,
-    dateString: getUTCDateStr(date),
+    dateString: getDateStr(date),
   };
 
   dafByDateCache.set(cacheKey, result);
