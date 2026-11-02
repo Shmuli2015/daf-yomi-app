@@ -299,4 +299,36 @@ describe('mishnahSpanFlags', () => {
   it('does not open a span when the word mishnah is plain text', () => {
     expect(mishnahSpanFlags(['משנה זו אינה כותרת', 'הֶמְשֵׁךְ'])).toEqual([false, false]);
   });
+
+  it('marks continuing mishnah when page starts with mishnah text before gemara heading', () => {
+    expect(
+      mishnahSpanFlags([
+        'וּבַעַל הַפִּיקִים, הָעִיקֵּל',
+        'אֶצְבְּעוֹתָיו מוּרְכָּבוֹת זוֹ עַל זוֹ',
+        'יָתֵר בְּיָדָיו וּבְרַגְלָיו',
+        '**גְּמָ׳** תָּנוּ רַבָּנַן: שֶׁבֶר רֶגֶל',
+        'הֶמְשֵׁךְ הַגְּמָרָא',
+      ]),
+    ).toEqual([true, true, true, false, false]);
+  });
+
+  it('marks continuing steinsaltz mishnah paragraphs before gemara heading', () => {
+    expect(
+      mishnahSpanFlags([
+        'ובעל הפיקים והעיקל',
+        'היו אצבעותיו מורכבות',
+        '**א גמרא** תנו רבנן',
+        'המשך הגמרא',
+      ]),
+    ).toEqual([true, true, false, false]);
+  });
+
+  it('does not mark mishnah when page starts directly with gemara heading', () => {
+    expect(
+      mishnahSpanFlags([
+        '**גְּמָ׳** תָּנוּ רַבָּנַן',
+        'הֶמְשֵׁךְ הַגְּמָרָא',
+      ]),
+    ).toEqual([false, false]);
+  });
 });

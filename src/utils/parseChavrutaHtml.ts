@@ -881,8 +881,17 @@ export function isChavrutaMishnahTitle(titleHe: string): boolean {
   return titleHe.includes('מתני') || titleHe.includes('משנה');
 }
 
+function detectInitialChavrutaMishnahState(blocks: ChavrutaBlock[]): boolean {
+  for (const block of blocks) {
+    if (block.kind === 'sectionHeader') {
+      return !isChavrutaMishnahTitle(block.titleHe);
+    }
+  }
+  return false;
+}
+
 export function chavrutaMishnahFlags(blocks: ChavrutaBlock[]): boolean[] {
-  let inMishnah = false;
+  let inMishnah = detectInitialChavrutaMishnahState(blocks);
   return blocks.map((block) => {
     if (block.kind === 'sectionHeader') {
       inMishnah = isChavrutaMishnahTitle(block.titleHe);
