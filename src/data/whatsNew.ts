@@ -8,6 +8,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.2.7',
+    highlights: [
+      'תזכורת לפי ימים מגיעה ביום שבחרת',
+      'רקע המשנה גם כשהדף נפתח באמצע המשנה',
+      'חזרה להיום בלוח עם אנימציה בכיוון הנכון',
+    ],
+  },
+  {
     version: '1.2.6',
     highlights: [
       'רש״י ותוספות נטענים לכל העמוד',
