@@ -63,7 +63,7 @@ export function resolveReminderTime(day: Date, config: ReminderConfig): Date | n
     return target;
   }
   const dayOfWeek = day.getDay();
-  const schedule = config.schedules[dayOfWeek === 0 ? 6 : dayOfWeek - 1];
+  const schedule = config.schedules[dayOfWeek];
   if (!schedule || !schedule.enabled) return null;
   target.setHours(schedule.hour, schedule.minute, 0, 0);
   return target;

@@ -14,7 +14,7 @@ export function updateDailyRecord(
   amud?: 'a' | 'b' | null
 ) {
   const pct = percentage ?? (status === 'learned' ? 100 : status === 'partial' ? 50 : 0);
-  const amudValue = amud !== undefined ? amud : status === 'partial' ? null : null;
+  const amudValue = amud !== undefined ? amud : null;
   const learnedAt = new Date().toISOString();
   db.runSync(
     `INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt)
