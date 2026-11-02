@@ -1,4 +1,5 @@
 import {
+  type ChavrutaBlock,
   buildAmudKey,
   buildFootnoteToken,
   chavrutaMishnahFlags,
@@ -371,6 +372,16 @@ describe('parseChavrutaDocument', () => {
       false,
       false,
     ]);
+  });
+
+  it('marks continuing mishnah when chavruta amud starts with paragraphs before gemara header', () => {
+    const blocks: ChavrutaBlock[] = [
+      { kind: 'paragraph', text: 'ובעל הפיקים והעיקל', footnoteRefs: [] },
+      { kind: 'paragraph', text: 'איזהו העיקל', footnoteRefs: [] },
+      { kind: 'sectionHeader', titleHe: 'גמרא' },
+      { kind: 'paragraph', text: 'תנו רבנן שבר רגל', footnoteRefs: [] },
+    ];
+    expect(chavrutaMishnahFlags(blocks)).toEqual([true, true, false, false]);
   });
 
   it('links a nobr footnote marker that includes a Hebrew letter', () => {

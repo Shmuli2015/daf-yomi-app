@@ -69,8 +69,21 @@ function isMishnahSpanClose(part: string): boolean {
   return MISHNAH_SPAN_CLOSE_RE.test(sectionStart(part)) || STEINSALTZ_GEMARA_RE.test(part);
 }
 
+function detectInitialMishnahState(parts: ReadonlyArray<string | null>): boolean {
+  for (const part of parts) {
+    if (part == null) continue;
+    if (isMishnahSpanOpen(part)) {
+      return false;
+    }
+    if (isMishnahSpanClose(part)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function mishnahSpanFlags(parts: ReadonlyArray<string | null>): boolean[] {
-  let inMishnah = false;
+  let inMishnah = detectInitialMishnahState(parts);
   return parts.map((part) => {
     if (part == null) return false;
     if (isMishnahSpanClose(part)) {
