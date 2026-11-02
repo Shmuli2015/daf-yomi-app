@@ -2,8 +2,29 @@ jest.mock('../../db/database', () => ({
   getSettings: () => ({ daf_day_start_mode: 'midnight' }),
 }));
 
+import { subDays } from 'date-fns';
 import { buildProgressCache, updateMasechetProgressInCache, invalidateProgressCache } from '../progressCache';
 import type { DailyRecord, PersonalTrackRecord } from '../../db/database';
+import { getDateStr } from '../dafYomi';
+
+function dafToday(): Date {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0, 0);
+}
+
+function historyRecord(daysAgo: number, status: DailyRecord['status']): DailyRecord {
+  const date = getDateStr(subDays(dafToday(), daysAgo));
+  return {
+    id: daysAgo + 1,
+    date,
+    masechet: 'ברכות',
+    daf: "דף ב'",
+    status,
+    percentage: status === 'learned' ? 100 : status === 'partial' ? 50 : 0,
+    amud: status === 'partial' ? 'a' : null,
+    learnedAt: `${date}T10:00:00.000Z`,
+  };
+}
 
 describe('progressCache utils', () => {
   beforeEach(() => {
@@ -86,5 +107,53 @@ describe('progressCache utils', () => {
     expect(updatedCache.totalShasProgress.percentage).toBe(fullCache.totalShasProgress.percentage);
     expect(updatedCache.masechetProgress.get('ברכות')?.learned).toBe(fullCache.masechetProgress.get('ברכות')?.learned);
     expect(updatedCache.sederProgress.get('zeraim')?.learnedDafim).toBe(fullCache.sederProgress.get('zeraim')?.learnedDafim);
+  });
+
+  describe('streak', () => {
+    it('counts consecutive learned days ending yesterday when today is unmarked', () => {
+      const cache = buildProgressCache([
+        historyRecord(1, 'learned'),
+        historyRecord(2, 'learned'),
+        historyRecord(3, 'learned'),
+      ]);
+      expect(cache.streak).toBe(3);
+    });
+
+    it('includes today when it is learned', () => {
+      const cache = buildProgressCache([
+        historyRecord(0, 'learned'),
+        historyRecord(1, 'learned'),
+        historyRecord(2, 'learned'),
+        historyRecord(3, 'learned'),
+      ]);
+      expect(cache.streak).toBe(4);
+    });
+
+    it('resets when yesterday is missed', () => {
+      const cache = buildProgressCache([
+        historyRecord(1, 'missed'),
+        historyRecord(2, 'learned'),
+        historyRecord(3, 'learned'),
+      ]);
+      expect(cache.streak).toBe(0);
+    });
+
+    it('does not break the walk on a partial day', () => {
+      const cache = buildProgressCache([
+        historyRecord(1, 'learned'),
+        historyRecord(2, 'partial'),
+        historyRecord(3, 'learned'),
+      ]);
+      expect(cache.streak).toBe(2);
+    });
+
+    it('skips today when missed and keeps a streak that ended yesterday', () => {
+      const cache = buildProgressCache([
+        historyRecord(0, 'missed'),
+        historyRecord(1, 'learned'),
+        historyRecord(2, 'learned'),
+      ]);
+      expect(cache.streak).toBe(2);
+    });
   });
 });
