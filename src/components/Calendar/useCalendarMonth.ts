@@ -108,9 +108,7 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
     const today = resolveDafTodayHDate();
     if (currentHDate.getMonth() === today.getMonth() && currentHDate.getFullYear() === today.getFullYear()) return;
 
-    const direction = (today.getFullYear() > currentHDate.getFullYear() || 
-                      (today.getFullYear() === currentHDate.getFullYear() && today.getMonth() > currentHDate.getMonth())) 
-                      ? 'next' : 'prev';
+    const direction = today.greg().getTime() > currentHDate.greg().getTime() ? 'next' : 'prev';
     
     animateGridChange(direction, () => {
       setCurrentHDate(today);
