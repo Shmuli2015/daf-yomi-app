@@ -8,6 +8,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.2.8',
+    highlights: [
+      'תוקנה בעיה בלחיצה הראשונה על חצי דף',
+      'שיפור החלוקה בין המשנה לגמרא בחברותא',
+      'שיפורי יציבות וביצועים',
+    ],
+  },
+  {
     version: '1.2.7',
     highlights: [
       'תזכורת לפי ימים מגיעה ביום שבחרת',
