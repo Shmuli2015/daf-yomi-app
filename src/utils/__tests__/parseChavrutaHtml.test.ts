@@ -374,6 +374,47 @@ describe('parseChavrutaDocument', () => {
     ]);
   });
 
+  it('keeps an inline bold mishnah word inside a footnote', () => {
+    const html = `
+      <u>דף מו - ב</u>
+      <b style='font-size:25px; color:RGB(51,119,204);'>גמרא:</b>
+      ${bodySpan('ותיובתא דשמואל.')}
+      ${noteSpan(`${noteMarker(7)} וחתנו ציין <b>ל"לחם</b> <b>משנה</b>" פרק ב דנחלות.`)}
+      ${bodySpan(`${gemara('אמר רבי שמעון בן לקיש')}: יציאת הפדחת.`)}
+    `;
+    const amud = findChavrutaAmud(parseChavrutaDocument(html), 46, 'b');
+
+    expect(amud?.blocks.filter((block) => block.kind === 'sectionHeader')).toEqual([
+      { kind: 'sectionHeader', titleHe: 'גמרא' },
+    ]);
+    expect(chavrutaMishnahFlags(amud?.blocks ?? []).some(Boolean)).toBe(false);
+    expect(amud?.paragraphs.map((paragraph) => paragraph.text)).toEqual([
+      'ותיובתא דשמואל.',
+      '**אמר רבי שמעון בן לקיש**: יציאת הפדחת.',
+    ]);
+    expect(amud?.footnotes[0].text).toContain('ל"לחם');
+    expect(amud?.footnotes[0].text).toContain('משנה');
+    expect(amud?.footnotes[0].text).toContain('פרק ב דנחלות');
+  });
+
+  it('keeps an inline matnitin label inside the gemara paragraph', () => {
+    const html = `
+      <u>דף כו - א</u>
+      <b style='font-size:25px; color:RGB(51,119,204);'>גמרא:</b>
+      ${bodySpan(`סתם ${gemara('מתניתין')} [משנתנו] בסיפא נמי דיקא.`)}
+      ${bodySpan('המשך הגמרא.')}
+    `;
+    const amud = findChavrutaAmud(parseChavrutaDocument(html), 26, 'a');
+
+    expect(amud?.blocks.map((block) => block.kind)).toEqual([
+      'sectionHeader',
+      'paragraph',
+      'paragraph',
+    ]);
+    expect(amud?.paragraphs[0].text).toBe('סתם **מתניתין** [משנתנו] בסיפא נמי דיקא.');
+    expect(chavrutaMishnahFlags(amud?.blocks ?? [])).toEqual([false, false, false]);
+  });
+
   it('marks continuing mishnah when chavruta amud starts with paragraphs before gemara header', () => {
     const blocks: ChavrutaBlock[] = [
       { kind: 'paragraph', text: 'ובעל הפיקים והעיקל', footnoteRefs: [] },
