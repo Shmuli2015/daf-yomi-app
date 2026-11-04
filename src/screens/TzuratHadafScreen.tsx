@@ -111,6 +111,8 @@ export default function TzuratHadafScreen() {
     handleToggleLearned,
     handleSelectTrack,
     handleOpenHalfMenuForTrack,
+    closeTrackPicker,
+    showHalfMenuInPicker,
     handleSelectFull,
     handleSelectHalfA,
     handleSelectHalfB,
@@ -301,15 +303,34 @@ export default function TzuratHadafScreen() {
         canMarkDafYomi={canMarkDafYomi}
         onSelectDafYomi={() => handleSelectTrack('dafYomi')}
         onSelectPersonal={() => handleSelectTrack('personal')}
-        onLongPressDafYomi={() => {
-          handleOpenHalfMenuForTrack('dafYomi');
-          setShowMarkMenu(true);
-        }}
-        onLongPressPersonal={() => {
-          handleOpenHalfMenuForTrack('personal');
-          setShowMarkMenu(true);
-        }}
-        onCancel={() => setShowTrackPicker(false)}
+        onLongPressDafYomi={() => handleOpenHalfMenuForTrack('dafYomi')}
+        onLongPressPersonal={() => handleOpenHalfMenuForTrack('personal')}
+        onCancel={closeTrackPicker}
+        halfMenu={
+          showHalfMenuInPicker
+            ? {
+                onSelectFull: () => {
+                  handleSelectFull();
+                  closeTrackPicker();
+                },
+                onSelectHalfA: () => {
+                  handleSelectHalfA();
+                  closeTrackPicker();
+                },
+                onSelectHalfB: () => {
+                  handleSelectHalfB();
+                  closeTrackPicker();
+                },
+                partialAmud: menuPartialAmud,
+                showUnmark: menuStudyStatus === 'partial',
+                onUnmark: () => {
+                  closeTrackPicker();
+                  requestUnmarkPending();
+                },
+                onCancel: closeTrackPicker,
+              }
+            : null
+        }
       />
 
       <DafMarkMenuModal
