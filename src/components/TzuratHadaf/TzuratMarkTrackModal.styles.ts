@@ -6,6 +6,13 @@ export function createTzuratMarkTrackModalStyles(theme: Theme) {
     content: {
       direction: 'rtl',
     },
+    hiddenContent: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      opacity: 0,
+    },
     title: {
       color: theme.colors.textPrimary,
       fontSize: 20,

@@ -25,6 +25,7 @@ export function useTzuratLearnedMark({
   const [showSiyumModal, setShowSiyumModal] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showTrackPicker, setShowTrackPicker] = useState(false);
+  const [showHalfMenuInPicker, setShowHalfMenuInPicker] = useState(false);
   const [pendingTrack, setPendingTrack] = useState<StudyTrackMode>('dafYomi');
 
   const {
@@ -240,8 +241,13 @@ export function useTzuratLearnedMark({
   );
 
   const handleOpenHalfMenuForTrack = useCallback((mode: StudyTrackMode) => {
-    setShowTrackPicker(false);
     setPendingTrack(mode);
+    setShowHalfMenuInPicker(true);
+  }, []);
+
+  const closeTrackPicker = useCallback(() => {
+    setShowTrackPicker(false);
+    setShowHalfMenuInPicker(false);
   }, []);
 
   const handleSelectFull = useCallback(() => {
@@ -333,6 +339,8 @@ export function useTzuratLearnedMark({
     handleToggleLearned,
     handleSelectTrack,
     handleOpenHalfMenuForTrack,
+    closeTrackPicker,
+    showHalfMenuInPicker,
     handleSelectFull,
     handleSelectHalfA,
     handleSelectHalfB,
