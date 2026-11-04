@@ -249,9 +249,9 @@ export default function ChavrutaTextContainer({
       />
 
       <ChavrutaFootnoteSheet
-        footnotes={data.footnotes}
-        activeIndex={activeFootnoteIndex}
-        onChangeIndex={setActiveFootnoteIndex}
+        footnote={
+          activeFootnoteIndex == null ? null : data.footnotes[activeFootnoteIndex] ?? null
+        }
         onClose={() => setActiveFootnoteIndex(null)}
       />
     </View>

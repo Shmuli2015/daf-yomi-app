@@ -7,25 +7,19 @@ import { useTheme } from '../../theme';
 import type { ChavrutaFootnote } from '../../services/chavrutaApi';
 import { emphasizeChavrutaFootnote } from '../../utils/chavrutaFootnoteEmphasis';
 import { chavrutaFootnoteLabel } from '../../utils/parseChavrutaHtml';
-import ChavrutaFootnoteNav from './ChavrutaFootnoteNav';
 import { createChavrutaFootnoteSheetStyles } from './ChavrutaFootnoteSheet.styles';
 
 interface ChavrutaFootnoteSheetProps {
-  footnotes: ChavrutaFootnote[];
-  activeIndex: number | null;
-  onChangeIndex: (index: number) => void;
+  footnote: ChavrutaFootnote | null;
   onClose: () => void;
 }
 
 export default function ChavrutaFootnoteSheet({
-  footnotes,
-  activeIndex,
-  onChangeIndex,
+  footnote,
   onClose,
 }: ChavrutaFootnoteSheetProps) {
   const theme = useTheme();
   const styles = useMemo(() => createChavrutaFootnoteSheetStyles(theme), [theme]);
-  const footnote = activeIndex == null ? null : footnotes[activeIndex] ?? null;
   const visible = footnote != null;
 
   return (
@@ -55,15 +49,6 @@ export default function ChavrutaFootnoteSheet({
           accentColor={theme.colors.accent}
         />
       </ScrollView>
-
-      {footnotes.length > 1 && activeIndex != null ? (
-        <ChavrutaFootnoteNav
-          currentIndex={activeIndex}
-          total={footnotes.length}
-          onPrev={() => onChangeIndex(Math.max(0, activeIndex - 1))}
-          onNext={() => onChangeIndex(Math.min(footnotes.length - 1, activeIndex + 1))}
-        />
-      ) : null}
     </BottomSheetModal>
   );
 }

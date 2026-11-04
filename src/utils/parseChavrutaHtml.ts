@@ -352,6 +352,23 @@ function isSectionDelimiterTitle(text: string): boolean {
   return SECTION_DELIMITER_TEXT_PATTERN.test(text.trim());
 }
 
+function isInsideOpenSpan(html: string, index: number): boolean {
+  const tagPattern = /<\/?span\b[^>]*>/gi;
+  let depth = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = tagPattern.exec(html)) !== null) {
+    if (match.index >= index) break;
+    if (match[0].startsWith('</')) {
+      depth = Math.max(0, depth - 1);
+    } else {
+      depth += 1;
+    }
+  }
+
+  return depth > 0;
+}
+
 function cleanSectionHeading(raw: string): string | null {
   const titleHe = cleanMarkerTitle(raw);
   if (!titleHe || isDafHeadingTitle(titleHe)) return null;
@@ -468,6 +485,7 @@ function collectBoundaryMarkers(html: string): LocatedBoundary[] {
   );
   let delimMatch: RegExpExecArray | null;
   while ((delimMatch = delimiterPattern.exec(html)) !== null) {
+    if (isInsideOpenSpan(html, delimMatch.index)) continue;
     const rawTitle = delimMatch[1] ?? '';
     const titleHe = cleanMarkerTitle(rawTitle);
     if (!titleHe) continue;
