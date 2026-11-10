@@ -80,6 +80,7 @@ module.exports = {
       privacyPolicyUrl: 'https://shmuli2015.github.io/daf-yomi-app/privacy.html',
       sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
       playTrack: process.env.EXPO_PUBLIC_PLAY_TRACK || '',
+      buildProfile: process.env.EAS_BUILD_PROFILE || '',
       supportFormUrl: process.env.EXPO_PUBLIC_SUPPORT_FORM_URL || '',
     },
   },
