@@ -38,12 +38,12 @@ if (!isExpoGo) {
   void Notifications.setNotificationCategoryAsync('study-reminder', [
     {
       identifier: 'finish-daf',
-      buttonTitle: '✅ סיימתי את הדף!',
+      buttonTitle: 'סיימתי את הדף!',
       options: { opensAppToForeground: false },
     },
     {
       identifier: 'later',
-      buttonTitle: '⏰ הזכר לי עוד שעה',
+      buttonTitle: 'הזכר לי עוד שעה',
       options: { opensAppToForeground: false },
     },
   ]).catch(error => {

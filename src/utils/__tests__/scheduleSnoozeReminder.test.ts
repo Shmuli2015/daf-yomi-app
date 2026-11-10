@@ -28,7 +28,7 @@ jest.mock('../dafDayBoundary', () => ({
 
 jest.mock('../notificationCopy', () => ({
   getSnoozeReminderCopy: () => ({
-    title: '⏰ תזכורת נודניק',
+    title: 'תזכורת נודניק',
     body: 'גוף ההתראה',
   }),
 }));
