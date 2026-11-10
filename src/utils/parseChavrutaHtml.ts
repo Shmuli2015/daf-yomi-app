@@ -230,21 +230,45 @@ interface FootnoteMarker {
   end: number;
 }
 
-function rememberFootnoteLabel(labels: string[], n: number, suffix: string): string {
-  const label = `${n}${suffix}`;
-  if (!labels.includes(label)) labels.push(label);
-  return buildRawFootnoteToken(n, suffix);
+function collectFootnoteLabelsFromText(text: string): string[] {
+  const labels: string[] = [];
+  const pattern = new RegExp(RAW_FOOTNOTE_TOKEN_PATTERN.source, RAW_FOOTNOTE_TOKEN_PATTERN.flags);
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    const label = match[1];
+    if (label && !labels.includes(label)) labels.push(label);
+  }
+
+  return labels;
 }
 
-function parseBodyParagraph(inner: string): DraftParagraph | null {
-  const footnoteLabels: string[] = [];
+function splitLetterSubjectParagraphs(text: string): string[] {
+  const chunks: string[] = [];
+  const pattern = /\.(\s*(?:\[\[fn:\d+[\u05D0-\u05EA]?\]\]\s*)*)(?=[\u05D0-\u05EA]\.\s)/g;
+  let lastEnd = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = pattern.exec(text)) !== null) {
+    const cutEnd = match.index + 1 + match[1].length;
+    const piece = text.slice(lastEnd, cutEnd).trim();
+    if (piece) chunks.push(piece);
+    lastEnd = cutEnd;
+  }
+
+  const tail = text.slice(lastEnd).trim();
+  if (tail) chunks.push(tail);
+  return chunks;
+}
+
+function parseBodyParagraphs(inner: string): DraftParagraph[] {
   const markerPattern = new RegExp(MARKER_PATTERN.source, MARKER_PATTERN.flags);
 
   const withNobr = inner.replace(markerPattern, (full, digits: string, suffix: string, dot: string) => {
     if (dot) return full;
     const parsed = Number(digits);
     if (!Number.isFinite(parsed) || parsed <= 0) return ' ';
-    return rememberFootnoteLabel(footnoteLabels, parsed, suffix ?? '');
+    return buildRawFootnoteToken(parsed, suffix ?? '');
   });
 
   const plainPattern = new RegExp(PLAIN_LETTERED_REF_PATTERN.source, PLAIN_LETTERED_REF_PATTERN.flags);
@@ -254,14 +278,17 @@ function parseBodyParagraph(inner: string): DraftParagraph | null {
       const parsed = Number(beforeDigits || afterDigits);
       const suffix = beforeSuffix || afterSuffix || '';
       if (!Number.isFinite(parsed) || parsed <= 0 || !suffix) return ' ';
-      return rememberFootnoteLabel(footnoteLabels, parsed, suffix);
+      return buildRawFootnoteToken(parsed, suffix);
     },
   );
 
   const text = cleanChavrutaText(withTokens);
-  if (!text) return null;
+  if (!text) return [];
 
-  return { text, footnoteLabels };
+  return splitLetterSubjectParagraphs(text).map((part) => ({
+    text: part,
+    footnoteLabels: collectFootnoteLabelsFromText(part),
+  }));
 }
 
 function markerOverlaps(start: number, end: number, markers: FootnoteMarker[]): boolean {
@@ -430,8 +457,7 @@ function parseAmudSection(section: string): ParsedSection {
 
   for (const span of extractStyledSpans(section)) {
     if (span.kind === 'body') {
-      const paragraph = parseBodyParagraph(span.inner);
-      if (paragraph) paragraphs.push(paragraph);
+      paragraphs.push(...parseBodyParagraphs(span.inner));
       continue;
     }
 
@@ -544,10 +570,24 @@ function collectBoundaryMarkers(html: string): LocatedBoundary[] {
   return markers.sort((a, b) => a.index - b.index || a.end - b.end);
 }
 
+function stripFootnoteTokens(text: string): string {
+  return text
+    .replace(new RegExp(RAW_FOOTNOTE_TOKEN_PATTERN.source, 'g'), ' ')
+    .replace(new RegExp(FOOTNOTE_TOKEN_PATTERN.source, 'g'), ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function paragraphHasFootnoteRefs(block: { text: string; footnoteLabels: string[] }): boolean {
+  if (block.footnoteLabels.length > 0) return true;
+  return new RegExp(RAW_FOOTNOTE_TOKEN_PATTERN.source).test(block.text)
+    || new RegExp(FOOTNOTE_TOKEN_PATTERN.source).test(block.text);
+}
+
 function classifyLeakedParagraph(
   text: string
 ): ChapterStartBlock | ChapterEndBlock | SectionHeaderBlock | 'drop' | null {
-  const plain = text.replace(/\*\*/g, '').replace(/\s+/g, ' ').trim();
+  const plain = stripFootnoteTokens(text.replace(/\*\*/g, '')).replace(/\s+/g, ' ').trim();
   if (!plain) return 'drop';
   if (isDafHeadingTitle(plain)) return 'drop';
 
@@ -581,6 +621,11 @@ function blocksFromParsedSection(parsed: ParsedSection): DraftBlock[] {
   const blocks: DraftBlock[] = [];
   for (const block of parsed.blocks) {
     if (block.kind !== 'paragraph') {
+      blocks.push(block);
+      continue;
+    }
+
+    if (paragraphHasFootnoteRefs(block)) {
       blocks.push(block);
       continue;
     }

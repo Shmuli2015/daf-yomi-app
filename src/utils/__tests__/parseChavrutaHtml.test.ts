@@ -321,6 +321,89 @@ describe('parseChavrutaDocument', () => {
     expect(parsed[0]?.paragraphs.map((paragraph) => paragraph.text)).toEqual(['המשך הביאור.']);
   });
 
+  it('keeps a chapter intro line with a footnote as a paragraph, not a second chapter card', () => {
+    const html = `
+      <u>דף נג - א</u>
+      <u>פרק תשיעי - מעשר בהמה</u>
+      ${bodySpan(`פרק מעשר בהמה ${bodyRef(1)}`)}
+      ${noteSpan(`${noteMarker(1)} התוספות ביארו את הטעם.`)}
+      ${bodySpan('א. אמרה תורה בפרשת מעשר בהמה.')}
+    `;
+    const parsed = parseChavrutaDocument(html);
+    const amud = findChavrutaAmud(parsed, 53, 'a');
+
+    expect(amud?.blocks[0]).toEqual({
+      kind: 'chapterStart',
+      titleHe: 'פרק תשיעי - מעשר בהמה',
+    });
+    expect(amud?.blocks[1]).toMatchObject({
+      kind: 'paragraph',
+      text: expect.stringContaining('פרק מעשר בהמה'),
+    });
+    expect(amud?.blocks.some((block) => block.kind === 'chapterStart' && block.titleHe.includes('[[fn:'))).toBe(
+      false,
+    );
+    expect(amud?.blocks.filter((block) => block.kind === 'chapterStart')).toHaveLength(1);
+    expect(amud?.paragraphs[0]?.footnoteRefs).toEqual([1]);
+    expect(amud?.footnotes[0]?.text).toContain('התוספות ביארו');
+  });
+
+  it('keeps a hakdama line with a footnote as a paragraph', () => {
+    const html = `
+      <u>דף עה - ב</u>
+      ${bodySpan(`הקדמה: ${bodyRef(140)}`)}
+      ${noteSpan(`${noteMarker(140)} ביאור להקדמה.`)}
+      ${bodySpan('בסוגיא לעיל נחלקו רבי ורשב"ג.')}
+    `;
+    const parsed = parseChavrutaDocument(html);
+    const amud = findChavrutaAmud(parsed, 75, 'b');
+
+    expect(amud?.blocks[0]).toMatchObject({
+      kind: 'paragraph',
+      text: expect.stringContaining('הקדמה'),
+    });
+    expect(amud?.blocks.some((block) => block.kind === 'chapterStart')).toBe(false);
+    expect(amud?.paragraphs[0]?.footnoteRefs).toEqual([1]);
+  });
+
+  it('splits a mid-paragraph letter subject onto its own line after a sentence end', () => {
+    const html = `
+      <u>דף נג - א</u>
+      ${bodySpan(
+        `ו. כתיב "העשירי יהיה קודש לה'". כלומר, אסור לגרום לכך שיצא דוקא תם או דוקא בעל מום בעשירי. ${bodyRef(6)} ז. מעשר בהמה אינו נפדה ואינו נמכר.`,
+      )}
+      ${noteSpan(`${noteMarker(6)} כן מתבאר לאו זה מרש"י בחומש.`)}
+    `;
+    const parsed = parseChavrutaDocument(html);
+    const amud = findChavrutaAmud(parsed, 53, 'a');
+    const paragraphs = amud?.paragraphs ?? [];
+
+    expect(paragraphs).toHaveLength(2);
+    expect(paragraphs[0]?.text).toContain('בעשירי.');
+    expect(paragraphs[0]?.text).toContain(buildFootnoteToken(1));
+    expect(paragraphs[0]?.text).not.toContain('ז.');
+    expect(paragraphs[0]?.footnoteRefs).toEqual([1]);
+    expect(paragraphs[1]?.text).toBe('ז. מעשר בהמה אינו נפדה ואינו נמכר.');
+    expect(paragraphs[1]?.footnoteRefs).toEqual([]);
+  });
+
+  it('does not split daf citations or inline lettered lists', () => {
+    const html = `
+      <u>דף נג - א</u>
+      ${bodySpan('מבואר בגמרא לקמן יג א. וכן בתוספות.')}
+      ${bodySpan('דומה מעשר לקדשים בארבעה דברים: א. גואל, ב. ונשחט.')}
+      ${bodySpan('או שליא שודאי יש ולד בתוכה אלא שנימוח, ו. או שפיר.')}
+    `;
+    const parsed = parseChavrutaDocument(html);
+    const amud = findChavrutaAmud(parsed, 53, 'a');
+
+    expect(amud?.paragraphs.map((paragraph) => paragraph.text)).toEqual([
+      'מבואר בגמרא לקמן יג א. וכן בתוספות.',
+      'דומה מעשר לקדשים בארבעה דברים: א. גואל, ב. ונשחט.',
+      'או שליא שודאי יש ולד בתוכה אלא שנימוח, ו. או שפיר.',
+    ]);
+  });
+
   it('marks the last chapter end as the end of the masechet', () => {
     const html = `
       <u>דף סד - א</u>
