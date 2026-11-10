@@ -183,6 +183,7 @@ GitHub Actions workflows:
 | [`.github/workflows/quality.yml`](./.github/workflows/quality.yml) | Called by other workflows | Shared `npm run ci` (typecheck, tests, expo-doctor) |
 | [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) | Pull requests and pushes to `master` | Runs the shared quality workflow |
 | [`.github/workflows/build-android.yml`](./.github/workflows/build-android.yml) | Push to `release/**`, tags `v*.*.*`, or manual dispatch | EAS local APK (+ AAB when needed), GitHub Release, optional Google Play upload |
+| [`.github/workflows/build-debug-apk.yml`](./.github/workflows/build-debug-apk.yml) | Push to `release/**`, or manual dispatch | EAS local debug APK, sent only to Telegram |
 | [`.github/workflows/deploy-pages.yml`](./.github/workflows/deploy-pages.yml) | After Android release or manual dispatch | Update [`docs/latest.json`](./docs/latest.json) and deploy [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) |
 | [`.github/workflows/promote-play-production.yml`](./.github/workflows/promote-play-production.yml) | Manual dispatch | Promote the Play alpha release to production and attach Hebrew what's new |
 
@@ -199,6 +200,8 @@ GitHub Actions workflows:
 - Older GitHub Releases are removed so `/releases/latest` stays a single current release.
 - Requires `EXPO_TOKEN` (and `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` when uploading to Play).
 
+**Debug APK** (`build-debug-apk.yml`): builds the `debug` profile (`com.masadaf.app.debug`, display name **מסע דף (בדיקה)**) and sends `masa-daf-X.Y.Z-debug.apk` to the Telegram chat in `TELEGRAM_CHAT_ID`. The file is not uploaded to GitHub Releases, the download page, or Actions artifacts. Requires `EXPO_TOKEN`, `TELEGRAM_BOT_TOKEN`, and `TELEGRAM_CHAT_ID`. If the APK is over 49MB, the job fails and nothing is published. Re-run from **Actions → Build Debug APK** when you need another copy.
+
 **Download page** (`deploy-pages.yml`): reads the latest GitHub Release and writes `docs/latest.json` so the download page points at the current APK. Triggered after a successful GitHub publish from the Android release workflow (also via `workflow_run` when the whole release workflow succeeds). Use **Run workflow** manually on `master` if you change `docs/` without a new APK. The `github-pages` environment only allows deploys from `master`, so a manual run from another branch is skipped.
 
 **Whats New notes:** Before each release, add an entry for the **next** version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts) (Hebrew bullets). `npm run release` fails without it. The GitHub Release body and the in-app lists (pre-download modal, post-install **מה חדש**, Settings) come from that file. Unique bullets are capped at 8 overall. After install, skipped versions are merged (newest first) up to that cap. Older GitHub Releases are deleted, so the latest body is built from remaining file entries.
@@ -206,8 +209,8 @@ GitHub Actions workflows:
 **Maintainer checklist for a release**
 
 1. Add a `WHATS_NEW` entry for the next version in [`src/data/whatsNew.ts`](./src/data/whatsNew.ts).
-2. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it (starts the Android release workflow on that branch). After the push it also builds a local debug APK on this machine into `local-builds/masa-daf-X.Y.Z-debug.apk`. That file is not uploaded. The local build runs `expo prebuild --clean` and Gradle directly (works on Windows, macOS, and Linux) and needs a JDK and the Android SDK. It regenerates `android/` for the debug package, so run `npx expo prebuild --clean` again before a regular `expo run:android`.
-3. Install the local debug APK beside the Play app. It is a separate app named **מסע דף (בדיקה)** (`com.masadaf.app.debug`), so production from Play stays installed. Keep the daily Google account out of the Play testing program so the store listing stays on production. Rebuild only the debug APK with `npm run build:apk:debug` (or a sideload preview APK with `npm run build:apk`).
+2. Run `npm run release` to bump the patch version, create a `release/X.Y.Z` branch, and push it. That starts the Android release workflow and the debug APK workflow on that branch. The debug APK arrives in your Telegram chat when the debug workflow finishes. It is not uploaded anywhere on GitHub.
+3. Install the Telegram debug APK beside the Play app. It is a separate app named **מסע דף (בדיקה)** (`com.masadaf.app.debug`), so production from Play stays installed. Keep the daily Google account out of the Play testing program so the store listing stays on production. Rebuild with **Actions → Build Debug APK**. A local fallback remains: `npm run build:apk:debug` (or a sideload preview APK with `npm run build:apk`). The local script runs `expo prebuild --clean` and Gradle, needs a JDK and the Android SDK, and regenerates `android/`, so run `npx expo prebuild --clean` again before a regular `expo run:android`.
 4. Open a pull request from `release/X.Y.Z` into `master`. GitHub blocks merge until the **CI** check `quality / quality` passes.
 5. Confirm the GitHub Release published with `{releaseApkBasename}-X.Y.Z.apk` (and `.aab` when Play was targeted), and that [GitHub Pages](https://shmuli2015.github.io/daf-yomi-app/) shows the new version.
 6. When the debug build looks right, run **Actions → Promote Play to Production**. That publishes the alpha build to the store and fills What's new. No version picker and no typing in Play Console.
