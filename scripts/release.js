@@ -76,13 +76,5 @@ try {
 
 console.log(`\n\x1b[32m✨ Release ${version} initiated!\x1b[0m`);
 console.log(`Branch ${branch} was pushed. The Play Store AAB build and GitHub Release are now running in GitHub Actions.`);
+console.log('The debug APK (מסע דף (בדיקה)) is built on GitHub and sent to your Telegram chat when that workflow finishes.');
 console.log(`Once built, merge the PR to keep master updated.\n`);
-
-console.log('\x1b[1m📱 Building a local debug APK (stays on this machine)...\x1b[0m');
-try {
-  run('npm run build:apk:debug');
-  console.log('\n\x1b[32mLocal debug APK is ready in local-builds/. Install it beside the Play production app.\x1b[0m\n');
-} catch (error) {
-  console.warn(`\n\x1b[33mWarning: local debug APK build failed (${error.message}). The GitHub release was already pushed.\x1b[0m`);
-  console.warn('\x1b[33mRetry later with: npm run build:apk:debug\x1b[0m\n');
-}
