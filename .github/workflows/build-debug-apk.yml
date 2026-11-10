@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - 'release/**'
-      - 'cursor/debug-apk-arm64-185b'
 
 concurrency:
   group: debug-apk-${{ github.ref }}
