@@ -49,6 +49,12 @@ module.exports = {
       ],
       'expo-sharing',
       'expo-status-bar',
+      [
+        'expo-image-picker',
+        {
+          photosPermission: 'כדי לצרף צילום מסך לפנייה לתמיכה.',
+        },
+      ],
       './plugins/withAndroidBuildOptimization.js',
       './plugins/withDismissNotificationOnAction.js',
       [
@@ -74,6 +80,7 @@ module.exports = {
       privacyPolicyUrl: 'https://shmuli2015.github.io/daf-yomi-app/privacy.html',
       sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || '',
       playTrack: process.env.EXPO_PUBLIC_PLAY_TRACK || '',
+      supportFormUrl: process.env.EXPO_PUBLIC_SUPPORT_FORM_URL || '',
     },
   },
 };

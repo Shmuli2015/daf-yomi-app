@@ -67,6 +67,19 @@ export function createChavrutaTextContainerStyles(theme: Theme, palette?: Reader
       fontWeight: '700',
       fontSize: 14,
     },
+    reportBtn: {
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: theme.radius.sm,
+      borderWidth: 1,
+      borderColor: accentColor,
+    },
+    reportBtnText: {
+      color: accentColor,
+      fontWeight: '700',
+      fontSize: 14,
+      writingDirection: 'rtl',
+    },
     headerBox: {
       alignItems: 'center',
       paddingBottom: 12,

@@ -62,6 +62,18 @@ export function createSteinsaltzTextContainerStyles(theme: Theme) {
       fontWeight: '700',
       fontSize: 14,
     },
+    reportBtn: {
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: theme.radius.sm,
+      marginTop: 8,
+      borderWidth: 1,
+    },
+    reportBtnText: {
+      fontWeight: '700',
+      fontSize: 14,
+      writingDirection: 'rtl',
+    },
     headerBox: {
       alignItems: 'center',
       paddingBottom: 12,

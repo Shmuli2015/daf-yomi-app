@@ -23,6 +23,7 @@ import GuideFaqTab from './GuideFaqTab';
 import GuideDetailedTab from './GuideDetailedTab';
 import GuideContactCard from './GuideContactCard';
 import GuideScrollTopButton from './GuideScrollTopButton';
+import SupportFormModal from '../SupportForm/SupportFormModal';
 import { useGuideSearch } from './useGuideSearch';
 import { useSupportContact } from './useSupportContact';
 import { useGuideExpandState } from './useGuideExpandState';
@@ -78,8 +79,12 @@ export function GuideModal({
   const {
     mailHintVisible,
     emailCopied,
-    openSupportEmail,
+    supportFormVisible,
+    supportSubjectOverride,
+    openSupportForm,
+    closeSupportForm,
     copySupportEmail,
+    openMailHint,
     dismissMailHint,
   } = useSupportContact();
 
@@ -230,7 +235,7 @@ export function GuideModal({
                         onClearSearch={clearSearch}
                         guideResultCount={guideResultCount}
                         onSwitchToGuide={() => setActiveTab('guide')}
-                        onAskSupport={openSupportEmail}
+                        onAskSupport={openSupportForm}
                         isItemExpanded={isFaqExpanded}
                         onToggleItem={toggleFaq}
                         onExpandAll={handleExpandAllFaq}
@@ -248,7 +253,7 @@ export function GuideModal({
                         onClearSearch={clearSearch}
                         faqResultCount={searchedFaqCount}
                         onSwitchToFaq={() => setActiveTab('faq')}
-                        onAskSupport={openSupportEmail}
+                        onAskSupport={openSupportForm}
                         isSectionExpanded={isSectionExpanded}
                         onToggleSection={toggleSection}
                         onExpandAll={handleExpandAllSections}
@@ -263,7 +268,7 @@ export function GuideModal({
                   </View>
 
                   <GuideContactCard
-                    onOpenEmail={() => openSupportEmail()}
+                    onOpenSupport={() => openSupportForm()}
                     onCopyEmail={copySupportEmail}
                     emailCopied={emailCopied}
                   />
@@ -283,12 +288,25 @@ export function GuideModal({
         </View>
       </Modal>
 
+      <SupportFormModal
+        visible={supportFormVisible}
+        onClose={closeSupportForm}
+        onMailOpenFailed={openMailHint}
+        initialCategory={supportSubjectOverride ? 'question' : 'bug'}
+        subjectOverride={supportSubjectOverride}
+      />
+
       <InfoModal
         visible={mailHintVisible}
         onClose={dismissMailHint}
         title="אפליקציית הדוא״ל לא נפתחה"
         message="במכשירים מסוימים לא מתבצעת הפניה אוטומטית לאפליקציית הדוא״ל. באפשרותך להעתיק את הכתובת המופיעה מטה ולשלוח אלינו הודעה באופן ידני."
         emphasis={SUPPORT_EMAIL}
+        secondaryLabel="העתק כתובת"
+        onSecondary={() => {
+          void copySupportEmail();
+          dismissMailHint();
+        }}
       />
     </>
   );

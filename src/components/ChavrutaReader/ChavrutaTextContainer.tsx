@@ -33,6 +33,7 @@ interface ChavrutaTextContainerProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  onReportError?: () => void;
   fontSize: number;
   showNotes: boolean;
   readerTheme?: ReaderTheme;
@@ -52,6 +53,7 @@ export default function ChavrutaTextContainer({
   loading,
   error,
   onRetry,
+  onReportError,
   fontSize,
   showNotes,
   readerTheme,
@@ -139,6 +141,17 @@ export default function ChavrutaTextContainer({
         <TouchableOpacity style={styles.retryBtn} onPress={onRetry} activeOpacity={0.8}>
           <Text style={styles.retryBtnText}>נסה שוב</Text>
         </TouchableOpacity>
+        {onReportError ? (
+          <TouchableOpacity
+            style={styles.reportBtn}
+            onPress={onReportError}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="דיווח על התקלה"
+          >
+            <Text style={styles.reportBtnText}>דיווח על התקלה</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     );
   }

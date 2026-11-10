@@ -152,6 +152,7 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+          EXPO_PUBLIC_SUPPORT_FORM_URL: ${{ secrets.EXPO_PUBLIC_SUPPORT_FORM_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
 
       - name: Rename APK
@@ -218,6 +219,7 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+          EXPO_PUBLIC_SUPPORT_FORM_URL: ${{ secrets.EXPO_PUBLIC_SUPPORT_FORM_URL }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           EXPO_PUBLIC_PLAY_TRACK: ${{ needs.gate.outputs.play_track }}
           EAS_LOCAL_BUILD_SKIP_CLEANUP: '1'
