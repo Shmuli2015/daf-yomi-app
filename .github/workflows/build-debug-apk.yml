@@ -108,19 +108,9 @@ jobs:
             --form "caption=${CAPTION}" \
             --url "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" || true)
           rm -f "$APK_FILENAME"
-          OK=$(python3 -c 'import json,sys
-try:
-    data = json.load(open(sys.argv[1], encoding="utf-8"))
-except Exception:
-    data = {}
-print("true" if data.get("ok") is True else "false")' "$BODY_FILE")
+          OK=$(jq -r 'if .ok == true then "true" else "false" end' "$BODY_FILE" 2>/dev/null || echo false)
           if [ "$HTTP" != "200" ] || [ "$OK" != "true" ]; then
-            python3 -c 'import json,sys
-try:
-    data = json.load(open(sys.argv[1], encoding="utf-8"))
-except Exception:
-    data = {}
-print(data.get("description") or "Telegram request failed")' "$BODY_FILE"
+            jq -r '.description // "Telegram request failed"' "$BODY_FILE" 2>/dev/null || echo "Telegram request failed"
             echo "::error::Telegram rejected the debug APK (HTTP ${HTTP}). No public copy was saved."
             rm -f "$BODY_FILE"
             exit 1
