@@ -103,7 +103,7 @@ export async function sendTestNotification(sound = true) {
 
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🧪 התראת בדיקה',
+        title: 'התראת בדיקה',
         body: copy.body,
         sound,
         priority: Notifications.AndroidNotificationPriority.MAX,

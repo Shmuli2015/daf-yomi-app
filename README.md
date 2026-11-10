@@ -65,8 +65,8 @@
 - **In-App User Guide**: Open **User guide** (<span dir="rtl" lang="he">מדריך שימוש</span>) for a Hebrew walkthrough of every major screen and feature; the guide includes the support email for feedback and questions
 - **Contact & support**: **Contact** (<span dir="rtl" lang="he">יצירת קשר</span>) in Settings opens your mail app, or write to **[support.masa.daf@gmail.com](mailto:support.masa.daf@gmail.com)** for feedback, technical support, and suggestions
 - **Interactive Notification Actions** (Hebrew in the app):  
-  - <span dir="rtl" lang="he">✅ סיימתי את הדף!</span>: mark the current cycle page as learned from the notification  
-  - <span dir="rtl" lang="he">⏰ הזכר לי עוד שעה</span>: snooze for one hour
+  - <span dir="rtl" lang="he">סיימתי את הדף!</span>: mark the current cycle page as learned from the notification  
+  - <span dir="rtl" lang="he">הזכר לי עוד שעה</span>: snooze for one hour
 - **Theme Selection**: Choose between Light, Dark, or System-based theme modes
 - **Date Display Preferences**: Toggle visibility of Gregorian date alongside Hebrew date
 - **Calendar Daf Labels**: Toggle whether each calendar cell shows that day's Daf number (<span dir="rtl" lang="he">הצג דף בלוח שנה</span>)
@@ -80,7 +80,7 @@
 - **Daily Learning Reminders**: Scheduled at your preferred time(s) while **Daily reminder** (<span dir="rtl" lang="he">תזכורת יומית</span>) stays enabled
 - **Dynamic Daf Information**: Notifications show today's tractate and page number
 - **Interactive Actions**: Quick actions directly from notification tray
-- **Snooze Functionality**: One-hour follow-up via <span dir="rtl" lang="he">⏰ הזכר לי עוד שעה</span>
+- **Snooze Functionality**: One-hour follow-up via <span dir="rtl" lang="he">הזכר לי עוד שעה</span>
 - **Expo Go**: Local notification scheduling still runs, but behavior can differ from dev/production builds; use a **development build** for full parity
 - **Android exact alarms** (API 31+): For reminders at an exact time (e.g. 7:30), grant **Schedule exact alarms** (<span dir="rtl" lang="he">תזמון התראות מדויק</span>) in system settings. Without it, `expo-notifications` falls back to approximate timing. Settings shows **Exact reminders** (<span dir="rtl" lang="he">תזכורות מדויקות</span>) status on Android; tap to open the permission screen. Requires a **development or production build** (not Expo Go) for the status check
 - **Auto-scheduling**: Notifications automatically reschedule on device reboot
