@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { Linking } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { SUPPORT_EMAIL, PRIVACY_POLICY_URL, getSupportMailtoUrl } from '../supportContact';
+import { SUPPORT_EMAIL, PRIVACY_POLICY_URL } from '../supportContact';
 
 type UseSettingsHelpChromeParams = {
   onEmailCopied: () => void;
@@ -9,6 +9,7 @@ type UseSettingsHelpChromeParams = {
 
 export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromeParams) {
   const [mailHintVisible, setMailHintVisible] = useState(false);
+  const [supportFormVisible, setSupportFormVisible] = useState(false);
   const [licensesVisible, setLicensesVisible] = useState(false);
   const [siyumNusachVisible, setSiyumNusachVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -22,12 +23,16 @@ export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromePa
     }
   }, [onEmailCopied]);
 
-  const openSupportEmail = useCallback(async () => {
-    try {
-      await Linking.openURL(getSupportMailtoUrl());
-    } catch {
-      setMailHintVisible(true);
-    }
+  const openSupportForm = useCallback(() => {
+    setSupportFormVisible(true);
+  }, []);
+
+  const closeSupportForm = useCallback(() => {
+    setSupportFormVisible(false);
+  }, []);
+
+  const openMailHint = useCallback(() => {
+    setMailHintVisible(true);
   }, []);
 
   const openPrivacyPolicy = useCallback(() => {
@@ -64,6 +69,10 @@ export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromePa
     clearSearch,
     mailHintVisible,
     closeMailHint,
+    openMailHint,
+    supportFormVisible,
+    openSupportForm,
+    closeSupportForm,
     licensesVisible,
     openLicenses,
     closeLicenses,
@@ -71,7 +80,6 @@ export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromePa
     openSiyumNusach,
     closeSiyumNusach,
     copySupportEmail,
-    openSupportEmail,
     openPrivacyPolicy,
   };
 }

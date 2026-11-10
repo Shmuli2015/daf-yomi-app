@@ -1,0 +1,7 @@
+name = "masa-daf-support-form"
+main = "src/index.ts"
+compatibility_date = "2025-10-01"
+
+[vars]
+SUPPORT_TO_EMAIL = "support.masa.daf@gmail.com"
+SUPPORT_FROM_EMAIL = "מסע דף <onboarding@resend.dev>"

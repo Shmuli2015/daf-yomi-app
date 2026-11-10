@@ -20,6 +20,7 @@ import SettingsDevSection from './Sections/SettingsDevSection';
 import InfoModal from '../InfoModal';
 import ContentLicensesModal from './Modals/ContentLicensesModal';
 import SiyumNusachModal from './Modals/SiyumNusachModal';
+import SupportFormModal from '../SupportForm/SupportFormModal';
 import { SUPPORT_EMAIL } from '../../supportContact';
 import { matchesSetting } from '../../utils/settingsSearch';
 import {
@@ -71,6 +72,10 @@ export default function SettingsScrollContent({
     clearSearch,
     mailHintVisible,
     closeMailHint,
+    openMailHint,
+    supportFormVisible,
+    openSupportForm,
+    closeSupportForm,
     licensesVisible,
     openLicenses,
     closeLicenses,
@@ -78,7 +83,6 @@ export default function SettingsScrollContent({
     openSiyumNusach,
     closeSiyumNusach,
     copySupportEmail,
-    openSupportEmail,
     openPrivacyPolicy,
   } = useSettingsHelpChrome({ onEmailCopied: helpUpdates.onEmailCopied });
 
@@ -449,7 +453,7 @@ export default function SettingsScrollContent({
                     embedded
                     showTrailingDivider={hasVisibleUpdates}
                     onGuideModalOpen={helpUpdates.onGuideModalOpen}
-                    onSupportPress={openSupportEmail}
+                    onSupportPress={openSupportForm}
                     onSupportLongPress={copySupportEmail}
                     onPrivacyPolicyPress={openPrivacyPolicy}
                     onSiyumNusachPress={openSiyumNusach}
@@ -490,6 +494,12 @@ export default function SettingsScrollContent({
           <SettingsFooter />
         </View>
       </Animated.ScrollView>
+
+      <SupportFormModal
+        visible={supportFormVisible}
+        onClose={closeSupportForm}
+        onMailOpenFailed={openMailHint}
+      />
 
       <InfoModal
         visible={mailHintVisible}

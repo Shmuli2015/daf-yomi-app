@@ -33,6 +33,7 @@ interface SteinsaltzTextContainerProps {
   loading: boolean;
   error: string | null;
   onRetry: () => void;
+  onReportError?: () => void;
   fontSize: number;
   readerTheme?: ReaderTheme;
   accentColor: string;
@@ -51,6 +52,7 @@ export default function SteinsaltzTextContainer({
   loading,
   error,
   onRetry,
+  onReportError,
   fontSize,
   readerTheme,
   accentColor,
@@ -133,6 +135,19 @@ export default function SteinsaltzTextContainer({
         >
           <Text style={styles.retryBtnText}>נסה שוב</Text>
         </TouchableOpacity>
+        {onReportError ? (
+          <TouchableOpacity
+            style={[styles.reportBtn, { borderColor: palette.accentColor }]}
+            onPress={onReportError}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="דיווח על התקלה"
+          >
+            <Text style={[styles.reportBtnText, { color: palette.accentColor }]}>
+              דיווח על התקלה
+            </Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     );
   }

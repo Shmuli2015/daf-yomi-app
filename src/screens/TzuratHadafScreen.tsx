@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, StyleSheet, useWindowDimensions } from 'react-native';
+import { Alert, View, StyleSheet, useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -13,6 +13,7 @@ import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
 import GuideModal from '../components/Guide/GuideModal';
+import SupportFormModal from '../components/SupportForm/SupportFormModal';
 import QuickJumpModal from '../components/QuickJump/QuickJumpModal';
 import ReaderToolbar, { type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
 import ReaderModePane from '../components/SefariaReader/ReaderModePane';
@@ -57,6 +58,8 @@ export default function TzuratHadafScreen() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showMarkMenu, setShowMarkMenu] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [showSupportForm, setShowSupportForm] = useState(false);
+  const [supportInitialMessage, setSupportInitialMessage] = useState('');
   const [showQuickJumpModal, setShowQuickJumpModal] = useState(false);
   const [autoScrollActive, setAutoScrollActive] = useState(false);
   const [autoScrollLevel, setAutoScrollLevel] = useState<AutoScrollSpeedLevel>(3);
@@ -142,6 +145,18 @@ export default function TzuratHadafScreen() {
     else if (reader.canPrevDaf) reader.handlePrevDaf();
   };
 
+  const openReaderErrorSupport = useCallback(
+    (source: string, error: string | null) => {
+      const location = `${headerMasechetHe} דף ${reader.location.dafNum} ${reader.location.amud}`;
+      const errorDetails = error?.trim() ? `\nפרטי השגיאה: ${error.trim()}` : '';
+      setSupportInitialMessage(
+        `נתקלתי בבעיה בטעינת ${source}.\nמיקום: ${location}${errorDetails}`,
+      );
+      setShowSupportForm(true);
+    },
+    [headerMasechetHe, reader.location.amud, reader.location.dafNum],
+  );
+
   const swipeHandlers = useDafSwipeGesture({
     canSwipeNext: reader.canNextAmud || reader.canNextDaf,
     canSwipePrev: reader.canPrevAmud || reader.canPrevDaf,
@@ -224,6 +239,7 @@ export default function TzuratHadafScreen() {
               loading={reader.sefariaLoading}
               error={reader.sefariaError}
               onRetry={() => reader.loadSefariaText(reader.location)}
+              onReportError={() => openReaderErrorSupport('הטקסט', reader.sefariaError)}
               fontSize={reader.fontSize}
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
@@ -243,6 +259,7 @@ export default function TzuratHadafScreen() {
               loading={reader.sefariaLoading}
               error={reader.sefariaError}
               onRetry={() => reader.loadSefariaText(reader.location)}
+              onReportError={() => openReaderErrorSupport('ביאור שטיינזלץ', reader.sefariaError)}
               fontSize={reader.fontSize}
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
@@ -263,6 +280,7 @@ export default function TzuratHadafScreen() {
               loading={reader.chavruta.loading}
               error={reader.chavruta.error}
               onRetry={reader.chavruta.reload}
+              onReportError={() => openReaderErrorSupport('ביאור חברותא', reader.chavruta.error)}
               fontSize={reader.fontSize}
               showNotes={reader.showChavrutaNotes}
               readerTheme={readerTheme}
@@ -400,6 +418,19 @@ export default function TzuratHadafScreen() {
         onClose={() => setShowGuideModal(false)}
         initialTab="faq"
         initialCategory="reader"
+      />
+
+      <SupportFormModal
+        visible={showSupportForm}
+        onClose={() => setShowSupportForm(false)}
+        onMailOpenFailed={() =>
+          Alert.alert(
+            'אפליקציית הדוא״ל לא נפתחה',
+            'אפשר לשלוח את הפנייה ישירות מהטופס.',
+          )
+        }
+        initialCategory="bug"
+        initialMessage={supportInitialMessage}
       />
 
       {autoScrollActive && (

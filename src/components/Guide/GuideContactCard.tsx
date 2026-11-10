@@ -5,13 +5,13 @@ import { useTheme } from '../../theme';
 import { createGuideContactCardStyles } from './GuideContactCard.styles';
 
 interface GuideContactCardProps {
-  onOpenEmail: () => void;
+  onOpenSupport: () => void;
   onCopyEmail: () => void;
   emailCopied: boolean;
 }
 
 export function GuideContactCard({
-  onOpenEmail,
+  onOpenSupport,
   onCopyEmail,
   emailCopied,
 }: GuideContactCardProps) {
@@ -33,11 +33,11 @@ export function GuideContactCard({
 
         <View style={styles.buttonsRow}>
           <TouchableOpacity
-            onPress={onOpenEmail}
+            onPress={onOpenSupport}
             style={styles.sendBtn}
             activeOpacity={0.75}
             accessibilityRole="button"
-            accessibilityLabel="שליחת הודעה בדוא״ל"
+            accessibilityLabel="שליחת הודעה"
           >
             <Ionicons name="paper-plane-outline" size={15} color={theme.colors.white} />
             <Text style={styles.sendBtnText}>שליחת הודעה</Text>

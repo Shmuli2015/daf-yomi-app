@@ -244,8 +244,8 @@ export const GUIDE_ITEM: SearchableSetting = {
 
 export const SUPPORT_ITEM: SearchableSetting = {
   title: 'תמיכה ויצירת קשר',
-  description: 'משוב והצעות לשיפור. לחיצה ארוכה מעתיקה את כתובת המייל',
-  synonyms: ['מייל', 'דואל', 'אימייל', 'צור קשר', 'תמיכה'],
+  description: 'טופס לדיווח באג, שאלה או הצעה, או פנייה במייל. לחיצה ארוכה מעתיקה את כתובת המייל',
+  synonyms: ['מייל', 'דואל', 'אימייל', 'צור קשר', 'תמיכה', 'באג', 'טלפון', 'פנייה', 'טופס'],
 };
 
 export const LICENSES_ITEM: SearchableSetting = {

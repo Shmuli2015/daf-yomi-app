@@ -474,6 +474,9 @@
             האפליקציה אינה דורשת יצירת חשבון, התחברות או מסירת פרטים אישיים כגון שם, כתובת דוא"ל, מספר טלפון או מיקום גיאוגרפי.
           </p>
           <p>
+            אם תבחרו מרצונכם לפנות דרך טופס התמיכה באפליקציה, יישלחו רק הפרטים שמילאתם (תוכן ההודעה, ואם מולאו גם תמונות/צילומי מסך, אימייל לחזרה או מספר טלפון ישראלי) יחד עם פרטים טכניים מינימליים (גרסת האפליקציה ומערכת ההפעלה), כדי שנוכל להשיב ולטפל בפנייה. אין שמירה של הפנייה אצלנו מעבר לקבלתה במייל התמיכה.
+          </p>
+          <p>
             כל המידע שנוצר במהלך השימוש, לרבות סימוני דפים שנלמדו, רצף ימי לימוד (Streak), מסלול אישי והגדרות תצוגה, נשמר אך ורק על גבי מכשירכם האישי באמצעות מסד נתונים מקומי מאובטח (SQLite) ואחסון פנימי.
           </p>
           <p>
@@ -530,9 +533,13 @@
               <strong>דיווח קריסות (Sentry):</strong>
               במקרה של קריסה או שגיאה טכנית חמורה, האפליקציה עשויה לשלוח דוח אבחוני לשירות Sentry (אחסון באירופה) לצורך תיקון באגים. הדוח כולל מידע טכני בלבד כגון גרסת האפליקציה, דגם המכשיר ומעקב שגיאה בקוד. אינו כולל שם, אימייל, תוכן לימוד או מזהה משתמש.
             </li>
+            <li>
+              <strong>טופס תמיכה (Cloudflare ו-Resend):</strong>
+              כאשר נשלחת פנייה מרצון דרך טופס התמיכה, ההודעה עוברת דרך Cloudflare Worker ואז דרך Resend אל מייל התמיכה של המפתח. נשלחים תוכן ההודעה, תמונות אם צורפו, אימייל לחזרה אם מולא, מספר טלפון ישראלי אם מולא, ופרטים טכניים (גרסת האפליקציה ומערכת ההפעלה). אין שמירת פניות בשרת שלנו.
+            </li>
           </ul>
           <p>
-            קריאות רשת אלו אינן כוללות שום מזהה אישי או מידע מהמכשיר מעבר לבקשת HTTP תקנית לצפייה בתוכן הלימוד, ולמעט דוחות קריסה טכניים כמתואר לעיל.
+            קריאות רשת אלו אינן כוללות שום מזהה אישי או מידע מהמכשיר מעבר לבקשת HTTP תקנית לצפייה בתוכן הלימוד, ולמעט דוחות קריסה טכניים ופניות תמיכה מרצון כמתואר לעיל.
           </p>
           <div class="info-box">
             <strong>ללא פרסומות וללא מעקב שיווקי:</strong> האפליקציה אינה מכילה רשתות פרסום (Ad Networks), רכיבי מעקב שיווקיים או כלי אנליטיקס התנהגותיים. דיווח קריסות טכני בלבד משמש לתיקון באגים.
@@ -576,7 +583,7 @@
             <span>יצירת קשר ופניות בנושאי פרטיות</span>
           </h2>
           <p>
-            לכל שאלה, הבהרה, בקשה או הערה בנוגע למדיניות פרטיות זו או לאפליקציה, ניתן לפנות אלינו ישירות:
+            לכל שאלה, הבהרה, בקשה או הערה בנוגע למדיניות פרטיות זו או לאפליקציה, ניתן לפנות דרך טופס התמיכה באפליקציה או ישירות בדוא״ל:
           </p>
           <div class="contact-card">
             <div class="contact-item">
@@ -679,7 +686,7 @@
             <span>Zero Personal Data Collection</span>
           </h2>
           <p>
-            The application operates without user registration or login. We do not collect your name, email address, phone number, location, contacts, or financial details. All study progress, completion records, streaks, personal track goals, and user preferences are stored strictly on your device in a local SQLite database and secure local storage.
+            The application operates without user registration or login. We do not require your name, email address, phone number, location, contacts, or financial details. If you voluntarily submit the in-app support form, only the details you enter (message text, and if provided a reply email or Israeli phone number) are sent together with minimal technical metadata (app version and operating system) so we can respond. We do not store support submissions on our own servers beyond receiving them in the support inbox. All study progress, completion records, streaks, personal track goals, and user preferences are stored strictly on your device in a local SQLite database and secure local storage.
           </p>
           <p>
             Texts downloaded for offline study, including the Gemara and commentaries, are also stored only on your device. You can delete them from Settings without deleting your study history.
@@ -725,9 +732,12 @@
             <li>
               <strong>Crash reporting (Sentry):</strong> If the app crashes or hits a serious technical error, a diagnostic report may be sent to Sentry (EU data region) to help fix bugs. Reports include technical details only (app version, device model, and stack traces). They do not include name, email, study content, or a user identity.
             </li>
+            <li>
+              <strong>Support form (Cloudflare and Resend):</strong> When you voluntarily submit the in-app support form, the message is relayed through a Cloudflare Worker and then Resend to the developer support inbox. The payload includes the message text, an optional reply email, an optional Israeli phone number, and technical details (app version and operating system). Support submissions are not stored on our own servers.
+            </li>
           </ul>
           <p>
-            No user identifiers or behavioral tracking parameters are included in content requests. The app contains no third-party advertisements and no marketing analytics SDKs. Crash reports are used only for debugging.
+            No user identifiers or behavioral tracking parameters are included in content requests. The app contains no third-party advertisements and no marketing analytics SDKs. Crash reports are used only for debugging. Support submissions are sent only when you choose to contact us.
           </p>
         </section>
 
@@ -762,7 +772,7 @@
             <span>Contact Information</span>
           </h2>
           <p>
-            For questions or concerns regarding this Privacy Policy, please contact:
+            For questions or concerns regarding this Privacy Policy, please use the in-app support form or contact:
           </p>
           <div class="contact-card">
             <div class="contact-item">
