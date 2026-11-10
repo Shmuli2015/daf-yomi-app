@@ -21,7 +21,7 @@ export type {
   ChavrutaParagraph,
 } from '../utils/parseChavrutaHtml';
 
-export const CHAVRUTA_CACHE_VERSION = 9;
+export const CHAVRUTA_CACHE_VERSION = 10;
 
 export interface ChavrutaPageData extends ChavrutaAmud {
   masechetEn: string;

@@ -88,21 +88,36 @@ function emphasizeFootnoteDashDibur(text: string): string {
   const dibur = text.slice(0, dashIndex).trim();
   if (!dibur || dibur.length > MAX_FOOTNOTE_DASH_DIBUR_LENGTH) return text;
 
-  const rest = text.slice(dashIndex + dashMatch[0].length).trim();
-  return rest ? `**${dibur}** ${dashMatch[1]} ${rest}` : `**${dibur}**`;
+  const leadingSpace = text.match(/^\s*/)?.[0] ?? '';
+  const rest = text.slice(dashIndex + dashMatch[0].length);
+  return rest.trim()
+    ? `${leadingSpace}**${dibur}** ${dashMatch[1]} ${rest}`
+    : `${leadingSpace}**${dibur}**`;
 }
 
-function emphasizePlainFootnoteRun(text: string): string {
-  const withDibur = /[\u05D0-\u05EA]/.test(text) ? emphasizeFootnoteDashDibur(text) : text;
+function emphasizePlainFootnoteRun(text: string, isFirstRun: boolean): string {
+  const withDibur =
+    isFirstRun && /[\u05D0-\u05EA]/.test(text) ? emphasizeFootnoteDashDibur(text) : text;
   return parseCommentaryRuns(withDibur)
     .map((run) => (run.isGemara ? `**${run.text}**` : emphasizeSourcesAndQuotes(run.text)))
     .join('');
 }
 
+const SECTION_LETTER_AFTER_TEXT =
+  /(?<=[.!?:\])])(?<!\*\*[\u05D0-\u05EA]\*\*\.)[ \t]+(\[?\*\*[\u05D0-\u05EA]\*\*\.)/g;
+
+function separateFootnoteSections(text: string): string {
+  return text.replace(SECTION_LETTER_AFTER_TEXT, '\n\n$1');
+}
+
 export function emphasizeChavrutaFootnote(text: string): string {
   if (!text) return '';
 
-  return parseCommentaryRuns(text)
-    .map((run) => (run.isGemara ? `**${run.text}**` : emphasizePlainFootnoteRun(run.text)))
+  const emphasized = parseCommentaryRuns(text)
+    .map((run, index) =>
+      run.isGemara ? `**${run.text}**` : emphasizePlainFootnoteRun(run.text, index === 0),
+    )
     .join('');
+
+  return separateFootnoteSections(emphasized);
 }
