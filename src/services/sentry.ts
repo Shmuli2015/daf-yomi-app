@@ -1,8 +1,10 @@
 import * as Sentry from '@sentry/react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { getPlayTrack } from './playTrack';
+import { isSentryEnvironmentEnabled, resolveSentryEnvironment } from './sentryEnvironment';
 
 const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+let sentryReady = false;
 
 function resolveSentryDsn(): string | undefined {
   const fromExtra = Constants.expoConfig?.extra?.sentryDsn;
@@ -16,16 +18,16 @@ function resolveSentryDsn(): string | undefined {
   return undefined;
 }
 
-function resolveSentryEnvironment(): string {
-  const playTrack = getPlayTrack();
-  if (playTrack && playTrack !== 'none') {
-    return playTrack;
+function resolveBuildProfile(): string {
+  const fromExtra = Constants.expoConfig?.extra?.buildProfile;
+  if (typeof fromExtra === 'string' && fromExtra.length > 0) {
+    return fromExtra;
   }
-  const profile = process.env.EAS_BUILD_PROFILE;
-  if (typeof profile === 'string' && profile.length > 0) {
-    return profile;
+  const fromEnv = process.env.EAS_BUILD_PROFILE;
+  if (typeof fromEnv === 'string' && fromEnv.length > 0) {
+    return fromEnv;
   }
-  return 'development';
+  return '';
 }
 
 function resolveSentryRelease(): string | undefined {
@@ -47,23 +49,26 @@ function sanitizeSentryEvent(event: SentryBeforeSendEvent): SentryBeforeSendEven
 
 export function initSentry(): boolean {
   const dsn = resolveSentryDsn();
-  if (!dsn || isExpoGo) {
+  const environment = resolveSentryEnvironment(getPlayTrack(), resolveBuildProfile());
+  if (!dsn || isExpoGo || !isSentryEnvironmentEnabled(environment)) {
+    sentryReady = false;
     return false;
   }
 
   Sentry.init({
     dsn,
-    environment: resolveSentryEnvironment(),
+    environment,
     release: resolveSentryRelease(),
     sendDefaultPii: false,
     tracesSampleRate: 0,
     beforeSend: sanitizeSentryEvent,
   });
+  sentryReady = true;
   return true;
 }
 
 export function captureException(error: unknown): void {
-  if (isExpoGo) {
+  if (!sentryReady) {
     return;
   }
   Sentry.captureException(error);
