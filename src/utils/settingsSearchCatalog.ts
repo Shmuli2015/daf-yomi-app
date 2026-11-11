@@ -90,7 +90,7 @@ export const CALENDAR_ITEM: SearchableSetting = {
 export const CONFETTI_ITEM: SearchableSetting = {
   title: 'אפקטים חגיגיים',
   description: 'הצגת קונפטי בסיום לימוד דף',
-  synonyms: ['קונפטי', 'חגיגה', 'אנימציה'],
+  synonyms: ['קונפטי', 'חגיגה', 'אנימציה', 'נגישות', 'הפחתת תנועה'],
 };
 
 export const TRACK_ITEM: SearchableSetting = {

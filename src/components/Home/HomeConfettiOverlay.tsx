@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { View, StyleSheet, useWindowDimensions } from 'react-native';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { useTheme } from '../../theme';
+import { useAccessibilityInfo } from '../../hooks/useAccessibilityInfo';
 
 type HomeConfettiOverlayProps = {
   visible: boolean;
@@ -15,8 +16,15 @@ export default function HomeConfettiOverlay({
   const theme = useTheme();
   const { width: windowWidth } = useWindowDimensions();
   const styles = useMemo(() => createStyles(), []);
+  const { reduceMotionEnabled } = useAccessibilityInfo();
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (visible && reduceMotionEnabled) {
+      onAnimationEnd();
+    }
+  }, [visible, reduceMotionEnabled, onAnimationEnd]);
+
+  if (!visible || reduceMotionEnabled) return null;
 
   return (
     <View style={styles.confettiContainer} pointerEvents="none">

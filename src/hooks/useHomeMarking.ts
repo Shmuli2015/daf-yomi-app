@@ -4,6 +4,7 @@ import { maybeRequestStoreReview, maybeRequestStoreReviewForStreak } from '../se
 import { getDafDayYesterday } from '../utils/dafDayBoundary';
 import { getDateStr, getDafByDate } from '../utils/dafYomi';
 import { triggerImpact } from '../utils/haptics';
+import { announceAccessibility } from '../utils/accessibilityAnnounce';
 
 type UseHomeMarkingParams = {
   currentDate: Date;
@@ -60,6 +61,11 @@ export function useHomeMarking({
       willLearn && masechetTotal > 0 && masechetLearned + 1 === masechetTotal;
     celebrateIfNeeded(willLearn);
     toggleAnyDafLearned(getDateStr(currentDate), todayMasechet, todayDafNum);
+    if (willLearn) {
+      announceAccessibility(`מסכת ${todayMasechet} דף ${todayDafNum} סומן כנלמד`);
+    } else {
+      announceAccessibility(`מסכת ${todayMasechet} דף ${todayDafNum} בוטל הסימון`);
+    }
     if (!isCompleting) {
       requestReviewIfStreakMilestone(willLearn);
     }
@@ -82,6 +88,7 @@ export function useHomeMarking({
       willLearn && masechetTotal > 0 && masechetLearned + 1 === masechetTotal;
     celebrateIfNeeded(willLearn);
     setDafStudyStatus(getDateStr(currentDate), todayMasechet, todayDafNum, 'learned');
+    announceAccessibility(`מסכת ${todayMasechet} דף ${todayDafNum} סומן כנלמד`);
     if (!isCompleting) {
       requestReviewIfStreakMilestone(willLearn);
     }
@@ -100,11 +107,13 @@ export function useHomeMarking({
   const handleMarkPartialA = useCallback(() => {
     void triggerImpact('light');
     markPartialAmud(getDateStr(currentDate), todayMasechet, todayDafNum, 'a');
+    announceAccessibility(`מסכת ${todayMasechet} דף ${todayDafNum} סומן עמוד א׳ בלבד`);
   }, [currentDate, markPartialAmud, todayDafNum, todayMasechet]);
 
   const handleMarkPartialB = useCallback(() => {
     void triggerImpact('light');
     markPartialAmud(getDateStr(currentDate), todayMasechet, todayDafNum, 'b');
+    announceAccessibility(`מסכת ${todayMasechet} דף ${todayDafNum} סומן עמוד ב׳ בלבד`);
   }, [currentDate, markPartialAmud, todayDafNum, todayMasechet]);
 
   const handleMarkYesterday = useCallback(() => {
@@ -113,6 +122,7 @@ export function useHomeMarking({
     const yesterday = getDafDayYesterday(new Date(), settings);
     const dafInfo = getDafByDate(yesterday);
     setDafStudyStatus(getDateStr(yesterday), dafInfo.masechet, dafInfo.daf, 'learned');
+    announceAccessibility(`דף אתמול מסכת ${dafInfo.masechet} דף ${dafInfo.daf} סומן כנלמד`);
     maybeRequestStoreReviewForStreak(useAppStore.getState().streak);
   }, [setDafStudyStatus]);
 
