@@ -17,6 +17,9 @@ interface CalendarDayProps {
   dafLabel?: string;
   hasSpecialEvent?: boolean;
   showSecularDate?: boolean;
+  gematriya?: string;
+  gregDay?: number;
+  styles?: ReturnType<typeof createCalendarDayStyles>;
   onPress: (hdate: HDate) => void;
 }
 
@@ -32,13 +35,17 @@ const CalendarDay = React.memo(
     dafLabel,
     hasSpecialEvent,
     showSecularDate = false,
+    gematriya: propGematriya,
+    gregDay: propGregDay,
+    styles: propStyles,
     onPress,
   }: CalendarDayProps) => {
     const theme = useTheme();
-    const styles = useMemo(() => createCalendarDayStyles(theme), [theme]);
+    const fallbackStyles = useMemo(() => createCalendarDayStyles(theme), [theme]);
+    const styles = propStyles ?? fallbackStyles;
 
-    const gematriya = hdate.renderGematriya().split(' ')[0];
-    const gregDay = hdate.greg().getDate();
+    const gematriya = propGematriya ?? hdate.renderGematriya().split(' ')[0];
+    const gregDay = propGregDay ?? hdate.greg().getDate();
 
     const scale = useSharedValue(1);
 
@@ -198,6 +205,9 @@ const CalendarDay = React.memo(
       prevProps.dafLabel === nextProps.dafLabel &&
       prevProps.hasSpecialEvent === nextProps.hasSpecialEvent &&
       prevProps.showSecularDate === nextProps.showSecularDate &&
+      prevProps.gematriya === nextProps.gematriya &&
+      prevProps.gregDay === nextProps.gregDay &&
+      prevProps.styles === nextProps.styles &&
       prevProps.onPress === nextProps.onPress &&
       prevProps.hdate.getFullYear() === nextProps.hdate.getFullYear() &&
       prevProps.hdate.getMonth() === nextProps.hdate.getMonth() &&

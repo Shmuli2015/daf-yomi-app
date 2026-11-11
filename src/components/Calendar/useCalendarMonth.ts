@@ -18,6 +18,8 @@ export interface DayData {
   dateKey: string;
   dafLabel?: string;
   hasSpecialEvent?: boolean;
+  gematriya: string;
+  gregDay: number;
 }
 
 export function isSameDay(d1: HDate, d2: HDate | null): boolean {
@@ -144,7 +146,8 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
     const prevMonth = firstDayOfMonth.prev();
     for (let i = dayOfWeek - 1; i >= 0; i--) {
       const d = new HDate(prevMonth.getDate() - i, prevMonth.getMonth(), prevMonth.getFullYear());
-      const dateKey = getDateStr(d.greg());
+      const greg = d.greg();
+      const dateKey = getDateStr(greg);
       const record = recordByDate.get(dateKey);
       const studyStatus = getStudyStatus(record);
       const evt = getHebrewDayEventInfo(d);
@@ -156,14 +159,17 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
         partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, todayHd),
         dateKey,
-        dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
+        dafLabel: showCalendarDaf ? getDafByDate(greg).dafNumOnly || undefined : undefined,
         hasSpecialEvent: evt.isShabbat || evt.isRoshChodesh || evt.isHoliday,
+        gematriya: d.renderGematriya().split(' ')[0],
+        gregDay: greg.getDate(),
       });
     }
 
     let d = firstDayOfMonth;
     while (d.getMonth() === month) {
-      const dateKey = getDateStr(d.greg());
+      const greg = d.greg();
+      const dateKey = getDateStr(greg);
       const record = recordByDate.get(dateKey);
       const studyStatus = getStudyStatus(record);
       const evt = getHebrewDayEventInfo(d);
@@ -175,15 +181,18 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
         partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, todayHd),
         dateKey,
-        dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
+        dafLabel: showCalendarDaf ? getDafByDate(greg).dafNumOnly || undefined : undefined,
         hasSpecialEvent: evt.isShabbat || evt.isRoshChodesh || evt.isHoliday,
+        gematriya: d.renderGematriya().split(' ')[0],
+        gregDay: greg.getDate(),
       });
       d = d.next();
     }
 
     const remaining = 42 - days.length;
     for (let i = 1; i <= remaining; i++) {
-      const dateKey = getDateStr(d.greg());
+      const greg = d.greg();
+      const dateKey = getDateStr(greg);
       const record = recordByDate.get(dateKey);
       const studyStatus = getStudyStatus(record);
       const evt = getHebrewDayEventInfo(d);
@@ -195,8 +204,10 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
         partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, todayHd),
         dateKey,
-        dafLabel: showCalendarDaf ? getDafByDate(d.greg()).dafNumOnly || undefined : undefined,
+        dafLabel: showCalendarDaf ? getDafByDate(greg).dafNumOnly || undefined : undefined,
         hasSpecialEvent: evt.isShabbat || evt.isRoshChodesh || evt.isHoliday,
+        gematriya: d.renderGematriya().split(' ')[0],
+        gregDay: greg.getDate(),
       });
       d = d.next();
     }

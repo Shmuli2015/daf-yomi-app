@@ -5,6 +5,7 @@ import { HDate } from '@hebcal/core';
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import CalendarDay from './Calendar/CalendarDay';
+import { createCalendarDayStyles } from './Calendar/CalendarDay.styles';
 import DafDetailModal from './Calendar/DafDetailModal';
 import ConfirmModal from './ConfirmModal';
 import DafMarkMenuModal from './DafMarkMenuModal';
@@ -27,6 +28,7 @@ export default function HebrewCalendar() {
   const { width: windowWidth } = useWindowDimensions();
   const theme = useTheme();
   const styles = useMemo(() => createHebrewCalendarStyles(theme), [theme]);
+  const dayStyles = useMemo(() => createCalendarDayStyles(theme), [theme]);
 
   const {
     recordByDate,
@@ -177,6 +179,9 @@ export default function HebrewCalendar() {
                   dafLabel={day.dafLabel}
                   hasSpecialEvent={day.hasSpecialEvent}
                   showSecularDate={showSecularDate}
+                  gematriya={day.gematriya}
+                  gregDay={day.gregDay}
+                  styles={dayStyles}
                   onPress={handleDayPress}
                 />
               ))}

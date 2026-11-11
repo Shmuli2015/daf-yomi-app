@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Animated, Easing } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SHAS_MASECHTOT } from '../../data/shas';
 import { stripNiqqud } from '../../utils/shas';
 import { formatProgressCount } from '../../utils/dafStatus';
@@ -28,21 +28,7 @@ const MasechetCard = React.memo(function MasechetCard({
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const progressWidth = useRef(new Animated.Value(data.percent / 100)).current;
-
-  useEffect(() => {
-    Animated.timing(progressWidth, {
-      toValue: data.percent / 100,
-      duration: 400,
-      easing: Easing.out(Easing.quad),
-      useNativeDriver: false,
-    }).start();
-  }, [data.percent]);
-
-  const barWidth = progressWidth.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0%', '100%'],
-  });
+  const clampedPercent = Math.min(100, Math.max(0, data.percent));
 
   return (
     <View style={styles.cardWrapper}>
@@ -86,11 +72,11 @@ const MasechetCard = React.memo(function MasechetCard({
             )}
           </View>
           <View style={styles.progressTrack}>
-            <Animated.View
+            <View
               style={[
                 styles.progressFill,
                 data.isCompleted ? styles.progressFillCompleted : styles.progressFillDefault,
-                { width: barWidth },
+                { width: `${clampedPercent}%` },
               ]}
             />
           </View>

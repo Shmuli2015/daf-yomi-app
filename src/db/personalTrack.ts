@@ -1,5 +1,4 @@
 import { db } from './connection';
-import { migratePersonalTrackColumns } from './migrations';
 import type { PersonalTrackRecord } from './types';
 
 export function getPersonalTrackRecords(masechet?: string): PersonalTrackRecord[] {
@@ -15,7 +14,6 @@ export function updatePersonalTrackRecord(
   status: 'learned' | 'partial' | 'none',
   amud?: 'a' | 'b' | null
 ) {
-  migratePersonalTrackColumns();
   const now = new Date().toISOString();
   if (status === 'none') {
     db.runSync('DELETE FROM personal_track_daf WHERE masechet = ? AND daf_num = ?', [masechet, dafNum]);
@@ -32,8 +30,35 @@ export function updatePersonalTrackRecord(
   }
 }
 
+export function batchUpdatePersonalTrackRecords(
+  updates: Array<{
+    masechet: string;
+    dafNum: number;
+    status: 'learned' | 'partial' | 'none';
+    amud?: 'a' | 'b' | null;
+  }>
+) {
+  db.withTransactionSync(() => {
+    const now = new Date().toISOString();
+    for (const { masechet, dafNum, status, amud } of updates) {
+      if (status === 'none') {
+        db.runSync('DELETE FROM personal_track_daf WHERE masechet = ? AND daf_num = ?', [masechet, dafNum]);
+      } else {
+        db.runSync(
+          `INSERT INTO personal_track_daf (masechet, daf_num, status, amud, learnedAt)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(masechet, daf_num) DO UPDATE SET
+             status = excluded.status,
+             amud = excluded.amud,
+             learnedAt = excluded.learnedAt`,
+          [masechet, dafNum, status, amud ?? null, now]
+        );
+      }
+    }
+  });
+}
+
 export function replaceAllPersonalTrackRecords(records: PersonalTrackRecord[]) {
-  migratePersonalTrackColumns();
   db.withTransactionSync(() => {
     db.runSync('DELETE FROM personal_track_daf');
     const now = new Date().toISOString();
@@ -47,7 +72,6 @@ export function replaceAllPersonalTrackRecords(records: PersonalTrackRecord[]) {
 }
 
 export function mergePersonalTrackRecords(records: PersonalTrackRecord[]) {
-  migratePersonalTrackColumns();
   db.withTransactionSync(() => {
     const now = new Date().toISOString();
     const existingPersonal = new Map(

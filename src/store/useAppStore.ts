@@ -8,7 +8,7 @@ import {
   parsePinnedPersonalMasechtot,
   removePinnedPersonalMasechet,
 } from '../utils/pinnedPersonalMasechtot';
-import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, updateReaderTheme as persistReaderTheme, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setGemaraNikud as persistGemaraNikud, setHapticsEnabled as persistHapticsEnabled, setKeepScreenAwake as persistKeepScreenAwake, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, setDafDayStartMode as persistDafDayStartMode, setDafDayStartTime as persistDafDayStartTime, setDafDayStartSchedules as persistDafDayStartSchedules, ensureDafDayStartSchedulesFromCurrentHour as persistEnsureDafDayStartSchedules, importFullBackupTransaction, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, clearAllReaderPositions, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
+import { getAllRecords, getDailyRecord, updateDailyRecord, batchUpdateDailyRecords, getSettings, updateSettings, updateThemeMode, updateReaderFontSize as persistReaderFontSize, updateReaderTheme as persistReaderTheme, setUpdateAutoPromptEnabled as persistUpdateAutoPromptSetting, setShowCalendarDaf as persistShowCalendarDaf, setShowSecularDate as persistShowSecularDate, setShowConfetti as persistShowConfetti, setDismissedHalfDafTip as persistDismissedHalfDafTip, setReaderViewMode as persistReaderViewMode, setShowChavrutaNotes as persistShowChavrutaNotes, setGemaraNikud as persistGemaraNikud, setHapticsEnabled as persistHapticsEnabled, setKeepScreenAwake as persistKeepScreenAwake, setLastBackupAt as persistLastBackupAt, setNotificationSoundEnabled as persistNotificationSoundEnabled, setDafDayStartMode as persistDafDayStartMode, setDafDayStartTime as persistDafDayStartTime, setDafDayStartSchedules as persistDafDayStartSchedules, ensureDafDayStartSchedulesFromCurrentHour as persistEnsureDafDayStartSchedules, importFullBackupTransaction, importRecords, replaceAllRecords, importSettingsFromBackup, getPersonalTrackRecords, updatePersonalTrackRecord, batchUpdatePersonalTrackRecords, setActivePersonalMasechet as persistActivePersonalMasechet, setShowPersonalTrackBanner as persistShowPersonalTrackBanner, replaceAllPersonalTrackRecords, mergePersonalTrackRecords, resetDB, resetDafYomiRecords, resetPersonalTrackRecords, clearAllReaderPositions, DailyRecord, SettingsRecord, PersonalTrackRecord } from '../db/database';
 import type { BackupData } from '../services/backup';
 import { getDafDayDate } from '../utils/dafDayBoundary';
 import type { DafDayStartDaySchedule } from '../utils/dafDayBoundary';
@@ -99,6 +99,8 @@ interface AppState {
     status: 'learned' | 'partial' | 'none',
     amud?: AmudSide | null
   ) => void;
+  batchMarkPersonalDafim: (masechetEn: string, dafNums: number[]) => void;
+  batchUnmarkPersonalDafim: (masechetEn: string, dafNums: number[]) => void;
 
   markTodayAsLearned: () => void;
   setDafStudyStatus: (
@@ -363,6 +365,32 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().refreshPersonalTrack(masechetEn);
   },
 
+  batchMarkPersonalDafim: (masechetEn, dafNums) => {
+    if (!isPersonalTrackEnabled(get().settings) || dafNums.length === 0) return;
+    batchUpdatePersonalTrackRecords(
+      dafNums.map((dafNum) => ({
+        masechet: masechetEn,
+        dafNum,
+        status: 'learned',
+        amud: null,
+      }))
+    );
+    get().refreshPersonalTrack(masechetEn);
+  },
+
+  batchUnmarkPersonalDafim: (masechetEn, dafNums) => {
+    if (!isPersonalTrackEnabled(get().settings) || dafNums.length === 0) return;
+    batchUpdatePersonalTrackRecords(
+      dafNums.map((dafNum) => ({
+        masechet: masechetEn,
+        dafNum,
+        status: 'none',
+        amud: null,
+      }))
+    );
+    get().refreshPersonalTrack(masechetEn);
+  },
+
   markTodayAsLearned: () => {
     const { currentDate, todayMasechet, todayDafNum } = get();
     const dateStr = getDateStr(currentDate);
@@ -405,14 +433,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     batchUpdateDailyRecords(
       updates.map(u => ({ ...u, status: 'learned' as const, amud: null }))
     );
-    get().refreshHistory(undefined, updates.map((u) => u.dateStr));
+    const masechetIdentifier = updates[0]?.masechet;
+    get().refreshHistory(masechetIdentifier, updates.map((u) => u.dateStr));
   },
 
   batchUnmarkDafim: (updates) => {
     batchUpdateDailyRecords(
       updates.map(u => ({ ...u, status: 'missed' as const, amud: null }))
     );
-    get().refreshHistory(undefined, updates.map((u) => u.dateStr));
+    const masechetIdentifier = updates[0]?.masechet;
+    get().refreshHistory(masechetIdentifier, updates.map((u) => u.dateStr));
   },
 
   updateNotificationSettings: (
