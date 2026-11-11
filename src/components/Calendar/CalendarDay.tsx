@@ -122,13 +122,23 @@ const CalendarDay = React.memo(
           ? theme.colors.accent
           : theme.colors.textSecondary;
 
+    const statusText = learned
+      ? ', נלמד'
+      : partial
+        ? ', נלמד חלקית'
+        : ', לא נלמד';
+    const todayText = isToday ? ', היום' : '';
+    const dayAccessibilityLabel = `יום ${gematriya}${dafLabel ? `, דף ${dafLabel}` : ''}${statusText}${todayText}`;
+
     return (
       <TouchableOpacity
         onPress={handlePress}
         activeOpacity={0.7}
         style={styles.cell}
         accessibilityRole="button"
-        accessibilityLabel={`יום ${gematriya}${dafLabel ? `, דף ${dafLabel}` : ''}`}
+        accessibilityLabel={dayAccessibilityLabel}
+        accessibilityState={{ selected: isSelected }}
+        hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
       >
         <Animated.View style={animatedContainerStyle}>
           <View

@@ -19,7 +19,10 @@ export default function StandardTabBar({ state, navigation }: BottomTabBarProps)
   }, [navigation]);
 
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom > 0 ? insets.bottom : 12 }]}>
+    <View
+      style={[styles.container, { paddingBottom: insets.bottom > 0 ? insets.bottom : 12 }]}
+      accessibilityRole="tablist"
+    >
       {state.routes.map((route, index) => {
         const isFocused = state.index === index;
         const config = TAB_CONFIG[route.name];

@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { numberToGematria } from '../../data/shas';
+import { getDafCellAccessibilityLabel } from './dafCellAccessibility';
 
 interface DafCellProps {
   dafNum: number;
@@ -81,12 +82,28 @@ const DafCell = React.memo(
       ? styles.dafTextPartial
       : styles.dafTextDefault;
 
+    const accessibilityLabel = getDafCellAccessibilityLabel({
+      dafNum,
+      isLearned,
+      isPartial,
+      partialAmud,
+      isPersonalLearned,
+      isPersonalPartial,
+      personalPartialAmud,
+      mode,
+    });
+
     return (
       <TouchableOpacity
         activeOpacity={0.7}
         onPress={() => onPress(dafNum)}
         onLongPress={onLongPress ? () => onLongPress(dafNum) : undefined}
         style={[styles.dafCell, cellStyle]}
+        accessible={true}
+        accessibilityRole="button"
+        accessibilityLabel={accessibilityLabel}
+        accessibilityHint="לחיצה קצרה לסימון או ביטול. לחיצה ארוכה לסימון חצי דף."
+        hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
       >
         {isBoth ? (
           <View style={styles.dafCornerStar}>

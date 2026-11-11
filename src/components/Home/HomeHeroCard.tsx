@@ -173,7 +173,13 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
           </View>
         </TouchableOpacity>
 
-        <View style={styles.progressSection}>
+        <View
+          style={styles.progressSection}
+          accessible={true}
+          accessibilityRole="progressbar"
+          accessibilityValue={{ min: 0, max: 100, now: masechetProgressPct }}
+          accessibilityLabel={`התקדמות במסכת: ${masechetLearnedCountLabel} מתוך ${masechetTotalCount} דפים, ${masechetProgressPct} אחוזים`}
+        >
           <View style={styles.progressHeader}>
             <Text style={styles.progressTitle}>
               {masechetLearnedCountLabel} מתוך {masechetTotalCount} דפים
@@ -242,6 +248,7 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
                     activeOpacity={0.8}
                     accessibilityRole="button"
                     accessibilityLabel={markLabel}
+                    accessibilityHint="לחיצה קצרה לסימון הדף כנלמד. לחיצה ארוכה לפתיחת תפריט סימון חצי דף."
                   >
                     <Ionicons
                       name={isPartial ? 'ellipse' : 'checkmark-circle-outline'}

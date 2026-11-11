@@ -53,7 +53,16 @@ const TabButton = React.memo(function TabButton({
   }, [isFocused, navigation, pressScale, routeKey, routeName]);
 
   return (
-    <TouchableOpacity style={styles.tab} onPress={handlePress} activeOpacity={1}>
+    <TouchableOpacity
+      style={styles.tab}
+      onPress={handlePress}
+      activeOpacity={1}
+      accessible={true}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isFocused }}
+      accessibilityLabel={config.label}
+      accessibilityHint={`מעבר ללשונית ${config.label}`}
+    >
       <Animated.View style={[styles.tabInner, { transform: [{ scale: pressScale }] }]}>
         <Animated.View style={[styles.iconWrapper, { transform: [{ scale: iconScale }] }]}>
           <Ionicons

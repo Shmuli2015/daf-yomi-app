@@ -29,6 +29,11 @@ const MasechetCard = React.memo(function MasechetCard({
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const clampedPercent = Math.min(100, Math.max(0, data.percent));
+  const cardLabel = `${stripNiqqud(data.m.he)}, ${
+    data.isCompleted
+      ? 'הושלמה במלואה'
+      : `${data.learned} מתוך ${data.m.pages} דפים נלמדו, ${clampedPercent} אחוזים`
+  }`;
 
   return (
     <View style={styles.cardWrapper}>
@@ -38,7 +43,7 @@ const MasechetCard = React.memo(function MasechetCard({
         onLongPress={() => onLongPress(data.m.en)}
         delayLongPress={400}
         accessibilityRole="button"
-        accessibilityLabel={stripNiqqud(data.m.he)}
+        accessibilityLabel={cardLabel}
         accessibilityHint="לחיצה קצרה פותחת את רשת הדפים. לחיצה ארוכה מסמנת או מבטלת את כל המסכת"
         style={[styles.card, data.isCompleted ? styles.cardCompleted : styles.cardDefault]}
       >
