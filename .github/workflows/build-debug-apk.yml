@@ -17,7 +17,8 @@ jobs:
     permissions:
       contents: read
     env:
-      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx3500m -Dorg.gradle.vfs.watch=false -Dorg.gradle.project.reactNativeArchitectures=armeabi-v7a,arm64-v8a -Dorg.gradle.project.android.enableMinifyInReleaseBuilds=true -Dorg.gradle.project.android.enableShrinkResourcesInReleaseBuilds=true"
+      GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.jvmargs=-Xmx3500m -Dorg.gradle.vfs.watch=false -Dorg.gradle.project.reactNativeArchitectures=arm64-v8a -Dorg.gradle.project.android.enableMinifyInReleaseBuilds=true -Dorg.gradle.project.android.enableShrinkResourcesInReleaseBuilds=true"
+      ORG_GRADLE_PROJECT_reactNativeArchitectures: arm64-v8a
     steps:
       - name: Check Telegram secrets
         env:
