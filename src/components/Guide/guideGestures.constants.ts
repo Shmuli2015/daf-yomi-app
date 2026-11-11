@@ -42,7 +42,7 @@ export const GUIDE_GESTURES: GuideGesture[] = [
   {
     id: 'reader-title-tap',
     icon: 'bookmarks-outline',
-    title: 'הקשה על כותרת הדף בנגן',
+    title: 'הקשה על כותרת הדף בקורא',
     badge: 'קפיצה מהירה',
     description: 'פותחת חלונית קפיצה מהירה למעבר ישיר לכל מסכת ודף בש״ס בלי לצאת מהקורא.',
   },
