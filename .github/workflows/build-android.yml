@@ -289,7 +289,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      actions: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -378,12 +377,6 @@ jobs:
             echo "Deleting older release: $tag"
             gh release delete "$tag" -y || echo "Warning: failed to delete $tag"
           done < <(gh release list --limit 100 --json tagName --jq '.[].tagName')
-
-      - name: Trigger Pages deploy
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh workflow run "Deploy GitHub Pages" --ref master
 
       - name: Write publish summary (GitHub ok)
         shell: bash
