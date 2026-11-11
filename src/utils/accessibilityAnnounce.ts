@@ -8,3 +8,4 @@ export function announceAccessibility(message: string): void {
     AccessibilityInfo.announceForAccessibility(message);
   } catch {}
 }
+
