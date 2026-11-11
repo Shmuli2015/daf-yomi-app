@@ -4,6 +4,7 @@ const mockGetDailyRecord = jest.fn();
 const mockGetAllRecords = jest.fn();
 const mockBatchUpdateDailyRecords = jest.fn();
 const mockUpdatePersonalTrackRecord = jest.fn();
+const mockBatchUpdatePersonalTrackRecords = jest.fn();
 const mockGetPersonalTrackRecords = jest.fn();
 
 jest.mock('expo-notifications', () => ({
@@ -24,6 +25,7 @@ jest.mock('../../db/database', () => {
     getAllRecords: mockGetAllRecords,
     batchUpdateDailyRecords: mockBatchUpdateDailyRecords,
     updatePersonalTrackRecord: mockUpdatePersonalTrackRecord,
+    batchUpdatePersonalTrackRecords: mockBatchUpdatePersonalTrackRecords,
     getPersonalTrackRecords: mockGetPersonalTrackRecords,
   };
   return new Proxy(mocks, {
@@ -317,5 +319,24 @@ describe('study marking store actions', () => {
   it('setPersonalDafStudyStatus passes none through to the database', () => {
     useAppStore.getState().setPersonalDafStudyStatus('Berakhot', 2, 'none');
     expect(mockUpdatePersonalTrackRecord).toHaveBeenCalledWith('Berakhot', 2, 'none', null);
+  });
+
+  it('batchMarkPersonalDafim calls batchUpdatePersonalTrackRecords with learned status', () => {
+    mockBatchUpdatePersonalTrackRecords.mockClear();
+    useAppStore.getState().batchMarkPersonalDafim('Berakhot', [2, 3, 4]);
+    expect(mockBatchUpdatePersonalTrackRecords).toHaveBeenCalledWith([
+      { masechet: 'Berakhot', dafNum: 2, status: 'learned', amud: null },
+      { masechet: 'Berakhot', dafNum: 3, status: 'learned', amud: null },
+      { masechet: 'Berakhot', dafNum: 4, status: 'learned', amud: null },
+    ]);
+  });
+
+  it('batchUnmarkPersonalDafim calls batchUpdatePersonalTrackRecords with none status', () => {
+    mockBatchUpdatePersonalTrackRecords.mockClear();
+    useAppStore.getState().batchUnmarkPersonalDafim('Berakhot', [2, 3]);
+    expect(mockBatchUpdatePersonalTrackRecords).toHaveBeenCalledWith([
+      { masechet: 'Berakhot', dafNum: 2, status: 'none', amud: null },
+      { masechet: 'Berakhot', dafNum: 3, status: 'none', amud: null },
+    ]);
   });
 });

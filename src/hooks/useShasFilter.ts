@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useDebouncedValue } from './useDebouncedValue';
 import { SHAS_MASECHTOT, SEDARIM, type Seder } from '../data/shas';
 import { getMasechetProgressFromCache, type ProgressCache } from '../utils/progressCache';
 import type { MasechetData } from '../components/Shas/MasechetCard';
@@ -8,6 +9,7 @@ export function useShasFilter(progressCache: ProgressCache | null) {
   const [selectedSeder, setSelectedSeder] = useState<Seder | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedQuery = useDebouncedValue(searchQuery, 150);
 
   const allMasechetData = useMemo(() => {
     const dataMap = new Map<Seder, MasechetData[]>();
@@ -40,7 +42,7 @@ export function useShasFilter(progressCache: ProgressCache | null) {
   }, [progressCache]);
 
   const { filteredSedarimData, matchedCount } = useMemo(() => {
-    const trimmedQuery = searchQuery.trim().toLowerCase();
+    const trimmedQuery = debouncedQuery.trim().toLowerCase();
     const map = new Map<Seder, MasechetData[]>();
     let count = 0;
 
@@ -77,7 +79,7 @@ export function useShasFilter(progressCache: ProgressCache | null) {
     });
 
     return { filteredSedarimData: map, matchedCount: count };
-  }, [allMasechetData, selectedSeder, selectedStatus, searchQuery]);
+  }, [allMasechetData, selectedSeder, selectedStatus, debouncedQuery]);
 
   return {
     selectedSeder,

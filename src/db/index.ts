@@ -63,6 +63,7 @@ export {
 } from './settings';
 
 export {
+  batchUpdatePersonalTrackRecords,
   getPersonalTrackRecords,
   mergePersonalTrackRecords,
   replaceAllPersonalTrackRecords,

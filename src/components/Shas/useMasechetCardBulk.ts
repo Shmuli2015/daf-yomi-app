@@ -25,7 +25,8 @@ export function useMasechetCardBulk() {
     settings,
     batchMarkDafim,
     batchUnmarkDafim,
-    togglePersonalDafLearned,
+    batchMarkPersonalDafim,
+    batchUnmarkPersonalDafim,
   } = useAppStore(
     useShallow((s) => ({
       history: s.history,
@@ -34,7 +35,8 @@ export function useMasechetCardBulk() {
       settings: s.settings,
       batchMarkDafim: s.batchMarkDafim,
       batchUnmarkDafim: s.batchUnmarkDafim,
-      togglePersonalDafLearned: s.togglePersonalDafLearned,
+      batchMarkPersonalDafim: s.batchMarkPersonalDafim,
+      batchUnmarkPersonalDafim: s.batchUnmarkPersonalDafim,
     })),
   );
 
@@ -130,16 +132,14 @@ export function useMasechetCardBulk() {
           const updates = buildMasechetUnmarkAllUpdates(masechetHe, dafim, recordByDate);
           if (updates.length > 0) batchUnmarkDafim(updates);
         } else if (action === 'markAllPersonal') {
-          for (const dafNum of dafim) {
-            if (!learnedSet.has(dafNum)) {
-              togglePersonalDafLearned(masechetEn, dafNum);
-            }
+          const toMark = dafim.filter((dafNum) => !learnedSet.has(dafNum));
+          if (toMark.length > 0) {
+            batchMarkPersonalDafim(masechetEn, toMark);
           }
         } else if (action === 'unmarkAllPersonal') {
-          for (const dafNum of dafim) {
-            if (learnedSet.has(dafNum)) {
-              togglePersonalDafLearned(masechetEn, dafNum);
-            }
+          const toUnmark = dafim.filter((dafNum) => learnedSet.has(dafNum));
+          if (toUnmark.length > 0) {
+            batchUnmarkPersonalDafim(masechetEn, toUnmark);
           }
         }
       } finally {
@@ -154,7 +154,8 @@ export function useMasechetCardBulk() {
     history,
     batchMarkDafim,
     batchUnmarkDafim,
-    togglePersonalDafLearned,
+    batchMarkPersonalDafim,
+    batchUnmarkPersonalDafim,
   ]);
 
   return {

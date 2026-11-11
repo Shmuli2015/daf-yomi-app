@@ -40,6 +40,8 @@ export function useMasechetModal({
   const markPartialAmud = useAppStore((s) => s.markPartialAmud);
   const batchMarkDafim = useAppStore((s) => s.batchMarkDafim);
   const batchUnmarkDafim = useAppStore((s) => s.batchUnmarkDafim);
+  const batchMarkPersonalDafim = useAppStore((s) => s.batchMarkPersonalDafim);
+  const batchUnmarkPersonalDafim = useAppStore((s) => s.batchUnmarkPersonalDafim);
   const togglePersonalDafLearned = useAppStore((s) => s.togglePersonalDafLearned);
   const markPersonalDafLearned = useAppStore((s) => s.markPersonalDafLearned);
   const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
@@ -196,10 +198,10 @@ export function useMasechetModal({
 
   const handleMarkAll = useCallback(() => {
     if (effectiveMode === 'personal') {
-      for (const dafNum of dafimArray) {
-        if (!personalLearnedSet.has(dafNum)) {
-          togglePersonalDafLearned(masechet.en, dafNum);
-        }
+      const toMark = dafimArray.filter((dafNum) => !personalLearnedSet.has(dafNum));
+      if (toMark.length > 0) {
+        batchMarkPersonalDafim(masechet.en, toMark);
+        if (settings?.show_confetti) setTimeout(() => setShowConfetti(true), 200);
       }
       return;
     }
@@ -210,14 +212,13 @@ export function useMasechetModal({
       batchMarkDafim(updates);
       if (settings?.show_confetti) setTimeout(() => setShowConfetti(true), 200);
     }
-  }, [effectiveMode, masechet.en, masechet.he, dafimArray, personalLearnedSet, togglePersonalDafLearned, recordByDate, batchMarkDafim, settings]);
+  }, [effectiveMode, masechet.en, masechet.he, dafimArray, personalLearnedSet, batchMarkPersonalDafim, recordByDate, batchMarkDafim, settings]);
 
   const handleUnmarkAll = useCallback(() => {
     if (effectiveMode === 'personal') {
-      for (const dafNum of dafimArray) {
-        if (personalLearnedSet.has(dafNum)) {
-          togglePersonalDafLearned(masechet.en, dafNum);
-        }
+      const toUnmark = dafimArray.filter((dafNum) => personalLearnedSet.has(dafNum));
+      if (toUnmark.length > 0) {
+        batchUnmarkPersonalDafim(masechet.en, toUnmark);
       }
       return;
     }
@@ -227,7 +228,7 @@ export function useMasechetModal({
     if (updates.length > 0) {
       batchUnmarkDafim(updates);
     }
-  }, [effectiveMode, masechet.en, masechet.he, dafimArray, personalLearnedSet, togglePersonalDafLearned, recordByDate, batchUnmarkDafim]);
+  }, [effectiveMode, masechet.en, masechet.he, dafimArray, personalLearnedSet, batchUnmarkPersonalDafim, recordByDate, batchUnmarkDafim]);
 
   const handleMarkAllPress = useCallback(() => setPendingAction('markAll'), []);
   const handleUnmarkAllPress = useCallback(() => setPendingAction('unmarkAll'), []);
