@@ -5,3 +5,11 @@ compatibility_date = "2025-10-01"
 [vars]
 SUPPORT_TO_EMAIL = "support.masa.daf@gmail.com"
 SUPPORT_FROM_EMAIL = "מסע דף <onboarding@resend.dev>"
+
+[[ratelimits]]
+name = "SUPPORT_RATE_LIMITER"
+namespace_id = "841101"
+
+  [ratelimits.simple]
+  limit = 5
+  period = 60

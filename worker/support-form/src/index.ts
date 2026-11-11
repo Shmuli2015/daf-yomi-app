@@ -1,3 +1,14 @@
+import {
+  attachmentFilename,
+  boundedMeta,
+  decodeBase64,
+  detectImageType,
+  getClientIp,
+  isWithinEmailLength,
+  readLimitedJson,
+  resolveSubject,
+} from './requestGuards';
+
 type SupportFormCategory = 'bug' | 'question' | 'suggestion';
 type SupportFormAttachmentContentType = 'image/jpeg' | 'image/png' | 'image/webp';
 
@@ -20,10 +31,15 @@ type SupportFormRequest = {
   attachments?: unknown;
 };
 
+type RateLimiter = {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
+};
+
 type Env = {
   RESEND_API_KEY: string;
   SUPPORT_TO_EMAIL: string;
   SUPPORT_FROM_EMAIL: string;
+  SUPPORT_RATE_LIMITER?: RateLimiter;
 };
 
 const MESSAGE_MAX_LENGTH = 4000;
@@ -106,15 +122,7 @@ function isValidIsraeliPhone(raw: string): boolean {
   return /^0(?:2|3|4|8|9)\d{7}$/.test(digits);
 }
 
-function getClientIp(request: Request): string {
-  return (
-    request.headers.get('CF-Connecting-IP') ||
-    request.headers.get('X-Forwarded-For')?.split(',')[0]?.trim() ||
-    'unknown'
-  );
-}
-
-function isRateLimited(ip: string): boolean {
+function isMemoryRateLimited(ip: string): boolean {
   const now = Date.now();
   const existing = rateLimitByIp.get(ip);
   if (!existing || existing.resetAt <= now) {
@@ -129,20 +137,16 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-function isAttachmentContentType(value: unknown): value is SupportFormAttachmentContentType {
-  return value === 'image/jpeg' || value === 'image/png' || value === 'image/webp';
+async function isRateLimited(ip: string, env: Env): Promise<boolean> {
+  if (env.SUPPORT_RATE_LIMITER) {
+    const { success } = await env.SUPPORT_RATE_LIMITER.limit({ key: ip });
+    return !success;
+  }
+  return isMemoryRateLimited(ip);
 }
 
-function sanitizeFilename(raw: string): string {
-  const trimmed = raw.trim().replace(/[\\/]+/g, '-');
-  const cleaned = trimmed
-    .replace(/[^\w.\u0590-\u05FF-]+/g, '_')
-    .replace(/^[.\-_]+/, '')
-    .replace(/\.+/g, '.');
-  if (!cleaned) {
-    return 'screenshot.jpg';
-  }
-  return cleaned.slice(0, 120);
+function isAttachmentContentType(value: unknown): value is SupportFormAttachmentContentType {
+  return value === 'image/jpeg' || value === 'image/png' || value === 'image/webp';
 }
 
 function estimateBase64DecodedBytes(base64: string): number {
@@ -184,11 +188,17 @@ function parseAttachment(
     return { ok: false, error: 'invalid_attachment' };
   }
 
+  const bytes = decodeBase64(contentBase64);
+  const detected = bytes ? detectImageType(bytes) : null;
+  if (!bytes || bytes.byteLength > ATTACHMENT_MAX_BYTES || detected !== contentTypeRaw) {
+    return { ok: false, error: 'invalid_attachment' };
+  }
+
   return {
     ok: true,
     value: {
-      filename: sanitizeFilename(filenameRaw || 'screenshot.jpg'),
-      contentType: contentTypeRaw,
+      filename: attachmentFilename(filenameRaw || 'screenshot', detected),
+      contentType: detected,
       content: contentBase64,
     },
   };
@@ -375,16 +385,19 @@ export default {
     }
 
     const ip = getClientIp(request);
-    if (isRateLimited(ip)) {
+    if (await isRateLimited(ip, env)) {
       return jsonResponse(request, { ok: false, error: 'rate_limited' }, 429);
     }
 
-    let body: SupportFormRequest;
-    try {
-      body = (await request.json()) as SupportFormRequest;
-    } catch {
+    const parsedBody = await readLimitedJson(request);
+    if (!parsedBody.ok) {
+      const status = parsedBody.error === 'payload_too_large' ? 413 : 400;
+      return jsonResponse(request, { ok: false, error: parsedBody.error }, status);
+    }
+    if (!parsedBody.value || typeof parsedBody.value !== 'object' || Array.isArray(parsedBody.value)) {
       return jsonResponse(request, { ok: false, error: 'invalid_json' }, 400);
     }
+    const body = parsedBody.value as SupportFormRequest;
 
     const honeypot = asTrimmedString(body.honeypot);
     if (honeypot) {
@@ -401,7 +414,7 @@ export default {
     }
 
     const replyEmail = asTrimmedString(body.replyEmail);
-    if (replyEmail && !isValidEmail(replyEmail)) {
+    if (replyEmail && (!isWithinEmailLength(replyEmail) || !isValidEmail(replyEmail))) {
       return jsonResponse(request, { ok: false, error: 'invalid_email' }, 400);
     }
 
@@ -414,10 +427,18 @@ export default {
       phone = normalizeIsraeliPhone(phoneRaw);
     }
 
-    const appVersion = asTrimmedString(body.appVersion);
-    const platform = asTrimmedString(body.platform);
-    const subjectOverride = asTrimmedString(body.subjectOverride);
-    const subject = subjectOverride || CATEGORY_SUBJECTS[body.category];
+    const appVersion = boundedMeta(asTrimmedString(body.appVersion));
+    const platform = boundedMeta(asTrimmedString(body.platform));
+    if (appVersion === null || platform === null) {
+      return jsonResponse(request, { ok: false, error: 'invalid_meta' }, 400);
+    }
+    const subject = resolveSubject(
+      asTrimmedString(body.subjectOverride),
+      CATEGORY_SUBJECTS[body.category],
+    );
+    if (!subject) {
+      return jsonResponse(request, { ok: false, error: 'invalid_subject' }, 400);
+    }
     const parsedAttachments = parseAttachments(body);
     if (!parsedAttachments.ok) {
       return jsonResponse(request, { ok: false, error: parsedAttachments.error }, 400);
