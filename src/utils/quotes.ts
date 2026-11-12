@@ -837,6 +837,18 @@ export function getRandomQuoteItem(): DafYomiQuote {
   return QUOTES[randomIndex];
 }
 
+export function pickAnotherQuote(currentId?: string): DafYomiQuote {
+  if (QUOTES.length <= 1) {
+    return QUOTES[0];
+  }
+  const currentIndex = QUOTES.findIndex((quote) => quote.id === currentId);
+  if (currentIndex < 0) {
+    return getRandomQuoteItem();
+  }
+  const offset = 1 + Math.floor(Math.random() * (QUOTES.length - 1));
+  return QUOTES[(currentIndex + offset) % QUOTES.length];
+}
+
 export function getDailyQuote(date: Date = new Date()): DafYomiQuote {
   const startOfYear = new Date(date.getFullYear(), 0, 1);
   const dayOfYear = Math.floor(
