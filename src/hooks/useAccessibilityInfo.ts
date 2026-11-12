@@ -3,6 +3,7 @@ import { AccessibilityInfo } from 'react-native';
 
 export function useAccessibilityInfo() {
   const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
+  const [reduceMotionReady, setReduceMotionReady] = useState(false);
   const [screenReaderEnabled, setScreenReaderEnabled] = useState(false);
 
   useEffect(() => {
@@ -14,7 +15,12 @@ export function useAccessibilityInfo() {
           setReduceMotionEnabled(Boolean(enabled));
         }
       })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => {
+        if (isMounted) {
+          setReduceMotionReady(true);
+        }
+      });
 
     AccessibilityInfo.isScreenReaderEnabled()
       .then((enabled) => {
@@ -49,7 +55,7 @@ export function useAccessibilityInfo() {
     };
   }, []);
 
-  return { reduceMotionEnabled, screenReaderEnabled };
+  return { reduceMotionEnabled, reduceMotionReady, screenReaderEnabled };
 }
 
 export function useAllowConfetti(

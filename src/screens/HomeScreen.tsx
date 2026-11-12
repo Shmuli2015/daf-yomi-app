@@ -9,6 +9,7 @@ import ScreenTopGradient from '../components/ScreenTopGradient';
 import YesterdayNudge from '../components/Home/YesterdayNudge';
 import HomeModals from '../components/Home/HomeModals';
 import HomeConfettiOverlay from '../components/Home/HomeConfettiOverlay';
+import HomeDailyQuoteCard from '../components/Home/HomeDailyQuoteCard';
 import { createHomeScreenStyles } from '../components/Home/homeScreen.styles';
 import { formatProgressCount } from '../utils/dafStatus';
 import { useHomeMarking } from '../hooks/useHomeMarking';
@@ -193,6 +194,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             currentDate={currentDate}
             onOpenGuide={openHeroGuide}
           />
+
+          <HomeDailyQuoteCard />
 
           {personalTrackEnabled && (
             <PersonalTrackSection

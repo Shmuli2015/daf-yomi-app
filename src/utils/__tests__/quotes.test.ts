@@ -4,6 +4,7 @@ import {
   formatQuote,
   getRandomQuote,
   getRandomQuoteItem,
+  pickAnotherQuote,
   getDailyQuote,
   getQuotesByCategory,
   DafYomiQuote,
@@ -92,6 +93,15 @@ describe('quotes utility', () => {
     const item = getRandomQuoteItem();
     expect(item).toBeDefined();
     expect(QUOTES).toContain(item);
+  });
+
+  it('pickAnotherQuote returns a different quote from the current one', () => {
+    const current = QUOTES[0];
+    for (let i = 0; i < 20; i += 1) {
+      const next = pickAnotherQuote(current.id);
+      expect(next.id).not.toBe(current.id);
+      expect(QUOTES).toContain(next);
+    }
   });
 
   it('getDailyQuote returns a deterministic quote for a given date', () => {
