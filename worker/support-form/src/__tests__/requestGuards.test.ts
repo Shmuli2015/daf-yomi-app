@@ -1,12 +1,16 @@
 import {
+  GUIDE_QUESTION_SUBJECT_PREFIX,
+  GUIDE_TOPIC_MAX_LENGTH,
   MAX_BODY_BYTES,
   SUBJECT_MAX_LENGTH,
   attachmentFilename,
   decodeBase64,
   detectImageType,
   getClientIp,
+  isValidReplyEmail,
   readLimitedJson,
-  resolveSubject,
+  resolveGuideTopic,
+  resolveSupportSubject,
 } from '../requestGuards';
 
 describe('support form request guards', () => {
@@ -27,16 +31,29 @@ describe('support form request guards', () => {
     expect(getClientIp(request)).toBe('unknown');
   });
 
-  it('keeps a guide subject and drops a subject with a line break', () => {
-    expect(resolveSubject('מסע דף, שאלה מהמדריך: סימון חצי דף', 'מסע דף: שאלה')).toBe(
-      'מסע דף, שאלה מהמדריך: סימון חצי דף',
+  it('builds a guide subject from a bounded topic', () => {
+    expect(resolveSupportSubject('מסע דף: שאלה', 'סימון חצי דף')).toBe(
+      `${GUIDE_QUESTION_SUBJECT_PREFIX}סימון חצי דף`,
     );
-    expect(resolveSubject(`באג\nBcc: victim@example.com`, 'מסע דף: דיווח על באג')).toBeNull();
+    expect(resolveSupportSubject('מסע דף: שאלה', '')).toBe('מסע דף: שאלה');
   });
 
-  it('caps a long subject', () => {
-    const subject = resolveSubject('א'.repeat(SUBJECT_MAX_LENGTH + 40), 'מסע דף: שאלה');
-    expect(subject).toBe('א'.repeat(SUBJECT_MAX_LENGTH));
+  it('rejects a guide topic with a line break', () => {
+    expect(resolveGuideTopic('נושא\nBcc: victim@example.com')).toBeNull();
+  });
+
+  it('caps a long guide topic before building the subject', () => {
+    const topic = resolveGuideTopic('א'.repeat(GUIDE_TOPIC_MAX_LENGTH + 40));
+    expect(topic).toBe('א'.repeat(GUIDE_TOPIC_MAX_LENGTH));
+    const subject = resolveSupportSubject('מסע דף: שאלה', topic ?? '');
+    expect(subject.length).toBeLessThanOrEqual(SUBJECT_MAX_LENGTH);
+  });
+
+  it('rejects reply emails with control characters or empty labels', () => {
+    expect(isValidReplyEmail('user@example.com')).toBe(true);
+    expect(isValidReplyEmail('user\u0000@example.com')).toBe(false);
+    expect(isValidReplyEmail('@example.com')).toBe(false);
+    expect(isValidReplyEmail('user@com')).toBe(false);
   });
 
   it('accepts a jpeg and rejects bytes that are not an image', () => {

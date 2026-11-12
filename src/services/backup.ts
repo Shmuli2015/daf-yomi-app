@@ -1,11 +1,9 @@
 import Constants from 'expo-constants';
 import { format, parseISO } from 'date-fns';
 import { he } from 'date-fns/locale/he';
-import * as DocumentPicker from 'expo-document-picker';
-import { Directory } from 'expo-file-system';
+import { Directory, File } from 'expo-file-system';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import { Share } from 'react-native';
 import {
   getAllRecords,
   getSettings,
@@ -17,10 +15,7 @@ import {
 import { toFileSharingUrl } from '../utils/shareProgressImage';
 import { normalizeAutoBackupInterval } from '../utils/autoBackupInterval';
 import { clampReaderFontSize, READER_FONT_SIZE_DEFAULT } from '../utils/readerFontSize';
-import {
-  computeBackupChecksum,
-  buildBackupCanonicalPayload,
-} from '../utils/backupChecksum';
+import { computeBackupDocumentChecksum } from '../utils/backupChecksum';
 
 export const CURRENT_BACKUP_VERSION = 2;
 export const MAX_BACKUP_SIZE_BYTES = 5 * 1024 * 1024;
@@ -63,22 +58,53 @@ function stripSettingsId(settings: SettingsRecord): BackupSettings {
   return rest;
 }
 
+function stripPersonalTrackId(record: PersonalTrackRecord): PersonalTrackRecord {
+  const { id: _id, ...rest } = record;
+  return {
+    masechet: rest.masechet,
+    daf_num: rest.daf_num,
+    status: rest.status,
+    amud: rest.amud === 'a' || rest.amud === 'b' ? rest.amud : null,
+    learnedAt: rest.learnedAt,
+  };
+}
+
 export function buildBackupData(): BackupData {
   const records = getAllRecords().map(stripRecordId);
   const settings = settingsForExport(stripSettingsId(getSettings()));
-  const personalTrackRecords = getPersonalTrackRecords();
-  const checksum = computeBackupChecksum(
-    buildBackupCanonicalPayload(records, settings, personalTrackRecords),
-  );
-
-  return {
+  const personalTrackRecords = getPersonalTrackRecords().map(stripPersonalTrackId);
+  const normalizedSettings = validateBackupSettings(settings);
+  if (!normalizedSettings) {
+    throw new Error('backup_settings_invalid');
+  }
+  const normalizedRecords: BackupRecord[] = [];
+  for (const record of records) {
+    const normalized = validateBackupRecord(record);
+    if (!normalized) {
+      throw new Error('backup_records_invalid');
+    }
+    normalizedRecords.push(normalized);
+  }
+  const normalizedPersonalTrackRecords: PersonalTrackRecord[] = [];
+  for (const record of personalTrackRecords) {
+    const normalized = validatePersonalTrackRecord(record);
+    if (!normalized) {
+      throw new Error('backup_personal_track_invalid');
+    }
+    normalizedPersonalTrackRecords.push(normalized);
+  }
+  const dataWithoutChecksum = {
     backupVersion: CURRENT_BACKUP_VERSION,
     exportedAt: new Date().toISOString(),
     appVersion: Constants.expoConfig?.version ?? 'unknown',
-    records,
-    settings,
-    personalTrackRecords,
-    checksum,
+    records: normalizedRecords,
+    settings: normalizedSettings,
+    personalTrackRecords: normalizedPersonalTrackRecords,
+  };
+
+  return {
+    ...dataWithoutChecksum,
+    checksum: computeBackupDocumentChecksum(dataWithoutChecksum),
   };
 }
 
@@ -240,14 +266,6 @@ function migrateBackup(raw: Record<string, unknown>): BackupData | null {
     }
   }
 
-  if (typeof raw.checksum === 'string' && raw.checksum.length > 0) {
-    const canonicalPayload = buildBackupCanonicalPayload(records, settings, personalTrackRecords);
-    const expectedChecksum = computeBackupChecksum(canonicalPayload);
-    if (raw.checksum !== expectedChecksum) {
-      return null;
-    }
-  }
-
   return {
     backupVersion: version,
     exportedAt:
@@ -261,13 +279,14 @@ function migrateBackup(raw: Record<string, unknown>): BackupData | null {
 }
 
 export function parseBackupJson(json: string): BackupParseResult {
-  if (typeof json !== 'string' || json.length > MAX_BACKUP_SIZE_BYTES) {
+  const normalizedJson = json.replace(/^\uFEFF/, '');
+  if (typeof normalizedJson !== 'string' || normalizedJson.length > MAX_BACKUP_SIZE_BYTES) {
     return { ok: false, error: 'קובץ הגיבוי גדול מדי (מעל 5MB).' };
   }
 
   let parsed: unknown;
   try {
-    parsed = JSON.parse(json);
+    parsed = JSON.parse(normalizedJson);
   } catch {
     return { ok: false, error: 'הקובץ אינו בפורמט JSON תקין.' };
   }
@@ -278,7 +297,10 @@ export function parseBackupJson(json: string): BackupParseResult {
 
   const data = migrateBackup(parsed as Record<string, unknown>);
   if (!data) {
-    return { ok: false, error: 'לא ניתן לקרוא את קובץ הגיבוי. ייתכן שהוא פגום או מגרסה חדשה מדי.' };
+    return {
+      ok: false,
+      error: 'לא ניתן לקרוא את קובץ הגיבוי. ייתכן שהוא פגום או מגרסה חדשה מדי.',
+    };
   }
 
   return { ok: true, data };
@@ -376,20 +398,16 @@ export async function exportAndShareBackup(): Promise<'success' | 'cancelled' | 
       encoding: FileSystem.EncodingType.UTF8,
     });
 
-    const shareUrl = toFileSharingUrl(dest);
-    if (await Sharing.isAvailableAsync()) {
-      await Sharing.shareAsync(shareUrl, {
-        mimeType: 'application/json',
-        dialogTitle: 'ייצוא גיבוי מסע דף',
-        UTI: 'public.json',
-      });
-    } else {
-      await Share.share({
-        title: 'גיבוי מסע דף',
-        message: json,
-        url: shareUrl,
-      });
+    if (!(await Sharing.isAvailableAsync())) {
+      return 'error';
     }
+
+    const shareUrl = toFileSharingUrl(dest);
+    await Sharing.shareAsync(shareUrl, {
+      mimeType: 'application/json',
+      dialogTitle: 'ייצוא גיבוי מסע דף',
+      UTI: 'public.json',
+    });
 
     return 'success';
   } catch (error) {
@@ -400,30 +418,39 @@ export async function exportAndShareBackup(): Promise<'success' | 'cancelled' | 
   }
 }
 
+async function readBackupFileText(file: File): Promise<string> {
+  try {
+    return await file.text();
+  } catch {
+    try {
+      return file.textSync();
+    } catch {
+      return FileSystem.readAsStringAsync(file.uri, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+    }
+  }
+}
+
 export async function pickAndReadBackupFile(): Promise<
   { ok: true; data: BackupData } | { ok: false; error: string } | 'cancelled'
 > {
   try {
-    const result = await DocumentPicker.getDocumentAsync({
-      type: ['application/json', 'application/octet-stream'],
-      copyToCacheDirectory: true,
+    const picked = await File.pickFileAsync({
+      mimeTypes: ['application/json', 'text/plain', 'application/octet-stream'],
     });
 
-    if (result.canceled || !result.assets?.[0]?.uri) {
+    if (picked.canceled || !picked.result) {
       return 'cancelled';
     }
 
-    const asset = result.assets[0];
-    if (typeof asset.size === 'number' && asset.size > MAX_BACKUP_SIZE_BYTES) {
+    const file = picked.result;
+    if (file.size > MAX_BACKUP_SIZE_BYTES) {
       return { ok: false, error: 'קובץ הגיבוי גדול מדי (מעל 5MB).' };
     }
 
-    const uri = asset.uri;
-    const json = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.UTF8,
-    });
-
-    const parsed = parseBackupJson(json);
+    const json = await readBackupFileText(file);
+    const parsed = parseBackupJson(json.replace(/^\uFEFF/, ''));
     if (!parsed.ok) {
       return { ok: false, error: parsed.error };
     }

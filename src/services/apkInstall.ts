@@ -29,10 +29,22 @@ export class ApkInstallError extends Error {
 
 const TRUSTED_RELEASE_DOWNLOAD_PREFIX = 'https://github.com/Shmuli2015/daf-yomi-app/releases/download/';
 const MINIMUM_VALID_APK_SIZE_BYTES = 5 * 1024 * 1024;
+const SAFE_APK_FILE_NAME = /^[A-Za-z0-9._-]+\.apk$/;
 
 export function isTrustedApkDownloadUrl(url: string): boolean {
   if (typeof url !== 'string') return false;
   return url.startsWith(TRUSTED_RELEASE_DOWNLOAD_PREFIX);
+}
+
+export function sanitizeApkFileName(fileName: string): string | null {
+  if (typeof fileName !== 'string') {
+    return null;
+  }
+  const baseName = fileName.replace(/\\/g, '/').split('/').pop()?.trim() ?? '';
+  if (!SAFE_APK_FILE_NAME.test(baseName)) {
+    return null;
+  }
+  return baseName;
 }
 
 export function getDownloadPageUrl(): string {
@@ -80,10 +92,15 @@ export async function downloadApk(
     throw new ApkInstallError('download_failed', 'כתובת ההורדה אינה מאושרת.');
   }
 
-  await ensureUpdatesDir();
-  await cleanupOldApkDownloads(fileName);
+  const safeFileName = sanitizeApkFileName(fileName);
+  if (!safeFileName) {
+    throw new ApkInstallError('download_failed', 'שם קובץ ההתקנה אינו תקין.');
+  }
 
-  const localUri = `${UPDATES_DIR}${fileName}`;
+  await ensureUpdatesDir();
+  await cleanupOldApkDownloads(safeFileName);
+
+  const localUri = `${UPDATES_DIR}${safeFileName}`;
   const callback = onProgress
     ? (data: FileSystem.DownloadProgressData) => {
         const total =

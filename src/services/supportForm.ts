@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { extractGuideTopic } from '../supportContact';
 import { fetchWithTimeout } from '../utils/fetchWithTimeout';
 import {
   validateSupportFormAttachments,
@@ -36,7 +37,7 @@ export type SupportFormSubmitPayload = {
   appVersion: string;
   platform: string;
   honeypot?: string;
-  subjectOverride?: string;
+  guideTopic?: string;
   attachments?: SupportFormAttachmentPayload[];
 };
 
@@ -108,8 +109,9 @@ export function buildSupportFormPayload(input: SupportFormInput & {
   if (phone) {
     payload.phone = normalizeIsraeliPhoneInput(phone);
   }
-  if (input.subjectOverride?.trim()) {
-    payload.subjectOverride = input.subjectOverride.trim();
+  const guideTopic = extractGuideTopic(input.subjectOverride);
+  if (guideTopic) {
+    payload.guideTopic = guideTopic;
   }
   if (input.honeypot) {
     payload.honeypot = input.honeypot;
