@@ -10,7 +10,7 @@ export const PRIVACY_POLICY_URL = 'https://shmuli2015.github.io/daf-yomi-app/pri
 
 const SUPPORT_MAIL_SUBJECT = 'מסע דף, יצירת קשר / הצעה לשיפור';
 
-const GUIDE_QUESTION_SUBJECT_PREFIX = 'מסע דף, שאלה מהמדריך: ';
+export const GUIDE_QUESTION_SUBJECT_PREFIX = 'מסע דף, שאלה מהמדריך: ';
 
 export function getSupportMailtoUrl(subject: string = SUPPORT_MAIL_SUBJECT, body?: string): string {
   let url = `mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent(subject)}`;
@@ -22,6 +22,18 @@ export function getSupportMailtoUrl(subject: string = SUPPORT_MAIL_SUBJECT, body
 
 export function getGuideQuestionSubject(question: string): string {
   return `${GUIDE_QUESTION_SUBJECT_PREFIX}${question.trim()}`;
+}
+
+export function extractGuideTopic(subjectOrTopic: string | undefined): string | undefined {
+  const trimmed = subjectOrTopic?.trim() ?? '';
+  if (!trimmed) {
+    return undefined;
+  }
+  if (trimmed.startsWith(GUIDE_QUESTION_SUBJECT_PREFIX)) {
+    const topic = trimmed.slice(GUIDE_QUESTION_SUBJECT_PREFIX.length).trim();
+    return topic.length > 0 ? topic : undefined;
+  }
+  return trimmed;
 }
 
 export function getSupportMailtoUrlFromDraft(draft: SupportMailDraft): string {

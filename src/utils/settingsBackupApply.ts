@@ -30,7 +30,8 @@ export function backupImportFeedback(
       title: 'הגיבוי יובא בהצלחה',
       message: 'הנתונים מוזגו עם ההיסטוריה הקיימת.',
       iconName: 'checkmark-circle',
-      compact: true,
+      toast: true,
+      autoCloseMs: 3000,
     };
   }
   if (scheduleFailed) {
@@ -39,17 +40,18 @@ export function backupImportFeedback(
       message:
         'כל הנתונים וההגדרות הוחלפו בגיבוי. לא הצלחנו לתזמן מחדש את התזכורות. אפשר לשמור שוב את שעת התזכורת בהגדרות.',
       iconName: 'alert-circle-outline',
-      compact: true,
+      toast: true,
+      autoCloseMs: 4500,
     };
   }
   return {
     title: 'הגיבוי יובא בהצלחה',
     message: 'כל הנתונים וההגדרות הוחלפו בגיבוי.',
     iconName: 'checkmark-circle',
-    compact: true,
+    toast: true,
+    autoCloseMs: 3000,
   };
 }
-
 export async function applyImportedBackup(
   backup: BackupData,
   mode: BackupImportMode,

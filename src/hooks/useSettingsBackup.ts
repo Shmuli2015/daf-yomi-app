@@ -75,7 +75,8 @@ export function useSettingsBackup({
                 ? 'הגיבוי יתעדכן בתיקייה שנבחרה לפי התדירות שבהגדרות.'
                 : 'קובץ הגיבוי נשמר בתיקייה שבחרת, ויתעדכן לפי התדירות שבהגדרות.',
           iconName: 'checkmark-circle',
-          compact: true,
+          toast: true,
+          autoCloseMs: 3000,
         });
         return;
       }
@@ -114,7 +115,8 @@ export function useSettingsBackup({
           title: 'תיקיית הגיבוי עודכנה',
           message: 'קובץ הגיבוי נשמר בתיקייה החדשה.',
           iconName: 'checkmark-circle',
-          compact: true,
+          toast: true,
+          autoCloseMs: 3000,
         });
         return;
       }
@@ -142,10 +144,10 @@ export function useSettingsBackup({
         markBackupExported();
         onFeedback({
           title: 'הגיבוי נשמר',
-          message: 'קובץ הגיבוי נשמר בהצלחה בתיקייה שבחרת.',
-          emphasis: result.fileName,
+          message: `הקובץ ${result.fileName} נשמר בהצלחה.`,
           iconName: 'checkmark-circle',
-          compact: true,
+          toast: true,
+          autoCloseMs: 3000,
         });
       } else if (result.status === 'error') {
         onFeedback({

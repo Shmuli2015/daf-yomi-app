@@ -30,7 +30,12 @@ jest.mock('expo-intent-launcher', () => ({
   },
 }));
 
-import { isTrustedApkDownloadUrl, downloadApk, ApkInstallError } from '../apkInstall';
+import {
+  isTrustedApkDownloadUrl,
+  sanitizeApkFileName,
+  downloadApk,
+  ApkInstallError,
+} from '../apkInstall';
 
 describe('apkInstall security validation', () => {
   it('validates trusted GitHub release download URLs', () => {
@@ -49,9 +54,23 @@ describe('apkInstall security validation', () => {
     expect(isTrustedApkDownloadUrl('' as string)).toBe(false);
   });
 
+  it('sanitizes apk file names to a safe basename', () => {
+    expect(sanitizeApkFileName('masa-daf-1.2.4.apk')).toBe('masa-daf-1.2.4.apk');
+    expect(sanitizeApkFileName('../evil.apk')).toBe('evil.apk');
+    expect(sanitizeApkFileName('nested/path/app.apk')).toBe('app.apk');
+    expect(sanitizeApkFileName('bad name.apk')).toBeNull();
+    expect(sanitizeApkFileName('payload.exe')).toBeNull();
+  });
+
   it('throws ApkInstallError if download URL is untrusted', async () => {
     await expect(downloadApk('https://untrusted.com/app.apk', 'app.apk')).rejects.toThrow(
       ApkInstallError,
     );
+  });
+
+  it('throws ApkInstallError if apk file name is unsafe', async () => {
+    const trustedUrl =
+      'https://github.com/Shmuli2015/daf-yomi-app/releases/download/v1.2.4/masa-daf-1.2.4.apk';
+    await expect(downloadApk(trustedUrl, 'bad name.apk')).rejects.toThrow(ApkInstallError);
   });
 });

@@ -4,9 +4,10 @@ import {
   decodeBase64,
   detectImageType,
   getClientIp,
-  isWithinEmailLength,
+  isValidReplyEmail,
   readLimitedJson,
-  resolveSubject,
+  resolveGuideTopic,
+  resolveSupportSubject,
 } from './requestGuards';
 
 type SupportFormCategory = 'bug' | 'question' | 'suggestion';
@@ -26,7 +27,7 @@ type SupportFormRequest = {
   appVersion?: unknown;
   platform?: unknown;
   honeypot?: unknown;
-  subjectOverride?: unknown;
+  guideTopic?: unknown;
   attachment?: SupportFormAttachmentRequest;
   attachments?: unknown;
 };
@@ -48,7 +49,6 @@ const ATTACHMENT_MAX_BASE64_LENGTH = Math.ceil((ATTACHMENT_MAX_BYTES * 4) / 3) +
 const ATTACHMENT_MAX_COUNT = 3;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const CATEGORY_LABELS: Record<SupportFormCategory, string> = {
   bug: 'באג',
@@ -64,28 +64,22 @@ const CATEGORY_SUBJECTS: Record<SupportFormCategory, string> = {
 
 const rateLimitByIp = new Map<string, { count: number; resetAt: number }>();
 
-function corsHeaders(request: Request): HeadersInit {
-  const origin = request.headers.get('Origin') ?? '*';
+function responseHeaders(): HeadersInit {
   return {
-    'Access-Control-Allow-Origin': origin,
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Accept',
-    'Access-Control-Max-Age': '86400',
-    Vary: 'Origin',
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
   };
 }
 
 function jsonResponse(
-  request: Request,
+  _request: Request,
   body: Record<string, unknown>,
   status: number,
 ): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: {
-      ...corsHeaders(request),
-      'Content-Type': 'application/json; charset=utf-8',
-    },
+    headers: responseHeaders(),
   });
 }
 
@@ -95,10 +89,6 @@ function isCategory(value: unknown): value is SupportFormCategory {
 
 function asTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : '';
-}
-
-function isValidEmail(value: string): boolean {
-  return EMAIL_PATTERN.test(value);
 }
 
 function normalizeIsraeliPhone(raw: string): string {
@@ -376,7 +366,10 @@ export default {
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 204,
-        headers: corsHeaders(request),
+        headers: {
+          'Cache-Control': 'no-store',
+          'X-Content-Type-Options': 'nosniff',
+        },
       });
     }
 
@@ -414,7 +407,7 @@ export default {
     }
 
     const replyEmail = asTrimmedString(body.replyEmail);
-    if (replyEmail && (!isWithinEmailLength(replyEmail) || !isValidEmail(replyEmail))) {
+    if (replyEmail && !isValidReplyEmail(replyEmail)) {
       return jsonResponse(request, { ok: false, error: 'invalid_email' }, 400);
     }
 
@@ -432,13 +425,11 @@ export default {
     if (appVersion === null || platform === null) {
       return jsonResponse(request, { ok: false, error: 'invalid_meta' }, 400);
     }
-    const subject = resolveSubject(
-      asTrimmedString(body.subjectOverride),
-      CATEGORY_SUBJECTS[body.category],
-    );
-    if (!subject) {
+    const guideTopic = resolveGuideTopic(asTrimmedString(body.guideTopic));
+    if (guideTopic === null) {
       return jsonResponse(request, { ok: false, error: 'invalid_subject' }, 400);
     }
+    const subject = resolveSupportSubject(CATEGORY_SUBJECTS[body.category], guideTopic);
     const parsedAttachments = parseAttachments(body);
     if (!parsedAttachments.ok) {
       return jsonResponse(request, { ok: false, error: parsedAttachments.error }, 400);

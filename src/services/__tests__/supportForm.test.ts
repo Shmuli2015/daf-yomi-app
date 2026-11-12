@@ -66,6 +66,23 @@ describe('supportForm', () => {
     );
   });
 
+  it('sends guideTopic instead of a free subject override', () => {
+    const payload = buildSupportFormPayload({
+      category: 'question',
+      message: 'שאלה מהמדריך',
+      replyEmail: '',
+      phone: '',
+      subjectOverride: 'מסע דף, שאלה מהמדריך: סימון חצי דף',
+    });
+    expect(payload).toEqual(
+      expect.objectContaining({
+        category: 'question',
+        guideTopic: 'סימון חצי דף',
+      }),
+    );
+    expect(payload).not.toHaveProperty('subjectOverride');
+  });
+
   it('returns null when validation fails', () => {
     expect(
       buildSupportFormPayload({

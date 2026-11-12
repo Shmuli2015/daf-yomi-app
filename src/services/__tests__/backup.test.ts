@@ -8,9 +8,11 @@ jest.mock('../../utils/shareProgressImage', () => ({
 jest.mock('expo-constants', () => ({
   expoConfig: { version: '1.1.6' },
 }));
-jest.mock('expo-document-picker', () => ({}));
 jest.mock('expo-file-system', () => ({
   Directory: { pickDirectoryAsync: jest.fn() },
+  File: {
+    pickFileAsync: jest.fn(),
+  },
 }));
 jest.mock('expo-file-system/legacy', () => ({
   documentDirectory: 'file:///data/',
@@ -30,18 +32,17 @@ jest.mock('../../db/database', () => ({
 }));
 
 import {
+  buildBackupData,
   parseBackupJson,
   MAX_BACKUP_SIZE_BYTES,
   CURRENT_BACKUP_VERSION,
   type BackupData,
 } from '../backup';
-import {
-  computeBackupChecksum,
-  buildBackupCanonicalPayload,
-} from '../../utils/backupChecksum';
+import { computeBackupDocumentChecksum } from '../../utils/backupChecksum';
+import { getAllRecords, getPersonalTrackRecords, getSettings } from '../../db/database';
 
 describe('backup security and validation', () => {
-  const validBackup: BackupData = {
+  const validBackupBase = {
     backupVersion: CURRENT_BACKUP_VERSION,
     exportedAt: '2026-09-24T12:00:00.000Z',
     appVersion: '1.1.6',
@@ -50,9 +51,9 @@ describe('backup security and validation', () => {
         date: '2026-09-24',
         masechet: 'ברכות',
         daf: 'ב',
-        status: 'learned',
+        status: 'learned' as const,
         percentage: 100,
-        amud: 'a',
+        amud: 'a' as const,
         learnedAt: '2026-09-24T12:30:00.000Z',
       },
     ],
@@ -103,11 +104,16 @@ describe('backup security and validation', () => {
       {
         masechet: 'ברכות',
         daf_num: 2,
-        status: 'learned',
-        amud: 'a',
+        status: 'learned' as const,
+        amud: 'a' as const,
         learnedAt: '2026-09-24T12:30:00.000Z',
       },
     ],
+  };
+
+  const validBackup: BackupData = {
+    ...validBackupBase,
+    checksum: computeBackupDocumentChecksum(validBackupBase),
   };
 
   it('parses valid backup data successfully', () => {
@@ -122,18 +128,23 @@ describe('backup security and validation', () => {
   });
 
   it('drops device auto backup paths from parsed settings', () => {
-    const json = JSON.stringify({
+    const settingsWithDevicePaths = {
+      ...validBackup.settings,
+      auto_backup_enabled: 1,
+      auto_backup_interval: 'daily' as const,
+      auto_backup_file_uri: 'content://device/current',
+      auto_backup_previous_file_uri: 'content://device/previous',
+      auto_backup_directory_uri: 'content://device/tree',
+      auto_backup_failed: 1,
+      auto_backup_issue: 'missing',
+    };
+    const document = {
       ...validBackup,
-      settings: {
-        ...validBackup.settings,
-        auto_backup_enabled: 1,
-        auto_backup_interval: 'daily',
-        auto_backup_file_uri: 'content://device/current',
-        auto_backup_previous_file_uri: 'content://device/previous',
-        auto_backup_directory_uri: 'content://device/tree',
-        auto_backup_failed: 1,
-        auto_backup_issue: 'missing',
-      },
+      settings: settingsWithDevicePaths,
+    };
+    const json = JSON.stringify({
+      ...document,
+      checksum: computeBackupDocumentChecksum(document),
     });
     const result = parseBackupJson(json);
     expect(result.ok).toBe(true);
@@ -233,26 +244,57 @@ describe('backup security and validation', () => {
   });
 
   it('accepts backup with valid checksum', () => {
-    const payload = buildBackupCanonicalPayload(
-      validBackup.records,
-      validBackup.settings,
-      validBackup.personalTrackRecords,
-    );
-    const checksum = computeBackupChecksum(payload);
-    const dataWithChecksum = {
-      ...validBackup,
-      checksum,
-    };
-    const result = parseBackupJson(JSON.stringify(dataWithChecksum));
+    const result = parseBackupJson(JSON.stringify(validBackup));
     expect(result.ok).toBe(true);
   });
 
-  it('rejects backup with tampered checksum', () => {
+  it('accepts v2 backup without checksum', () => {
+    const result = parseBackupJson(JSON.stringify(validBackupBase));
+    expect(result.ok).toBe(true);
+  });
+
+  it('accepts backup even when checksum does not match', () => {
     const dataWithBadChecksum = {
       ...validBackup,
       checksum: 'badchecksum12345',
     };
     const result = parseBackupJson(JSON.stringify(dataWithBadChecksum));
-    expect(result.ok).toBe(false);
+    expect(result.ok).toBe(true);
+  });
+
+  it('round-trips buildBackupData through parseBackupJson with personal track ids stripped', () => {
+    (getAllRecords as jest.Mock).mockReturnValue([
+      {
+        id: 9,
+        date: '2026-09-24',
+        masechet: 'ברכות',
+        daf: 'ב',
+        status: 'learned',
+        percentage: 100,
+        amud: 'a',
+        learnedAt: '2026-09-24T12:30:00.000Z',
+      },
+    ]);
+    (getSettings as jest.Mock).mockReturnValue({
+      id: 1,
+      ...validBackup.settings,
+      auto_backup_enabled: 1,
+      auto_backup_directory_uri: 'content://device/tree',
+    });
+    (getPersonalTrackRecords as jest.Mock).mockReturnValue([
+      {
+        id: 42,
+        masechet: 'ברכות',
+        daf_num: 2,
+        status: 'learned',
+        amud: 'a',
+        learnedAt: '2026-09-24T12:30:00.000Z',
+      },
+    ]);
+
+    const exported = buildBackupData();
+    expect(exported.personalTrackRecords?.[0]).not.toHaveProperty('id');
+    const result = parseBackupJson(JSON.stringify(exported, null, 2));
+    expect(result.ok).toBe(true);
   });
 });

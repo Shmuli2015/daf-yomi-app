@@ -1,9 +1,12 @@
 export const MAX_BODY_BYTES = 4_500_000;
 export const SUBJECT_MAX_LENGTH = 200;
+export const GUIDE_TOPIC_MAX_LENGTH = 120;
 export const EMAIL_MAX_LENGTH = 254;
 export const META_MAX_LENGTH = 64;
+export const GUIDE_QUESTION_SUBJECT_PREFIX = 'מסע דף, שאלה מהמדריך: ';
 
 const CONTROL_CHARS = /[\u0000-\u001F\u007F]/;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const IMAGE_EXTENSIONS = {
   'image/jpeg': 'jpg',
@@ -33,15 +36,39 @@ export function capText(value: string, maxLength: number): string {
   return chars.slice(0, maxLength).join('');
 }
 
-export function resolveSubject(override: string, fallback: string): string | null {
-  if (!override) {
-    return fallback;
+export function resolveGuideTopic(raw: string): string | null {
+  if (!raw) {
+    return '';
   }
-  const subject = capText(override, SUBJECT_MAX_LENGTH);
-  if (hasControlChars(subject)) {
+  const topic = capText(raw, GUIDE_TOPIC_MAX_LENGTH);
+  if (hasControlChars(topic)) {
     return null;
   }
-  return subject;
+  return topic;
+}
+
+export function resolveSupportSubject(categorySubject: string, guideTopic: string): string {
+  if (!guideTopic) {
+    return categorySubject;
+  }
+  return capText(`${GUIDE_QUESTION_SUBJECT_PREFIX}${guideTopic}`, SUBJECT_MAX_LENGTH);
+}
+
+export function isValidReplyEmail(value: string): boolean {
+  if (!value || !isWithinEmailLength(value) || hasControlChars(value)) {
+    return false;
+  }
+  if (!EMAIL_PATTERN.test(value)) {
+    return false;
+  }
+  const [localPart, domain] = value.split('@');
+  if (!localPart || !domain || localPart.length === 0 || domain.length < 3) {
+    return false;
+  }
+  if (!domain.includes('.') || domain.startsWith('.') || domain.endsWith('.')) {
+    return false;
+  }
+  return true;
 }
 
 export function boundedMeta(value: string): string | null {
