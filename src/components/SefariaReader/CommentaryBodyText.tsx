@@ -31,14 +31,16 @@ export default function CommentaryBodyText({
 }: CommentaryBodyTextProps) {
   const theme = useTheme();
   const highlightStyles = useMemo(() => createSearchHighlightTextStyles(theme), [theme]);
-  const sanitized = stripEmDash(text);
-  const prepared =
-    commentator === 'steinsaltz'
-      ? stripSteinsaltzSectionLetters(sanitized)
-      : commentator
-        ? emphasizeRashiDibur(sanitized)
-        : sanitized;
-  const runs = parseCommentaryRuns(prepared);
+  const runs = useMemo(() => {
+    const sanitized = stripEmDash(text);
+    const prepared =
+      commentator === 'steinsaltz'
+        ? stripSteinsaltzSectionLetters(sanitized)
+        : commentator
+          ? emphasizeRashiDibur(sanitized)
+          : sanitized;
+    return parseCommentaryRuns(prepared);
+  }, [commentator, text]);
   const hasSearchQuery = searchQuery.trim().length > 0;
   let occurrenceCursor = -1;
 

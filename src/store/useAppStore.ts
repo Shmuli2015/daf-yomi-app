@@ -13,6 +13,7 @@ import type { BackupData } from '../services/backup';
 import { getDafDayDate } from '../utils/dafDayBoundary';
 import type { DafDayStartDaySchedule } from '../utils/dafDayBoundary';
 import { getDafByDate, getDateStr } from '../utils/dafYomi';
+import { buildRecentHistoryKey } from '../utils/last7Days';
 import { scheduleNotifications } from '../utils/notifications';
 import {
   reminderModeFromSettings,
@@ -61,10 +62,24 @@ function patchHistoryByDates(history: DailyRecord[], dates: string[]): DailyReco
   return next;
 }
 
+function historySlice(history: DailyRecord[]) {
+  const recordByDate = new Map<string, DailyRecord>();
+  for (let i = 0; i < history.length; i += 1) {
+    recordByDate.set(history[i].date, history[i]);
+  }
+  return {
+    history,
+    recentHistoryKey: buildRecentHistoryKey(history),
+    recordByDate,
+  };
+}
+
 interface AppState {
   currentDate: Date;
   todayRecord: DailyRecord | null;
   history: DailyRecord[];
+  recentHistoryKey: string;
+  recordByDate: Map<string, DailyRecord>;
   settings: SettingsRecord | null;
   todayDafText: string;
   todayMasechet: string;
@@ -160,7 +175,7 @@ interface AppState {
 export const useAppStore = create<AppState>((set, get) => ({
   currentDate: new Date(),
   todayRecord: null,
-  history: [],
+  ...historySlice([]),
   settings: null,
   todayDafText: '',
   todayMasechet: '',
@@ -262,7 +277,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const record = nextHistory.find(r => r.date === dateStr) || null;
 
     set({
-      history: nextHistory,
+      ...historySlice(nextHistory),
       progressCache: cache,
       todayRecord: record,
       streak: cache.streak
@@ -602,7 +617,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { personalTrackRecords, settings } = get();
     const cache = buildProgressCache([], isPersonalTrackEnabled(settings) ? personalTrackRecords : []);
     set({
-      history: [],
+      ...historySlice([]),
       todayRecord: null,
       streak: 0,
       progressCache: cache,
@@ -634,7 +649,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       currentDate: today,
       todayRecord: null,
-      history: [],
+      ...historySlice([]),
       settings,
       personalTrackRecords: [],
       activePersonalMasechet: null,

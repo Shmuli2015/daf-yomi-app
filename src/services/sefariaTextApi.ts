@@ -114,7 +114,40 @@ async function ensureCacheDir(): Promise<string> {
 function getCacheFilePath(tref: string, plainGemara: boolean): string {
   const safeTref = tref.replace(/\./g, '_');
   const variant = plainGemara ? '.plain' : '';
-  return `${CACHE_DIR}${safeTref}${variant}.json`;
+  return `${CACHE_DIR}${safeTref}${variant}.v${SEFARIA_TEXT_CACHE_VERSION}.json`;
+}
+
+function abortError(): Error {
+  const error = new Error('Aborted');
+  error.name = 'AbortError';
+  return error;
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw abortError();
+  }
+}
+
+async function withCallerAbort<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) {
+    return promise;
+  }
+  throwIfAborted(signal);
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(abortError());
+    signal.addEventListener('abort', onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener('abort', onAbort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener('abort', onAbort);
+        reject(error);
+      },
+    );
+  });
 }
 
 export function cleanHebrewHtml(html: string): string {
@@ -145,6 +178,7 @@ interface FetchFromNetworkOptions {
   shekalimLocation?: { dafNum: number; amud: Amud; masechetHe: string };
   mishnahLocation?: { masechetEn: string; dafNum: number; amud: Amud };
   plainGemara?: boolean;
+  signal?: AbortSignal;
 }
 
 function appendCommentary(
@@ -169,8 +203,9 @@ function appendCommentary(
   commentaries[segIdx].push(item);
 }
 
-async function fetchJson(url: string): Promise<any> {
-  const response = await fetchWithTimeout(url);
+async function fetchJson(url: string, signal?: AbortSignal): Promise<any> {
+  throwIfAborted(signal);
+  const response = await fetchWithTimeout(url, signal ? { signal } : undefined);
   if (!response.ok) {
     throw new Error(`Failed to fetch ${url}: HTTP ${response.status}`);
   }
@@ -187,21 +222,26 @@ async function fetchFromNetwork(
   const mainUrl = `https://www.sefaria.org/api/texts/${encodeURI(tref)}?context=0&commentary=0${versionQuery}`;
   const shekalim = Boolean(options.shekalimLocation);
   const commTypes = commentatorFetchSpecs(tref, shekalim);
+  const signal = options.signal;
 
-  const mainPromise = fetchJson(mainUrl);
+  const mainPromise = fetchJson(mainUrl, signal);
   const failedCommentators: SefariaCommentatorKey[] = [];
   const commPromises = commTypes.map(async (comm) => {
     try {
       const commUrl = `https://www.sefaria.org/api/texts/${encodeURI(comm.prefix)}?context=0`;
-      const json = await fetchJson(commUrl);
+      const json = await fetchJson(commUrl, signal);
       return { comm, json };
-    } catch {
+    } catch (err) {
+      if (signal?.aborted) {
+        throw err;
+      }
       failedCommentators.push(comm.key);
       return { comm, json: null };
     }
   });
 
   const [mainJson, ...commResults] = await Promise.all([mainPromise, ...commPromises]);
+  throwIfAborted(signal);
 
   const titleHe = options.displayTitleHe || mainJson.heTitle || mainJson.ref || tref;
   const titleEn = mainJson.ref || tref;
@@ -352,14 +392,7 @@ export async function hasCachedSefariaPageText(
     if (!fileInfo.exists || (fileInfo.size ?? 0) <= 100) {
       return false;
     }
-    const content = await FileSystem.readAsStringAsync(cachePath);
-    const parsed = JSON.parse(content) as SefariaPageData & { v?: number };
-    return (
-      !!parsed &&
-      parsed.v === SEFARIA_TEXT_CACHE_VERSION &&
-      Array.isArray(parsed.segments) &&
-      parsed.segments.length > 0
-    );
+    return true;
   } catch {
     return false;
   }
@@ -376,6 +409,7 @@ export class SefariaDiskWriteError extends Error {
 
 export interface FetchSefariaPageTextOptions {
   requireDiskCache?: boolean;
+  signal?: AbortSignal;
 }
 
 function readDiskPage(
@@ -401,6 +435,7 @@ async function loadSefariaPage(
   dafNum: number,
   amud: Amud,
   identity: NonNullable<ReturnType<typeof resolveSefariaCacheIdentity>>,
+  signal?: AbortSignal,
 ): Promise<SefariaLoadResult> {
   const { tref, plainGemara, shekalim, mishnah, sharedAmud } = identity;
   const memKey = memoryCacheKey(tref, plainGemara);
@@ -442,7 +477,7 @@ async function loadSefariaPage(
         : { plainGemara };
 
   const [data, chapters] = await Promise.all([
-    fetchFromNetwork(tref, networkOptions),
+    fetchFromNetwork(tref, { ...networkOptions, signal }),
     skipIndexChapters ? Promise.resolve([]) : fetchSefariaChapters(chapterSource).catch(() => []),
   ]);
 
@@ -491,23 +526,30 @@ export async function fetchSefariaPageText(
     return remembered;
   }
 
+  throwIfAborted(options.signal);
   const pending = inFlight.get(memKey);
-  const promise = pending ?? loadSefariaPage(masechetEn, dafNum, amud, identity);
+  const promise = pending ?? loadSefariaPage(masechetEn, dafNum, amud, identity, options.signal);
   if (!pending) {
     inFlight.set(memKey, promise);
+    void promise.then(
+      () => {
+        if (inFlight.get(memKey) === promise) {
+          inFlight.delete(memKey);
+        }
+      },
+      () => {
+        if (inFlight.get(memKey) === promise) {
+          inFlight.delete(memKey);
+        }
+      },
+    );
   }
 
-  try {
-    const result = await promise;
-    if (!result.savedToDisk && options.requireDiskCache) {
-      throw new SefariaDiskWriteError();
-    }
-    return result.data;
-  } finally {
-    if (inFlight.get(memKey) === promise) {
-      inFlight.delete(memKey);
-    }
+  const result = await withCallerAbort(promise, options.signal);
+  if (!result.savedToDisk && options.requireDiskCache) {
+    throw new SefariaDiskWriteError();
   }
+  return result.data;
 }
 
 export async function clearSefariaTextCache(): Promise<void> {

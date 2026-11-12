@@ -13,7 +13,7 @@ interface InlineCommentaryCardProps {
   isDark?: boolean;
 }
 
-export default function InlineCommentaryCard({
+function InlineCommentaryCard({
   item,
   accentColor,
   fontSize,
@@ -49,3 +49,5 @@ export default function InlineCommentaryCard({
     </View>
   );
 }
+
+export default React.memo(InlineCommentaryCard);

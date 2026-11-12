@@ -2,7 +2,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { AppUpdateModal } from '../components/AppUpdateModal';
 import Toast, { type ToastIconName } from '../components/Toast';
 import WhatsNewModal from '../components/WhatsNewModal';
-import GuideModal from '../components/Guide/GuideModal';
+import GuideModal from '../components/Guide/GuideModalGate';
 import { useAppUpdateCheck } from '../hooks/useAppUpdateCheck';
 import { useWhatsNewOnLaunch } from '../hooks/useWhatsNewOnLaunch';
 import { probeLatestReleaseForDev } from '../services/appUpdate';

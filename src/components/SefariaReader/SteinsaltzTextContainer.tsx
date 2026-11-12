@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
+  type ListRenderItem,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { SharedValue } from 'react-native-reanimated';
+import Animated, { type SharedValue } from 'react-native-reanimated';
 import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import CommentaryBodyText from './CommentaryBodyText';
 import ReaderSkeleton from './ReaderSkeleton';
@@ -20,6 +20,7 @@ import { mishnahJoinRoles } from '../../utils/mishnahJoin';
 import type { ReaderTheme } from './ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
+import { scrollReaderTo } from '../../utils/readerScroll';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
 import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
 import { createMishnahJoinStyles } from './mishnahJoin.styles';
@@ -77,9 +78,8 @@ export default function SteinsaltzTextContainer({
     () => createMishnahJoinStyles(theme, STEINSALTZ_TEXT_SCROLL_GAP),
     [theme],
   );
-  const segmentOffsetsRef = useRef<Map<string, number>>(new Map());
 
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop, scrollToY } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop, scrollToIndex } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey: data?.tref || '',
@@ -91,18 +91,12 @@ export default function SteinsaltzTextContainer({
       onAutoScrollPause,
     });
 
-  useEffect(() => {
-    if (!activeSearchSegmentId) return;
-    const y = segmentOffsetsRef.current.get(activeSearchSegmentId);
-    if (y == null) return;
-    scrollToY(Math.max(0, y - 24));
-  }, [activeSearchSegmentId, scrollToY]);
-
-  const { registerAnchor, clearSavedPosition } = useReaderPosition({
+  const { clearSavedPosition, reportVisibleIndex } = useReaderPosition({
     positionKey,
     scrollViewRef,
     scrollYRef,
     skipRestore: initialScrollOffset > 1,
+    scrollToIndex,
   });
 
   const handleScrollToTop = useCallback(() => {
@@ -127,6 +121,121 @@ export default function SteinsaltzTextContainer({
     [blocks],
   );
   const mishnahJoins = useMemo(() => mishnahJoinRoles(mishnahMarks), [mishnahMarks]);
+  const blockIndexBySegmentId = useMemo(() => {
+    const map = new Map<string, number>();
+    blocks.forEach((block, index) => {
+      if (block.kind === 'paragraph') {
+        map.set(block.item.ref, index);
+      }
+    });
+    return map;
+  }, [blocks]);
+
+  useEffect(() => {
+    if (!activeSearchSegmentId) return;
+    const index = blockIndexBySegmentId.get(activeSearchSegmentId);
+    if (index == null) return;
+    scrollToIndex(index);
+  }, [activeSearchOccurrenceIndex, activeSearchSegmentId, blockIndexBySegmentId, scrollToIndex]);
+
+  const reportVisibleIndexRef = useRef(reportVisibleIndex);
+  reportVisibleIndexRef.current = reportVisibleIndex;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 35 }).current;
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<{ index?: number | null; isViewable: boolean }> }) => {
+      const top = viewableItems.find((item) => item.isViewable && typeof item.index === 'number');
+      if (top && typeof top.index === 'number') {
+        reportVisibleIndexRef.current(top.index);
+      }
+    },
+  ).current;
+
+  const handleScrollToIndexFailed = useCallback(
+    (info: { index: number; averageItemLength: number }) => {
+      scrollReaderTo(scrollViewRef.current, info.averageItemLength * info.index, false);
+      setTimeout(() => scrollToIndex(info.index, 24, false), 60);
+    },
+    [scrollToIndex, scrollViewRef],
+  );
+
+  const listHeader = useMemo(
+    () => (
+      <View style={[styles.headerBox, { borderBottomColor: palette.borderColor }]}>
+        <Text style={[styles.titleHe, { color: palette.accentColor }]}>
+          {`שטיינזלץ · ${data?.titleHe ?? ''}`}
+        </Text>
+      </View>
+    ),
+    [data?.titleHe, palette.accentColor, palette.borderColor, styles.headerBox, styles.titleHe],
+  );
+
+  const renderItem = useCallback<ListRenderItem<(typeof blocks)[number]>>(
+    ({ item: block, index }) => {
+      if (block.kind === 'chapterStart') {
+        return (
+          <ChapterBoundaryMarker
+            kind="start"
+            titleHe={block.titleHe}
+            chapterNumber={block.chapterNumber}
+            palette={palette}
+          />
+        );
+      }
+      if (block.kind === 'chapterEnd') {
+        return (
+          <ChapterBoundaryMarker
+            kind="end"
+            titleHe={block.titleHe}
+            isMasechetEnd={block.isMasechetEnd}
+            masechetHe={block.masechetHe}
+            palette={palette}
+          />
+        );
+      }
+      const joinRole = mishnahJoins[index];
+      const isActiveSearchMatch = activeSearchSegmentId === block.item.ref;
+      const textStyle = [
+        styles.paragraphText,
+        {
+          color: palette.textColor,
+          fontSize,
+          lineHeight: Math.round(fontSize * 1.7),
+        },
+      ];
+      return (
+        <View
+          style={[
+            styles.paragraph,
+            joinRole && [
+              mishnahJoinStyles[joinRole],
+              { backgroundColor: palette.mishnahSurfaceColor },
+            ],
+            isActiveSearchMatch && { backgroundColor: palette.accentLight },
+          ]}
+        >
+          <CommentaryBodyText
+            text={block.item.he}
+            commentator="steinsaltz"
+            baseStyle={textStyle}
+            accentColor={palette.accentColor}
+            searchQuery={searchQuery}
+            activeOccurrenceIndex={isActiveSearchMatch ? activeSearchOccurrenceIndex : null}
+          />
+        </View>
+      );
+    },
+    [
+      activeSearchOccurrenceIndex,
+      activeSearchSegmentId,
+      fontSize,
+      mishnahJoinStyles,
+      mishnahJoins,
+      palette,
+      searchQuery,
+      styles.paragraph,
+      styles.paragraphText,
+    ],
+  );
 
   if (loading) {
     return (
@@ -178,8 +287,14 @@ export default function SteinsaltzTextContainer({
 
   return (
     <View style={[styles.container, { backgroundColor: palette.backgroundColor }]}>
-      <ScrollView
-        ref={scrollViewRef}
+      <Animated.FlatList
+        ref={scrollViewRef as never}
+        data={blocks}
+        keyExtractor={(block, index) =>
+          block.kind === 'paragraph' ? block.item.ref : `${block.kind}-${index}`
+        }
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
@@ -187,77 +302,13 @@ export default function SteinsaltzTextContainer({
         onScrollBeginDrag={handleScrollBeginDrag}
         onContentSizeChange={handleContentSizeChange}
         scrollEventThrottle={16}
-      >
-        <View style={[styles.headerBox, { borderBottomColor: palette.borderColor }]}>
-          <Text style={[styles.titleHe, { color: palette.accentColor }]}>{`שטיינזלץ · ${data.titleHe}`}</Text>
-        </View>
-
-        {blocks.map((block, index) => {
-          if (block.kind === 'chapterStart') {
-            return (
-              <ChapterBoundaryMarker
-                key={`chapter-start-${index}`}
-                kind="start"
-                titleHe={block.titleHe}
-                chapterNumber={block.chapterNumber}
-                palette={palette}
-              />
-            );
-          }
-          if (block.kind === 'chapterEnd') {
-            return (
-              <ChapterBoundaryMarker
-                key={`chapter-end-${index}`}
-                kind="end"
-                titleHe={block.titleHe}
-                isMasechetEnd={block.isMasechetEnd}
-                masechetHe={block.masechetHe}
-                palette={palette}
-              />
-            );
-          }
-          const joinRole = mishnahJoins[index];
-          const segmentId = block.item.ref;
-          const isActiveSearchMatch = activeSearchSegmentId === segmentId;
-          const textStyle = [
-            styles.paragraphText,
-            {
-              color: palette.textColor,
-              fontSize,
-              lineHeight: Math.round(fontSize * 1.7),
-            },
-          ];
-          return (
-            <View
-              key={`${block.item.ref}-${index}`}
-              onLayout={(event) => {
-                const y = event.nativeEvent.layout.y;
-                segmentOffsetsRef.current.set(segmentId, y);
-                registerAnchor(index, y);
-              }}
-              style={[
-                styles.paragraph,
-                joinRole && [
-                  mishnahJoinStyles[joinRole],
-                  { backgroundColor: palette.mishnahSurfaceColor },
-                ],
-                isActiveSearchMatch && { backgroundColor: palette.accentLight },
-              ]}
-            >
-              <CommentaryBodyText
-                text={block.item.he}
-                commentator="steinsaltz"
-                baseStyle={textStyle}
-                accentColor={palette.accentColor}
-                searchQuery={searchQuery}
-                activeOccurrenceIndex={
-                  isActiveSearchMatch ? activeSearchOccurrenceIndex : null
-                }
-              />
-            </View>
-          );
-        })}
-      </ScrollView>
+        windowSize={7}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged as never}
+        onScrollToIndexFailed={handleScrollToIndexFailed}
+      />
 
       <ScrollToTopFab
         visible={showFab}

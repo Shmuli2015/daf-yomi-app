@@ -1,9 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { useSplashScreenAnimations } from '../hooks/useSplashScreenAnimations';
-import { getRandomQuote } from '../utils/quotes';
 
 interface SplashScreenProps {
   isReady: boolean;
@@ -13,7 +12,19 @@ interface SplashScreenProps {
 export default function SplashScreen({ isReady, onFinish }: SplashScreenProps) {
   const theme = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const randomQuote = useMemo(() => getRandomQuote(), []);
+  const [randomQuote, setRandomQuote] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    void import('../utils/quotes').then((mod) => {
+      if (!cancelled) {
+        setRandomQuote(mod.getRandomQuote());
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const {
     scale,
     opacity,

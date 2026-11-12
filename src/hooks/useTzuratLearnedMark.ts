@@ -29,10 +29,8 @@ export function useTzuratLearnedMark({
   const [pendingTrack, setPendingTrack] = useState<StudyTrackMode>('dafYomi');
 
   const {
-    history,
     settings,
     progressCache,
-    personalTrackRecords,
     toggleAnyDafLearned,
     setDafStudyStatus,
     markPartialAmud,
@@ -41,10 +39,8 @@ export function useTzuratLearnedMark({
     setPersonalDafStudyStatus,
   } = useAppStore(
     useShallow((s) => ({
-      history: s.history,
       settings: s.settings,
       progressCache: s.progressCache,
-      personalTrackRecords: s.personalTrackRecords,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
       setDafStudyStatus: s.setDafStudyStatus,
       markPartialAmud: s.markPartialAmud,
@@ -73,15 +69,28 @@ export function useTzuratLearnedMark({
     [dafNum],
   );
 
-  const personalRecord = useMemo(
-    () => personalTrackRecords.find((r) => r.masechet === masechetEn && r.daf_num === dafNum),
-    [personalTrackRecords, masechetEn, dafNum],
-  );
+  const personalLearnedCount = useAppStore((s) => {
+    let count = 0;
+    for (let i = 0; i < s.personalTrackRecords.length; i += 1) {
+      const record = s.personalTrackRecords[i];
+      if (record.masechet === masechetEn && record.status === 'learned') {
+        count += 1;
+      }
+    }
+    return count;
+  });
 
-  const dailyRecord = useMemo(() => {
-    if (!dateStr) return undefined;
-    return history.find((r) => r.date === dateStr);
-  }, [history, dateStr]);
+  const personalRecord = useAppStore((s) => {
+    for (let i = 0; i < s.personalTrackRecords.length; i += 1) {
+      const record = s.personalTrackRecords[i];
+      if (record.masechet === masechetEn && record.daf_num === dafNum) {
+        return record;
+      }
+    }
+    return undefined;
+  });
+
+  const dailyRecord = useAppStore((s) => (dateStr ? s.recordByDate.get(dateStr) : undefined));
 
   const dafYomiStatus = useMemo(
     () => (dateStr ? getStudyStatus(dailyRecord) : 'none' as const),
@@ -132,10 +141,7 @@ export function useTzuratLearnedMark({
     (mode: StudyTrackMode) => {
       if (masechetTotalPages <= 0) return false;
       if (mode === 'personal') {
-        const learnedCount = personalTrackRecords.filter(
-          (r) => r.masechet === masechetEn && r.status === 'learned',
-        ).length;
-        return learnedCount + 1 === masechetTotalPages;
+        return personalLearnedCount + 1 === masechetTotalPages;
       }
       if (isTamidStartDaf(masechetEn, dafNum)) {
         const kinnimPages = SHAS_MASECHTOT.find((m) => m.en === 'Kinnim')?.pages ?? 0;
@@ -151,7 +157,7 @@ export function useTzuratLearnedMark({
         : 0;
       return learnedBefore + 1 === masechetTotalPages;
     },
-    [masechetTotalPages, personalTrackRecords, masechetEn, masechetHe, progressCache, dafNum],
+    [masechetTotalPages, personalLearnedCount, masechetEn, masechetHe, progressCache, dafNum],
   );
 
   const markFullOnTrack = useCallback(

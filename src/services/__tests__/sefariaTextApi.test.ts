@@ -183,7 +183,10 @@ describe('sefariaTextApi', () => {
     };
     const payload = JSON.stringify(cached);
     expect(payload.length).toBeGreaterThan(100);
-    files.set('file:///files/sefaria-text/Berakhot_2a.json', payload);
+    files.set(
+      `file:///files/sefaria-text/Berakhot_2a.v${SEFARIA_TEXT_CACHE_VERSION}.json`,
+      payload,
+    );
 
     const page = await fetchSefariaPageText('Berachot', 2, 'a');
     expect(page.segments[0].he).toBe('מהדיסק');

@@ -52,3 +52,18 @@ export function useAccessibilityInfo() {
   return { reduceMotionEnabled, screenReaderEnabled };
 }
 
+export function useAllowConfetti(
+  active: boolean,
+  setActive: (value: boolean) => void,
+): boolean {
+  const { reduceMotionEnabled } = useAccessibilityInfo();
+
+  useEffect(() => {
+    if (active && reduceMotionEnabled) {
+      setActive(false);
+    }
+  }, [active, reduceMotionEnabled, setActive]);
+
+  return active && !reduceMotionEnabled;
+}
+

@@ -12,7 +12,7 @@ import TzuratMarkTrackModal from '../components/TzuratHadaf/TzuratMarkTrackModal
 import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
-import GuideModal from '../components/Guide/GuideModal';
+import GuideModal from '../components/Guide/GuideModalGate';
 import SupportFormModal from '../components/SupportForm/SupportFormModal';
 import QuickJumpModal from '../components/QuickJump/QuickJumpModal';
 import ReaderToolbar, { type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
@@ -40,6 +40,7 @@ import { SHAS_MASECHTOT } from '../data/shas';
 import { useDafSwipeGesture } from '../hooks/useDafSwipeGesture';
 import { useReaderScrollMemory } from '../hooks/useReaderScrollMemory';
 import { useTzuratLearnedMark } from '../hooks/useTzuratLearnedMark';
+import { useAllowConfetti } from '../hooks/useAccessibilityInfo';
 
 type Route = RouteProp<RootStackParamList, 'TzuratHadaf'>;
 type Nav = NativeStackNavigationProp<RootStackParamList, 'TzuratHadaf'>;
@@ -152,15 +153,38 @@ export default function TzuratHadafScreen() {
     dafNum: reader.location.dafNum,
   });
 
-  const handleNavigateNext = () => {
+  const handleNavigateNext = useCallback(() => {
     if (reader.canNextAmud) reader.handleNextAmud();
     else if (reader.canNextDaf) reader.handleNextDaf();
-  };
+  }, [reader.canNextAmud, reader.canNextDaf, reader.handleNextAmud, reader.handleNextDaf]);
 
-  const handleNavigatePrev = () => {
+  const handleNavigatePrev = useCallback(() => {
     if (reader.canPrevAmud) reader.handlePrevAmud();
     else if (reader.canPrevDaf) reader.handlePrevDaf();
-  };
+  }, [reader.canPrevAmud, reader.canPrevDaf, reader.handlePrevAmud, reader.handlePrevDaf]);
+
+  const retrySefaria = useCallback(() => {
+    reader.loadSefariaText(reader.location);
+  }, [reader.loadSefariaText, reader.location]);
+
+  const pauseAutoScroll = useCallback(() => {
+    setAutoScrollPaused(true);
+  }, []);
+
+  const rememberClassicOffset = useCallback(
+    (offset: number) => setOffset('classic', offset),
+    [setOffset],
+  );
+  const rememberSteinsaltzOffset = useCallback(
+    (offset: number) => setOffset('steinsaltz', offset),
+    [setOffset],
+  );
+  const rememberChavrutaOffset = useCallback(
+    (offset: number) => setOffset('chavruta', offset),
+    [setOffset],
+  );
+  const readerSearchQuery = search.isSearchActive ? search.highlightQuery : '';
+  const confettiVisible = useAllowConfetti(showConfetti, setShowConfetti);
 
   const openReaderErrorSupport = useCallback(
     (source: string, error: string | null) => {
@@ -275,7 +299,7 @@ export default function TzuratHadafScreen() {
               data={reader.sefariaData}
               loading={reader.sefariaLoading}
               error={reader.sefariaError}
-              onRetry={() => reader.loadSefariaText(reader.location)}
+              onRetry={retrySefaria}
               onReportError={() => openReaderErrorSupport('הטקסט', reader.sefariaError)}
               fontSize={reader.fontSize}
               readerTheme={readerTheme}
@@ -283,13 +307,13 @@ export default function TzuratHadafScreen() {
               classicTabLabel={reader.classicTabLabel}
               scrollProgress={scrollProgress}
               initialScrollOffset={getOffset('classic')}
-              onScrollOffset={(offset) => setOffset('classic', offset)}
+              onScrollOffset={rememberClassicOffset}
               positionKey={buildReaderPositionKey(reader.pageKey, 'classic')}
               autoScrollActive={autoScrollActive}
               autoScrollLevel={autoScrollLevel}
               autoScrollPaused={autoScrollPaused}
-              onAutoScrollPause={() => setAutoScrollPaused(true)}
-              searchQuery={search.isSearchActive ? search.searchQuery : ''}
+              onAutoScrollPause={pauseAutoScroll}
+              searchQuery={readerSearchQuery}
               activeSearchSegmentId={search.activeMatch?.segmentId ?? null}
               activeSearchOccurrenceIndex={search.activeMatch?.occurrenceIndex ?? null}
             />
@@ -298,20 +322,20 @@ export default function TzuratHadafScreen() {
               data={reader.sefariaData}
               loading={reader.sefariaLoading}
               error={reader.sefariaError}
-              onRetry={() => reader.loadSefariaText(reader.location)}
+              onRetry={retrySefaria}
               onReportError={() => openReaderErrorSupport('ביאור שטיינזלץ', reader.sefariaError)}
               fontSize={reader.fontSize}
               readerTheme={readerTheme}
               accentColor={theme.colors.accent}
               scrollProgress={scrollProgress}
               initialScrollOffset={getOffset('steinsaltz')}
-              onScrollOffset={(offset) => setOffset('steinsaltz', offset)}
+              onScrollOffset={rememberSteinsaltzOffset}
               positionKey={buildReaderPositionKey(reader.pageKey, 'steinsaltz')}
               autoScrollActive={autoScrollActive}
               autoScrollLevel={autoScrollLevel}
               autoScrollPaused={autoScrollPaused}
-              onAutoScrollPause={() => setAutoScrollPaused(true)}
-              searchQuery={search.isSearchActive ? search.searchQuery : ''}
+              onAutoScrollPause={pauseAutoScroll}
+              searchQuery={readerSearchQuery}
               activeSearchSegmentId={search.activeMatch?.segmentId ?? null}
               activeSearchOccurrenceIndex={search.activeMatch?.occurrenceIndex ?? null}
             />
@@ -330,13 +354,13 @@ export default function TzuratHadafScreen() {
               accentColor={theme.colors.accent}
               scrollProgress={scrollProgress}
               initialScrollOffset={getOffset('chavruta')}
-              onScrollOffset={(offset) => setOffset('chavruta', offset)}
+              onScrollOffset={rememberChavrutaOffset}
               positionKey={buildReaderPositionKey(reader.pageKey, 'chavruta')}
               autoScrollActive={autoScrollActive}
               autoScrollLevel={autoScrollLevel}
               autoScrollPaused={autoScrollPaused}
-              onAutoScrollPause={() => setAutoScrollPaused(true)}
-              searchQuery={search.isSearchActive ? search.searchQuery : ''}
+              onAutoScrollPause={pauseAutoScroll}
+              searchQuery={readerSearchQuery}
               activeSearchSegmentId={search.activeMatch?.segmentId ?? null}
               activeSearchOccurrenceIndex={search.activeMatch?.occurrenceIndex ?? null}
             />
@@ -493,7 +517,7 @@ export default function TzuratHadafScreen() {
         />
       )}
 
-      {showConfetti && (
+      {confettiVisible && (
         <View style={styles.confettiContainer} pointerEvents="none">
           <ConfettiCannon
             count={200}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,7 +34,7 @@ export default function PersonalMasechetPickerModal({
     setExpandedSedarim(selected ? new Set([selected.seder]) : new Set());
   }, [visible, selectedMasechetEn]);
 
-  const toggleSeder = (seder: Seder) => {
+  const toggleSeder = useCallback((seder: Seder) => {
     setExpandedSedarim((prev) => {
       const next = new Set(prev);
       if (next.has(seder)) {
@@ -44,18 +44,26 @@ export default function PersonalMasechetPickerModal({
       }
       return next;
     });
-  };
+  }, []);
 
   const progressMap = useMemo(() => {
+    const learnedByMasechet = new Map<string, Set<number>>();
+    for (let i = 0; i < personalTrackRecords.length; i += 1) {
+      const record = personalTrackRecords[i];
+      if (record.status !== 'learned') continue;
+      let dafim = learnedByMasechet.get(record.masechet);
+      if (!dafim) {
+        dafim = new Set();
+        learnedByMasechet.set(record.masechet, dafim);
+      }
+      dafim.add(record.daf_num);
+    }
     const map = new Map<string, { learned: number; total: number; pct: number }>();
-    for (const m of SHAS_MASECHTOT) {
-      const recs = personalTrackRecords.filter(
-        (r) => r.masechet === m.en && r.status === 'learned'
-      );
-      const learned = new Set(recs.map((r) => r.daf_num)).size;
-      const total = m.pages;
+    for (const masechet of SHAS_MASECHTOT) {
+      const learned = learnedByMasechet.get(masechet.en)?.size ?? 0;
+      const total = masechet.pages;
       const pct = total > 0 ? Math.round((learned / total) * 100) : 0;
-      map.set(m.en, { learned, total, pct });
+      map.set(masechet.en, { learned, total, pct });
     }
     return map;
   }, [personalTrackRecords]);

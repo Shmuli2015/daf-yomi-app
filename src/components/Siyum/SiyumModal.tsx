@@ -15,6 +15,7 @@ import { useTheme } from '../../theme';
 import { createSiyumModalStyles } from './siyumModalStyles';
 import { triggerSuccess } from '../../utils/haptics';
 import { useSiyumShare } from './useSiyumShare';
+import { useAllowConfetti } from '../../hooks/useAccessibilityInfo';
 import SiyumShareCard from './SiyumShareCard';
 
 interface SiyumModalProps {
@@ -47,6 +48,7 @@ export default function SiyumModal({
       void triggerSuccess();
     }
   }, [visible]);
+  const confettiVisible = useAllowConfetti(showConfetti, setShowConfetti);
 
   if (!visible) return null;
 
@@ -101,7 +103,7 @@ export default function SiyumModal({
           </View>
         </View>
 
-        {showConfetti && (
+        {confettiVisible && (
           <View style={styles.confettiContainer} pointerEvents="none">
             <ConfettiCannon
               count={220}

@@ -797,6 +797,26 @@ interface ChavrutaHeading {
   contentStart: number;
 }
 
+let headingCacheHtml: string | null = null;
+let headingCache: ChavrutaHeading[] | null = null;
+
+export function releaseChavrutaHeadingCache(html?: string): void {
+  if (!html || headingCacheHtml === html) {
+    headingCacheHtml = null;
+    headingCache = null;
+  }
+}
+
+function headingsForHtml(html: string): ChavrutaHeading[] {
+  if (headingCacheHtml === html && headingCache) {
+    return headingCache;
+  }
+  const headings = collectChavrutaHeadings(html);
+  headingCacheHtml = html;
+  headingCache = headings;
+  return headings;
+}
+
 function collectChavrutaHeadings(html: string): ChavrutaHeading[] {
   const headings: ChavrutaHeading[] = [];
   const pattern = new RegExp(DAF_HEADING_PATTERN.source, DAF_HEADING_PATTERN.flags);
@@ -834,7 +854,7 @@ export function parseChavrutaAmudFromHtml(
   dafNum: number,
   amud: Amud,
 ): ChavrutaAmud | null {
-  const headings = collectChavrutaHeadings(html);
+  const headings = headingsForHtml(html);
   const matching = headings
     .map((heading, index) => ({ heading, index }))
     .filter(({ heading }) => heading.dafNum === dafNum && heading.amud === amud);
@@ -860,7 +880,7 @@ export function parseChavrutaAmudFromHtml(
 }
 
 export function parseChavrutaDocument(html: string): ChavrutaAmud[] {
-  const headings = collectChavrutaHeadings(html);
+  const headings = headingsForHtml(html);
 
   type GroupedAmud = {
     dafNum: number;
@@ -967,12 +987,22 @@ export function chavrutaMishnahFlags(blocks: ChavrutaBlock[]): boolean[] {
   });
 }
 
+const amudLookup = new WeakMap<ChavrutaAmud[], Map<string, ChavrutaAmud>>();
+
 export function findChavrutaAmud(
   amudim: ChavrutaAmud[],
   dafNum: number,
   amud: Amud
 ): ChavrutaAmud | null {
-  return amudim.find((item) => item.dafNum === dafNum && item.amud === amud) ?? null;
+  let lookup = amudLookup.get(amudim);
+  if (!lookup) {
+    lookup = new Map();
+    for (const item of amudim) {
+      lookup.set(`${item.dafNum}:${item.amud}`, item);
+    }
+    amudLookup.set(amudim, lookup);
+  }
+  return lookup.get(`${dafNum}:${amud}`) ?? null;
 }
 
 function parseGemaraRuns(text: string): Array<{ text: string; isGemara: boolean }> {

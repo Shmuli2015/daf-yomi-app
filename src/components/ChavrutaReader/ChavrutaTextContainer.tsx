@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
+  type ListRenderItem,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import type { SharedValue } from 'react-native-reanimated';
+import Animated, { type SharedValue } from 'react-native-reanimated';
 import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import ReaderSkeleton from '../SefariaReader/ReaderSkeleton';
 import ScrollToTopFab from '../SefariaReader/ScrollToTopFab';
@@ -20,6 +20,7 @@ import ChavrutaBodyText from './ChavrutaBodyText';
 import ChavrutaFootnoteSheet from './ChavrutaFootnoteSheet';
 import ChavrutaSectionHeader from './ChavrutaSectionHeader';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
+import { scrollReaderTo } from '../../utils/readerScroll';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
 import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
 import { createMishnahJoinStyles } from '../SefariaReader/mishnahJoin.styles';
@@ -87,10 +88,9 @@ export default function ChavrutaTextContainer({
     [theme],
   );
   const [activeFootnoteIndex, setActiveFootnoteIndex] = useState<number | null>(null);
-  const segmentOffsetsRef = useRef<Map<string, number>>(new Map());
 
   const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop, scrollToY } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop, scrollToIndex } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey,
@@ -102,18 +102,12 @@ export default function ChavrutaTextContainer({
       onAutoScrollPause,
     });
 
-  useEffect(() => {
-    if (!activeSearchSegmentId) return;
-    const y = segmentOffsetsRef.current.get(activeSearchSegmentId);
-    if (y == null) return;
-    scrollToY(Math.max(0, y - 24));
-  }, [activeSearchSegmentId, scrollToY]);
-
-  const { registerAnchor, clearSavedPosition } = useReaderPosition({
+  const { clearSavedPosition, reportVisibleIndex } = useReaderPosition({
     positionKey,
     scrollViewRef,
     scrollYRef,
     skipRestore: initialScrollOffset > 1,
+    scrollToIndex,
   });
 
   const handleScrollToTop = useCallback(() => {
@@ -134,9 +128,129 @@ export default function ChavrutaTextContainer({
   const mishnahFlags = useMemo(() => chavrutaMishnahFlags(renderBlocks), [renderBlocks]);
   const mishnahJoins = useMemo(() => mishnahJoinRoles(mishnahFlags), [mishnahFlags]);
 
+  const openFootnote = useCallback((footnote: ChavrutaFootnote) => {
+    const footnotes = data?.footnotes ?? [];
+    const index = footnotes.findIndex((item) => item.id === footnote.id);
+    setActiveFootnoteIndex(index >= 0 ? index : null);
+  }, [data?.footnotes]);
+
   useEffect(() => {
     setActiveFootnoteIndex(null);
   }, [data?.masechetEn, data?.dafNum, data?.amud, showNotes]);
+
+  useEffect(() => {
+    if (!activeSearchSegmentId?.startsWith('p-')) return;
+    const index = Number(activeSearchSegmentId.slice(2));
+    if (Number.isNaN(index)) return;
+    scrollToIndex(index);
+  }, [activeSearchOccurrenceIndex, activeSearchSegmentId, scrollToIndex]);
+
+  const reportVisibleIndexRef = useRef(reportVisibleIndex);
+  reportVisibleIndexRef.current = reportVisibleIndex;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 35 }).current;
+  const onViewableItemsChanged = useRef(
+    ({ viewableItems }: { viewableItems: Array<{ index?: number | null; isViewable: boolean }> }) => {
+      const top = viewableItems.find((item) => item.isViewable && typeof item.index === 'number');
+      if (top && typeof top.index === 'number') {
+        reportVisibleIndexRef.current(top.index);
+      }
+    },
+  ).current;
+
+  const handleScrollToIndexFailed = useCallback(
+    (info: { index: number; averageItemLength: number }) => {
+      scrollReaderTo(scrollViewRef.current, info.averageItemLength * info.index, false);
+      setTimeout(() => scrollToIndex(info.index, 24, false), 60);
+    },
+    [scrollToIndex, scrollViewRef],
+  );
+
+  const listHeader = useMemo(
+    () => (
+      <View style={styles.headerBox}>
+        <Text style={styles.titleHe}>{`חברותא · ${data?.titleHe ?? ''}`}</Text>
+      </View>
+    ),
+    [data?.titleHe, styles.headerBox, styles.titleHe],
+  );
+
+  const renderItem = useCallback<ListRenderItem<ChavrutaBlock>>(
+    ({ item: block, index }) => {
+      if (block.kind === 'chapterStart') {
+        return (
+          <ChapterBoundaryMarker
+            kind="start"
+            titleHe={block.titleHe}
+            chapterNumber={block.chapterNumber}
+            palette={palette}
+          />
+        );
+      }
+      if (block.kind === 'chapterEnd') {
+        return (
+          <ChapterBoundaryMarker
+            kind="end"
+            titleHe={block.titleHe}
+            isMasechetEnd={block.isMasechetEnd}
+            masechetHe={block.masechetHe}
+            palette={palette}
+          />
+        );
+      }
+      if (block.kind === 'sectionHeader') {
+        return <ChavrutaSectionHeader titleHe={block.titleHe} palette={palette} />;
+      }
+      const joinRole = mishnahJoins[index];
+      const segmentId = `p-${index}`;
+      const isActiveSearchMatch = activeSearchSegmentId === segmentId;
+      const textStyle = [
+        styles.paragraphText,
+        {
+          color: palette.textColor,
+          fontSize,
+          lineHeight: Math.round(fontSize * 1.7),
+        },
+      ];
+      return (
+        <View
+          style={[
+            styles.paragraph,
+            joinRole && [
+              mishnahJoinStyles[joinRole],
+              { backgroundColor: palette.mishnahSurfaceColor },
+            ],
+            isActiveSearchMatch && { backgroundColor: palette.accentLight },
+          ]}
+        >
+          <ChavrutaBodyText
+            text={block.text}
+            baseStyle={textStyle}
+            fontSize={fontSize}
+            accentColor={palette.accentColor}
+            showNotes={showNotes}
+            footnotesById={footnotesById}
+            onPressFootnote={openFootnote}
+            searchQuery={searchQuery}
+            activeOccurrenceIndex={isActiveSearchMatch ? activeSearchOccurrenceIndex : null}
+          />
+        </View>
+      );
+    },
+    [
+      activeSearchOccurrenceIndex,
+      activeSearchSegmentId,
+      fontSize,
+      footnotesById,
+      mishnahJoinStyles,
+      mishnahJoins,
+      openFootnote,
+      palette,
+      searchQuery,
+      showNotes,
+      styles.paragraph,
+      styles.paragraphText,
+    ],
+  );
 
   if (loading) {
     return (
@@ -180,15 +294,16 @@ export default function ChavrutaTextContainer({
     );
   }
 
-  const openFootnote = (footnote: ChavrutaFootnote) => {
-    const index = data.footnotes.findIndex((item) => item.id === footnote.id);
-    setActiveFootnoteIndex(index >= 0 ? index : null);
-  };
-
   return (
     <View style={styles.container}>
-      <ScrollView
-        ref={scrollViewRef}
+      <Animated.FlatList
+        ref={scrollViewRef as never}
+        data={renderBlocks}
+        keyExtractor={(block, index) =>
+          block.kind === 'paragraph' ? `p-${index}` : `${block.kind}-${index}`
+        }
+        renderItem={renderItem}
+        ListHeaderComponent={listHeader}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={true}
@@ -196,89 +311,13 @@ export default function ChavrutaTextContainer({
         onScrollBeginDrag={handleScrollBeginDrag}
         onContentSizeChange={handleContentSizeChange}
         scrollEventThrottle={16}
-      >
-        <View style={styles.headerBox}>
-          <Text style={styles.titleHe}>{`חברותא · ${data.titleHe}`}</Text>
-        </View>
-
-        {renderBlocks.map((block, index) => {
-          if (block.kind === 'chapterStart') {
-            return (
-              <ChapterBoundaryMarker
-                key={`chapter-start-${index}`}
-                kind="start"
-                titleHe={block.titleHe}
-                chapterNumber={block.chapterNumber}
-                palette={palette}
-              />
-            );
-          }
-          if (block.kind === 'chapterEnd') {
-            return (
-              <ChapterBoundaryMarker
-                key={`chapter-end-${index}`}
-                kind="end"
-                titleHe={block.titleHe}
-                isMasechetEnd={block.isMasechetEnd}
-                masechetHe={block.masechetHe}
-                palette={palette}
-              />
-            );
-          }
-          if (block.kind === 'sectionHeader') {
-            return (
-              <ChavrutaSectionHeader
-                key={`section-header-${index}`}
-                titleHe={block.titleHe}
-                palette={palette}
-              />
-            );
-          }
-          const joinRole = mishnahJoins[index];
-          const segmentId = `p-${index}`;
-          const isActiveSearchMatch = activeSearchSegmentId === segmentId;
-          const textStyle = [
-            styles.paragraphText,
-            {
-              color: palette.textColor,
-              fontSize,
-              lineHeight: Math.round(fontSize * 1.7),
-            },
-          ];
-          return (
-            <View
-              key={`paragraph-${index}`}
-              onLayout={(event) => {
-                const y = event.nativeEvent.layout.y;
-                segmentOffsetsRef.current.set(segmentId, y);
-                registerAnchor(index, y);
-              }}
-              style={[
-                styles.paragraph,
-                joinRole && [
-                  mishnahJoinStyles[joinRole],
-                  { backgroundColor: palette.mishnahSurfaceColor },
-                ],
-                isActiveSearchMatch && { backgroundColor: palette.accentLight },
-              ]}
-            >
-              <ChavrutaBodyText
-                text={block.text}
-                baseStyle={textStyle}
-                fontSize={fontSize}
-                accentColor={palette.accentColor}
-                showNotes={showNotes}
-                footnotesById={footnotesById}
-                onPressFootnote={openFootnote}
-                searchQuery={searchQuery}
-                activeOccurrenceIndex={
-                  isActiveSearchMatch ? activeSearchOccurrenceIndex : null
-                }
-              />
-            </View>
-          );
-        })}
-      </ScrollView>
+        windowSize={7}
+        initialNumToRender={8}
+        maxToRenderPerBatch={8}
+        viewabilityConfig={viewabilityConfig}
+        onViewableItemsChanged={onViewableItemsChanged as never}
+        onScrollToIndexFailed={handleScrollToIndexFailed}
+      />
 
       <ScrollToTopFab
         visible={showFab}

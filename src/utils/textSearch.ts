@@ -19,12 +19,42 @@ export interface SearchMatchLocation {
   occurrenceIndex: number;
 }
 
+const COMPILED_QUERY_LIMIT = 16;
+const compiledByQuery = new Map<string, { source: string; flags: string } | null>();
+
+function highlightRegexForQuery(query: string): RegExp | null {
+  const cached = compiledByQuery.get(query);
+  if (cached !== undefined) {
+    return cached ? new RegExp(cached.source, cached.flags) : null;
+  }
+  const compiled = buildHighlightRegex(tokenizeQuery(query));
+  if (compiledByQuery.size >= COMPILED_QUERY_LIMIT) {
+    const oldest = compiledByQuery.keys().next().value;
+    if (oldest !== undefined) {
+      compiledByQuery.delete(oldest);
+    }
+  }
+  compiledByQuery.set(
+    query,
+    compiled ? { source: compiled.source, flags: compiled.flags } : null,
+  );
+  return compiled;
+}
+
+function countRegexMatches(text: string, regex: RegExp | null): number {
+  if (!regex) {
+    return 0;
+  }
+  const flags = regex.flags.includes('g') ? regex.flags : `${regex.flags}g`;
+  const globalRegex = new RegExp(regex.source, flags);
+  return text.match(globalRegex)?.length ?? 0;
+}
+
 export function buildHighlightSpans(
   text: string,
   query: string,
 ): HighlightSegment[] {
-  const tokens = tokenizeQuery(query);
-  const regex = buildHighlightRegex(tokens);
+  const regex = highlightRegexForQuery(query);
   if (!regex) {
     return [{ text, isMatch: false }];
   }
@@ -35,14 +65,7 @@ export function buildHighlightSpans(
 }
 
 export function countHighlightMatches(text: string, query: string): number {
-  const tokens = tokenizeQuery(query);
-  const regex = buildHighlightRegex(tokens);
-  if (!regex) {
-    return 0;
-  }
-  const flags = regex.flags.includes('g') ? regex.flags : `${regex.flags}g`;
-  const globalRegex = new RegExp(regex.source, flags);
-  return text.match(globalRegex)?.length ?? 0;
+  return countRegexMatches(text, highlightRegexForQuery(query));
 }
 
 export function searchInSegments(
@@ -53,13 +76,14 @@ export function searchInSegments(
   if (tokens.length === 0) {
     return [];
   }
+  const regex = highlightRegexForQuery(query);
 
   const matches: SearchMatchLocation[] = [];
   segments.forEach((segment, segmentIndex) => {
     if (!matchesAllTokens(segment.text, tokens)) {
       return;
     }
-    const occurrenceCount = countHighlightMatches(segment.text, query);
+    const occurrenceCount = countRegexMatches(segment.text, regex);
     for (let occurrenceIndex = 0; occurrenceIndex < occurrenceCount; occurrenceIndex += 1) {
       matches.push({
         segmentId: segment.id,

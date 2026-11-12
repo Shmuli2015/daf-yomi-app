@@ -156,22 +156,21 @@ describe('chavrutaApi', () => {
   });
 
   it('reads a valid disk cache after memory is cleared', async () => {
-    const cached = {
+    const pagePayload = JSON.stringify({
+      dafNum: 2,
+      amud: 'a',
+      titleHe: 'דף ב - א',
+      paragraphs: [{ text: 'מהדיסק', footnoteRefs: [] }],
+      footnotes: [],
+    });
+    const manifest = JSON.stringify({
       v: CHAVRUTA_CACHE_VERSION,
       masechetEn: 'Berachot',
-      amudim: [
-        {
-          dafNum: 2,
-          amud: 'a',
-          titleHe: 'דף ב - א',
-          paragraphs: [{ text: 'מהדיסק', footnoteRefs: [] }],
-          footnotes: [],
-        },
-      ],
-    };
-    const payload = JSON.stringify(cached);
-    expect(payload.length).toBeGreaterThan(100);
-    files.set('file:///files/chavruta/Berachot.json', payload);
+      keys: ['2a'],
+    });
+    expect(pagePayload.length).toBeGreaterThan(20);
+    files.set('file:///files/chavruta/Berachot/manifest.json', manifest);
+    files.set('file:///files/chavruta/Berachot/2a.json', pagePayload);
 
     const page = await fetchChavrutaAmud('Berachot', 2, 'a');
     expect(page.paragraphs[0].text).toBe('מהדיסק');

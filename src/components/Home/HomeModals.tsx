@@ -3,7 +3,7 @@ import PersonalMasechetPickerModal from '../PersonalMasechetPickerModal';
 import PersonalMasechetDetailModal from '../PersonalMasechetDetailModal';
 import QuickJumpModal from '../QuickJump/QuickJumpModal';
 import SiyumModal from '../Siyum/SiyumModal';
-import GuideModal from '../Guide/GuideModal';
+import GuideModal from '../Guide/GuideModalGate';
 import type { GuideCategoryId } from '../Guide/guideCategories';
 import type { GuideTabType } from '../Guide/GuideTabToggle';
 import type { PersonalTrackRecord } from '../../db/database';

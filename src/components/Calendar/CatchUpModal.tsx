@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { View, Text, TouchableOpacity, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import BottomSheetModal from '../BottomSheetModal';
 import { useTheme } from '../../theme';
@@ -36,7 +36,7 @@ export default function CatchUpModal({
     }
   }, [visible, items]);
 
-  const toggleItem = (dateStr: string) => {
+  const toggleItem = useCallback((dateStr: string) => {
     setSelectedDates((prev) => {
       const next = new Set(prev);
       if (next.has(dateStr)) {
@@ -46,7 +46,38 @@ export default function CatchUpModal({
       }
       return next;
     });
-  };
+  }, []);
+
+  const renderItem = useCallback(
+    ({ item }: { item: CatchUpItem }) => {
+      const isChecked = selectedDates.has(item.dateStr);
+      return (
+        <TouchableOpacity
+          onPress={() => toggleItem(item.dateStr)}
+          style={[styles.itemRow, isChecked && styles.itemRowSelected]}
+          activeOpacity={0.75}
+        >
+          <View style={styles.itemRight}>
+            <Ionicons
+              name={isChecked ? 'checkbox' : 'square-outline'}
+              size={22}
+              color={isChecked ? theme.colors.accent : theme.colors.textMuted}
+            />
+            <View style={styles.itemTextContainer}>
+              <Text style={[styles.itemTitle, isChecked && styles.itemTitleSelected]}>
+                {item.masechet} {item.daf}
+              </Text>
+              <Text style={styles.itemHebDate}>{item.hebDateStr}</Text>
+            </View>
+          </View>
+          <View style={styles.itemLeftBadge}>
+            <Text style={styles.itemBadgeText}>יומי</Text>
+          </View>
+        </TouchableOpacity>
+      );
+    },
+    [selectedDates, styles, theme.colors.accent, theme.colors.textMuted, toggleItem],
+  );
 
   const selectAll = () => {
     setSelectedDates(new Set(items.map((i) => i.dateStr)));
@@ -107,49 +138,15 @@ export default function CatchUpModal({
           </TouchableOpacity>
         </View>
 
-        <ScrollView
+        <FlatList
+          data={items}
+          keyExtractor={(item) => item.dateStr}
+          renderItem={renderItem}
           style={styles.list}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-        >
-          {items.map((item) => {
-            const isChecked = selectedDates.has(item.dateStr);
-            return (
-              <TouchableOpacity
-                key={item.dateStr}
-                onPress={() => toggleItem(item.dateStr)}
-                style={[
-                  styles.itemRow,
-                  isChecked && styles.itemRowSelected,
-                ]}
-                activeOpacity={0.75}
-              >
-                <View style={styles.itemRight}>
-                  <Ionicons
-                    name={isChecked ? 'checkbox' : 'square-outline'}
-                    size={22}
-                    color={isChecked ? theme.colors.accent : theme.colors.textMuted}
-                  />
-                  <View style={styles.itemTextContainer}>
-                    <Text
-                      style={[
-                        styles.itemTitle,
-                        isChecked && styles.itemTitleSelected,
-                      ]}
-                    >
-                      {item.masechet} {item.daf}
-                    </Text>
-                    <Text style={styles.itemHebDate}>{item.hebDateStr}</Text>
-                  </View>
-                </View>
-
-                <View style={styles.itemLeftBadge}>
-                  <Text style={styles.itemBadgeText}>יומי</Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+          extraData={selectedDates}
+        />
 
         <View style={styles.footer}>
           <TouchableOpacity

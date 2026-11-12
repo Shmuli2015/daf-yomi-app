@@ -6,7 +6,7 @@ import {
   DAF_DAY_START_HOUR_MIN,
 } from '../../../utils/dafDayBoundary';
 import SettingsChoiceModal from './SettingsChoiceModal';
-import { GuideModal } from '../../Guide/GuideModal';
+import GuideModal from '../../Guide/GuideModalGate';
 import { TimePickerModal } from '../Schedule/TimePickerModal';
 import ResetOptionsModal from './ResetOptionsModal';
 import { ResetOptionType } from './ResetOptionsModal.types';

@@ -27,6 +27,7 @@ import SiyumModal from '../Siyum/SiyumModal';
 import SheetDragHandle from '../SheetDragHandle';
 import { createMasechetModalStyles } from './MasechetModal.styles';
 import { useMasechetModal } from './useMasechetModal';
+import { useAllowConfetti } from '../../hooks/useAccessibilityInfo';
 
 interface MasechetModalProps {
   masechet: typeof SHAS_MASECHTOT[0];
@@ -98,6 +99,7 @@ export default function MasechetModal({
     ),
     [getCellProps, handleToggleDafStable, handleLongPressDafStable, styles],
   );
+  const confettiVisible = useAllowConfetti(showConfetti, setShowConfetti);
 
   return (
     <Modal
@@ -196,7 +198,7 @@ export default function MasechetModal({
                 ListFooterComponent={<View style={{ height: 24 }} />}
               />
 
-              {showConfetti && (
+              {confettiVisible && (
                 <View style={styles.confettiContainer} pointerEvents="none">
                   <ConfettiCannon
                     count={180}

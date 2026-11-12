@@ -29,30 +29,16 @@ describe('readerPrefetch', () => {
     (hasCachedChavrutaMasechet as jest.Mock).mockResolvedValue(false);
   });
 
-  it('prefetches sefaria pages for adjacent amud and the next daf', async () => {
+  it('prefetches only the next sefaria amud', async () => {
     await prefetchNextDaf(
       { masechetEn: 'Berachot', dafNum: 2, amud: 'a' },
       { gemaraNikud: true, includeChavruta: false },
     );
 
-    expect(fetchSefariaPageText).toHaveBeenCalledTimes(3);
+    expect(fetchSefariaPageText).toHaveBeenCalledTimes(1);
     expect(fetchSefariaPageText).toHaveBeenCalledWith(
       'Berachot',
       2,
-      'b',
-      true,
-      { requireDiskCache: true },
-    );
-    expect(fetchSefariaPageText).toHaveBeenCalledWith(
-      'Berachot',
-      3,
-      'a',
-      true,
-      { requireDiskCache: true },
-    );
-    expect(fetchSefariaPageText).toHaveBeenCalledWith(
-      'Berachot',
-      3,
       'b',
       true,
       { requireDiskCache: true },
