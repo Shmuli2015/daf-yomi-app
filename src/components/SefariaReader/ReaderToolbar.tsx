@@ -32,6 +32,8 @@ interface ReaderToolbarProps {
   onOpenGuide?: () => void;
   autoScrollActive?: boolean;
   onToggleAutoScroll?: () => void;
+  searchActive?: boolean;
+  onToggleSearch?: () => void;
 }
 
 const MODES: Array<{ id: ViewMode; label: string; icon: keyof typeof Ionicons.glyphMap }> = [
@@ -60,6 +62,8 @@ export default function ReaderToolbar({
   onOpenGuide,
   autoScrollActive = false,
   onToggleAutoScroll,
+  searchActive = false,
+  onToggleSearch,
 }: ReaderToolbarProps) {
   const theme = useTheme();
   const styles = useMemo(() => createReaderToolbarStyles(theme), [theme]);
@@ -177,6 +181,29 @@ export default function ReaderToolbar({
         )}
 
         <View style={styles.actionsRow}>
+          {onToggleSearch && (
+            <TouchableOpacity
+              style={[
+                styles.themeBtn,
+                searchActive && { backgroundColor: theme.colors.accentLight },
+              ]}
+              onPress={() => {
+                triggerImpact('light');
+                onToggleSearch();
+              }}
+              activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel="חיפוש בעמוד"
+              accessibilityState={{ selected: searchActive }}
+            >
+              <Ionicons
+                name="search-outline"
+                size={17}
+                color={theme.colors.accent}
+              />
+            </TouchableOpacity>
+          )}
+
           {onToggleAutoScroll && (
             <TouchableOpacity
               style={[

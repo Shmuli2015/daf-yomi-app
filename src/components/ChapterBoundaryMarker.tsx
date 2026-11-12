@@ -5,6 +5,7 @@ import {
   getChapterEndDisplay,
   getChapterStartDisplay,
 } from '../utils/chapterBoundaries';
+import type { ReaderThemePalette } from '../utils/readerTheme';
 import { createChapterBoundaryMarkerStyles } from './ChapterBoundaryMarker.styles';
 
 interface ChapterBoundaryMarkerProps {
@@ -13,6 +14,7 @@ interface ChapterBoundaryMarkerProps {
   chapterNumber?: number;
   isMasechetEnd?: boolean;
   masechetHe?: string;
+  palette: Pick<ReaderThemePalette, 'accentLight' | 'accentBorder' | 'accentColor' | 'textColor'>;
 }
 
 export default function ChapterBoundaryMarker({
@@ -21,9 +23,13 @@ export default function ChapterBoundaryMarker({
   chapterNumber,
   isMasechetEnd,
   masechetHe,
+  palette,
 }: ChapterBoundaryMarkerProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createChapterBoundaryMarkerStyles(theme), [theme]);
+  const styles = useMemo(
+    () => createChapterBoundaryMarkerStyles(theme, palette),
+    [theme, palette],
+  );
   const display =
     kind === 'start'
       ? getChapterStartDisplay(titleHe, chapterNumber)

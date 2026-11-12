@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ScrollView,
   Text,
@@ -22,7 +22,7 @@ import ChavrutaSectionHeader from './ChavrutaSectionHeader';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
 import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
-import { createMishnahJoinStyles, mishnahStartBorderColor } from '../SefariaReader/mishnahJoin.styles';
+import { createMishnahJoinStyles } from '../SefariaReader/mishnahJoin.styles';
 import {
   CHAVRUTA_TEXT_SCROLL_GAP,
   createChavrutaTextContainerStyles,
@@ -46,6 +46,9 @@ interface ChavrutaTextContainerProps {
   autoScrollLevel?: AutoScrollSpeedLevel;
   autoScrollPaused?: boolean;
   onAutoScrollPause?: () => void;
+  searchQuery?: string;
+  activeSearchSegmentId?: string | null;
+  activeSearchOccurrenceIndex?: number | null;
 }
 
 export default function ChavrutaTextContainer({
@@ -66,6 +69,9 @@ export default function ChavrutaTextContainer({
   autoScrollLevel,
   autoScrollPaused,
   onAutoScrollPause,
+  searchQuery = '',
+  activeSearchSegmentId = null,
+  activeSearchOccurrenceIndex = null,
 }: ChavrutaTextContainerProps) {
   const theme = useTheme();
   const palette = useMemo(
@@ -81,9 +87,10 @@ export default function ChavrutaTextContainer({
     [theme],
   );
   const [activeFootnoteIndex, setActiveFootnoteIndex] = useState<number | null>(null);
+  const segmentOffsetsRef = useRef<Map<string, number>>(new Map());
 
   const resetKey = `${data?.masechetEn || ''}-${data?.dafNum || ''}-${data?.amud || ''}`;
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop, scrollToY } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey,
@@ -94,6 +101,13 @@ export default function ChavrutaTextContainer({
       autoScrollPaused,
       onAutoScrollPause,
     });
+
+  useEffect(() => {
+    if (!activeSearchSegmentId) return;
+    const y = segmentOffsetsRef.current.get(activeSearchSegmentId);
+    if (y == null) return;
+    scrollToY(Math.max(0, y - 24));
+  }, [activeSearchSegmentId, scrollToY]);
 
   const { registerAnchor, clearSavedPosition } = useReaderPosition({
     positionKey,
@@ -195,6 +209,7 @@ export default function ChavrutaTextContainer({
                 kind="start"
                 titleHe={block.titleHe}
                 chapterNumber={block.chapterNumber}
+                palette={palette}
               />
             );
           }
@@ -206,6 +221,7 @@ export default function ChavrutaTextContainer({
                 titleHe={block.titleHe}
                 isMasechetEnd={block.isMasechetEnd}
                 masechetHe={block.masechetHe}
+                palette={palette}
               />
             );
           }
@@ -214,41 +230,50 @@ export default function ChavrutaTextContainer({
               <ChavrutaSectionHeader
                 key={`section-header-${index}`}
                 titleHe={block.titleHe}
-                isSepia={palette.isSepia}
-                isDark={palette.isDark}
-                accentColor={palette.accentColor}
+                palette={palette}
               />
             );
           }
           const joinRole = mishnahJoins[index];
+          const segmentId = `p-${index}`;
+          const isActiveSearchMatch = activeSearchSegmentId === segmentId;
+          const textStyle = [
+            styles.paragraphText,
+            {
+              color: palette.textColor,
+              fontSize,
+              lineHeight: Math.round(fontSize * 1.7),
+            },
+          ];
           return (
             <View
               key={`paragraph-${index}`}
-              onLayout={(event) => registerAnchor(index, event.nativeEvent.layout.y)}
+              onLayout={(event) => {
+                const y = event.nativeEvent.layout.y;
+                segmentOffsetsRef.current.set(segmentId, y);
+                registerAnchor(index, y);
+              }}
               style={[
                 styles.paragraph,
                 joinRole && [
                   mishnahJoinStyles[joinRole],
-                  mishnahStartBorderColor(palette.accentColor),
                   { backgroundColor: palette.mishnahSurfaceColor },
                 ],
+                isActiveSearchMatch && { backgroundColor: palette.accentLight },
               ]}
             >
               <ChavrutaBodyText
                 text={block.text}
-                baseStyle={[
-                  styles.paragraphText,
-                  {
-                    color: palette.textColor,
-                    fontSize,
-                    lineHeight: Math.round(fontSize * 1.7),
-                  },
-                ]}
+                baseStyle={textStyle}
                 fontSize={fontSize}
                 accentColor={palette.accentColor}
                 showNotes={showNotes}
                 footnotesById={footnotesById}
                 onPressFootnote={openFootnote}
+                searchQuery={searchQuery}
+                activeOccurrenceIndex={
+                  isActiveSearchMatch ? activeSearchOccurrenceIndex : null
+                }
               />
             </View>
           );

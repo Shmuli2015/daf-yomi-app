@@ -12,6 +12,8 @@ interface InlineCommentarySectionProps {
   commentaries: SefariaCommentaryItem[];
   fontSize: number;
   accentColor: string;
+  commentarySurfaceColor: string;
+  commentaryBorderColor: string;
   isSepia?: boolean;
   isDark?: boolean;
 }
@@ -20,6 +22,8 @@ export default function InlineCommentarySection({
   commentaries,
   fontSize,
   accentColor,
+  commentarySurfaceColor,
+  commentaryBorderColor,
   isSepia,
   isDark,
 }: InlineCommentarySectionProps) {
@@ -35,10 +39,17 @@ export default function InlineCommentarySection({
   }, [commentaries, activeTab]);
 
   const subTextColor = isSepia ? '#8C7462' : isDark ? '#A1A1AA' : '#64748B';
-  const guideLineColor = isSepia ? '#D4B996' : isDark ? 'rgba(251, 191, 36, 0.35)' : `${accentColor}4D`;
 
   return (
-    <View style={[styles.container, { borderRightColor: guideLineColor }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: commentarySurfaceColor,
+          borderColor: commentaryBorderColor,
+        },
+      ]}
+    >
       {filterTabs.length > 2 && (
         <CommentaryFilterChips
           tabs={filterTabs}

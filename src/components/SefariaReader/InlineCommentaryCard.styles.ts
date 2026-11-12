@@ -26,6 +26,7 @@ export function createInlineCommentaryCardStyles(_theme: Theme) {
       writingDirection: 'rtl',
       alignSelf: 'stretch',
       width: '100%',
+      includeFontPadding: false,
     },
   });
 }

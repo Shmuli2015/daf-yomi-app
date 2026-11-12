@@ -13,7 +13,7 @@ import AccordionSlideContent from '../AccordionSlideContent';
 import type { AccordionCollapseScroll } from '../../hooks/useAccordionSlide';
 import CommentaryBodyText from './CommentaryBodyText';
 import InlineCommentarySection from './InlineCommentarySection';
-import { createMishnahJoinStyles, mishnahStartBorderColor } from './mishnahJoin.styles';
+import { createMishnahJoinStyles } from './mishnahJoin.styles';
 import { createSegmentCardStyles } from './SegmentCard.styles';
 import { SEFARIA_TEXT_SCROLL_GAP } from './SefariaTextContainer.styles';
 
@@ -22,6 +22,9 @@ interface SegmentCardProps {
   commentaries: SefariaCommentaryItem[];
   fontSize: number;
   accentColor: string;
+  accentLight?: string;
+  accentBorder?: string;
+  commentarySurfaceColor?: string;
   isExpanded: boolean;
   isClosing?: boolean;
   onToggleExpand: (index: number) => void;
@@ -33,6 +36,9 @@ interface SegmentCardProps {
   markAsMishnah?: boolean;
   mishnahJoinRole?: MishnahJoinRole | null;
   mishnahSurfaceColor?: string;
+  searchQuery?: string;
+  isActiveSearchMatch?: boolean;
+  activeSearchOccurrenceIndex?: number | null;
 }
 
 const SegmentCard = React.memo(function SegmentCard({
@@ -40,6 +46,9 @@ const SegmentCard = React.memo(function SegmentCard({
   commentaries,
   fontSize,
   accentColor,
+  accentLight,
+  accentBorder,
+  commentarySurfaceColor,
   isExpanded,
   isClosing,
   onToggleExpand,
@@ -51,6 +60,9 @@ const SegmentCard = React.memo(function SegmentCard({
   markAsMishnah = false,
   mishnahJoinRole = null,
   mishnahSurfaceColor,
+  searchQuery = '',
+  isActiveSearchMatch = false,
+  activeSearchOccurrenceIndex = null,
 }: SegmentCardProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSegmentCardStyles(theme), [theme]);
@@ -64,24 +76,15 @@ const SegmentCard = React.memo(function SegmentCard({
   const isMishnahStart = Boolean(segment.mishnahLabel) || isMishnahHeading(segment.he);
   const showMishnahMark = markAsMishnah || isMishnahStart;
   const joinRole = mishnahJoinRole ?? (showMishnahMark ? 'solo' : null);
-
   const textColor = isSepia
     ? '#2C221E'
     : isDark
     ? '#FFFFFF'
     : '#0F172A';
 
-  const badgeBg = isSepia
-    ? 'rgba(180, 83, 9, 0.10)'
-    : isDark
-    ? 'rgba(245, 158, 11, 0.14)'
-    : `${accentColor}14`;
-
-  const badgeTextColor = isSepia
-    ? '#92400E'
-    : isDark
-    ? '#FBBF24'
-    : accentColor;
+  const badgeBg = accentLight ?? `${accentColor}14`;
+  const badgeTextColor = accentColor;
+  const activeSearchBg = accentLight ?? theme.colors.accentLight;
 
   const handleToggle = () => {
     if (!hasCommentary) return;
@@ -98,15 +101,24 @@ const SegmentCard = React.memo(function SegmentCard({
     onCommentaryLayout?.(segment.index, event.nativeEvent.layout.height);
   };
 
+  const textStyle = [
+    styles.text,
+    {
+      color: textColor,
+      fontSize,
+      lineHeight: Math.round(fontSize * 1.6),
+    },
+  ];
+
   return (
     <TouchableOpacity
       style={[
         styles.card,
         joinRole && [
           mishnahJoinStyles[joinRole],
-          mishnahStartBorderColor(accentColor),
           { backgroundColor: mishnahSurfaceColor },
         ],
+        isActiveSearchMatch && { backgroundColor: activeSearchBg },
       ]}
       onPress={handleToggle}
       onLayout={handleCardLayout}
@@ -125,15 +137,12 @@ const SegmentCard = React.memo(function SegmentCard({
 
         <CommentaryBodyText
           text={segment.he}
-          baseStyle={[
-            styles.text,
-            {
-              color: textColor,
-              fontSize,
-              lineHeight: Math.round(fontSize * 1.6),
-            },
-          ]}
+          baseStyle={textStyle}
           accentColor={accentColor}
+          searchQuery={searchQuery}
+          activeOccurrenceIndex={
+            isActiveSearchMatch ? activeSearchOccurrenceIndex : null
+          }
         />
 
         {hasCommentary && (
@@ -163,6 +172,10 @@ const SegmentCard = React.memo(function SegmentCard({
               commentaries={commentaries}
               fontSize={fontSize}
               accentColor={accentColor}
+              commentarySurfaceColor={
+                commentarySurfaceColor ?? theme.colors.accentLight
+              }
+              commentaryBorderColor={accentBorder ?? theme.colors.accentBorder}
               isSepia={isSepia}
               isDark={isDark}
             />

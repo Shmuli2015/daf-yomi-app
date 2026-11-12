@@ -7,6 +7,9 @@ export interface ReaderThemePalette {
   backgroundColor: string;
   surfaceColor: string;
   mishnahSurfaceColor: string;
+  commentarySurfaceColor: string;
+  accentLight: string;
+  accentBorder: string;
   textColor: string;
   subTextColor: string;
   accentColor: string;
@@ -46,7 +49,10 @@ export function getReaderThemePalette(
       isSepia: true,
       backgroundColor: '#FBF0D9',
       surfaceColor: '#F4E6C8',
-      mishnahSurfaceColor: 'rgba(180, 83, 9, 0.12)',
+      mishnahSurfaceColor: 'rgba(180, 83, 9, 0.14)',
+      commentarySurfaceColor: 'rgba(180, 83, 9, 0.07)',
+      accentLight: 'rgba(180, 83, 9, 0.08)',
+      accentBorder: 'rgba(180, 83, 9, 0.20)',
       textColor: '#2C221E',
       subTextColor: '#8C7462',
       accentColor: '#92400E',
@@ -55,30 +61,38 @@ export function getReaderThemePalette(
   }
 
   if (readerTheme === 'dark') {
+    const accent = appAccentColor || '#C9963C';
     return {
       theme: 'dark',
       isDark: true,
       isSepia: false,
       backgroundColor: '#121212',
       surfaceColor: '#1E1E1E',
-      mishnahSurfaceColor: 'rgba(201, 150, 60, 0.16)',
+      mishnahSurfaceColor: 'rgba(201, 150, 60, 0.18)',
+      commentarySurfaceColor: 'rgba(201, 150, 60, 0.10)',
+      accentLight: 'rgba(201, 150, 60, 0.10)',
+      accentBorder: 'rgba(201, 150, 60, 0.25)',
       textColor: '#FFFFFF',
       subTextColor: '#A1A1AA',
-      accentColor: appAccentColor || '#C9963C',
+      accentColor: accent,
       borderColor: '#27272A',
     };
   }
 
+  const accent = appAccentColor || '#B45309';
   return {
     theme: 'light',
     isDark: false,
     isSepia: false,
     backgroundColor: '#FFFFFF',
     surfaceColor: '#F8FAFC',
-    mishnahSurfaceColor: 'rgba(180, 83, 9, 0.10)',
+    mishnahSurfaceColor: 'rgba(180, 83, 9, 0.12)',
+    commentarySurfaceColor: 'rgba(180, 83, 9, 0.06)',
+    accentLight: 'rgba(180, 83, 9, 0.08)',
+    accentBorder: 'rgba(180, 83, 9, 0.18)',
     textColor: '#0F172A',
     subTextColor: '#64748B',
-    accentColor: appAccentColor || '#B45309',
+    accentColor: accent,
     borderColor: '#E2E8F0',
   };
 }

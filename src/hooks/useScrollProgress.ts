@@ -129,6 +129,11 @@ export function useScrollProgress({
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   }, [scrollViewRef]);
 
+  const scrollToY = useCallback((y: number, animated = true) => {
+    const offset = Math.max(0, y);
+    scrollViewRef.current?.scrollTo({ y: offset, animated });
+  }, [scrollViewRef]);
+
   return {
     scrollViewRef,
     scrollYRef,
@@ -137,5 +142,6 @@ export function useScrollProgress({
     handleScrollBeginDrag,
     handleContentSizeChange,
     scrollToTop,
+    scrollToY,
   };
 }

@@ -1,25 +1,25 @@
 import React, { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { useTheme } from '../../theme';
+import type { ReaderThemePalette } from '../../utils/readerTheme';
 import { createChavrutaSectionHeaderStyles } from './ChavrutaSectionHeader.styles';
 
 interface ChavrutaSectionHeaderProps {
   titleHe: string;
-  isSepia?: boolean;
-  isDark?: boolean;
-  accentColor?: string;
+  palette: Pick<
+    ReaderThemePalette,
+    'accentLight' | 'accentBorder' | 'accentColor' | 'borderColor'
+  >;
 }
 
 export default function ChavrutaSectionHeader({
   titleHe,
-  isSepia,
-  isDark,
-  accentColor,
+  palette,
 }: ChavrutaSectionHeaderProps) {
   const theme = useTheme();
   const styles = useMemo(
-    () => createChavrutaSectionHeaderStyles(theme, isSepia, isDark, accentColor),
-    [theme, isSepia, isDark, accentColor],
+    () => createChavrutaSectionHeaderStyles(theme, palette),
+    [theme, palette],
   );
 
   return (

@@ -179,6 +179,7 @@ describe('sefariaTextApi', () => {
       segments: [{ index: 0, ref: 'Berakhot.2a:1', he: 'מהדיסק' }],
       commentaries: {},
       chapterEvents: [],
+      failedCommentators: [],
     };
     const payload = JSON.stringify(cached);
     expect(payload.length).toBeGreaterThan(100);

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchSefariaPageText, type SefariaPageData } from '../services/sefariaTextApi';
 import { useChavrutaPage } from './useChavrutaPage';
 import { hasChavrutaSource } from '../data/chavrutaSources';
@@ -25,6 +25,10 @@ import { useReaderPrefetch } from './useReaderPrefetch';
 
 export type NavDirection = 'next' | 'prev' | null;
 
+function locationRequestKey(loc: DafLocation, gemaraNikud: boolean): string {
+  return `${normalizeMasechetEn(loc.masechetEn)}:${loc.dafNum}:${loc.amud}:${gemaraNikud ? '1' : '0'}`;
+}
+
 export function useDafReader(initialLocation: DafLocation) {
   const [location, setLocation] = useState<DafLocation>(initialLocation);
   const [navDirection, setNavDirection] = useState<NavDirection>(null);
@@ -39,6 +43,7 @@ export function useDafReader(initialLocation: DafLocation) {
   const [sefariaData, setSefariaData] = useState<SefariaPageData | null>(null);
   const [sefariaLoading, setSefariaLoading] = useState(true);
   const [sefariaError, setSefariaError] = useState<string | null>(null);
+  const loadRequestKeyRef = useRef<string | null>(null);
 
   const normalizedMasechet = normalizeMasechetEn(location.masechetEn);
   const mishnahOnly = isMishnahOnlySlot(normalizedMasechet, location.dafNum, location.amud);
@@ -62,15 +67,25 @@ export function useDafReader(initialLocation: DafLocation) {
   );
 
   const loadSefariaText = useCallback(async (loc: DafLocation) => {
+    const requestKey = locationRequestKey(loc, gemaraNikud);
+    loadRequestKeyRef.current = requestKey;
     setSefariaLoading(true);
     setSefariaError(null);
     try {
       const data = await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud);
+      if (loadRequestKeyRef.current !== requestKey) {
+        return;
+      }
       setSefariaData(data);
     } catch (err: unknown) {
+      if (loadRequestKeyRef.current !== requestKey) {
+        return;
+      }
       setSefariaError(describeSefariaLoadError(err, { gemaraNikud, nikudAvailable }));
     } finally {
-      setSefariaLoading(false);
+      if (loadRequestKeyRef.current === requestKey) {
+        setSefariaLoading(false);
+      }
     }
   }, [gemaraNikud, nikudAvailable]);
 

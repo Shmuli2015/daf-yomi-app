@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useRef } from 'react';
+import React, { useMemo, useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import ChapterBoundaryMarker from '../ChapterBoundaryMarker';
 import SegmentCard from './SegmentCard';
 import ReaderSkeleton from './ReaderSkeleton';
 import ScrollToTopFab from './ScrollToTopFab';
+import CommentaryLoadBanner from './CommentaryLoadBanner';
 import type { ReaderTheme } from './ReaderToolbar';
 import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useTheme } from '../../theme';
@@ -42,6 +43,9 @@ interface SefariaTextContainerProps {
   autoScrollLevel?: AutoScrollSpeedLevel;
   autoScrollPaused?: boolean;
   onAutoScrollPause?: () => void;
+  searchQuery?: string;
+  activeSearchSegmentId?: string | null;
+  activeSearchOccurrenceIndex?: number | null;
 }
 
 export default function SefariaTextContainer({
@@ -62,14 +66,19 @@ export default function SefariaTextContainer({
   autoScrollLevel,
   autoScrollPaused,
   onAutoScrollPause,
+  searchQuery = '',
+  activeSearchSegmentId = null,
+  activeSearchOccurrenceIndex = null,
 }: SefariaTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSefariaTextContainerStyles(theme), [theme]);
   const [expandedIndices, setExpandedIndices] = useState<Set<number>>(new Set());
+  const [bannerDismissed, setBannerDismissed] = useState(false);
   const expandedIndicesRef = useRef(expandedIndices);
   expandedIndicesRef.current = expandedIndices;
+  const segmentOffsetsRef = useRef<Map<number, number>>(new Map());
 
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop, scrollToY } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey: data?.tref || '',
@@ -80,6 +89,19 @@ export default function SefariaTextContainer({
       autoScrollPaused,
       onAutoScrollPause,
     });
+
+  useEffect(() => {
+    setBannerDismissed(false);
+  }, [data?.tref]);
+
+  useEffect(() => {
+    if (!activeSearchSegmentId) return;
+    const segmentIndex = Number(activeSearchSegmentId);
+    if (Number.isNaN(segmentIndex)) return;
+    const y = segmentOffsetsRef.current.get(segmentIndex);
+    if (y == null) return;
+    scrollToY(Math.max(0, y - 24));
+  }, [activeSearchSegmentId, scrollToY]);
 
   const { registerAnchor, clearSavedPosition } = useReaderPosition({
     positionKey,
@@ -156,9 +178,18 @@ export default function SefariaTextContainer({
   }, [beginCollapse]);
 
   const handleCardLayout = useCallback((index: number, y: number, height: number) => {
+    segmentOffsetsRef.current.set(index, y);
     registerCardLayout(index, y, height);
     registerAnchor(index, y);
   }, [registerCardLayout, registerAnchor]);
+
+  const classicFailedCommentators = useMemo(() => {
+    if (!data?.failedCommentators?.length) return [];
+    const classicKeys = new Set(classicCommentatorKeysForTref(data.tref));
+    return data.failedCommentators.filter((key) => classicKeys.has(key));
+  }, [data]);
+
+  const showCommentaryBanner = classicFailedCommentators.length > 0 && !bannerDismissed;
 
   const handleCommentaryLayout = useCallback((index: number, height: number) => {
     registerCommentaryHeight(index, height);
@@ -237,6 +268,13 @@ export default function SefariaTextContainer({
           <Text style={[styles.titleHe, { color: palette.accentColor }]}>{data.titleHe}</Text>
         </View>
 
+        {showCommentaryBanner ? (
+          <CommentaryLoadBanner
+            onRetry={onRetry}
+            onDismiss={() => setBannerDismissed(true)}
+          />
+        ) : null}
+
         {blocks.map((block, index) => {
           if (block.kind === 'chapterStart') {
             return (
@@ -245,6 +283,7 @@ export default function SefariaTextContainer({
                 kind="start"
                 titleHe={block.titleHe}
                 chapterNumber={block.chapterNumber}
+                palette={palette}
               />
             );
           }
@@ -256,6 +295,7 @@ export default function SefariaTextContainer({
                 titleHe={block.titleHe}
                 isMasechetEnd={block.isMasechetEnd}
                 masechetHe={block.masechetHe}
+                palette={palette}
               />
             );
           }
@@ -271,6 +311,9 @@ export default function SefariaTextContainer({
               commentaries={commList}
               fontSize={fontSize}
               accentColor={palette.accentColor}
+              accentLight={palette.accentLight}
+              accentBorder={palette.accentBorder}
+              commentarySurfaceColor={palette.commentarySurfaceColor}
               isExpanded={isExpanded}
               isClosing={closingIndex === segment.index}
               onToggleExpand={handleToggleExpand}
@@ -282,6 +325,13 @@ export default function SefariaTextContainer({
               markAsMishnah={mishnahMarks[index]}
               mishnahJoinRole={mishnahJoins[index]}
               mishnahSurfaceColor={palette.mishnahSurfaceColor}
+              searchQuery={searchQuery}
+              isActiveSearchMatch={activeSearchSegmentId === String(segment.index)}
+              activeSearchOccurrenceIndex={
+                activeSearchSegmentId === String(segment.index)
+                  ? activeSearchOccurrenceIndex
+                  : null
+              }
             />
           );
         })}
