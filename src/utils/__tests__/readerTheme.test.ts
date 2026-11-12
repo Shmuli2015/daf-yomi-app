@@ -38,9 +38,21 @@ describe('getReaderThemeLabel', () => {
 });
 
 describe('getReaderThemePalette', () => {
-  it('includes a mishnah surface tint for each reader theme', () => {
-    expect(getReaderThemePalette('light').mishnahSurfaceColor).toBe('rgba(180, 83, 9, 0.10)');
-    expect(getReaderThemePalette('sepia').mishnahSurfaceColor).toBe('rgba(180, 83, 9, 0.12)');
-    expect(getReaderThemePalette('dark').mishnahSurfaceColor).toBe('rgba(201, 150, 60, 0.16)');
+  it('includes hierarchical section surfaces for each reader theme', () => {
+    const light = getReaderThemePalette('light');
+    const sepia = getReaderThemePalette('sepia');
+    const dark = getReaderThemePalette('dark');
+
+    expect(light.mishnahSurfaceColor).toBe('rgba(180, 83, 9, 0.12)');
+    expect(light.commentarySurfaceColor).toBe('rgba(180, 83, 9, 0.06)');
+    expect(light.accentLight).toBe('rgba(180, 83, 9, 0.08)');
+
+    expect(sepia.mishnahSurfaceColor).toBe('rgba(180, 83, 9, 0.14)');
+    expect(sepia.commentarySurfaceColor).toBe('rgba(180, 83, 9, 0.07)');
+    expect(sepia.accentBorder).toBe('rgba(180, 83, 9, 0.20)');
+
+    expect(dark.mishnahSurfaceColor).toBe('rgba(201, 150, 60, 0.18)');
+    expect(dark.commentarySurfaceColor).toBe('rgba(201, 150, 60, 0.10)');
+    expect(dark.accentBorder).toBe('rgba(201, 150, 60, 0.25)');
   });
 });

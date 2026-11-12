@@ -60,6 +60,7 @@ export interface SefariaPageData {
   segments: SefariaSegment[];
   commentaries: Record<number, SefariaCommentaryItem[]>;
   chapterEvents: SefariaChapterEvent[];
+  failedCommentators: SefariaCommentatorKey[];
 }
 
 const CACHE_DIR = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? ''}sefaria-text/`;
@@ -188,12 +189,14 @@ async function fetchFromNetwork(
   const commTypes = commentatorFetchSpecs(tref, shekalim);
 
   const mainPromise = fetchJson(mainUrl);
+  const failedCommentators: SefariaCommentatorKey[] = [];
   const commPromises = commTypes.map(async (comm) => {
     try {
       const commUrl = `https://www.sefaria.org/api/texts/${encodeURI(comm.prefix)}?context=0`;
       const json = await fetchJson(commUrl);
       return { comm, json };
     } catch {
+      failedCommentators.push(comm.key);
       return { comm, json: null };
     }
   });
@@ -301,6 +304,7 @@ async function fetchFromNetwork(
     segments,
     commentaries,
     chapterEvents,
+    failedCommentators,
     v: SEFARIA_TEXT_CACHE_VERSION,
   } as SefariaPageData;
 }
@@ -388,6 +392,7 @@ function readDiskPage(
   return {
     ...parsed,
     chapterEvents: Array.isArray(parsed.chapterEvents) ? parsed.chapterEvents : [],
+    failedCommentators: [],
   };
 }
 
@@ -451,15 +456,20 @@ async function loadSefariaPage(
     );
   }
 
+  const cacheData: SefariaPageData = {
+    ...data,
+    failedCommentators: [],
+  };
+
   let savedToDisk = true;
   try {
     await ensureCacheDir();
-    await FileSystem.writeAsStringAsync(cachePath, JSON.stringify(data));
+    await FileSystem.writeAsStringAsync(cachePath, JSON.stringify(cacheData));
   } catch {
     savedToDisk = false;
   }
 
-  writeMemoryCache(memKey, data);
+  writeMemoryCache(memKey, cacheData);
   return { data, savedToDisk };
 }
 

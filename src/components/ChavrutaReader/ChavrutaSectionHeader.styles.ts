@@ -1,33 +1,14 @@
 import { StyleSheet } from 'react-native';
 import type { Theme } from '../../theme';
+import type { ReaderThemePalette } from '../../utils/readerTheme';
 
 export function createChavrutaSectionHeaderStyles(
   theme: Theme,
-  isSepia?: boolean,
-  isDark?: boolean,
-  customAccentColor?: string,
+  palette: Pick<
+    ReaderThemePalette,
+    'accentLight' | 'accentBorder' | 'accentColor' | 'borderColor'
+  >,
 ) {
-  const badgeBg = isSepia
-    ? 'rgba(180, 83, 9, 0.10)'
-    : isDark
-    ? 'rgba(245, 158, 11, 0.14)'
-    : theme.colors.accentLight;
-  const badgeBorder = isSepia
-    ? 'rgba(180, 83, 9, 0.22)'
-    : isDark
-    ? 'rgba(245, 158, 11, 0.30)'
-    : theme.colors.accentBorder;
-  const textColor = isSepia
-    ? '#92400E'
-    : isDark
-    ? '#FBBF24'
-    : (customAccentColor || theme.colors.accent);
-  const dividerColor = isSepia
-    ? 'rgba(180, 83, 9, 0.20)'
-    : isDark
-    ? '#27272A'
-    : theme.colors.border;
-
   return StyleSheet.create({
     container: {
       flexDirection: 'row',
@@ -41,22 +22,22 @@ export function createChavrutaSectionHeaderStyles(
     dividerLine: {
       flex: 1,
       height: StyleSheet.hairlineWidth,
-      backgroundColor: dividerColor,
+      backgroundColor: palette.borderColor,
     },
     badge: {
       paddingHorizontal: 16,
       paddingVertical: 6,
       borderRadius: theme.radius.full,
-      backgroundColor: badgeBg,
+      backgroundColor: palette.accentLight,
       borderWidth: 1,
-      borderColor: badgeBorder,
+      borderColor: palette.accentBorder,
       alignItems: 'center',
       justifyContent: 'center',
     },
     title: {
       fontSize: 15,
       fontWeight: '800',
-      color: textColor,
+      color: palette.accentColor,
       textAlign: 'center',
       writingDirection: 'rtl',
     },

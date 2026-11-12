@@ -17,6 +17,7 @@ import SupportFormModal from '../components/SupportForm/SupportFormModal';
 import QuickJumpModal from '../components/QuickJump/QuickJumpModal';
 import ReaderToolbar, { type ReaderTheme } from '../components/SefariaReader/ReaderToolbar';
 import ReaderModePane from '../components/SefariaReader/ReaderModePane';
+import ReaderSearchBar from '../components/SefariaReader/ReaderSearchBar';
 import SefariaTextContainer from '../components/SefariaReader/SefariaTextContainer';
 import SteinsaltzTextContainer from '../components/SefariaReader/SteinsaltzTextContainer';
 import ChavrutaTextContainer from '../components/ChavrutaReader/ChavrutaTextContainer';
@@ -28,7 +29,9 @@ import ReadingProgressBar from '../components/SefariaReader/ReadingProgressBar';
 import { useDafReader } from '../hooks/useDafReader';
 import { useReaderKeepAwake } from '../hooks/useReaderKeepAwake';
 import { useReaderTheme } from '../hooks/useReaderTheme';
+import { useReaderSearch } from '../hooks/useReaderSearch';
 import { getReaderThemePalette } from '../utils/readerTheme';
+import { buildReaderSearchSegments } from '../utils/readerSearchSegments';
 import { useTheme } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
 import { normalizeMasechetEn } from '../utils/dafNavigation';
@@ -98,6 +101,20 @@ export default function TzuratHadafScreen() {
       ),
     [reader.location.masechetEn, reader.location.dafNum, reader.location.amud, masechetHe],
   );
+
+  const searchSegments = useMemo(
+    () =>
+      buildReaderSearchSegments(
+        reader.viewMode,
+        reader.sefariaData,
+        reader.chavruta.data,
+      ),
+    [reader.viewMode, reader.sefariaData, reader.chavruta.data],
+  );
+  const search = useReaderSearch({
+    segments: searchSegments,
+    resetKey: `${reader.pageKey}:${reader.viewMode}`,
+  });
 
   const {
     personalEnabled,
@@ -218,7 +235,27 @@ export default function TzuratHadafScreen() {
               setAutoScrollActive((prev) => !prev);
               setAutoScrollPaused(false);
             }}
+            searchActive={search.isSearchActive}
+            onToggleSearch={() => {
+              if (search.isSearchActive) {
+                search.closeSearch();
+              } else {
+                search.openSearch();
+              }
+            }}
           />
+
+          {search.isSearchActive ? (
+            <ReaderSearchBar
+              query={search.searchQuery}
+              onChangeQuery={search.setSearchQuery}
+              matchCount={search.matches.length}
+              activeMatchIndex={search.activeMatchIndex}
+              onNext={search.goToNextMatch}
+              onPrev={search.goToPrevMatch}
+              onClose={search.closeSearch}
+            />
+          ) : null}
 
           <ReadingProgressBar progress={scrollProgress} accentColor={theme.colors.accent} />
         </>
@@ -252,6 +289,9 @@ export default function TzuratHadafScreen() {
               autoScrollLevel={autoScrollLevel}
               autoScrollPaused={autoScrollPaused}
               onAutoScrollPause={() => setAutoScrollPaused(true)}
+              searchQuery={search.isSearchActive ? search.searchQuery : ''}
+              activeSearchSegmentId={search.activeMatch?.segmentId ?? null}
+              activeSearchOccurrenceIndex={search.activeMatch?.occurrenceIndex ?? null}
             />
           ) : reader.viewMode === 'steinsaltz' ? (
             <SteinsaltzTextContainer
@@ -271,6 +311,9 @@ export default function TzuratHadafScreen() {
               autoScrollLevel={autoScrollLevel}
               autoScrollPaused={autoScrollPaused}
               onAutoScrollPause={() => setAutoScrollPaused(true)}
+              searchQuery={search.isSearchActive ? search.searchQuery : ''}
+              activeSearchSegmentId={search.activeMatch?.segmentId ?? null}
+              activeSearchOccurrenceIndex={search.activeMatch?.occurrenceIndex ?? null}
             />
           ) : !reader.chavrutaAvailable ? (
             <ChavrutaUnavailableState readerTheme={readerTheme} accentColor={theme.colors.accent} />
@@ -293,6 +336,9 @@ export default function TzuratHadafScreen() {
               autoScrollLevel={autoScrollLevel}
               autoScrollPaused={autoScrollPaused}
               onAutoScrollPause={() => setAutoScrollPaused(true)}
+              searchQuery={search.isSearchActive ? search.searchQuery : ''}
+              activeSearchSegmentId={search.activeMatch?.segmentId ?? null}
+              activeSearchOccurrenceIndex={search.activeMatch?.occurrenceIndex ?? null}
             />
           )}
         </ReaderModePane>

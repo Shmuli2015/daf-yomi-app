@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   ScrollView,
   Text,
@@ -22,7 +22,7 @@ import { getReaderThemePalette } from '../../utils/readerTheme';
 import { useScrollProgress } from '../../hooks/useScrollProgress';
 import { useReaderPosition } from '../../hooks/useReaderPosition';
 import type { AutoScrollSpeedLevel } from '../../hooks/useAutoScroll';
-import { createMishnahJoinStyles, mishnahStartBorderColor } from './mishnahJoin.styles';
+import { createMishnahJoinStyles } from './mishnahJoin.styles';
 import {
   createSteinsaltzTextContainerStyles,
   STEINSALTZ_TEXT_SCROLL_GAP,
@@ -45,6 +45,9 @@ interface SteinsaltzTextContainerProps {
   autoScrollLevel?: AutoScrollSpeedLevel;
   autoScrollPaused?: boolean;
   onAutoScrollPause?: () => void;
+  searchQuery?: string;
+  activeSearchSegmentId?: string | null;
+  activeSearchOccurrenceIndex?: number | null;
 }
 
 export default function SteinsaltzTextContainer({
@@ -64,6 +67,9 @@ export default function SteinsaltzTextContainer({
   autoScrollLevel,
   autoScrollPaused,
   onAutoScrollPause,
+  searchQuery = '',
+  activeSearchSegmentId = null,
+  activeSearchOccurrenceIndex = null,
 }: SteinsaltzTextContainerProps) {
   const theme = useTheme();
   const styles = useMemo(() => createSteinsaltzTextContainerStyles(theme), [theme]);
@@ -71,8 +77,9 @@ export default function SteinsaltzTextContainer({
     () => createMishnahJoinStyles(theme, STEINSALTZ_TEXT_SCROLL_GAP),
     [theme],
   );
+  const segmentOffsetsRef = useRef<Map<string, number>>(new Map());
 
-  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop } =
+  const { scrollViewRef, scrollYRef, showFab, handleScroll, handleScrollBeginDrag, handleContentSizeChange, scrollToTop, scrollToY } =
     useScrollProgress({
       progressShared: scrollProgress,
       resetKey: data?.tref || '',
@@ -83,6 +90,13 @@ export default function SteinsaltzTextContainer({
       autoScrollPaused,
       onAutoScrollPause,
     });
+
+  useEffect(() => {
+    if (!activeSearchSegmentId) return;
+    const y = segmentOffsetsRef.current.get(activeSearchSegmentId);
+    if (y == null) return;
+    scrollToY(Math.max(0, y - 24));
+  }, [activeSearchSegmentId, scrollToY]);
 
   const { registerAnchor, clearSavedPosition } = useReaderPosition({
     positionKey,
@@ -186,6 +200,7 @@ export default function SteinsaltzTextContainer({
                 kind="start"
                 titleHe={block.titleHe}
                 chapterNumber={block.chapterNumber}
+                palette={palette}
               />
             );
           }
@@ -197,35 +212,47 @@ export default function SteinsaltzTextContainer({
                 titleHe={block.titleHe}
                 isMasechetEnd={block.isMasechetEnd}
                 masechetHe={block.masechetHe}
+                palette={palette}
               />
             );
           }
           const joinRole = mishnahJoins[index];
+          const segmentId = block.item.ref;
+          const isActiveSearchMatch = activeSearchSegmentId === segmentId;
+          const textStyle = [
+            styles.paragraphText,
+            {
+              color: palette.textColor,
+              fontSize,
+              lineHeight: Math.round(fontSize * 1.7),
+            },
+          ];
           return (
             <View
               key={`${block.item.ref}-${index}`}
-              onLayout={(event) => registerAnchor(index, event.nativeEvent.layout.y)}
+              onLayout={(event) => {
+                const y = event.nativeEvent.layout.y;
+                segmentOffsetsRef.current.set(segmentId, y);
+                registerAnchor(index, y);
+              }}
               style={[
                 styles.paragraph,
                 joinRole && [
                   mishnahJoinStyles[joinRole],
-                  mishnahStartBorderColor(palette.accentColor),
                   { backgroundColor: palette.mishnahSurfaceColor },
                 ],
+                isActiveSearchMatch && { backgroundColor: palette.accentLight },
               ]}
             >
               <CommentaryBodyText
                 text={block.item.he}
                 commentator="steinsaltz"
-                baseStyle={[
-                  styles.paragraphText,
-                  {
-                    color: palette.textColor,
-                    fontSize,
-                    lineHeight: Math.round(fontSize * 1.7),
-                  },
-                ]}
+                baseStyle={textStyle}
                 accentColor={palette.accentColor}
+                searchQuery={searchQuery}
+                activeOccurrenceIndex={
+                  isActiveSearchMatch ? activeSearchOccurrenceIndex : null
+                }
               />
             </View>
           );
