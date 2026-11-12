@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useShallow } from 'zustand/react/shallow';
 
 import { SHAS_MASECHTOT } from '../data/shas';
 import {
@@ -51,7 +52,16 @@ export function useOfflinePrefetch({
   onFeedback,
   onCompleted,
 }: UseOfflinePrefetchParams = {}): UseOfflinePrefetchReturn {
-  const settings = useAppStore((state) => state.settings);
+  const prefetchSettings = useAppStore(
+    useShallow((state) => ({
+      daf_day_start_mode: state.settings?.daf_day_start_mode,
+      daf_day_start_hour: state.settings?.daf_day_start_hour,
+      daf_day_start_minute: state.settings?.daf_day_start_minute,
+      daf_day_start_schedules: state.settings?.daf_day_start_schedules,
+      gemaraNikud: state.settings?.gemara_nikud !== 0,
+      activePersonalMasechet: state.settings?.active_personal_masechet,
+    })),
+  );
   const [isPrefetching, setIsPrefetching] = useState(false);
   const [prefetchProgress, setPrefetchProgress] = useState<OfflinePrefetchProgress | null>(null);
   const [activeTargetLabel, setActiveTargetLabel] = useState<string | null>(null);
@@ -61,30 +71,29 @@ export function useOfflinePrefetch({
   const cancelRef = useRef(false);
 
   const dafYomiMasechetInfo = useMemo(() => {
-    if (!settings) return null;
-    const day = getDafByDate(getDafDayDate(new Date(), settings));
+    const day = getDafByDate(getDafDayDate(new Date(), prefetchSettings));
     return {
       masechetEn: day.masechetEn,
       masechetHe: day.masechet,
     };
-  }, [settings]);
+  }, [prefetchSettings]);
 
   const personalMasechetInfo = useMemo(() => {
-    const en = settings?.active_personal_masechet?.trim();
+    const en = prefetchSettings.activePersonalMasechet?.trim();
     if (!en) return null;
     return {
       masechetEn: en,
       masechetHe: resolveMasechetHe(en),
     };
-  }, [settings?.active_personal_masechet]);
+  }, [prefetchSettings.activePersonalMasechet]);
 
   const refreshPrefetchStatus = useCallback(async () => {
     try {
-      const gemaraNikud = settings?.gemara_nikud !== 0;
+      const gemaraNikud = prefetchSettings.gemaraNikud;
       const days = await getOfflinePrefetchStatus({
         dayCount: OFFLINE_PREFETCH_DAY_COUNT,
         gemaraNikud,
-        dafDaySettings: settings ?? {},
+        dafDaySettings: prefetchSettings,
       });
       setDaysStatus(days);
 
@@ -110,7 +119,7 @@ export function useOfflinePrefetch({
       setDafYomiStatus(null);
       setPersonalStatus(null);
     }
-  }, [dafYomiMasechetInfo, personalMasechetInfo, settings]);
+  }, [dafYomiMasechetInfo, personalMasechetInfo, prefetchSettings]);
 
   useEffect(() => {
     void refreshPrefetchStatus();
@@ -123,7 +132,7 @@ export function useOfflinePrefetch({
   }, [isPrefetching]);
 
   const nikudSavedLabel =
-    settings?.gemara_nikud !== 0 ? 'נשמרה גרסה עם ניקוד.' : 'נשמרה גרסה בלי ניקוד.';
+    prefetchSettings.gemaraNikud ? 'נשמרה גרסה עם ניקוד.' : 'נשמרה גרסה בלי ניקוד.';
 
   const reportResult = useCallback(
     (result: OfflinePrefetchResult, successMessage: string) => {
@@ -232,26 +241,26 @@ export function useOfflinePrefetch({
       () =>
         prefetchOfflineDays({
           dayCount: OFFLINE_PREFETCH_DAY_COUNT,
-          gemaraNikud: settings?.gemara_nikud !== 0,
-          dafDaySettings: settings ?? {},
+          gemaraNikud: prefetchSettings.gemaraNikud,
+          dafDaySettings: prefetchSettings,
           shouldCancel: () => cancelRef.current,
           onProgress: setPrefetchProgress,
         }),
     );
-  }, [runPrefetch, settings]);
+  }, [runPrefetch, prefetchSettings]);
 
   const startMasechetPrefetch = useCallback(
     async (masechetEn: string, masechetHe?: string) => {
       const he = resolveMasechetHe(masechetEn, masechetHe);
       await runPrefetch(`מסכת ${he}`, `מסכת ${he} נשמרה במכשיר לקריאה ללא רשת.`, () =>
         prefetchOfflineMasechet(masechetEn, {
-          gemaraNikud: settings?.gemara_nikud !== 0,
+          gemaraNikud: prefetchSettings.gemaraNikud,
           shouldCancel: () => cancelRef.current,
           onProgress: setPrefetchProgress,
         }),
       );
     },
-    [runPrefetch, settings?.gemara_nikud],
+    [runPrefetch, prefetchSettings.gemaraNikud],
   );
 
   return {

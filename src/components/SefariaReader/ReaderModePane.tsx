@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
-  FadeIn,
-  FadeOut,
-  SlideInLeft,
-  SlideInRight,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import type { ViewMode } from './ReaderToolbar';
 import type { NavDirection } from '../../hooks/useDafReader';
@@ -23,32 +22,29 @@ export default function ReaderModePane({
   children,
 }: ReaderModePaneProps) {
   const skipEnter = useRef(true);
+  const opacity = useSharedValue(1);
+  const translateX = useSharedValue(0);
 
   useEffect(() => {
-    skipEnter.current = false;
-  }, []);
-
-  const getEnteringAnimation = () => {
-    if (skipEnter.current) return undefined;
-    if (navDirection === 'next') {
-      return SlideInLeft.duration(200);
+    if (skipEnter.current) {
+      skipEnter.current = false;
+      return;
     }
-    if (navDirection === 'prev') {
-      return SlideInRight.duration(200);
-    }
-    return FadeIn.duration(180);
-  };
+    const fromX = navDirection === 'next' ? -28 : navDirection === 'prev' ? 28 : 0;
+    translateX.value = fromX;
+    opacity.value = fromX === 0 ? 0.72 : 1;
+    translateX.value = withTiming(0, { duration: 200 });
+    opacity.value = withTiming(1, { duration: 180 });
+  }, [navDirection, opacity, pageKey, translateX, viewMode]);
 
-  const compositeKey = `${viewMode}-${pageKey || 'default'}`;
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateX: translateX.value }],
+  }));
 
   return (
     <View style={styles.pane}>
-      <Animated.View
-        key={compositeKey}
-        entering={getEnteringAnimation()}
-        exiting={FadeOut.duration(120)}
-        style={styles.pane}
-      >
+      <Animated.View key={`${viewMode}-${pageKey || 'default'}`} style={[styles.pane, animatedStyle]}>
         {children}
       </Animated.View>
     </View>

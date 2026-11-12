@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import type { NativeSyntheticEvent, NativeScrollEvent, ScrollViewInstance } from 'react-native';
 import { useAnimatedRef, type SharedValue } from 'react-native-reanimated';
 import { useAutoScroll, type AutoScrollSpeedLevel } from './useAutoScroll';
+import { scrollReaderTo, scrollReaderToIndex } from '../utils/readerScroll';
 
 interface UseScrollProgressOptions {
   progressShared?: SharedValue<number>;
@@ -54,7 +55,7 @@ export function useScrollProgress({
   });
 
   const applyOffset = useCallback((offset: number) => {
-    scrollViewRef.current?.scrollTo({ y: offset, animated: false });
+    scrollReaderTo(scrollViewRef.current, offset, false);
   }, [scrollViewRef]);
 
   useEffect(() => {
@@ -126,12 +127,15 @@ export function useScrollProgress({
   const scrollToTop = useCallback(() => {
     isScrollingToTopRef.current = true;
     setShowFab(false);
-    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    scrollReaderTo(scrollViewRef.current, 0, true);
   }, [scrollViewRef]);
 
   const scrollToY = useCallback((y: number, animated = true) => {
-    const offset = Math.max(0, y);
-    scrollViewRef.current?.scrollTo({ y: offset, animated });
+    scrollReaderTo(scrollViewRef.current, Math.max(0, y), animated);
+  }, [scrollViewRef]);
+
+  const scrollToIndex = useCallback((index: number, viewOffset = 24, animated = true) => {
+    scrollReaderToIndex(scrollViewRef.current, index, viewOffset, animated);
   }, [scrollViewRef]);
 
   return {
@@ -143,5 +147,6 @@ export function useScrollProgress({
     handleContentSizeChange,
     scrollToTop,
     scrollToY,
+    scrollToIndex,
   };
 }

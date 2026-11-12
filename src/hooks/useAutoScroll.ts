@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { ScrollViewInstance } from 'react-native';
+import { scrollReaderTo } from '../utils/readerScroll';
 
 export type AutoScrollSpeedLevel = 1 | 2 | 3 | 4 | 5;
 
@@ -65,7 +66,7 @@ export function useAutoScroll({
           currentY + stepPerFrame * factor,
         );
         scrollYRef.current = nextY;
-        scrollViewRef.current?.scrollTo({ y: nextY, animated: false });
+        scrollReaderTo(scrollViewRef.current, nextY, false);
         lastTimeRef.current = time;
       }
 

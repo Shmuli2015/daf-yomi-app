@@ -21,6 +21,7 @@ import { useCalendarMonth, isSameDay } from './Calendar/useCalendarMonth';
 import { useCalendarActions } from './Calendar/useCalendarActions';
 import { createHebrewCalendarStyles } from './Calendar/HebrewCalendar.styles';
 import { useTheme } from '../theme';
+import { useAllowConfetti } from '../hooks/useAccessibilityInfo';
 
 const DAYS_OF_WEEK = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
@@ -92,6 +93,7 @@ export default function HebrewCalendar() {
     recordByDate,
     showConfettiSetting,
   });
+  const confettiVisible = useAllowConfetti(showConfetti, setShowConfetti);
 
   return (
     <View style={styles.container}>
@@ -242,7 +244,7 @@ export default function HebrewCalendar() {
         onClose={() => setShowCatchUpModal(false)}
       />
 
-      {showConfetti && (
+      {confettiVisible && (
         <View 
           style={styles.confettiContainer}
           pointerEvents="none"

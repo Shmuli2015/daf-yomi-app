@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { he } from 'date-fns/locale/he';
 import { useAppStore } from '../store/useAppStore';
 import { getDafDayDate } from '../utils/dafDayBoundary';
-import { buildLast7Days, buildRecentHistoryKey } from '../utils/last7Days';
+import { buildLast7Days } from '../utils/last7Days';
 import { dafYomiDisplayMasechetHe, kinnimTamidCalendarDisplay } from '../utils/mishnahOnlySefaria';
 import { getMasechetDafim } from '../utils/shas';
 import { formatMasechetEndCountdown, getDaysUntilMasechetEnd } from '../utils/masechetEndCountdown';
@@ -50,7 +50,7 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
       todayDafNumValue: s.todayDafNumValue,
       todayAmud: s.todayAmud,
       streak: s.streak,
-      recentHistoryKey: buildRecentHistoryKey(s.history),
+      recentHistoryKey: s.recentHistoryKey,
       showSecularDate: s.settings?.show_secular_date === 1,
       dismissedHalfDafTip: s.settings?.dismissed_half_daf_tip,
       personalTrackEnabled: isPersonalTrackEnabled(s.settings),

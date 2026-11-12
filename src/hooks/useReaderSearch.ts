@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDebouncedValue } from './useDebouncedValue';
 import {
   searchInSegments,
   type SearchableSegment,
   type SearchMatchLocation,
 } from '../utils/textSearch';
+
+const SEARCH_DEBOUNCE_MS = 150;
 
 interface UseReaderSearchOptions {
   segments: SearchableSegment[];
@@ -14,17 +17,19 @@ export function useReaderSearch({ segments, resetKey }: UseReaderSearchOptions) 
   const [isSearchActive, setIsSearchActive] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeMatchIndex, setActiveMatchIndex] = useState(0);
+  const debouncedQuery = useDebouncedValue(searchQuery, SEARCH_DEBOUNCE_MS);
+  const highlightQuery = isSearchActive ? debouncedQuery : '';
 
   const matches = useMemo<SearchMatchLocation[]>(() => {
-    if (!isSearchActive || !searchQuery.trim()) {
+    if (!highlightQuery.trim()) {
       return [];
     }
-    return searchInSegments(segments, searchQuery);
-  }, [isSearchActive, searchQuery, segments]);
+    return searchInSegments(segments, highlightQuery);
+  }, [highlightQuery, segments]);
 
   useEffect(() => {
     setActiveMatchIndex(0);
-  }, [searchQuery, resetKey, isSearchActive]);
+  }, [highlightQuery, resetKey, isSearchActive]);
 
   useEffect(() => {
     if (matches.length === 0) {
@@ -61,6 +66,7 @@ export function useReaderSearch({ segments, resetKey }: UseReaderSearchOptions) 
   return {
     isSearchActive,
     searchQuery,
+    highlightQuery,
     setSearchQuery,
     matches,
     activeMatchIndex,

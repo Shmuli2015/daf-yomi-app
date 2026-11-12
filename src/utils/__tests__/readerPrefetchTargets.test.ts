@@ -1,7 +1,7 @@
 import { getNextDafPrefetchTargets } from '../readerPrefetchTargets';
 
 describe('readerPrefetchTargets', () => {
-  it('returns next amud of current daf and both amudim of next daf when on amud a', () => {
+  it('returns only the next amud when on amud a', () => {
     const targets = getNextDafPrefetchTargets({
       masechetEn: 'Berachot',
       dafNum: 2,
@@ -10,12 +10,10 @@ describe('readerPrefetchTargets', () => {
 
     expect(targets).toEqual([
       { masechetEn: 'Berachot', dafNum: 2, amud: 'b' },
-      { masechetEn: 'Berachot', dafNum: 3, amud: 'a' },
-      { masechetEn: 'Berachot', dafNum: 3, amud: 'b' },
     ]);
   });
 
-  it('returns both amudim of next daf when on amud b', () => {
+  it('returns the first amud of the next daf when on amud b', () => {
     const targets = getNextDafPrefetchTargets({
       masechetEn: 'Berachot',
       dafNum: 2,
@@ -24,11 +22,10 @@ describe('readerPrefetchTargets', () => {
 
     expect(targets).toEqual([
       { masechetEn: 'Berachot', dafNum: 3, amud: 'a' },
-      { masechetEn: 'Berachot', dafNum: 3, amud: 'b' },
     ]);
   });
 
-  it('transitions to next tractate when on the final page of a tractate', () => {
+  it('transitions to the next tractate when on the final page of a tractate', () => {
     const targets = getNextDafPrefetchTargets({
       masechetEn: 'Berachot',
       dafNum: 64,
@@ -37,11 +34,10 @@ describe('readerPrefetchTargets', () => {
 
     expect(targets).toEqual([
       { masechetEn: 'Shabbat', dafNum: 2, amud: 'a' },
-      { masechetEn: 'Shabbat', dafNum: 2, amud: 'b' },
     ]);
   });
 
-  it('only includes available amudim for tractates with asymmetric page ends', () => {
+  it('only includes an available amud for tractates with asymmetric page ends', () => {
     const targets = getNextDafPrefetchTargets({
       masechetEn: 'Berachot',
       dafNum: 63,

@@ -7,9 +7,9 @@ import {
 import { normalizeMasechetEn, type Amud } from '../utils/dafNavigation';
 import { resolveChavrutaLocation } from '../utils/mishnahOnlySefaria';
 import {
-  findChavrutaAmud,
   parseChavrutaAmudFromHtml,
   parseChavrutaDocument,
+  releaseChavrutaHeadingCache,
   type ChavrutaAmud,
 } from '../utils/parseChavrutaHtml';
 import { decodeHtmlBytes } from '../utils/windows1255';
@@ -21,16 +21,21 @@ export type {
   ChavrutaParagraph,
 } from '../utils/parseChavrutaHtml';
 
-export const CHAVRUTA_CACHE_VERSION = 10;
+export const CHAVRUTA_CACHE_VERSION = 11;
 
 export interface ChavrutaPageData extends ChavrutaAmud {
   masechetEn: string;
 }
 
-interface ChavrutaMasechetCache {
+interface ChavrutaManifest {
   v: number;
   masechetEn: string;
-  amudim: ChavrutaAmud[];
+  keys: string[];
+}
+
+interface ChavrutaMasechetMemory {
+  amudim: Map<string, ChavrutaAmud>;
+  complete: boolean;
 }
 
 interface FetchChavrutaAmudOptions {
@@ -38,10 +43,10 @@ interface FetchChavrutaAmudOptions {
 }
 
 const CACHE_DIR = `${FileSystem.documentDirectory ?? FileSystem.cacheDirectory ?? ''}chavruta/`;
-const memoryCache = new Map<string, ChavrutaMasechetCache>();
+const memoryCache = new Map<string, ChavrutaMasechetMemory>();
 const rawHtml = new Map<string, string>();
 const htmlInFlight = new Map<string, Promise<string>>();
-const fullParseInFlight = new Map<string, Promise<ChavrutaMasechetCache>>();
+const fullParseInFlight = new Map<string, Promise<void>>();
 const parseTokens = new Map<string, { cancelled: boolean }>();
 const writeChain = new Map<string, Promise<void>>();
 
@@ -82,9 +87,34 @@ async function ensureCacheDir(): Promise<string> {
   return CACHE_DIR;
 }
 
-function getCacheFilePath(masechetEn: string): string {
+function amudMapKey(dafNum: number, amud: Amud): string {
+  return `${dafNum}:${amud}`;
+}
+
+function amudStorageKey(dafNum: number, amud: Amud): string {
+  return `${dafNum}${amud}`;
+}
+
+function masechetDir(masechetEn: string): string {
   const safeName = masechetEn.replace(/\s+/g, '_');
-  return `${CACHE_DIR}${safeName}.json`;
+  return `${CACHE_DIR}${safeName}/`;
+}
+
+function manifestPath(masechetEn: string): string {
+  return `${masechetDir(masechetEn)}manifest.json`;
+}
+
+function amudFilePath(masechetEn: string, dafNum: number, amud: Amud): string {
+  return `${masechetDir(masechetEn)}${amudStorageKey(dafNum, amud)}.json`;
+}
+
+function rememberAmud(masechetEn: string, page: ChavrutaAmud, complete = false): void {
+  const existing = memoryCache.get(masechetEn) ?? { amudim: new Map(), complete: false };
+  existing.amudim.set(amudMapKey(page.dafNum, page.amud), page);
+  if (complete) {
+    existing.complete = true;
+  }
+  memoryCache.set(masechetEn, existing);
 }
 
 export function invalidateChavrutaMemoryCache(masechetEn?: string): void {
@@ -93,6 +123,7 @@ export function invalidateChavrutaMemoryCache(masechetEn?: string): void {
     cancelParseToken(normalized);
     memoryCache.delete(normalized);
     rawHtml.delete(normalized);
+    releaseChavrutaHeadingCache();
     htmlInFlight.delete(normalized);
     fullParseInFlight.delete(normalized);
     return;
@@ -101,6 +132,7 @@ export function invalidateChavrutaMemoryCache(masechetEn?: string): void {
   cancelParseToken();
   memoryCache.clear();
   rawHtml.clear();
+  releaseChavrutaHeadingCache();
   htmlInFlight.clear();
   fullParseInFlight.clear();
 }
@@ -110,31 +142,26 @@ export async function hasCachedChavrutaMasechet(masechetEn: string): Promise<boo
   if (!getChavrutaSource(normalized)) {
     return false;
   }
-  if (memoryCache.has(normalized)) {
+  if (memoryCache.get(normalized)?.complete) {
     return true;
   }
-  const cached = await readCachedMasechet(normalized);
-  if (cached) {
-    memoryCache.set(normalized, cached);
-    return true;
-  }
-  return false;
+  const manifest = await readManifest(normalized);
+  return manifest != null;
 }
 
-async function readCachedMasechet(masechetEn: string): Promise<ChavrutaMasechetCache | null> {
-  const cachePath = getCacheFilePath(masechetEn);
+async function readManifest(masechetEn: string): Promise<ChavrutaManifest | null> {
   try {
+    const cachePath = manifestPath(masechetEn);
     const fileInfo = await FileSystem.getInfoAsync(cachePath);
-    if (!fileInfo.exists || (fileInfo.size ?? 0) < 100) {
+    if (!fileInfo.exists || (fileInfo.size ?? 0) < 20) {
       return null;
     }
-    const content = await FileSystem.readAsStringAsync(cachePath);
-    const parsed = JSON.parse(content) as ChavrutaMasechetCache;
+    const parsed = JSON.parse(await FileSystem.readAsStringAsync(cachePath)) as ChavrutaManifest;
     if (
       parsed?.v === CHAVRUTA_CACHE_VERSION &&
       parsed.masechetEn === masechetEn &&
-      Array.isArray(parsed.amudim) &&
-      parsed.amudim.length > 0
+      Array.isArray(parsed.keys) &&
+      parsed.keys.length > 0
     ) {
       return parsed;
     }
@@ -143,17 +170,53 @@ async function readCachedMasechet(masechetEn: string): Promise<ChavrutaMasechetC
   return null;
 }
 
-async function writeCachedMasechet(cache: ChavrutaMasechetCache): Promise<void> {
+async function readCachedAmud(
+  masechetEn: string,
+  dafNum: number,
+  amud: Amud,
+): Promise<ChavrutaAmud | null> {
+  try {
+    const cachePath = amudFilePath(masechetEn, dafNum, amud);
+    const fileInfo = await FileSystem.getInfoAsync(cachePath);
+    if (!fileInfo.exists || (fileInfo.size ?? 0) < 20) {
+      return null;
+    }
+    const parsed = JSON.parse(await FileSystem.readAsStringAsync(cachePath)) as ChavrutaAmud;
+    if (parsed?.dafNum === dafNum && parsed.amud === amud) {
+      return parsed;
+    }
+  } catch {
+  }
+  return null;
+}
+
+async function writeCachedMasechet(masechetEn: string, amudim: ChavrutaAmud[]): Promise<void> {
   try {
     await ensureCacheDir();
-    await FileSystem.writeAsStringAsync(getCacheFilePath(cache.masechetEn), JSON.stringify(cache));
+    const directory = masechetDir(masechetEn);
+    await FileSystem.makeDirectoryAsync(directory, { intermediates: true });
+    const keys: string[] = [];
+    for (const page of amudim) {
+      const key = amudStorageKey(page.dafNum, page.amud);
+      keys.push(key);
+      await FileSystem.writeAsStringAsync(
+        amudFilePath(masechetEn, page.dafNum, page.amud),
+        JSON.stringify(page),
+      );
+    }
+    const manifest: ChavrutaManifest = {
+      v: CHAVRUTA_CACHE_VERSION,
+      masechetEn,
+      keys,
+    };
+    await FileSystem.writeAsStringAsync(manifestPath(masechetEn), JSON.stringify(manifest));
   } catch {
   }
 }
 
 async function deleteCachedMasechet(masechetEn: string): Promise<void> {
   try {
-    await FileSystem.deleteAsync(getCacheFilePath(masechetEn), { idempotent: true });
+    await FileSystem.deleteAsync(masechetDir(masechetEn), { idempotent: true });
   } catch {
   }
 }
@@ -200,7 +263,7 @@ async function getMasechetHtml(masechetEn: string, forceRefresh: boolean): Promi
   }
 }
 
-function startFullParse(masechetEn: string, html: string): Promise<ChavrutaMasechetCache> {
+function startFullParse(masechetEn: string, html: string): Promise<void> {
   const pending = fullParseInFlight.get(masechetEn);
   if (pending) {
     return pending;
@@ -216,26 +279,17 @@ function startFullParse(masechetEn: string, html: string): Promise<ChavrutaMasec
   const promise = (async () => {
     await Promise.resolve();
     if (token.cancelled) {
-      return {
-        v: CHAVRUTA_CACHE_VERSION,
-        masechetEn,
-        amudim: [],
-      };
+      return;
     }
     const amudim = parseChavrutaDocument(html);
     if (amudim.length === 0) {
       throw new Error('לא ניתן לפענח את ביאור חברותא למסכת זו');
     }
-    const cache: ChavrutaMasechetCache = {
-      v: CHAVRUTA_CACHE_VERSION,
-      masechetEn,
-      amudim,
-    };
     await enqueueMasechetWrite(masechetEn, async () => {
       if (token.cancelled) {
         return;
       }
-      await writeCachedMasechet(cache);
+      await writeCachedMasechet(masechetEn, amudim);
       if (token.cancelled) {
         if (parseTokens.get(masechetEn) === token || !parseTokens.has(masechetEn)) {
           await deleteCachedMasechet(masechetEn);
@@ -243,17 +297,13 @@ function startFullParse(masechetEn: string, html: string): Promise<ChavrutaMasec
         }
         return;
       }
-      memoryCache.set(masechetEn, cache);
+      memoryCache.set(masechetEn, {
+        complete: true,
+        amudim: new Map(amudim.map((page) => [amudMapKey(page.dafNum, page.amud), page])),
+      });
       rawHtml.delete(masechetEn);
+      releaseChavrutaHeadingCache(html);
     });
-    if (token.cancelled) {
-      return {
-        v: CHAVRUTA_CACHE_VERSION,
-        masechetEn,
-        amudim: [],
-      };
-    }
-    return cache;
   })();
 
   fullParseInFlight.set(masechetEn, promise);
@@ -296,23 +346,21 @@ export async function fetchChavrutaAmud(
     invalidateChavrutaMemoryCache(normalized);
     await deleteCachedMasechet(normalized);
   } else {
-    const remembered = memoryCache.get(normalized);
+    const remembered = memoryCache.get(normalized)?.amudim.get(
+      amudMapKey(resolved.dafNum, resolved.amud),
+    );
     if (remembered) {
-      const page = findChavrutaAmud(remembered.amudim, resolved.dafNum, resolved.amud);
-      if (!page) {
-        throw new Error('לא נמצא ביאור חברותא לעמוד זה');
-      }
-      return toPageData(normalized, page);
+      return toPageData(normalized, remembered);
     }
 
-    const cached = await readCachedMasechet(normalized);
+    const cached = await readCachedAmud(normalized, resolved.dafNum, resolved.amud);
     if (cached) {
-      memoryCache.set(normalized, cached);
-      const page = findChavrutaAmud(cached.amudim, resolved.dafNum, resolved.amud);
-      if (!page) {
-        throw new Error('לא נמצא ביאור חברותא לעמוד זה');
-      }
-      return toPageData(normalized, page);
+      rememberAmud(normalized, cached);
+      return toPageData(normalized, cached);
+    }
+
+    if (memoryCache.get(normalized)?.complete) {
+      throw new Error('לא נמצא ביאור חברותא לעמוד זה');
     }
   }
 
@@ -323,6 +371,7 @@ export async function fetchChavrutaAmud(
     throw new Error('לא נמצא ביאור חברותא לעמוד זה');
   }
 
+  rememberAmud(normalized, page);
   void startFullParse(normalized, html);
   return toPageData(normalized, page);
 }

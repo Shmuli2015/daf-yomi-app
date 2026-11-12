@@ -44,6 +44,7 @@ export function useDafReader(initialLocation: DafLocation) {
   const [sefariaLoading, setSefariaLoading] = useState(true);
   const [sefariaError, setSefariaError] = useState<string | null>(null);
   const loadRequestKeyRef = useRef<string | null>(null);
+  const sefariaAbortRef = useRef<AbortController | null>(null);
 
   const normalizedMasechet = normalizeMasechetEn(location.masechetEn);
   const mishnahOnly = isMishnahOnlySlot(normalizedMasechet, location.dafNum, location.amud);
@@ -67,17 +68,25 @@ export function useDafReader(initialLocation: DafLocation) {
   );
 
   const loadSefariaText = useCallback(async (loc: DafLocation) => {
+    sefariaAbortRef.current?.abort();
+    const controller = new AbortController();
+    sefariaAbortRef.current = controller;
     const requestKey = locationRequestKey(loc, gemaraNikud);
     loadRequestKeyRef.current = requestKey;
     setSefariaLoading(true);
     setSefariaError(null);
     try {
-      const data = await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud);
-      if (loadRequestKeyRef.current !== requestKey) {
+      const data = await fetchSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud, {
+        signal: controller.signal,
+      });
+      if (controller.signal.aborted || loadRequestKeyRef.current !== requestKey) {
         return;
       }
       setSefariaData(data);
     } catch (err: unknown) {
+      if (controller.signal.aborted) {
+        return;
+      }
       if (loadRequestKeyRef.current !== requestKey) {
         return;
       }
@@ -89,11 +98,32 @@ export function useDafReader(initialLocation: DafLocation) {
     }
   }, [gemaraNikud, nikudAvailable]);
 
-  useReaderPrefetch(location, gemaraNikud, chavrutaAvailable);
+  const deferSefaria = viewMode === 'chavruta' && chavrutaAvailable;
+  useReaderPrefetch(location, gemaraNikud, deferSefaria);
 
   useEffect(() => {
+    return () => {
+      sefariaAbortRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!deferSefaria) {
+      void loadSefariaText(location);
+      return;
+    }
+    const requestKey = locationRequestKey(location, gemaraNikud);
+    if (loadRequestKeyRef.current && loadRequestKeyRef.current !== requestKey) {
+      sefariaAbortRef.current?.abort();
+    }
+  }, [deferSefaria, gemaraNikud, location, loadSefariaText]);
+
+  useEffect(() => {
+    if (!deferSefaria || chavruta.loading) {
+      return;
+    }
     void loadSefariaText(location);
-  }, [location, loadSefariaText]);
+  }, [chavruta.loading, deferSefaria, location, loadSefariaText]);
 
   const handleToggleViewMode = useCallback((mode: ViewMode) => {
     if (mode === viewMode) {

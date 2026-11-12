@@ -21,6 +21,7 @@ import {
 
 export const OFFLINE_PREFETCH_DAY_COUNT = 7;
 const DEFAULT_CONCURRENCY = 2;
+const STATUS_CONCURRENCY = 8;
 
 export type OfflinePrefetchProgress = {
   completed: number;
@@ -180,6 +181,27 @@ async function runPool<T>(
   return { successCount, failureCount, diskWriteFailureCount, cancelled };
 }
 
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  worker: (item: T) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (nextIndex < items.length) {
+      const current = nextIndex;
+      nextIndex += 1;
+      results[current] = await worker(items[current]);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
 async function getStatusForTargets(
   amudTargets: DafLocation[],
   gemaraNikud: boolean,
@@ -190,13 +212,15 @@ async function getStatusForTargets(
     return statusFromCounts(0, 0);
   }
 
-  const amudFlags = await Promise.all(
-    amudTargets.map((loc) =>
-      hasCachedSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud),
-    ),
+  const amudFlags = await mapWithConcurrency(
+    amudTargets,
+    STATUS_CONCURRENCY,
+    (loc) => hasCachedSefariaPageText(loc.masechetEn, loc.dafNum, loc.amud, gemaraNikud),
   );
-  const chavrutaFlags = await Promise.all(
-    chavrutaTargets.map((loc) => hasCachedChavrutaMasechet(loc.masechetEn)),
+  const chavrutaFlags = await mapWithConcurrency(
+    chavrutaTargets,
+    STATUS_CONCURRENCY,
+    (loc) => hasCachedChavrutaMasechet(loc.masechetEn),
   );
 
   const cachedCount =

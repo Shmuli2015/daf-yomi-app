@@ -1,5 +1,4 @@
 import { DailyRecord } from '../db/database';
-import dafDates from '../data/dafDates.json';
 import { SHAS_MASECHTOT, SEDARIM, Seder, numberToGematria } from '../data/shas';
 import { getRecordProgress } from './dafStatus';
 import { isTamidMasechet, isTamidStartDaf, TAMID_START_DAF } from './mishnahOnlySefaria';
@@ -8,13 +7,23 @@ export function stripNiqqud(str: string) {
   return str.replace(/[\u0591-\u05C7]/g, '');
 }
 
-const normalizedDafDates = new Map<string, string>();
-for (const [key, value] of Object.entries(dafDates as Record<string, string>)) {
-  const lastUnderscore = key.lastIndexOf('_');
-  if (lastUnderscore === -1) continue;
-  const masechetPart = stripNiqqud(key.slice(0, lastUnderscore));
-  const dafPart = key.slice(lastUnderscore + 1);
-  normalizedDafDates.set(`${masechetPart}_${dafPart}`, value);
+let normalizedDafDates: Map<string, string> | null = null;
+
+function getNormalizedDafDates(): Map<string, string> {
+  if (normalizedDafDates) {
+    return normalizedDafDates;
+  }
+  const dafDates = require('../data/dafDates.json') as Record<string, string>;
+  const map = new Map<string, string>();
+  for (const [key, value] of Object.entries(dafDates)) {
+    const lastUnderscore = key.lastIndexOf('_');
+    if (lastUnderscore === -1) continue;
+    const masechetPart = stripNiqqud(key.slice(0, lastUnderscore));
+    const dafPart = key.slice(lastUnderscore + 1);
+    map.set(`${masechetPart}_${dafPart}`, value);
+  }
+  normalizedDafDates = map;
+  return map;
 }
 
 export const MASECHTOT_ENDING_ON_AMUD_A = new Set([
@@ -101,7 +110,7 @@ export function getMasechetDafim(masechetName: string): number[] {
 
   const prefix = masechetNameSafe + '_';
   const dafim: number[] = [];
-  for (const k of normalizedDafDates.keys()) {
+  for (const k of getNormalizedDafDates().keys()) {
     if (k.startsWith(prefix)) {
       const dafNum = parseInt(k.slice(prefix.length), 10);
       if (!isNaN(dafNum)) dafim.push(dafNum);
@@ -133,10 +142,10 @@ export function getDafDateStr(masechetHe: string, dafNum: number): string | null
     dafNum === TAMID_START_DAF &&
     (masechetNameSafe === 'תמיד' || isTamidMasechet(masechetHe))
   ) {
-    return normalizedDafDates.get(`קינים_${TAMID_START_DAF}`) ?? null;
+    return getNormalizedDafDates().get(`קינים_${TAMID_START_DAF}`) ?? null;
   }
   const key = `${masechetNameSafe}_${dafNum}`;
-  return normalizedDafDates.get(key) ?? null;
+  return getNormalizedDafDates().get(key) ?? null;
 }
 
 export function getMasechetProgress(masechetHe: string, history: DailyRecord[]) {

@@ -5,7 +5,7 @@ import { cleanupAllApkDownloads } from '../services/apkInstall';
 import { deleteLegacyTzuratHadafCache } from '../services/storageManager';
 import { scheduleIdleSequence } from '../utils/scheduleIdleTask';
 
-const MIN_SPLASH_MS = 1800;
+const MIN_SPLASH_MS = 300;
 const SPLASH_HARD_MAX_MS = 6000;
 
 export function useAppInitialization() {
