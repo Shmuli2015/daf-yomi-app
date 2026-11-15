@@ -1,8 +1,9 @@
 import React, { forwardRef, useMemo } from 'react';
-import { View, type ViewInstance, Text, Image } from 'react-native';
+import { View, type ViewInstance, Text } from 'react-native';
 import type { LayoutChangeEvent } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LIGHT_THEME } from '../../theme';
+import { useTheme } from '../../theme';
+import ShareFrame from '../Share/ShareFrame';
 import { createSiyumShareCardStyles } from './siyumShareCardStyles';
 
 interface SiyumShareCardProps {
@@ -15,44 +16,42 @@ const SiyumShareCard = forwardRef<ViewInstance, SiyumShareCardProps>(function Si
   { masechetHe, totalPages, onLayout },
   ref,
 ) {
-  const styles = useMemo(() => createSiyumShareCardStyles(LIGHT_THEME), []);
+  const theme = useTheme();
+  const styles = useMemo(() => createSiyumShareCardStyles(theme, true), [theme]);
 
   return (
-    <View ref={ref} style={styles.root} collapsable={false} onLayout={onLayout}>
-      <View style={styles.decorTop} />
-      <View style={styles.decorBottom} />
-
-      <View style={styles.content}>
-        <View style={styles.ribbonOuter}>
-          <View style={styles.ribbonRing}>
-            <View style={styles.ribbonInner}>
-              <Ionicons name="ribbon" size={108} color={LIGHT_THEME.colors.accent} />
+    <View ref={ref} collapsable={false} onLayout={onLayout}>
+      <ShareFrame cardTheme="dark" categoryBadge="סיום מסכת ש״ס">
+        <View style={styles.root}>
+          <View style={styles.crownOuterRing}>
+            <View style={styles.crownInnerRing}>
+              <Ionicons name="ribbon" size={88} color={theme.colors.accent} />
             </View>
           </View>
-        </View>
 
-        <Text style={styles.title}>מַזָּל טוֹב!</Text>
-        <Text style={styles.subtitle}>סיימת מסכת {masechetHe}</Text>
+          <Text style={styles.congratsTitle}>מַזָּל טוֹב!</Text>
+          <Text style={styles.completionSubtitle}>לרגל סיום והשלמת</Text>
 
-        <View style={styles.pagesPill}>
-          <Text style={styles.pagesText}>זכית לסיים {totalPages} דפים</Text>
-        </View>
-      </View>
-
-      <View style={styles.footer}>
-        <View style={styles.footerLineWrap}>
-          <View style={styles.footerLine} />
-        </View>
-        <View style={styles.branding}>
-          <View style={styles.logoOuter}>
-            <Image source={require('../../../assets/icon.png')} style={styles.logo} />
+          <View style={styles.masechetRow}>
+            <View style={styles.flourishLine} />
+            <Text style={styles.masechetName}>מסכת {masechetHe}</Text>
+            <View style={styles.flourishLine} />
           </View>
-          <View>
-            <Text style={styles.appName}>מסע דף</Text>
-            <Text style={styles.appTagline}>מעקב דף יומי</Text>
+
+          <View style={styles.pagesPill}>
+            <Text style={styles.pagesText}>זכית לסיים {totalPages} דפי גמרא</Text>
+          </View>
+
+          <View style={styles.hadranCard}>
+            <Text style={styles.hadranLine1}>
+              הֲדְרָן עֲלָךְ מַסֶּכֶת {masechetHe} וַהֲדָרָךְ עֲלַן
+            </Text>
+            <Text style={styles.hadranLine2}>
+              דַּעְתַּן עֲלָךְ וְדַעְתָּךְ עֲלַן • תּוֹרָה צִוָּה לָנוּ מֹשֶׁה
+            </Text>
           </View>
         </View>
-      </View>
+      </ShareFrame>
     </View>
   );
 });

@@ -1,144 +1,118 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import type { Theme } from '../../theme';
-import { CARD_SIZE } from '../../utils/shareProgressImage';
 
-export function createSiyumShareCardStyles(theme: Theme) {
+export function createSiyumShareCardStyles(theme: Theme, isDark: boolean) {
+  const textColor = isDark ? theme.colors.textPrimary : theme.colors.primary;
+  const mutedColor = isDark ? theme.colors.textSecondary : theme.colors.textMuted;
+  const pillBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.9)';
+  const hadranBg = isDark ? 'rgba(201,150,60,0.1)' : 'rgba(201,150,60,0.08)';
+
   return StyleSheet.create({
     root: {
-      width: CARD_SIZE,
-      height: CARD_SIZE,
-      direction: 'rtl',
-      overflow: 'hidden',
-      backgroundColor: theme.colors.surface,
-    },
-    decorTop: {
-      position: 'absolute',
-      top: -120,
-      right: -80,
-      width: 440,
-      height: 440,
-      borderRadius: 220,
-      backgroundColor: theme.colors.accentLight,
-    },
-    decorBottom: {
-      position: 'absolute',
-      bottom: -100,
-      left: -100,
-      width: 380,
-      height: 380,
-      borderRadius: 190,
-      backgroundColor: theme.colors.accentLight,
-    },
-    content: {
-      flex: 1,
-      justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: 64,
+      justifyContent: 'center',
+      width: '100%',
     },
-    ribbonOuter: {
-      marginBottom: 36,
-      ...theme.shadow.gold,
-      borderRadius: 140,
-    },
-    ribbonRing: {
-      width: 240,
-      height: 240,
-      borderRadius: 120,
-      padding: 8,
+    crownOuterRing: {
+      width: 190,
+      height: 190,
+      borderRadius: 95,
       borderWidth: 2,
-      borderColor: theme.colors.accentBorder,
+      borderColor: theme.colors.cardFrameBorder,
+      padding: 10,
       justifyContent: 'center',
       alignItems: 'center',
-      overflow: 'hidden',
-      backgroundColor: theme.colors.surface,
+      backgroundColor: isDark ? 'rgba(201,150,60,0.06)' : 'rgba(201,150,60,0.08)',
+      marginBottom: 20,
     },
-    ribbonInner: {
-      width: 210,
-      height: 210,
-      borderRadius: 105,
-      backgroundColor: theme.colors.accentLight,
+    crownInnerRing: {
+      width: 166,
+      height: 166,
+      borderRadius: 83,
+      backgroundColor: isDark ? 'rgba(201,150,60,0.15)' : 'rgba(201,150,60,0.16)',
       justifyContent: 'center',
       alignItems: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.cardFrameBorderGlow,
     },
-    title: {
-      fontSize: 72,
+    congratsTitle: {
+      fontSize: 76,
       fontWeight: '900',
       color: theme.colors.accent,
+      letterSpacing: 2,
       textAlign: 'center',
-      marginBottom: 16,
+      lineHeight: 82,
+      marginBottom: 6,
     },
-    subtitle: {
-      fontSize: 44,
-      fontWeight: '800',
-      color: theme.colors.textPrimary,
+    completionSubtitle: {
+      fontSize: 30,
+      fontWeight: '700',
+      color: mutedColor,
       textAlign: 'center',
-      writingDirection: 'rtl',
-      width: '100%',
-      marginBottom: 36,
+      marginBottom: 10,
     },
-    pagesPill: {
-      paddingVertical: 24,
-      paddingHorizontal: 48,
-      borderRadius: theme.radius.full,
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1.5,
-      borderColor: theme.colors.accentBorder,
-      ...theme.shadow.cardMedium,
-    },
-    pagesText: {
-      fontSize: 36,
-      fontWeight: '800',
-      color: theme.colors.textSecondary,
-      textAlign: 'center',
-      writingDirection: 'rtl',
-    },
-    footer: {
-      paddingBottom: 48,
-      paddingTop: 8,
-    },
-    footerLineWrap: {
-      alignItems: 'center',
-      marginBottom: 28,
-      paddingHorizontal: 100,
-    },
-    footerLine: {
-      height: 4,
-      width: '100%',
-      maxWidth: 520,
-      borderRadius: 2,
-      backgroundColor: theme.colors.accent,
-      opacity: 0.85,
-    },
-    branding: {
+    masechetRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 24,
-      paddingHorizontal: 32,
+      gap: 20,
+      marginBottom: 24,
+      width: '100%',
+      paddingHorizontal: 20,
     },
-    logoOuter: {
-      padding: 12,
-      borderRadius: 22,
-      backgroundColor: theme.colors.surface,
-      borderWidth: 1,
-      borderColor: theme.colors.accentBorder,
-      ...theme.shadow.card,
+    flourishLine: {
+      height: 2,
+      flex: 1,
+      maxWidth: 100,
+      backgroundColor: theme.colors.cardFrameBorder,
+      borderRadius: theme.radius.full,
     },
-    logo: {
-      width: 56,
-      height: 56,
-      borderRadius: 14,
-    },
-    appName: {
-      fontSize: 36,
+    masechetName: {
+      fontSize: 66,
       fontWeight: '900',
-      color: theme.colors.textPrimary,
+      color: textColor,
+      letterSpacing: -1,
+      textAlign: 'center',
     },
-    appTagline: {
-      fontSize: 23,
-      fontWeight: '600',
-      color: theme.colors.textMuted,
-      marginTop: 4,
+    pagesPill: {
+      paddingVertical: 14,
+      paddingHorizontal: 40,
+      borderRadius: theme.radius.full,
+      backgroundColor: pillBg,
+      borderWidth: 1.5,
+      borderColor: theme.colors.cardFrameBorder,
+      marginBottom: 24,
+    },
+    pagesText: {
+      fontSize: 30,
+      fontWeight: '800',
+      color: theme.colors.accent,
+      textAlign: 'center',
+    },
+    hadranCard: {
+      paddingVertical: 18,
+      paddingHorizontal: 40,
+      borderRadius: theme.radius.md,
+      backgroundColor: hadranBg,
+      borderWidth: 1,
+      borderColor: theme.colors.cardFrameBorderGlow,
+      maxWidth: 760,
+      alignSelf: 'center',
+    },
+    hadranLine1: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: textColor,
+      textAlign: 'center',
+      marginBottom: 4,
+      writingDirection: 'rtl',
+    },
+    hadranLine2: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: theme.colors.accent,
+      textAlign: 'center',
+      writingDirection: 'rtl',
     },
   });
 }

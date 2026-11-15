@@ -3,18 +3,20 @@ import {
   View,
   type ViewInstance,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import ShareProgressCard from './ShareProgressCard';
-import { CARD_SIZE, captureAndShare, waitForShareCaptureReady, type ShareProgressData } from '../../utils/shareProgressImage';
+import type { ShareCardThemeMode } from './ShareFrame';
+import {
+  captureAndShare,
+  waitForShareCaptureReady,
+  type ShareProgressData,
+} from '../../utils/shareProgressImage';
 import BottomSheetModal from '../BottomSheetModal';
-
-const PREVIEW_WIDTH = 300;
-const PREVIEW_SCALE = PREVIEW_WIDTH / CARD_SIZE;
+import { createSharePreviewModalStyles } from './SharePreviewModal.styles';
 
 interface SharePreviewModalProps {
   visible: boolean;
@@ -22,12 +24,17 @@ interface SharePreviewModalProps {
   data: ShareProgressData | null;
 }
 
-export default function SharePreviewModal({ visible, onClose, data }: SharePreviewModalProps) {
+export default function SharePreviewModal({
+  visible,
+  onClose,
+  data,
+}: SharePreviewModalProps) {
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createSharePreviewModalStyles(theme), [theme]);
   const captureRef = useRef<ViewInstance>(null);
   const [sharing, setSharing] = useState(false);
   const [captureLaidOut, setCaptureLaidOut] = useState(false);
+  const [cardTheme, setCardTheme] = useState<ShareCardThemeMode>('dark');
 
   useEffect(() => {
     if (visible) {
@@ -67,9 +74,57 @@ export default function SharePreviewModal({ visible, onClose, data }: SharePrevi
 
         <Text style={styles.title}>כך ייראה השיתוף שלך</Text>
 
+        <View style={styles.themeSelectorRow}>
+          <TouchableOpacity
+            style={[
+              styles.themeOptionButton,
+              cardTheme === 'dark' && styles.themeOptionButtonActive,
+            ]}
+            onPress={() => setCardTheme('dark')}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="moon"
+              size={15}
+              color={cardTheme === 'dark' ? theme.colors.accent : theme.colors.textMuted}
+            />
+            <Text
+              style={[
+                styles.themeOptionText,
+                cardTheme === 'dark' && styles.themeOptionTextActive,
+              ]}
+            >
+              כהה מלכותי
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.themeOptionButton,
+              cardTheme === 'light' && styles.themeOptionButtonActive,
+            ]}
+            onPress={() => setCardTheme('light')}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="sunny"
+              size={15}
+              color={cardTheme === 'light' ? theme.colors.accent : theme.colors.textMuted}
+            />
+            <Text
+              style={[
+                styles.themeOptionText,
+                cardTheme === 'light' && styles.themeOptionTextActive,
+              ]}
+            >
+              בהיר יוקרתי
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         <View style={styles.previewWrapper}>
           <View style={styles.previewScaler}>
-            <ShareProgressCard data={data} />
+            <ShareProgressCard data={data} cardTheme={cardTheme} />
           </View>
         </View>
 
@@ -80,10 +135,10 @@ export default function SharePreviewModal({ visible, onClose, data }: SharePrevi
           disabled={sharing}
         >
           {sharing ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color={theme.colors.white} />
           ) : (
             <>
-              <Ionicons name="share-outline" size={20} color="#FFFFFF" />
+              <Ionicons name="share-outline" size={20} color={theme.colors.white} />
               <Text style={styles.shareText}>שתף תמונה</Text>
             </>
           )}
@@ -94,74 +149,10 @@ export default function SharePreviewModal({ visible, onClose, data }: SharePrevi
         <ShareProgressCard
           ref={captureRef}
           data={data}
+          cardTheme={cardTheme}
           onLayout={() => setCaptureLaidOut(true)}
         />
       </View>
     </BottomSheetModal>
   );
 }
-
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
-  StyleSheet.create({
-    content: {
-      alignItems: 'center',
-      paddingTop: 12,
-      direction: 'rtl',
-    },
-    closeBtn: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      padding: 4,
-      zIndex: 2,
-    },
-    title: {
-      color: theme.colors.textPrimary,
-      fontSize: 20,
-      fontWeight: '900',
-      marginBottom: 20,
-      textAlign: 'center',
-    },
-    previewWrapper: {
-      width: PREVIEW_WIDTH,
-      height: PREVIEW_WIDTH,
-      overflow: 'hidden',
-      borderRadius: 16,
-      marginBottom: 20,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    previewScaler: {
-      width: CARD_SIZE,
-      height: CARD_SIZE,
-      transform: [{ scale: PREVIEW_SCALE }],
-    },
-    shareButton: {
-      width: '100%',
-      backgroundColor: theme.colors.accent,
-      paddingVertical: 14,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexDirection: 'row',
-      gap: 8,
-    },
-    shareButtonDisabled: {
-      opacity: 0.85,
-    },
-    shareText: {
-      color: '#FFFFFF',
-      fontSize: 16,
-      fontWeight: '800',
-    },
-    captureHost: {
-      position: 'absolute',
-      left: -10000,
-      top: 0,
-      width: CARD_SIZE,
-      height: CARD_SIZE,
-      opacity: 1,
-    },
-  });

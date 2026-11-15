@@ -28,7 +28,15 @@ export type ShasShareData = {
   completedMasechtot: number;
 };
 
-export type ShareProgressData = StreakShareData | ShasShareData;
+export type UpcomingMasechetShareData = {
+  variant: 'upcoming_masechet';
+  masechetHe: string;
+  daysLeft: number;
+  startDateFormatted: string;
+  hebrewDate: string;
+};
+
+export type ShareProgressData = StreakShareData | ShasShareData | UpcomingMasechetShareData;
 
 function waitForIdle(): Promise<void> {
   return new Promise((resolve) => {

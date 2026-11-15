@@ -27,6 +27,14 @@ export type Theme = {
     gold: string;
     overlay: string;
     overlayStrong: string;
+    goldLight: string;
+    goldDark: string;
+    cardWarmSurface: string;
+    cardWarmSurfaceSecondary: string;
+    cardDarkSurface: string;
+    cardDarkSurfaceSecondary: string;
+    cardFrameBorder: string;
+    cardFrameBorderGlow: string;
   };
   radius: {
     sm: number;
@@ -68,6 +76,14 @@ export const DARK_THEME: Theme = {
     gold: '#FFD700',
     overlay: 'rgba(0,0,0,0.4)',
     overlayStrong: 'rgba(0,0,0,0.65)',
+    goldLight: '#F3D282',
+    goldDark: '#9A6E18',
+    cardWarmSurface: '#FFFDF9',
+    cardWarmSurfaceSecondary: '#F8EED9',
+    cardDarkSurface: '#0B0F19',
+    cardDarkSurfaceSecondary: '#131B2E',
+    cardFrameBorder: 'rgba(201,150,60,0.38)',
+    cardFrameBorderGlow: 'rgba(201,150,60,0.18)',
   },
   radius: {
     sm: 12,
