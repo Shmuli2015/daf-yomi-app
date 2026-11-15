@@ -1,8 +1,9 @@
-import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, TextInput, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { createDafMarkMenuStyles } from './DafMarkMenuContent.styles';
+import StopPointPresetsRow from './StopPointPresetsRow';
 
 export interface DafMarkMenuContentProps {
   onSelectFull: () => void;
@@ -12,6 +13,8 @@ export interface DafMarkMenuContentProps {
   showUnmark?: boolean;
   onUnmark?: () => void;
   partialAmud?: 'a' | 'b' | null;
+  stopPoint?: string | null;
+  onSaveStopPoint?: (note: string | null) => void;
   onOpenTzuratHadaf?: () => void;
 }
 
@@ -23,10 +26,35 @@ export default function DafMarkMenuContent({
   showUnmark = false,
   onUnmark,
   partialAmud = null,
+  stopPoint = null,
+  onSaveStopPoint,
   onOpenTzuratHadaf,
 }: DafMarkMenuContentProps) {
   const theme = useTheme();
   const styles = useMemo(() => createDafMarkMenuStyles(theme), [theme]);
+  const [isEditingStopPoint, setIsEditingStopPoint] = useState(false);
+  const [stopPointInput, setStopPointInput] = useState(stopPoint ?? '');
+
+  useEffect(() => {
+    setStopPointInput(stopPoint ?? '');
+  }, [stopPoint]);
+
+  const hasStopPoint = Boolean(stopPoint && stopPoint.trim());
+
+  const handleSaveNote = () => {
+    if (onSaveStopPoint) {
+      onSaveStopPoint(stopPointInput.trim() || null);
+    }
+    setIsEditingStopPoint(false);
+  };
+
+  const handleDeleteNote = () => {
+    if (onSaveStopPoint) {
+      onSaveStopPoint(null);
+    }
+    setStopPointInput('');
+    setIsEditingStopPoint(false);
+  };
 
   return (
     <View style={styles.content}>
@@ -59,6 +87,67 @@ export default function DafMarkMenuContent({
           חצי דף (ב){partialAmud === 'b' ? ' ✓' : ''}
         </Text>
       </TouchableOpacity>
+
+      {onSaveStopPoint && (
+        isEditingStopPoint ? (
+          <View style={styles.stopPointCard}>
+            <Text style={styles.stopPointLabel}>איפה עצרת בלימוד?</Text>
+            <StopPointPresetsRow
+              selectedValue={stopPointInput}
+              onSelectPreset={(val) => setStopPointInput(val)}
+            />
+            <TextInput
+              style={styles.stopPointInput}
+              value={stopPointInput}
+              onChangeText={setStopPointInput}
+              placeholder="או הקלידו: למשל 3/4 עמוד, שורה 15..."
+              placeholderTextColor={theme.colors.textMuted}
+              textAlign="right"
+              autoFocus
+            />
+            <View style={styles.stopPointButtonsRow}>
+              <TouchableOpacity
+                style={styles.stopPointSaveBtn}
+                onPress={handleSaveNote}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.stopPointSaveText}>שמור</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.stopPointCancelBtn}
+                onPress={() => setIsEditingStopPoint(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.stopPointCancelText}>ביטול</Text>
+              </TouchableOpacity>
+              {hasStopPoint && (
+                <TouchableOpacity
+                  style={styles.stopPointDeleteBtn}
+                  onPress={handleDeleteNote}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.stopPointDeleteText}>מחק</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.optionButton}
+            onPress={() => setIsEditingStopPoint(true)}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={hasStopPoint ? 'bookmark' : 'bookmark-outline'}
+              size={22}
+              color={hasStopPoint ? theme.colors.success : theme.colors.accent}
+            />
+            <Text style={[styles.optionText, hasStopPoint && styles.optionTextDone]} numberOfLines={1}>
+              {hasStopPoint ? `נקודת עצירה: ${stopPoint}` : 'נקודת עצירה / איפה עצרתי'}
+            </Text>
+          </TouchableOpacity>
+        )
+      )}
 
       {onOpenTzuratHadaf && (
         <TouchableOpacity style={styles.optionButton} onPress={onOpenTzuratHadaf} activeOpacity={0.8}>

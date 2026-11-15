@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useAppStore } from '../store/useAppStore';
 import { maybeRequestStoreReview, maybeRequestStoreReviewForStreak } from '../services/storeReview';
-import { getPartialAmud, getStudyStatus } from '../utils/dafStatus';
+import { getPartialAmud, getStopPoint, getStudyStatus } from '../utils/dafStatus';
 import { getDafDateStr } from '../utils/shas';
 import { isTamidStartDaf } from '../utils/mishnahOnlySefaria';
 import { getMasechetProgressFromCache } from '../utils/progressCache';
@@ -26,6 +26,7 @@ export function useTzuratLearnedMark({
   const [showConfetti, setShowConfetti] = useState(false);
   const [showTrackPicker, setShowTrackPicker] = useState(false);
   const [showHalfMenuInPicker, setShowHalfMenuInPicker] = useState(false);
+  const [showStopPointModal, setShowStopPointModal] = useState(false);
   const [pendingTrack, setPendingTrack] = useState<StudyTrackMode>('dafYomi');
 
   const {
@@ -33,20 +34,24 @@ export function useTzuratLearnedMark({
     progressCache,
     toggleAnyDafLearned,
     setDafStudyStatus,
+    setDafStopPoint,
     markPartialAmud,
     markPersonalDafLearned,
     markPersonalPartialAmud,
     setPersonalDafStudyStatus,
+    setPersonalDafStopPoint,
   } = useAppStore(
     useShallow((s) => ({
       settings: s.settings,
       progressCache: s.progressCache,
       toggleAnyDafLearned: s.toggleAnyDafLearned,
       setDafStudyStatus: s.setDafStudyStatus,
+      setDafStopPoint: s.setDafStopPoint,
       markPartialAmud: s.markPartialAmud,
       markPersonalDafLearned: s.markPersonalDafLearned,
       markPersonalPartialAmud: s.markPersonalPartialAmud,
       setPersonalDafStudyStatus: s.setPersonalDafStudyStatus,
+      setPersonalDafStopPoint: s.setPersonalDafStopPoint,
     })),
   );
 
@@ -111,6 +116,21 @@ export function useTzuratLearnedMark({
     () => getPartialAmud(personalRecord),
     [personalRecord],
   );
+
+  const dafYomiStopPoint = useMemo(
+    () => (dateStr ? getStopPoint(dailyRecord) : null),
+    [dateStr, dailyRecord],
+  );
+
+  const personalStopPoint = useMemo(
+    () => getStopPoint(personalRecord),
+    [personalRecord],
+  );
+
+  const currentStopPoint = useMemo(() => {
+    if (pendingTrack === 'personal') return personalStopPoint;
+    return dafYomiStopPoint ?? personalStopPoint;
+  }, [pendingTrack, dafYomiStopPoint, personalStopPoint]);
 
   const canMarkDafYomi = dateStr != null && dafYomiMasechetHe != null;
   const canMarkPersonal = personalEnabled && Boolean(masechetEn);
@@ -300,6 +320,31 @@ export function useTzuratLearnedMark({
     markPartialAmud,
   ]);
 
+  const handleSaveStopPoint = useCallback((note: string | null) => {
+    void triggerImpact('light');
+    if (pendingTrack === 'personal' || (!dateStr && personalEnabled)) {
+      setPersonalDafStopPoint(masechetEn, dafNum, note);
+      return;
+    }
+    if (dateStr && dafYomiMasechetHe) {
+      setDafStopPoint(dateStr, dafYomiMasechetHe, dafHeStr, note);
+      return;
+    }
+    if (personalEnabled) {
+      setPersonalDafStopPoint(masechetEn, dafNum, note);
+    }
+  }, [
+    pendingTrack,
+    dateStr,
+    personalEnabled,
+    masechetEn,
+    dafNum,
+    dafYomiMasechetHe,
+    dafHeStr,
+    setPersonalDafStopPoint,
+    setDafStopPoint,
+  ]);
+
   const handleConfirmUnmark = useCallback(() => {
     setShowConfirm(false);
     void triggerImpact('light');
@@ -337,6 +382,9 @@ export function useTzuratLearnedMark({
     personalStatus,
     dafYomiPartialAmud,
     personalPartialAmud,
+    currentStopPoint,
+    dafYomiStopPoint,
+    personalStopPoint,
     menuPartialAmud,
     menuStudyStatus,
     canMarkLearned,
@@ -350,10 +398,13 @@ export function useTzuratLearnedMark({
     handleSelectFull,
     handleSelectHalfA,
     handleSelectHalfB,
+    handleSaveStopPoint,
     handleConfirmUnmark,
     requestUnmarkPending,
     showTrackPicker,
     setShowTrackPicker,
+    showStopPointModal,
+    setShowStopPointModal,
     showConfirm,
     setShowConfirm,
     showSiyumModal,

@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import type { Theme } from '../theme';
 
 export const createDafMarkMenuStyles = (theme: Theme) =>
@@ -67,6 +67,84 @@ export const createDafMarkMenuStyles = (theme: Theme) =>
     cancelText: {
       color: theme.colors.textSecondary,
       fontSize: 16,
+      fontWeight: '600',
+    },
+    stopPointCard: {
+      padding: 14,
+      borderRadius: 14,
+      backgroundColor: theme.colors.background,
+      borderWidth: 1,
+      borderColor: theme.colors.accentBorder,
+      marginBottom: 10,
+    },
+    stopPointLabel: {
+      color: theme.colors.textPrimary,
+      fontSize: 14,
+      fontWeight: '700',
+      marginBottom: 8,
+      textAlign: Platform.OS === 'web' ? 'right' : 'left',
+      writingDirection: 'rtl',
+      alignSelf: 'stretch',
+    },
+    stopPointInput: {
+      backgroundColor: theme.colors.surface,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      borderRadius: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      color: theme.colors.textPrimary,
+      fontSize: 15,
+      textAlign: 'right',
+      writingDirection: 'rtl',
+      alignSelf: 'stretch',
+      marginBottom: 12,
+    },
+    stopPointButtonsRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    stopPointSaveBtn: {
+      flex: 1,
+      backgroundColor: theme.colors.accent,
+      paddingVertical: 11,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    stopPointSaveText: {
+      color: theme.colors.white,
+      fontSize: 15,
+      fontWeight: '700',
+    },
+    stopPointCancelBtn: {
+      flex: 1,
+      paddingVertical: 11,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+    },
+    stopPointCancelText: {
+      color: theme.colors.textSecondary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
+    stopPointDeleteBtn: {
+      paddingHorizontal: 14,
+      paddingVertical: 11,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.danger,
+    },
+    stopPointDeleteText: {
+      color: theme.colors.danger,
+      fontSize: 15,
       fontWeight: '600',
     },
   });

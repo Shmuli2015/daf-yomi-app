@@ -4,6 +4,7 @@ import {
   formatProgressCount,
   getPartialAmud,
   getRecordProgress,
+  getStopPoint,
   getStudyStatus,
   resolveAmudMark,
   statusToPercentage,
@@ -64,6 +65,18 @@ describe('dafStatus', () => {
     });
   });
 
+  describe('getStopPoint', () => {
+    it('returns the stop point note only when status is partial', () => {
+      expect(getStopPoint(null)).toBeNull();
+      expect(getStopPoint(undefined)).toBeNull();
+      expect(getStopPoint({ status: 'learned', stop_point: 'שורה 15' })).toBeNull();
+      expect(getStopPoint({ status: 'missed', stop_point: 'שורה 15' })).toBeNull();
+      expect(getStopPoint({ status: 'partial', stop_point: '   ' })).toBeNull();
+      expect(getStopPoint({ status: 'partial', stop_point: 'שורה 15' })).toBe('שורה 15');
+      expect(getStopPoint({ status: 'partial', stop_point: '  סיימתי 3/4 עמוד  ' })).toBe('סיימתי 3/4 עמוד');
+    });
+  });
+
   describe('statusToPercentage', () => {
     it('maps learned, partial, and missed to 100, 50, and 0', () => {
       expect(statusToPercentage('learned')).toBe(100);
@@ -81,11 +94,11 @@ describe('dafStatus', () => {
   });
 
   describe('formatPartialAmudLabel', () => {
-    it('labels amud b as ב and everything else as א', () => {
+    it('labels amud b as ב, amud a as א, and falls back to general partial', () => {
       expect(formatPartialAmudLabel('b')).toBe('עמוד ב׳ נלמד');
       expect(formatPartialAmudLabel('a')).toBe('עמוד א׳ נלמד');
-      expect(formatPartialAmudLabel(null)).toBe('עמוד א׳ נלמד');
-      expect(formatPartialAmudLabel(undefined)).toBe('עמוד א׳ נלמד');
+      expect(formatPartialAmudLabel(null)).toBe('נלמד חלקית');
+      expect(formatPartialAmudLabel(undefined)).toBe('נלמד חלקית');
     });
   });
 

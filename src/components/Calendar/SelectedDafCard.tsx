@@ -22,6 +22,7 @@ interface SelectedDafCardProps {
   };
   studyStatus?: 'none' | 'partial' | 'learned';
   partialAmud?: 'a' | 'b' | null;
+  stopPoint?: string | null;
   onToggle?: () => void;
   onLongPressToggle?: () => void;
   onOpenTzuratHadaf?: () => void;
@@ -36,6 +37,7 @@ export default function SelectedDafCard({
   dafInfo,
   studyStatus = 'none',
   partialAmud = null,
+  stopPoint = null,
   onToggle,
   onLongPressToggle,
   onOpenTzuratHadaf,
@@ -139,7 +141,9 @@ export default function SelectedDafCard({
 
       <View style={styles.actions}>
         {isPartial && (
-          <Text style={styles.partialStatusText}>{formatPartialAmudLabel(partialAmud)}</Text>
+          <Text style={styles.partialStatusText}>
+            {stopPoint ? `נקודת עצירה: ${stopPoint}` : formatPartialAmudLabel(partialAmud)}
+          </Text>
         )}
         <TouchableOpacity
           onPress={onToggle}

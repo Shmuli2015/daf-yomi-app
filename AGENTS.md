@@ -62,6 +62,7 @@
 
 ## Git & Branching Workflow
 
+- **No Git Commit or Push Without Explicit User Approval**: Never create git commits (`git commit`) or push commits to a remote repository (`git push`) automatically after modifying code. Always complete code modifications, verify them (`npm run typecheck`, unit tests), present a clear summary of changes to the user, and wait for the user's explicit permission before executing any commit or push commands.
 - **No Direct Push to Master**: Never push commits directly to the `master` branch. The master branch is protected.
 - **Dedicated Branches**: Always create a dedicated branch (e.g. `feature/...`, `fix/...`, `chore/...`, `docs/...`) for any code or documentation changes.
 - **Merge via Pull Request**: All changes must be delivered and merged into `master` exclusively through a Pull Request.

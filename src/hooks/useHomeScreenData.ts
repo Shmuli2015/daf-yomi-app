@@ -9,7 +9,7 @@ import { buildLast7Days } from '../utils/last7Days';
 import { dafYomiDisplayMasechetHe, kinnimTamidCalendarDisplay } from '../utils/mishnahOnlySefaria';
 import { getMasechetDafim } from '../utils/shas';
 import { formatMasechetEndCountdown, getDaysUntilMasechetEnd } from '../utils/masechetEndCountdown';
-import { getStudyStatus, getPartialAmud } from '../utils/dafStatus';
+import { getStudyStatus, getPartialAmud, getStopPoint } from '../utils/dafStatus';
 import { getMasechetProgressFromCache } from '../utils/progressCache';
 import { isPersonalTrackEnabled } from '../utils/personalTrack';
 import { shouldShowYesterdayNudge } from '../utils/yesterdayNudge';
@@ -107,6 +107,7 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
   );
 
   const partialAmud = getPartialAmud(todayRecord);
+  const stopPoint = getStopPoint(todayRecord);
   const hDate = useMemo(() => new HDate(currentDate), [currentDate]);
   const hebrewDateStr = useMemo(() => hDate.renderGematriya(), [hDate]);
   const gregorianDateStr = useMemo(
@@ -167,6 +168,7 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
     displayMasechetHe,
     sharedSubtitle,
     partialAmud,
+    stopPoint,
     hebrewDateStr,
     gregorianDateStr,
     eventName,

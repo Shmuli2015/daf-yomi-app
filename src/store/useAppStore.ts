@@ -108,6 +108,11 @@ interface AppState {
   togglePersonalDafLearned: (masechetEn: string, dafNum: number) => void;
   markPersonalDafLearned: (masechetEn: string, dafNum: number) => void;
   markPersonalPartialAmud: (masechetEn: string, dafNum: number, amud: AmudSide) => void;
+  setPersonalDafStopPoint: (
+    masechetEn: string,
+    dafNum: number,
+    stopPoint: string | null
+  ) => void;
   setPersonalDafStudyStatus: (
     masechetEn: string,
     dafNum: number,
@@ -123,6 +128,12 @@ interface AppState {
     masechet: string,
     daf: string,
     status: 'learned' | 'partial' | 'missed'
+  ) => void;
+  setDafStopPoint: (
+    dateStr: string,
+    masechet: string,
+    daf: string,
+    stopPoint: string | null
   ) => void;
   markPartialAmud: (
     dateStr: string,
@@ -374,6 +385,25 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().refreshPersonalTrack(masechetEn);
   },
 
+  setPersonalDafStopPoint: (masechetEn, dafNum, stopPoint) => {
+    if (!isPersonalTrackEnabled(get().settings)) return;
+    const cleanNote = stopPoint?.trim() || null;
+    const { personalTrackRecords } = get();
+    const existing = personalTrackRecords.find(
+      (r) => r.masechet === masechetEn && r.daf_num === dafNum
+    );
+    if (!cleanNote) {
+      if (existing?.amud) {
+        updatePersonalTrackRecord(masechetEn, dafNum, 'partial', existing.amud, null);
+      } else {
+        updatePersonalTrackRecord(masechetEn, dafNum, 'none', null, null);
+      }
+    } else {
+      updatePersonalTrackRecord(masechetEn, dafNum, 'partial', existing?.amud ?? null, cleanNote);
+    }
+    get().refreshPersonalTrack(masechetEn);
+  },
+
   setPersonalDafStudyStatus: (masechetEn, dafNum, status, amud = null) => {
     if (!isPersonalTrackEnabled(get().settings)) return;
     updatePersonalTrackRecord(masechetEn, dafNum, status, amud);
@@ -417,6 +447,21 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setDafStudyStatus: (dateStr, masechet, daf, status) => {
     updateDailyRecord(dateStr, masechet, daf, status, undefined, null);
+    get().refreshHistory(masechet, [dateStr]);
+  },
+
+  setDafStopPoint: (dateStr, masechet, daf, stopPoint) => {
+    const cleanNote = stopPoint?.trim() || null;
+    const existing = getDailyRecord(dateStr) || get().history.find((r) => r.date === dateStr) || null;
+    if (!cleanNote) {
+      if (existing?.amud) {
+        updateDailyRecord(dateStr, masechet, daf, 'partial', 50, existing.amud, null);
+      } else {
+        updateDailyRecord(dateStr, masechet, daf, 'missed', 0, null, null);
+      }
+    } else {
+      updateDailyRecord(dateStr, masechet, daf, 'partial', 50, existing?.amud ?? null, cleanNote);
+    }
     get().refreshHistory(masechet, [dateStr]);
   },
 

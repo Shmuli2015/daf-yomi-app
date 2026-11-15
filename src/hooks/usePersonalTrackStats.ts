@@ -12,7 +12,7 @@ export function usePersonalTrackStats(
     return SHAS_MASECHTOT.find((m) => m.en === activeMasechetEn) || null;
   }, [activeMasechetEn]);
 
-  const { learnedCount, totalPages, percentage, nextDafNum, isNextDafPartial, nextDafAmud } = useMemo(() => {
+  const { learnedCount, totalPages, percentage, nextDafNum, isNextDafPartial, nextDafAmud, nextDafStopPoint } = useMemo(() => {
     if (!masechet) {
       return {
         learnedCount: 0,
@@ -21,6 +21,7 @@ export function usePersonalTrackStats(
         nextDafNum: null,
         isNextDafPartial: false,
         nextDafAmud: null,
+        nextDafStopPoint: null,
       };
     }
 
@@ -66,6 +67,7 @@ export function usePersonalTrackStats(
       nextDafNum: next,
       isNextDafPartial: nextRecord?.status === 'partial',
       nextDafAmud: nextRecord?.amud || null,
+      nextDafStopPoint: nextRecord?.stop_point || null,
     };
   }, [masechet, personalTrackRecords]);
 
@@ -87,6 +89,7 @@ export function usePersonalTrackStats(
     nextDafNum,
     isNextDafPartial,
     nextDafAmud,
+    nextDafStopPoint,
     animatedProgressStyle,
   };
 }

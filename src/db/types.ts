@@ -7,6 +7,7 @@ export interface DailyRecord {
   percentage: number;
   amud: 'a' | 'b' | null;
   learnedAt: string;
+  stop_point?: string | null;
 }
 
 export interface PersonalTrackRecord {
@@ -16,6 +17,7 @@ export interface PersonalTrackRecord {
   status: 'learned' | 'partial';
   amud?: 'a' | 'b' | null;
   learnedAt: string;
+  stop_point?: string | null;
 }
 
 export interface SettingsRecord {

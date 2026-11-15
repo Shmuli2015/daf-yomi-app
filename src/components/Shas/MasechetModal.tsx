@@ -78,9 +78,11 @@ export default function MasechetModal({
     handleMenuSelectFull,
     handleMenuSelectHalfA,
     handleMenuSelectHalfB,
+    handleMenuSaveStopPoint,
     handleMenuUnmark,
     handleMenuCancel,
     menuPartialAmud,
+    menuStopPoint,
     menuShowUnmark,
   } = useMasechetModal({
     masechet,
@@ -223,6 +225,8 @@ export default function MasechetModal({
                 <DafMarkMenuModal
                   visible={selectedDafForMenu !== null}
                   partialAmud={menuPartialAmud}
+                  stopPoint={menuStopPoint}
+                  onSaveStopPoint={handleMenuSaveStopPoint}
                   showUnmark={menuShowUnmark}
                   onSelectFull={handleMenuSelectFull}
                   onSelectHalfA={handleMenuSelectHalfA}

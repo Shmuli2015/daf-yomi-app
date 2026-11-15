@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../theme';
 import { numberToGematria } from '../data/shas';
-import { formatProgressCount } from '../utils/dafStatus';
+import { formatProgressCount, formatPartialAmudLabel } from '../utils/dafStatus';
 import { usePersonalTrackStats } from '../hooks/usePersonalTrackStats';
 import { useAppStore } from '../store/useAppStore';
 import { createPersonalTrackBannerStyles } from './PersonalTrack/PersonalTrackBanner.styles';
@@ -43,6 +43,7 @@ export default function PersonalTrackBanner({
   const styles = useMemo(() => createPersonalTrackBannerStyles(theme), [theme]);
   const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
   const setPersonalDafStudyStatus = useAppStore((s) => s.setPersonalDafStudyStatus);
+  const setPersonalDafStopPoint = useAppStore((s) => s.setPersonalDafStopPoint);
   const [showMarkModal, setShowMarkModal] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { animatedChevronStyle } = useGuideSectionAnimation(expanded);
@@ -55,6 +56,7 @@ export default function PersonalTrackBanner({
     nextDafNum,
     isNextDafPartial,
     nextDafAmud,
+    nextDafStopPoint,
     animatedProgressStyle,
   } = usePersonalTrackStats(activeMasechetEn, personalTrackRecords);
 
@@ -76,8 +78,16 @@ export default function PersonalTrackBanner({
   }
 
   const nextDafGematria = nextDafNum ? numberToGematria(nextDafNum) : null;
+  const stopPointSummary = isNextDafPartial
+    ? nextDafStopPoint
+      ? `נעצר: ${nextDafStopPoint}`
+      : formatPartialAmudLabel(nextDafAmud)
+    : null;
+
   const compactMeta = nextDafGematria
-    ? `הדף הבא ${nextDafGematria}`
+    ? stopPointSummary
+      ? `הדף הבא ${nextDafGematria} (${stopPointSummary})`
+      : `הדף הבא ${nextDafGematria}`
     : 'המסכת הושלמה';
 
   return (
@@ -180,6 +190,22 @@ export default function PersonalTrackBanner({
                   >
                     <Text style={styles.nextDafValue}>דף {nextDafGematria}</Text>
                   </TouchableOpacity>
+                  {isNextDafPartial && (
+                    <TouchableOpacity
+                      onPress={() => setShowMarkModal(true)}
+                      style={styles.partialStopPointBadge}
+                      activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel="עריכת נקודת עצירה או סימון לימוד"
+                    >
+                      <Ionicons name="bookmark" size={12} color={theme.colors.accent} />
+                      <Text style={styles.partialStopPointText}>
+                        {nextDafStopPoint
+                          ? `נעצר: ${nextDafStopPoint}`
+                          : formatPartialAmudLabel(nextDafAmud)}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
               ) : (
                 <View style={styles.completedInfo}>
@@ -217,6 +243,11 @@ export default function PersonalTrackBanner({
         <DafMarkMenuModal
           visible={showMarkModal}
           partialAmud={isNextDafPartial ? nextDafAmud : null}
+          stopPoint={isNextDafPartial ? nextDafStopPoint : null}
+          onSaveStopPoint={(note) => {
+            setPersonalDafStopPoint(masechet.en, nextDafNum, note);
+            setShowMarkModal(false);
+          }}
           showUnmark={isNextDafPartial}
           onSelectFull={() => {
             onToggleDafLearned(masechet.en, nextDafNum);

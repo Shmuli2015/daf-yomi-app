@@ -38,6 +38,7 @@ export default function PersonalMasechetDetailModal({
   const { width: windowWidth } = useWindowDimensions();
   const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
   const setPersonalDafStudyStatus = useAppStore((s) => s.setPersonalDafStudyStatus);
+  const setPersonalDafStopPoint = useAppStore((s) => s.setPersonalDafStopPoint);
   const [selectedDafForMenu, setSelectedDafForMenu] = useState<number | null>(null);
 
   const masechet = useMemo(() => {
@@ -240,6 +241,11 @@ export default function PersonalMasechetDetailModal({
         <DafMarkMenuModal
           visible={selectedDafForMenu !== null}
           partialAmud={selectedDafForMenu ? partialMap.get(selectedDafForMenu)?.amud || null : null}
+          stopPoint={selectedDafForMenu ? partialMap.get(selectedDafForMenu)?.stop_point || null : null}
+          onSaveStopPoint={(note) => {
+            setPersonalDafStopPoint(masechet.en, selectedDafForMenu, note);
+            setSelectedDafForMenu(null);
+          }}
           showUnmark={
             selectedDafForMenu
               ? learnedSet.has(selectedDafForMenu) || partialMap.has(selectedDafForMenu)

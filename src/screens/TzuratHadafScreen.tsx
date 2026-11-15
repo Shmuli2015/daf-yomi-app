@@ -12,6 +12,8 @@ import TzuratMarkTrackModal from '../components/TzuratHadaf/TzuratMarkTrackModal
 import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
+import TzuratStopPointModal from '../components/TzuratHadaf/TzuratStopPointModal';
+import TzuratStopPointToast from '../components/TzuratHadaf/TzuratStopPointToast';
 import GuideModal from '../components/Guide/GuideModalGate';
 import SupportFormModal from '../components/SupportForm/SupportFormModal';
 import QuickJumpModal from '../components/QuickJump/QuickJumpModal';
@@ -34,7 +36,7 @@ import { getReaderThemePalette } from '../utils/readerTheme';
 import { buildReaderSearchSegments } from '../utils/readerSearchSegments';
 import { useTheme } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
-import { normalizeMasechetEn } from '../utils/dafNavigation';
+import { formatDafLabel, normalizeMasechetEn } from '../utils/dafNavigation';
 import { readerDisplayMasechetHe, isTamidStartDaf } from '../utils/mishnahOnlySefaria';
 import { SHAS_MASECHTOT } from '../data/shas';
 import { useDafSwipeGesture } from '../hooks/useDafSwipeGesture';
@@ -68,6 +70,7 @@ export default function TzuratHadafScreen() {
   const [autoScrollActive, setAutoScrollActive] = useState(false);
   const [autoScrollLevel, setAutoScrollLevel] = useState<AutoScrollSpeedLevel>(3);
   const [autoScrollPaused, setAutoScrollPaused] = useState(false);
+  const [stopPointToastDismissed, setStopPointToastDismissed] = useState(false);
   const scrollProgress = useSharedValue(0);
   const isSystemDark = theme.colors.background === '#121212';
   const { readerTheme, setReaderTheme } = useReaderTheme(isSystemDark);
@@ -86,6 +89,10 @@ export default function TzuratHadafScreen() {
   useEffect(() => {
     scrollProgress.value = 0;
   }, [reader.pageKey, scrollProgress]);
+
+  useEffect(() => {
+    setStopPointToastDismissed(false);
+  }, [reader.pageKey]);
 
   const masechetHe = useMemo(
     () => getMasechetHe(reader.location.masechetEn, route.params.masechetHe),
@@ -124,6 +131,7 @@ export default function TzuratHadafScreen() {
     personalStatus,
     dafYomiPartialAmud,
     personalPartialAmud,
+    currentStopPoint,
     menuPartialAmud,
     menuStudyStatus,
     canMarkLearned,
@@ -137,10 +145,13 @@ export default function TzuratHadafScreen() {
     handleSelectFull,
     handleSelectHalfA,
     handleSelectHalfB,
+    handleSaveStopPoint,
     handleConfirmUnmark,
     requestUnmarkPending,
     showTrackPicker,
     setShowTrackPicker,
+    showStopPointModal,
+    setShowStopPointModal,
     showConfirm,
     setShowConfirm,
     showSiyumModal,
@@ -235,6 +246,14 @@ export default function TzuratHadafScreen() {
               }
             }}
           />
+
+          {currentStopPoint && !stopPointToastDismissed && (
+            <TzuratStopPointToast
+              stopPoint={currentStopPoint}
+              onPress={() => setShowStopPointModal(true)}
+              onDismiss={() => setStopPointToastDismissed(true)}
+            />
+          )}
 
           <ReaderToolbar
             viewMode={reader.viewMode}
@@ -410,6 +429,11 @@ export default function TzuratHadafScreen() {
                   closeTrackPicker();
                 },
                 partialAmud: menuPartialAmud,
+                stopPoint: currentStopPoint,
+                onSaveStopPoint: (note) => {
+                  handleSaveStopPoint(note);
+                  closeTrackPicker();
+                },
                 showUnmark: menuStudyStatus === 'partial',
                 onUnmark: () => {
                   closeTrackPicker();
@@ -436,12 +460,26 @@ export default function TzuratHadafScreen() {
           setShowMarkMenu(false);
         }}
         partialAmud={menuPartialAmud}
+        stopPoint={currentStopPoint}
+        onSaveStopPoint={(note) => {
+          handleSaveStopPoint(note);
+          setShowMarkMenu(false);
+        }}
         showUnmark={menuStudyStatus === 'partial'}
         onUnmark={() => {
           setShowMarkMenu(false);
           requestUnmarkPending();
         }}
         onCancel={() => setShowMarkMenu(false)}
+      />
+
+      <TzuratStopPointModal
+        visible={showStopPointModal}
+        onClose={() => setShowStopPointModal(false)}
+        masechetName={masechetHe || reader.location.masechetEn}
+        dafLabel={formatDafLabel(reader.location.dafNum, reader.location.amud)}
+        currentStopPoint={currentStopPoint}
+        onSave={handleSaveStopPoint}
       />
 
       <ConfirmModal
