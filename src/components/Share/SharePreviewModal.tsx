@@ -143,10 +143,7 @@ export default function SharePreviewModal({
           {sharing ? (
             <ActivityIndicator color={theme.colors.white} />
           ) : (
-            <>
-              <Ionicons name="share-outline" size={20} color={theme.colors.white} />
-              <Text style={styles.shareText}>שתף תמונה</Text>
-            </>
+            <Text style={styles.shareText}>שתף תמונה</Text>
           )}
         </TouchableOpacity>
       </View>
