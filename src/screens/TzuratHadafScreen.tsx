@@ -13,6 +13,7 @@ import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
 import TzuratStopPointModal from '../components/TzuratHadaf/TzuratStopPointModal';
+import TzuratStopPointToast from '../components/TzuratHadaf/TzuratStopPointToast';
 import GuideModal from '../components/Guide/GuideModalGate';
 import SupportFormModal from '../components/SupportForm/SupportFormModal';
 import QuickJumpModal from '../components/QuickJump/QuickJumpModal';
@@ -69,6 +70,7 @@ export default function TzuratHadafScreen() {
   const [autoScrollActive, setAutoScrollActive] = useState(false);
   const [autoScrollLevel, setAutoScrollLevel] = useState<AutoScrollSpeedLevel>(3);
   const [autoScrollPaused, setAutoScrollPaused] = useState(false);
+  const [stopPointToastDismissed, setStopPointToastDismissed] = useState(false);
   const scrollProgress = useSharedValue(0);
   const isSystemDark = theme.colors.background === '#121212';
   const { readerTheme, setReaderTheme } = useReaderTheme(isSystemDark);
@@ -87,6 +89,10 @@ export default function TzuratHadafScreen() {
   useEffect(() => {
     scrollProgress.value = 0;
   }, [reader.pageKey, scrollProgress]);
+
+  useEffect(() => {
+    setStopPointToastDismissed(false);
+  }, [reader.pageKey]);
 
   const masechetHe = useMemo(
     () => getMasechetHe(reader.location.masechetEn, route.params.masechetHe),
@@ -228,8 +234,6 @@ export default function TzuratHadafScreen() {
             studyStatus={studyStatus}
             canMarkLearned={canMarkLearned}
             isFullscreen={isFullscreen}
-            stopPoint={currentStopPoint}
-            onOpenStopPoint={() => setShowStopPointModal(true)}
             onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
             onClose={() => navigation.goBack()}
             onToggleLearned={handleToggleLearned}
@@ -242,6 +246,14 @@ export default function TzuratHadafScreen() {
               }
             }}
           />
+
+          {currentStopPoint && !stopPointToastDismissed && (
+            <TzuratStopPointToast
+              stopPoint={currentStopPoint}
+              onPress={() => setShowStopPointModal(true)}
+              onDismiss={() => setStopPointToastDismissed(true)}
+            />
+          )}
 
           <ReaderToolbar
             viewMode={reader.viewMode}

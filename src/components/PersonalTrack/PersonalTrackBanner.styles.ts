@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { useTheme } from '../../theme';
 
 export const createPersonalTrackBannerStyles = (theme: ReturnType<typeof useTheme>) =>
@@ -158,6 +158,25 @@ export const createPersonalTrackBannerStyles = (theme: ReturnType<typeof useThem
       fontWeight: '800',
       color: theme.colors.textPrimary,
       textDecorationLine: 'underline',
+    },
+    partialStopPointBadge: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      backgroundColor: theme.colors.accent + '15',
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      borderRadius: theme.radius.sm,
+      borderWidth: 1,
+      borderColor: theme.colors.accent + '30',
+      marginStart: 4,
+    },
+    partialStopPointText: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: theme.colors.accent,
+      textAlign: Platform.OS === 'web' ? 'right' : 'left',
+      writingDirection: 'rtl',
     },
     completedInfo: {
       flexDirection: 'row',

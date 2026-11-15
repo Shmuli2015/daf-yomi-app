@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import BottomSheetModal from '../BottomSheetModal';
 import { useTheme } from '../../theme';
 import { createTzuratStopPointModalStyles } from './TzuratStopPointModal.styles';
+import StopPointPresetsRow from '../StopPointPresetsRow';
 
 interface TzuratStopPointModalProps {
   visible: boolean;
@@ -55,11 +56,16 @@ export default function TzuratStopPointModal({
           {masechetName} {dafLabel}
         </Text>
 
+        <StopPointPresetsRow
+          selectedValue={noteText}
+          onSelectPreset={(val) => setNoteText(val)}
+        />
+
         <TextInput
           style={styles.input}
           value={noteText}
           onChangeText={setNoteText}
-          placeholder="למשל: סיימתי 3/4 עמוד, שורה 15..."
+          placeholder="או הקלידו: למשל 3/4 עמוד, שורה 15..."
           placeholderTextColor={theme.colors.textMuted}
           textAlign="right"
           autoFocus

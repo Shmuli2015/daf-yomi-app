@@ -15,8 +15,6 @@ interface TzuratHeaderProps {
   studyStatus?: 'none' | 'partial' | 'learned';
   canMarkLearned?: boolean;
   isFullscreen?: boolean;
-  stopPoint?: string | null;
-  onOpenStopPoint?: () => void;
   onToggleFullscreen?: () => void;
   onClose: () => void;
   onToggleLearned?: () => void;
@@ -33,8 +31,6 @@ export default function TzuratHeader({
   studyStatus = 'none',
   canMarkLearned = false,
   isFullscreen = false,
-  stopPoint = null,
-  onOpenStopPoint,
   onToggleFullscreen,
   onClose,
   onToggleLearned,
@@ -43,7 +39,6 @@ export default function TzuratHeader({
 }: TzuratHeaderProps) {
   const isLearned = studyStatus === 'learned';
   const isPartial = studyStatus === 'partial';
-  const hasStopPoint = Boolean(stopPoint && stopPoint.trim());
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(theme, isLandscape), [theme, isLandscape]);
@@ -93,25 +88,6 @@ export default function TzuratHeader({
           </TouchableOpacity>
 
           <View style={styles.actions}>
-            {onOpenStopPoint ? (
-              <TouchableOpacity
-                onPress={onOpenStopPoint}
-                style={[
-                  styles.iconBtn,
-                  { width: btnSize, height: btnSize },
-                  hasStopPoint ? styles.stopPointBtnActive : null,
-                ]}
-                activeOpacity={0.7}
-                accessibilityLabel={hasStopPoint ? `נקודת עצירה: ${stopPoint}` : 'נקודת עצירה'}
-              >
-                <Ionicons
-                  name={hasStopPoint ? 'bookmark' : 'bookmark-outline'}
-                  size={iconSize}
-                  color={hasStopPoint ? theme.colors.accent : theme.colors.textSecondary}
-                />
-              </TouchableOpacity>
-            ) : null}
-
             {onToggleFullscreen ? (
               <TouchableOpacity
                 onPress={onToggleFullscreen}
@@ -234,9 +210,5 @@ const createStyles = (theme: ReturnType<typeof useTheme>, isLandscape: boolean) 
     markBtnPartial: {
       backgroundColor: theme.colors.accentLight,
       borderColor: theme.colors.accent + '50',
-    },
-    stopPointBtnActive: {
-      backgroundColor: theme.colors.accentLight,
-      borderColor: theme.colors.accentBorder,
     },
   });

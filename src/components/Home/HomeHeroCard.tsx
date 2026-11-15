@@ -226,9 +226,23 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
             ) : (
               <>
                 {isPartial && (
-                  <Text style={styles.partialStatusText}>
-                    {stopPoint ? `נקודת עצירה: ${stopPoint}` : formatPartialAmudLabel(partialAmud)}
-                  </Text>
+                  <TouchableOpacity
+                    onPress={onOpenMarkMenu}
+                    activeOpacity={0.7}
+                    style={styles.partialStatusBtn}
+                    accessibilityRole="button"
+                    accessibilityLabel={
+                      stopPoint
+                        ? `נקודת עצירה: ${stopPoint}, לחץ לעריכה`
+                        : 'נלמד חלקית, לחץ לעריכה'
+                    }
+                  >
+                    <Ionicons name="bookmark" size={14} color={theme.colors.accent} />
+                    <Text style={styles.partialStatusText}>
+                      {stopPoint ? `נקודת עצירה: ${stopPoint}` : formatPartialAmudLabel(partialAmud)}
+                    </Text>
+                    <Ionicons name="pencil" size={12} color={theme.colors.accent} />
+                  </TouchableOpacity>
                 )}
 
                 {canMark && (

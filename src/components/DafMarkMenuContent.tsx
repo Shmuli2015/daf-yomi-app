@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, TextInput, Platform } from 'react-native'
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../theme';
 import { createDafMarkMenuStyles } from './DafMarkMenuContent.styles';
+import StopPointPresetsRow from './StopPointPresetsRow';
 
 export interface DafMarkMenuContentProps {
   onSelectFull: () => void;
@@ -91,11 +92,15 @@ export default function DafMarkMenuContent({
         isEditingStopPoint ? (
           <View style={styles.stopPointCard}>
             <Text style={styles.stopPointLabel}>איפה עצרת בלימוד?</Text>
+            <StopPointPresetsRow
+              selectedValue={stopPointInput}
+              onSelectPreset={(val) => setStopPointInput(val)}
+            />
             <TextInput
               style={styles.stopPointInput}
               value={stopPointInput}
               onChangeText={setStopPointInput}
-              placeholder="למשל: סיימתי 3/4 עמוד, שורה 15..."
+              placeholder="או הקלידו: למשל 3/4 עמוד, שורה 15..."
               placeholderTextColor={theme.colors.textMuted}
               textAlign="right"
               autoFocus
