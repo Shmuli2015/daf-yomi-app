@@ -84,7 +84,11 @@ export default function SettingsScrollContent({
     closeSiyumNusach,
     copySupportEmail,
     openPrivacyPolicy,
-  } = useSettingsHelpChrome({ onEmailCopied: helpUpdates.onEmailCopied });
+    openRateApp,
+  } = useSettingsHelpChrome({
+    onEmailCopied: helpUpdates.onEmailCopied,
+    onFeedback: helpUpdates.onFeedback,
+  });
 
   const { openSection, toggleSection, openSectionByName } = useSettingsAccordion(null);
 
@@ -455,6 +459,7 @@ export default function SettingsScrollContent({
                     onGuideModalOpen={helpUpdates.onGuideModalOpen}
                     onSupportPress={openSupportForm}
                     onSupportLongPress={copySupportEmail}
+                    onRateAppPress={openRateApp}
                     onPrivacyPolicyPress={openPrivacyPolicy}
                     onSiyumNusachPress={openSiyumNusach}
                     onLicensesPress={openLicenses}

@@ -2,12 +2,18 @@ import { useCallback, useState } from 'react';
 import { Linking } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { SUPPORT_EMAIL, PRIVACY_POLICY_URL } from '../supportContact';
+import { PLAY_STORE_APP_URL } from '../utils/shareDownloadLink';
+import type { SettingsFeedback } from './useSettingsFeedback';
 
 type UseSettingsHelpChromeParams = {
   onEmailCopied: () => void;
+  onFeedback?: (feedback: SettingsFeedback) => void;
 };
 
-export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromeParams) {
+export function useSettingsHelpChrome({
+  onEmailCopied,
+  onFeedback,
+}: UseSettingsHelpChromeParams) {
   const [mailHintVisible, setMailHintVisible] = useState(false);
   const [supportFormVisible, setSupportFormVisible] = useState(false);
   const [licensesVisible, setLicensesVisible] = useState(false);
@@ -38,6 +44,19 @@ export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromePa
   const openPrivacyPolicy = useCallback(() => {
     void Linking.openURL(PRIVACY_POLICY_URL);
   }, []);
+
+  const openRateApp = useCallback(async () => {
+    try {
+      await Linking.openURL(PLAY_STORE_APP_URL);
+    } catch {
+      onFeedback?.({
+        title: 'לא ניתן לפתוח את החנות',
+        message: 'נסו שוב בעוד רגע, או חפשו מסע דף בגוגל פליי.',
+        iconName: 'alert-circle-outline',
+        compact: true,
+      });
+    }
+  }, [onFeedback]);
 
   const clearSearch = useCallback(() => {
     setSearchQuery('');
@@ -81,5 +100,6 @@ export function useSettingsHelpChrome({ onEmailCopied }: UseSettingsHelpChromePa
     closeSiyumNusach,
     copySupportEmail,
     openPrivacyPolicy,
+    openRateApp,
   };
 }

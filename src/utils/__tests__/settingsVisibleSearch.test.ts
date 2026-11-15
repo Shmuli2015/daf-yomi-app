@@ -112,5 +112,11 @@ describe('settingsVisibleSearch', () => {
     expect(getMatchingSectionKeys('גיבוי', baseCtx)).toEqual(['backup_data']);
     expect(getMatchingSectionKeys('מצב תצוגה', baseCtx)).toEqual(['display']);
   });
+
+  it('matches rate app row in help updates search', () => {
+    expect(hasVisibleSettingsMatch('דירוג', baseCtx)).toBe(true);
+    expect(hasVisibleSectionMatch('דירוג', 'help_updates', baseCtx)).toBe(true);
+    expect(getMatchingSectionKeys('דירוג', baseCtx)).toEqual(['help_updates']);
+  });
 });
 
