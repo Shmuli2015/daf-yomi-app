@@ -10,8 +10,10 @@ import YesterdayNudge from '../components/Home/YesterdayNudge';
 import HomeModals from '../components/Home/HomeModals';
 import HomeConfettiOverlay from '../components/Home/HomeConfettiOverlay';
 import HomeDailyQuoteCard from '../components/Home/HomeDailyQuoteCard';
+import HomeUpcomingMasechetBanner from '../components/Home/HomeUpcomingMasechetBanner';
 import { createHomeScreenStyles } from '../components/Home/homeScreen.styles';
 import { formatProgressCount } from '../utils/dafStatus';
+import { getUpcomingMasechetInfo } from '../utils/upcomingMasechet';
 import { useHomeMarking } from '../hooks/useHomeMarking';
 import { useHomeScreenModals } from '../hooks/useHomeScreenModals';
 import { useHomeScreenData } from '../hooks/useHomeScreenData';
@@ -142,6 +144,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     setShowConfetti,
   });
 
+  const upcomingMasechet = useMemo(() => getUpcomingMasechetInfo(new Date(), 6), []);
+
   if (!isAppReady) {
     return <View style={styles.loading} />;
   }
@@ -194,6 +198,10 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             currentDate={currentDate}
             onOpenGuide={openHeroGuide}
           />
+
+          {upcomingMasechet && (
+            <HomeUpcomingMasechetBanner info={upcomingMasechet} />
+          )}
 
           <HomeDailyQuoteCard />
 
