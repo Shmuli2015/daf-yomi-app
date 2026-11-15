@@ -26,36 +26,45 @@ export function createSharePreviewModalStyles(theme: Theme) {
       marginBottom: 16,
       textAlign: 'center',
     },
-    themeSelectorRow: {
+    segmentedControl: {
       flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 10,
-      marginBottom: 16,
       backgroundColor: theme.colors.background,
-      padding: 4,
       borderRadius: theme.radius.full,
+      padding: 3,
       borderWidth: 1,
       borderColor: theme.colors.border,
+      marginBottom: 16,
+      position: 'relative',
+      direction: 'ltr',
+      width: 280,
     },
-    themeOptionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingVertical: 6,
-      paddingHorizontal: 16,
+    indicator: {
+      position: 'absolute',
+      top: 3,
+      bottom: 3,
       borderRadius: theme.radius.full,
-    },
-    themeOptionButtonActive: {
       backgroundColor: theme.colors.surface,
       ...theme.shadow.card,
     },
-    themeOptionText: {
+    segmentBtn: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 7,
+      borderRadius: theme.radius.full,
+      zIndex: 1,
+    },
+    segmentBtnActiveFallback: {
+      backgroundColor: theme.colors.surface,
+    },
+    segmentText: {
       fontSize: 14,
       fontWeight: '700',
       color: theme.colors.textMuted,
     },
-    themeOptionTextActive: {
+    segmentTextActive: {
       color: theme.colors.accent,
       fontWeight: '800',
     },

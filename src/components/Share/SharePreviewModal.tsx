@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
 import ShareProgressCard from './ShareProgressCard';
 import type { ShareCardThemeMode } from './ShareFrame';
+import { useModeSwitcherIndicator } from '../../hooks/useModeSwitcherIndicator';
 import {
   captureAndShare,
   waitForShareCaptureReady,
@@ -24,6 +26,17 @@ interface SharePreviewModalProps {
   data: ShareProgressData | null;
 }
 
+const SHARE_THEME_TABS: Array<{
+  id: ShareCardThemeMode;
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}> = [
+  { id: 'dark', label: 'כהה מלכותי', icon: 'moon' },
+  { id: 'light', label: 'בהיר יוקרתי', icon: 'sunny' },
+];
+
+const SHARE_THEME_IDS = SHARE_THEME_TABS.map((tab) => tab.id);
+
 export default function SharePreviewModal({
   visible,
   onClose,
@@ -36,6 +49,11 @@ export default function SharePreviewModal({
   const [captureLaidOut, setCaptureLaidOut] = useState(false);
   const [cardTheme, setCardTheme] = useState<ShareCardThemeMode>(() =>
     theme.isDark ? 'dark' : 'light',
+  );
+
+  const { onSwitcherLayout, indicatorStyle, isReady } = useModeSwitcherIndicator(
+    cardTheme,
+    SHARE_THEME_IDS,
   );
 
   useEffect(() => {
@@ -77,58 +95,43 @@ export default function SharePreviewModal({
 
         <Text style={styles.title}>כך ייראה השיתוף שלך</Text>
 
-        <View style={styles.themeSelectorRow}>
-          <TouchableOpacity
-            style={[
-              styles.themeOptionButton,
-              cardTheme === 'dark' && styles.themeOptionButtonActive,
-            ]}
-            onPress={() => setCardTheme('dark')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="moon"
-              size={15}
-              color={cardTheme === 'dark' ? theme.colors.accent : theme.colors.textMuted}
-            />
-            <Text
-              style={[
-                styles.themeOptionText,
-                cardTheme === 'dark' && styles.themeOptionTextActive,
-              ]}
-            >
-              כהה מלכותי
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.themeOptionButton,
-              cardTheme === 'light' && styles.themeOptionButtonActive,
-            ]}
-            onPress={() => setCardTheme('light')}
-            activeOpacity={0.7}
-          >
-            <Ionicons
-              name="sunny"
-              size={15}
-              color={cardTheme === 'light' ? theme.colors.accent : theme.colors.textMuted}
-            />
-            <Text
-              style={[
-                styles.themeOptionText,
-                cardTheme === 'light' && styles.themeOptionTextActive,
-              ]}
-            >
-              בהיר יוקרתי
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.segmentedControl} onLayout={onSwitcherLayout}>
+          <Animated.View pointerEvents="none" style={[styles.indicator, indicatorStyle]} />
+          {SHARE_THEME_TABS.map((tab) => {
+            const isActive = cardTheme === tab.id;
+            return (
+              <TouchableOpacity
+                key={tab.id}
+                style={[styles.segmentBtn, isActive && !isReady && styles.segmentBtnActiveFallback]}
+                onPress={() => setCardTheme(tab.id)}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={tab.label}
+                accessibilityState={{ selected: isActive }}
+              >
+                <Ionicons
+                  name={tab.icon}
+                  size={15}
+                  color={isActive ? theme.colors.accent : theme.colors.textMuted}
+                />
+                <Text
+                  style={[styles.segmentText, isActive && styles.segmentTextActive]}
+                >
+                  {tab.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         <View style={styles.previewWrapper}>
-          <View style={styles.previewScaler}>
+          <Animated.View
+            key={cardTheme}
+            entering={FadeIn.duration(240)}
+            style={styles.previewScaler}
+          >
             <ShareProgressCard data={data} cardTheme={cardTheme} />
-          </View>
+          </Animated.View>
         </View>
 
         <TouchableOpacity
