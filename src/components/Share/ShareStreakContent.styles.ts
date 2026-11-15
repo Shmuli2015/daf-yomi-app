@@ -1,11 +1,13 @@
 import { StyleSheet, Platform } from 'react-native';
 import type { Theme } from '../../theme';
+import { getShareCardPalette } from './shareCardTheme';
 
 export function createShareStreakContentStyles(theme: Theme, isDark: boolean) {
-  const textColor = isDark ? theme.colors.textPrimary : theme.colors.primary;
-  const mutedColor = isDark ? theme.colors.textSecondary : theme.colors.textMuted;
-  const pillBg = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.85)';
-  const quoteBg = isDark ? 'rgba(201,150,60,0.09)' : 'rgba(201,150,60,0.08)';
+  const palette = getShareCardPalette(theme, isDark);
+  const textColor = palette.textPrimary;
+  const mutedColor = palette.textSecondary;
+  const pillBg = palette.cardBg;
+  const quoteBg = palette.quoteBg;
 
   return StyleSheet.create({
     root: {

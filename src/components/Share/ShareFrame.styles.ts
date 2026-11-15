@@ -1,11 +1,13 @@
 import { StyleSheet, Platform } from 'react-native';
 import type { Theme } from '../../theme';
 import { CARD_SIZE } from '../../utils/shareProgressImage';
+import { getShareCardPalette } from './shareCardTheme';
 
 export function createShareFrameStyles(theme: Theme, isDark: boolean) {
-  const textColor = isDark ? theme.colors.textPrimary : theme.colors.primary;
-  const mutedColor = isDark ? theme.colors.textSecondary : theme.colors.textMuted;
-  const chipBg = isDark ? 'rgba(201,150,60,0.12)' : 'rgba(201,150,60,0.10)';
+  const palette = getShareCardPalette(theme, isDark);
+  const textColor = palette.textPrimary;
+  const mutedColor = palette.textSecondary;
+  const chipBg = palette.chipBg;
 
   return StyleSheet.create({
     root: {
