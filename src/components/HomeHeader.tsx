@@ -151,6 +151,7 @@ const HomeHeader = React.memo(function HomeHeader({
             isFuture={isFuture}
             studyStatus={studyStatus}
             partialAmud={partialAmud}
+            stopPoint={stopPoint}
             showHalfDafTip={showHalfDafTip}
             masechetProgressPct={masechetProgressPct}
             masechetLearnedCountLabel={masechetLearnedCountLabel}

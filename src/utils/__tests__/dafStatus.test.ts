@@ -94,11 +94,11 @@ describe('dafStatus', () => {
   });
 
   describe('formatPartialAmudLabel', () => {
-    it('labels amud b as ב and everything else as א', () => {
+    it('labels amud b as ב, amud a as א, and falls back to general partial', () => {
       expect(formatPartialAmudLabel('b')).toBe('עמוד ב׳ נלמד');
       expect(formatPartialAmudLabel('a')).toBe('עמוד א׳ נלמד');
-      expect(formatPartialAmudLabel(null)).toBe('עמוד א׳ נלמד');
-      expect(formatPartialAmudLabel(undefined)).toBe('עמוד א׳ נלמד');
+      expect(formatPartialAmudLabel(null)).toBe('נלמד חלקית');
+      expect(formatPartialAmudLabel(undefined)).toBe('נלמד חלקית');
     });
   });
 

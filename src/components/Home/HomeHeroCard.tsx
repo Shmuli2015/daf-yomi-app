@@ -24,6 +24,7 @@ interface HomeHeroCardProps {
   isFuture?: boolean;
   studyStatus?: 'none' | 'partial' | 'learned';
   partialAmud?: 'a' | 'b' | null;
+  stopPoint?: string | null;
   showHalfDafTip?: boolean;
   masechetProgressPct?: number;
   masechetLearnedCountLabel?: string;
@@ -54,6 +55,7 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
   isFuture = false,
   studyStatus = 'none',
   partialAmud = null,
+  stopPoint = null,
   showHalfDafTip = false,
   masechetProgressPct = 0,
   masechetLearnedCountLabel = '0',
@@ -225,7 +227,7 @@ const HomeHeroCard = React.memo(function HomeHeroCard({
               <>
                 {isPartial && (
                   <Text style={styles.partialStatusText}>
-                    {formatPartialAmudLabel(partialAmud)}
+                    {stopPoint ? `נקודת עצירה: ${stopPoint}` : formatPartialAmudLabel(partialAmud)}
                   </Text>
                 )}
 

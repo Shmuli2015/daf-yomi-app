@@ -51,5 +51,7 @@ export function formatProgressCount(value: number): string {
 }
 
 export function formatPartialAmudLabel(amud: AmudSide | null | undefined): string {
-  return amud === 'b' ? 'עמוד ב׳ נלמד' : 'עמוד א׳ נלמד';
+  if (amud === 'b') return 'עמוד ב׳ נלמד';
+  if (amud === 'a') return 'עמוד א׳ נלמד';
+  return 'נלמד חלקית';
 }
