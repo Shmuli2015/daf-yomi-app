@@ -21,9 +21,9 @@ export default function HomeUpcomingMasechetBanner({
   const styles = useMemo(() => createHomeUpcomingMasechetBannerStyles(theme), [theme]);
 
   const countdownText = useMemo(() => {
-    if (info.daysLeft === 0) return 'היום מתחילים מסכת חדשה!';
-    if (info.daysLeft === 1) return 'מחר מתחילים מסכת חדשה!';
-    return `עוד ${info.daysLeft} ימים מתחילים מסכת חדשה!`;
+    if (info.daysLeft === 0) return 'היום מתחילים!';
+    if (info.daysLeft === 1) return 'מחר מתחילים';
+    return `עוד ${info.daysLeft} ימים`;
   }, [info.daysLeft]);
 
   return (
@@ -35,42 +35,47 @@ export default function HomeUpcomingMasechetBanner({
         style={StyleSheet.absoluteFill}
       />
 
-      <View style={styles.topRow}>
-        <View style={styles.iconTitleGroup}>
+      <View style={styles.innerRow}>
+        <View style={styles.infoGroup}>
           <View style={styles.iconBox}>
-            <Ionicons name="sparkles" size={18} color={theme.colors.accent} />
+            <Ionicons name="sparkles" size={20} color={theme.colors.accent} />
           </View>
-          <Text style={styles.headline}>{countdownText}</Text>
+          <View style={styles.textCol}>
+            <View style={styles.eyebrowPill}>
+              <Text style={styles.eyebrowText}>{countdownText}</Text>
+            </View>
+            <Text style={styles.masechetTitle}>מסכת {info.masechetHe}</Text>
+            <Text style={styles.timingSubtitle}>
+              {info.dayOfWeekHe}, {info.hebrewDateStr}
+            </Text>
+          </View>
         </View>
 
-        {onDismiss && (
+        <View style={styles.actionsGroup}>
           <TouchableOpacity
-            style={styles.closeButton}
-            onPress={onDismiss}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            style={styles.compactShareBtn}
+            onPress={() => onShare(info)}
+            activeOpacity={0.7}
             accessibilityRole="button"
-            accessibilityLabel="סגור באנר"
+            accessibilityLabel="שתף הזמנה למסכת החדשה"
           >
-            <Ionicons name="close" size={18} color={theme.colors.textMuted} />
+            <Ionicons name="share-outline" size={15} color={theme.colors.accent} />
+            <Text style={styles.compactShareBtnText}>שתף</Text>
           </TouchableOpacity>
-        )}
-      </View>
 
-      <View style={styles.body}>
-        <Text style={styles.masechetTitle}>מסכת {info.masechetHe}</Text>
-        <Text style={styles.timingSubtitle}>
-          {info.dayOfWeekHe}, {info.hebrewDateStr}
-        </Text>
+          {onDismiss && (
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={onDismiss}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="button"
+              accessibilityLabel="סגור באנר"
+            >
+              <Ionicons name="close" size={16} color={theme.colors.textMuted} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-
-      <TouchableOpacity
-        style={styles.shareInviteButton}
-        onPress={() => onShare(info)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="share-social-outline" size={18} color={theme.colors.white} />
-        <Text style={styles.shareInviteButtonText}>שתף הזמנה ללימוד עם חברים</Text>
-      </TouchableOpacity>
     </View>
   );
 }
