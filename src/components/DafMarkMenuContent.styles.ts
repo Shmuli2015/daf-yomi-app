@@ -94,7 +94,9 @@ export const createDafMarkMenuStyles = (theme: Theme) =>
       paddingVertical: 10,
       color: theme.colors.textPrimary,
       fontSize: 15,
+      textAlign: 'right',
       writingDirection: 'rtl',
+      alignSelf: 'stretch',
       marginBottom: 12,
     },
     stopPointButtonsRow: {

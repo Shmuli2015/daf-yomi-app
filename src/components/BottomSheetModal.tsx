@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { Modal, Platform, Pressable, StyleSheet, View, Animated } from 'react-native';
+import { Modal, Platform, Pressable, StyleSheet, View, Animated, KeyboardAvoidingView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme';
 import { useSheetDismissGesture } from '../hooks/useSheetDismissGesture';
+import { useKeyboardHeight } from '../hooks/useKeyboardHeight';
 import { createBottomSheetModalStyles } from './BottomSheetModal.styles';
 import SheetDragHandle from './SheetDragHandle';
 
@@ -13,6 +14,7 @@ interface BottomSheetModalProps {
   showHandle?: boolean;
   dismissible?: boolean;
   contentBottomGap?: number;
+  avoidKeyboard?: boolean;
 }
 
 const SHEET_MIN_BOTTOM_INSET = 12;
@@ -25,10 +27,12 @@ export default function BottomSheetModal({
   showHandle = true,
   dismissible = true,
   contentBottomGap = SHEET_CONTENT_BOTTOM_GAP,
+  avoidKeyboard = false,
 }: BottomSheetModalProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createBottomSheetModalStyles(theme), [theme]);
+  const keyboardHeight = useKeyboardHeight(visible && avoidKeyboard);
   const sheetBottomPadding = Math.max(insets.bottom, SHEET_MIN_BOTTOM_INSET) + contentBottomGap;
   const { panHandlers, sheetAnimatedStyle, overlayAnimatedStyle, animationType, dismiss } =
     useSheetDismissGesture({
@@ -52,7 +56,16 @@ export default function BottomSheetModal({
           style={[StyleSheet.absoluteFill, styles.overlayDim, overlayAnimatedStyle]}
         />
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
-        <View style={styles.sheetLayer} pointerEvents="box-none">
+        <KeyboardAvoidingView
+          style={[
+            styles.sheetLayer,
+            avoidKeyboard && Platform.OS === 'android' && keyboardHeight > 0
+              ? { bottom: keyboardHeight }
+              : null,
+          ]}
+          behavior={avoidKeyboard && Platform.OS === 'ios' ? 'padding' : undefined}
+          pointerEvents="box-none"
+        >
           <Animated.View
             pointerEvents="auto"
             style={[styles.sheet, sheetAnimatedStyle, { paddingBottom: sheetBottomPadding }]}
@@ -60,7 +73,7 @@ export default function BottomSheetModal({
             {showHandle ? <SheetDragHandle panHandlers={panHandlers} /> : null}
             {children}
           </Animated.View>
-        </View>
+        </KeyboardAvoidingView>
       </View>
     </Modal>
   );

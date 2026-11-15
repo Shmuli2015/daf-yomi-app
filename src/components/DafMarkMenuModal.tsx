@@ -8,7 +8,7 @@ interface DafMarkMenuModalProps extends DafMarkMenuContentProps {
 
 export default function DafMarkMenuModal({ visible, ...contentProps }: DafMarkMenuModalProps) {
   return (
-    <BottomSheetModal visible={visible} onClose={contentProps.onCancel}>
+    <BottomSheetModal visible={visible} onClose={contentProps.onCancel} avoidKeyboard>
       <DafMarkMenuContent {...contentProps} />
     </BottomSheetModal>
   );

@@ -92,14 +92,12 @@ export default function DafMarkMenuContent({
           <View style={styles.stopPointCard}>
             <Text style={styles.stopPointLabel}>איפה עצרת בלימוד?</Text>
             <TextInput
-              style={[
-                styles.stopPointInput,
-                { textAlign: Platform.OS === 'web' ? 'right' : 'left' },
-              ]}
+              style={styles.stopPointInput}
               value={stopPointInput}
               onChangeText={setStopPointInput}
               placeholder="למשל: סיימתי 3/4 עמוד, שורה 15..."
               placeholderTextColor={theme.colors.textMuted}
+              textAlign="right"
               autoFocus
             />
             <View style={styles.stopPointButtonsRow}>

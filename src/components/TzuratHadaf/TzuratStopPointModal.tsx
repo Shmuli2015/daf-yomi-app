@@ -45,7 +45,7 @@ export default function TzuratStopPointModal({
   };
 
   return (
-    <BottomSheetModal visible={visible} onClose={onClose}>
+    <BottomSheetModal visible={visible} onClose={onClose} avoidKeyboard>
       <View style={styles.content}>
         <View style={styles.headerRow}>
           <Ionicons name="bookmark" size={24} color={theme.colors.accent} />
@@ -56,14 +56,12 @@ export default function TzuratStopPointModal({
         </Text>
 
         <TextInput
-          style={[
-            styles.input,
-            { textAlign: Platform.OS === 'web' ? 'right' : 'left' },
-          ]}
+          style={styles.input}
           value={noteText}
           onChangeText={setNoteText}
           placeholder="למשל: סיימתי 3/4 עמוד, שורה 15..."
           placeholderTextColor={theme.colors.textMuted}
+          textAlign="right"
           autoFocus
         />
 

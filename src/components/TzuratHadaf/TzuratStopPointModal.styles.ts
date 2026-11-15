@@ -35,7 +35,9 @@ export const createTzuratStopPointModalStyles = (theme: Theme) =>
       paddingVertical: 12,
       color: theme.colors.textPrimary,
       fontSize: 16,
+      textAlign: 'right',
       writingDirection: 'rtl',
+      alignSelf: 'stretch',
       marginBottom: 16,
     },
     buttonsRow: {
