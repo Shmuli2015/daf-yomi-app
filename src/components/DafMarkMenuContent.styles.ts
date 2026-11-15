@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import type { Theme } from '../theme';
 
 export const createDafMarkMenuStyles = (theme: Theme) =>
@@ -82,8 +82,9 @@ export const createDafMarkMenuStyles = (theme: Theme) =>
       fontSize: 14,
       fontWeight: '700',
       marginBottom: 8,
-      textAlign: 'right',
+      textAlign: Platform.OS === 'web' ? 'right' : 'left',
       writingDirection: 'rtl',
+      alignSelf: 'stretch',
     },
     stopPointInput: {
       backgroundColor: theme.colors.surface,
@@ -102,24 +103,39 @@ export const createDafMarkMenuStyles = (theme: Theme) =>
     stopPointButtonsRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 10,
     },
     stopPointSaveBtn: {
       flex: 1,
       backgroundColor: theme.colors.accent,
-      paddingVertical: 10,
+      paddingVertical: 11,
       borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
     },
     stopPointSaveText: {
       color: theme.colors.white,
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: '700',
     },
+    stopPointCancelBtn: {
+      flex: 1,
+      paddingVertical: 11,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      backgroundColor: theme.colors.surface,
+    },
+    stopPointCancelText: {
+      color: theme.colors.textSecondary,
+      fontSize: 15,
+      fontWeight: '600',
+    },
     stopPointDeleteBtn: {
-      paddingHorizontal: 12,
-      paddingVertical: 10,
+      paddingHorizontal: 14,
+      paddingVertical: 11,
       borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
@@ -128,21 +144,7 @@ export const createDafMarkMenuStyles = (theme: Theme) =>
     },
     stopPointDeleteText: {
       color: theme.colors.danger,
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    stopPointCancelBtn: {
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderRadius: 10,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    stopPointCancelText: {
-      color: theme.colors.textSecondary,
-      fontSize: 14,
+      fontSize: 15,
       fontWeight: '600',
     },
   });

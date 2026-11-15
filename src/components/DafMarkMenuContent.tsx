@@ -108,6 +108,13 @@ export default function DafMarkMenuContent({
               >
                 <Text style={styles.stopPointSaveText}>שמור</Text>
               </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.stopPointCancelBtn}
+                onPress={() => setIsEditingStopPoint(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.stopPointCancelText}>ביטול</Text>
+              </TouchableOpacity>
               {hasStopPoint && (
                 <TouchableOpacity
                   style={styles.stopPointDeleteBtn}
@@ -117,13 +124,6 @@ export default function DafMarkMenuContent({
                   <Text style={styles.stopPointDeleteText}>מחק</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity
-                style={styles.stopPointCancelBtn}
-                onPress={() => setIsEditingStopPoint(false)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.stopPointCancelText}>ביטול</Text>
-              </TouchableOpacity>
             </View>
           </View>
         ) : (

@@ -71,7 +71,14 @@ export default function TzuratStopPointModal({
             onPress={handleSave}
             activeOpacity={0.8}
           >
-            <Text style={styles.saveButtonText}>שמור נקודת עצירה</Text>
+            <Text style={styles.saveButtonText}>שמור</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={onClose}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.cancelButtonText}>ביטול</Text>
           </TouchableOpacity>
           {hasExisting && (
             <TouchableOpacity
@@ -83,10 +90,6 @@ export default function TzuratStopPointModal({
             </TouchableOpacity>
           )}
         </View>
-
-        <TouchableOpacity style={styles.cancelButton} onPress={onClose} activeOpacity={0.7}>
-          <Text style={styles.cancelButtonText}>ביטול</Text>
-        </TouchableOpacity>
       </View>
     </BottomSheetModal>
   );
