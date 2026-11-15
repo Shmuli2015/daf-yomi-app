@@ -5,6 +5,7 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 export type ThemeScheme = 'light' | 'dark';
 
 export type Theme = {
+  isDark: boolean;
   colors: {
     background: string;
     surface: string;
@@ -54,6 +55,7 @@ export type Theme = {
 };
 
 export const DARK_THEME: Theme = {
+  isDark: true,
   colors: {
     background: '#121212',
     surface: '#1E1E1E',
@@ -134,6 +136,7 @@ export const DARK_THEME: Theme = {
 
 export const LIGHT_THEME: Theme = {
   ...DARK_THEME,
+  isDark: false,
   colors: {
     ...DARK_THEME.colors,
     background: '#F8FAFC',

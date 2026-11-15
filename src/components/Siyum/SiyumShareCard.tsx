@@ -17,11 +17,12 @@ const SiyumShareCard = forwardRef<ViewInstance, SiyumShareCardProps>(function Si
   ref,
 ) {
   const theme = useTheme();
-  const styles = useMemo(() => createSiyumShareCardStyles(theme, true), [theme]);
+  const isDark = theme.isDark;
+  const styles = useMemo(() => createSiyumShareCardStyles(theme, isDark), [theme, isDark]);
 
   return (
     <View ref={ref} collapsable={false} onLayout={onLayout}>
-      <ShareFrame cardTheme="dark" categoryBadge="סיום מסכת ש״ס">
+      <ShareFrame cardTheme={isDark ? 'dark' : 'light'} categoryBadge="סיום מסכת ש״ס">
         <View style={styles.root}>
           <View style={styles.crownOuterRing}>
             <View style={styles.crownInnerRing}>

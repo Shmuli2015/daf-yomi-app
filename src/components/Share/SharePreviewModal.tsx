@@ -34,16 +34,19 @@ export default function SharePreviewModal({
   const captureRef = useRef<ViewInstance>(null);
   const [sharing, setSharing] = useState(false);
   const [captureLaidOut, setCaptureLaidOut] = useState(false);
-  const [cardTheme, setCardTheme] = useState<ShareCardThemeMode>('dark');
+  const [cardTheme, setCardTheme] = useState<ShareCardThemeMode>(() =>
+    theme.isDark ? 'dark' : 'light',
+  );
 
   useEffect(() => {
     if (visible) {
       setCaptureLaidOut(false);
+      setCardTheme(theme.isDark ? 'dark' : 'light');
     } else {
       setSharing(false);
       setCaptureLaidOut(false);
     }
-  }, [visible, data]);
+  }, [visible, data, theme.isDark]);
 
   const handleShare = async () => {
     if (!data || sharing) return;
