@@ -228,7 +228,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const record = history.find((r) => r.date === dateStr) || get().todayRecord;
 
     set({
-      history,
+      ...historySlice(history),
       personalTrackRecords,
       progressCache: cache,
       streak: cache.streak,

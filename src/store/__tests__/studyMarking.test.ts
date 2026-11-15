@@ -54,6 +54,8 @@ jest.mock('../../services/sentry', () => ({
 
 import type { DailyRecord } from '../../db/database';
 import type { ProgressCache } from '../../utils/progressCache';
+import { getDateStr } from '../../utils/dafYomi';
+import { buildRecentHistoryKey } from '../../utils/last7Days';
 import { useAppStore } from '../useAppStore';
 
 const defaultSettings = {
@@ -269,6 +271,30 @@ describe('study marking store actions', () => {
       { dateStr: '2026-01-10', masechet: 'ברכות', daf: "דף ב'", status: 'missed', amud: null },
       { dateStr: '2026-01-11', masechet: 'ברכות', daf: "דף ג'", status: 'missed', amud: null },
     ]);
+  });
+
+  it('loadProgressData fills recordByDate and recentHistoryKey before any mark', () => {
+    const today = getDateStr(new Date());
+    const learned: DailyRecord = {
+      ...seedHistory[0],
+      date: today,
+      status: 'learned',
+    };
+    mockGetAllRecords.mockReturnValue([learned]);
+    seedStore({
+      progressCache: null,
+      history: [],
+      recordByDate: new Map(),
+      recentHistoryKey: buildRecentHistoryKey([]),
+      currentDate: new Date(),
+    });
+
+    useAppStore.getState().loadProgressData();
+
+    const state = useAppStore.getState();
+    expect(state.recordByDate.get(today)).toEqual(learned);
+    expect(state.recentHistoryKey).toBe(buildRecentHistoryKey([learned]));
+    expect(state.recentHistoryKey).not.toBe(buildRecentHistoryKey([]));
   });
 
   it('refreshHistory patches up to 40 dates when a cache exists', () => {
