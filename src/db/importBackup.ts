@@ -19,7 +19,7 @@ import type { DailyRecordInput, FullBackupInput, SettingsInput } from './types';
 
 function insertDailyRecord(record: DailyRecordInput) {
   db.runSync(
-    'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+    'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt, stop_point) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     [
       record.date,
       record.masechet,
@@ -28,13 +28,14 @@ function insertDailyRecord(record: DailyRecordInput) {
       record.percentage ?? 0,
       record.amud ?? null,
       record.learnedAt,
+      record.stop_point ?? null,
     ]
   );
 }
 
 function updateDailyRecordFromBackup(record: DailyRecordInput) {
   db.runSync(
-    'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
+    'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ?, stop_point = ? WHERE date = ?',
     [
       record.masechet,
       record.daf,
@@ -42,6 +43,7 @@ function updateDailyRecordFromBackup(record: DailyRecordInput) {
       record.percentage ?? 0,
       record.amud ?? null,
       record.learnedAt,
+      record.stop_point ?? null,
       record.date,
     ]
   );
@@ -74,6 +76,7 @@ export function importRecords(records: DailyRecordInput[]) {
           percentage: incoming.percentage ?? 0,
           amud: incoming.amud ?? null,
           learnedAt: incoming.learnedAt,
+          stop_point: incoming.stop_point ?? null,
         });
         continue;
       }
@@ -92,6 +95,7 @@ export function importRecords(records: DailyRecordInput[]) {
               percentage: existing.percentage,
               amud: existing.amud,
               learnedAt: existing.learnedAt,
+              stop_point: existing.stop_point ?? null,
             };
 
       updateDailyRecordFromBackup(winner);
@@ -103,6 +107,7 @@ export function importRecords(records: DailyRecordInput[]) {
         percentage: winner.percentage ?? 0,
         amud: winner.amud ?? null,
         learnedAt: winner.learnedAt,
+        stop_point: winner.stop_point ?? null,
       });
     }
   });

@@ -366,4 +366,56 @@ describe('study marking store actions', () => {
       { masechet: 'Berakhot', dafNum: 3, status: 'none', amud: null },
     ]);
   });
+
+  it('setDafStopPoint writes partial status with stop point note', () => {
+    mockUpdateDailyRecord.mockClear();
+    useAppStore.getState().setDafStopPoint('2026-03-01', 'ברכות', "דף ב'", 'שורה 10');
+    expect(mockUpdateDailyRecord).toHaveBeenCalledWith(
+      '2026-03-01',
+      'ברכות',
+      "דף ב'",
+      'partial',
+      50,
+      null,
+      'שורה 10',
+    );
+  });
+
+  it('setDafStopPoint clears note to missed when no amud was set', () => {
+    mockUpdateDailyRecord.mockClear();
+    useAppStore.getState().setDafStopPoint('2026-03-01', 'ברכות', "דף ב'", '   ');
+    expect(mockUpdateDailyRecord).toHaveBeenCalledWith(
+      '2026-03-01',
+      'ברכות',
+      "דף ב'",
+      'missed',
+      0,
+      null,
+      null,
+    );
+  });
+
+  it('setPersonalDafStopPoint writes partial status with note', () => {
+    mockUpdatePersonalTrackRecord.mockClear();
+    useAppStore.getState().setPersonalDafStopPoint('Berakhot', 2, 'סיימתי 3/4 עמוד');
+    expect(mockUpdatePersonalTrackRecord).toHaveBeenCalledWith(
+      'Berakhot',
+      2,
+      'partial',
+      null,
+      'סיימתי 3/4 עמוד',
+    );
+  });
+
+  it('setPersonalDafStopPoint clears to none when note is empty and no amud', () => {
+    mockUpdatePersonalTrackRecord.mockClear();
+    useAppStore.getState().setPersonalDafStopPoint('Berakhot', 2, null);
+    expect(mockUpdatePersonalTrackRecord).toHaveBeenCalledWith(
+      'Berakhot',
+      2,
+      'none',
+      null,
+      null,
+    );
+  });
 });

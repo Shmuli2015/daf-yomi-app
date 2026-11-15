@@ -27,6 +27,7 @@ export function useHomeMarking({
 }: UseHomeMarkingParams) {
   const toggleAnyDafLearned = useAppStore((s) => s.toggleAnyDafLearned);
   const setDafStudyStatus = useAppStore((s) => s.setDafStudyStatus);
+  const setDafStopPoint = useAppStore((s) => s.setDafStopPoint);
   const markPartialAmud = useAppStore((s) => s.markPartialAmud);
   const showConfettiPref = useAppStore((s) => s.settings?.show_confetti);
 
@@ -116,6 +117,11 @@ export function useHomeMarking({
     announceAccessibility(`מסכת ${todayMasechet} דף ${todayDafNum} סומן עמוד ב׳ בלבד`);
   }, [currentDate, markPartialAmud, todayDafNum, todayMasechet]);
 
+  const handleSaveStopPoint = useCallback((note: string | null) => {
+    void triggerImpact('light');
+    setDafStopPoint(getDateStr(currentDate), todayMasechet, todayDafNum, note);
+  }, [currentDate, setDafStopPoint, todayDafNum, todayMasechet]);
+
   const handleMarkYesterday = useCallback(() => {
     void triggerImpact('medium');
     const settings = useAppStore.getState().settings ?? {};
@@ -137,6 +143,7 @@ export function useHomeMarking({
     handleMarkFull,
     handleMarkPartialA,
     handleMarkPartialB,
+    handleSaveStopPoint,
     handleMarkYesterday,
     showConfetti,
     setShowConfetti,

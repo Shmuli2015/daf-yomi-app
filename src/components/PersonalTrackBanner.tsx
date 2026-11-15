@@ -43,6 +43,7 @@ export default function PersonalTrackBanner({
   const styles = useMemo(() => createPersonalTrackBannerStyles(theme), [theme]);
   const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
   const setPersonalDafStudyStatus = useAppStore((s) => s.setPersonalDafStudyStatus);
+  const setPersonalDafStopPoint = useAppStore((s) => s.setPersonalDafStopPoint);
   const [showMarkModal, setShowMarkModal] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const { animatedChevronStyle } = useGuideSectionAnimation(expanded);
@@ -55,6 +56,7 @@ export default function PersonalTrackBanner({
     nextDafNum,
     isNextDafPartial,
     nextDafAmud,
+    nextDafStopPoint,
     animatedProgressStyle,
   } = usePersonalTrackStats(activeMasechetEn, personalTrackRecords);
 
@@ -217,6 +219,11 @@ export default function PersonalTrackBanner({
         <DafMarkMenuModal
           visible={showMarkModal}
           partialAmud={isNextDafPartial ? nextDafAmud : null}
+          stopPoint={isNextDafPartial ? nextDafStopPoint : null}
+          onSaveStopPoint={(note) => {
+            setPersonalDafStopPoint(masechet.en, nextDafNum, note);
+            setShowMarkModal(false);
+          }}
           showUnmark={isNextDafPartial}
           onSelectFull={() => {
             onToggleDafLearned(masechet.en, nextDafNum);

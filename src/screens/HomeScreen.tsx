@@ -82,6 +82,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     displayMasechetHe,
     sharedSubtitle,
     partialAmud,
+    stopPoint,
     hebrewDateStr,
     gregorianDateStr,
     eventName,
@@ -95,6 +96,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
     handleMarkFull,
     handleMarkPartialA,
     handleMarkPartialB,
+    handleSaveStopPoint,
     handleMarkYesterday,
     showConfetti,
     setShowConfetti,
@@ -183,6 +185,8 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             onMarkPartialA={handleMarkPartialA}
             onMarkPartialB={handleMarkPartialB}
             partialAmud={partialAmud}
+            stopPoint={stopPoint}
+            onSaveStopPoint={handleSaveStopPoint}
             showHalfDafTip={showHalfDafTip}
             onDismissHalfDafTip={dismissHalfDafTip}
             masechetProgressPct={masechetStats.pct}

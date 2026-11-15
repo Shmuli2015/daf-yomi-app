@@ -4,7 +4,7 @@ import { useAppStore } from '../../store/useAppStore';
 import { maybeRequestStoreReview, maybeRequestStoreReviewForStreak } from '../../services/storeReview';
 import { SHAS_MASECHTOT, numberToGematria } from '../../data/shas';
 import { getDafDateStr, getMasechetDafim } from '../../utils/shas';
-import { getStudyStatus, getPartialAmud, type AmudSide } from '../../utils/dafStatus';
+import { getStudyStatus, getPartialAmud, getStopPoint, type AmudSide } from '../../utils/dafStatus';
 import { getMasechetProgressFromCache } from '../../utils/progressCache';
 import {
   buildMasechetMarkAllUpdates,
@@ -37,6 +37,7 @@ export function useMasechetModal({
 
   const toggleAnyDafLearned = useAppStore((s) => s.toggleAnyDafLearned);
   const setDafStudyStatus = useAppStore((s) => s.setDafStudyStatus);
+  const setDafStopPoint = useAppStore((s) => s.setDafStopPoint);
   const markPartialAmud = useAppStore((s) => s.markPartialAmud);
   const batchMarkDafim = useAppStore((s) => s.batchMarkDafim);
   const batchUnmarkDafim = useAppStore((s) => s.batchUnmarkDafim);
@@ -46,6 +47,7 @@ export function useMasechetModal({
   const markPersonalDafLearned = useAppStore((s) => s.markPersonalDafLearned);
   const markPersonalPartialAmud = useAppStore((s) => s.markPersonalPartialAmud);
   const setPersonalDafStudyStatus = useAppStore((s) => s.setPersonalDafStudyStatus);
+  const setPersonalDafStopPoint = useAppStore((s) => s.setPersonalDafStopPoint);
   const pinPersonalMasechet = useAppStore((s) => s.pinPersonalMasechet);
   const unpinPersonalMasechet = useAppStore((s) => s.unpinPersonalMasechet);
 
@@ -359,6 +361,19 @@ export function useMasechetModal({
     setSelectedDafForMenu(null);
   }, []);
 
+  const handleMenuSaveStopPoint = useCallback((note: string | null) => {
+    if (selectedDafForMenu === null) return;
+    if (effectiveMode === 'personal') {
+      setPersonalDafStopPoint(masechet.en, selectedDafForMenu, note);
+    } else {
+      const dStr = getDafDateStr(masechet.he, selectedDafForMenu);
+      if (dStr) {
+        setDafStopPoint(dStr, masechet.he, `דף ${numberToGematria(selectedDafForMenu)}`, note);
+      }
+    }
+    setSelectedDafForMenu(null);
+  }, [selectedDafForMenu, effectiveMode, setPersonalDafStopPoint, setDafStopPoint, masechet.en, masechet.he]);
+
   const menuPartialAmud: AmudSide | null = useMemo(() => {
     if (selectedDafForMenu === null) return null;
     if (effectiveMode === 'personal') {
@@ -366,6 +381,15 @@ export function useMasechetModal({
     }
     const dStr = getDafDateStr(masechet.he, selectedDafForMenu);
     return dStr ? getPartialAmud(recordByDate.get(dStr)) : null;
+  }, [selectedDafForMenu, effectiveMode, personalPartialMap, masechet.he, recordByDate]);
+
+  const menuStopPoint: string | null = useMemo(() => {
+    if (selectedDafForMenu === null) return null;
+    if (effectiveMode === 'personal') {
+      return personalPartialMap.get(selectedDafForMenu)?.stop_point || null;
+    }
+    const dStr = getDafDateStr(masechet.he, selectedDafForMenu);
+    return dStr ? getStopPoint(recordByDate.get(dStr)) : null;
   }, [selectedDafForMenu, effectiveMode, personalPartialMap, masechet.he, recordByDate]);
 
   const menuShowUnmark: boolean = useMemo(() => {
@@ -414,9 +438,11 @@ export function useMasechetModal({
     handleMenuSelectFull,
     handleMenuSelectHalfA,
     handleMenuSelectHalfB,
+    handleMenuSaveStopPoint,
     handleMenuUnmark,
     handleMenuCancel,
     menuPartialAmud,
+    menuStopPoint,
     menuShowUnmark,
   };
 }

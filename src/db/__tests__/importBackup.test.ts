@@ -132,10 +132,10 @@ describe('importBackup', () => {
     expect(db.withTransactionSync).toHaveBeenCalledTimes(1);
     expect(runSql()).toEqual([
       'DELETE FROM daily_daf',
-      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt, stop_point) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     ]);
     expect(db.runSync).toHaveBeenCalledWith(
-      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt, stop_point) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [
         incoming.date,
         incoming.masechet,
@@ -144,6 +144,7 @@ describe('importBackup', () => {
         incoming.percentage,
         incoming.amud,
         incoming.learnedAt,
+        null,
       ],
     );
   });
@@ -153,7 +154,7 @@ describe('importBackup', () => {
     importRecords([incoming]);
 
     expect(runSql()).toEqual([
-      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      'INSERT INTO daily_daf (date, masechet, daf, status, percentage, amud, learnedAt, stop_point) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     ]);
   });
 
@@ -173,8 +174,8 @@ describe('importBackup', () => {
       }),
     ]);
     expect(db.runSync).toHaveBeenCalledWith(
-      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
-      ['ברכות', "דף ב'", 'learned', 100, null, '2021-01-01T00:00:00.000Z', '2026-01-15'],
+      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ?, stop_point = ? WHERE date = ?',
+      ['ברכות', "דף ב'", 'learned', 100, null, '2021-01-01T00:00:00.000Z', null, '2026-01-15'],
     );
 
     jest.clearAllMocks();
@@ -186,16 +187,16 @@ describe('importBackup', () => {
       }),
     ]);
     expect(db.runSync).toHaveBeenCalledWith(
-      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
-      ['ברכות', "דף ב'", 'missed', 0, null, '2020-01-01T00:00:00.000Z', '2026-01-15'],
+      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ?, stop_point = ? WHERE date = ?',
+      ['ברכות', "דף ב'", 'missed', 0, null, '2020-01-01T00:00:00.000Z', null, '2026-01-15'],
     );
 
     jest.clearAllMocks();
     (getAllRecords as jest.Mock).mockReturnValue([existing]);
     importRecords([dailyInput({ status: 'learned', learnedAt: 'not-a-date' })]);
     expect(db.runSync).toHaveBeenCalledWith(
-      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ? WHERE date = ?',
-      ['ברכות', "דף ב'", 'missed', 0, null, '2020-01-01T00:00:00.000Z', '2026-01-15'],
+      'UPDATE daily_daf SET masechet = ?, daf = ?, status = ?, percentage = ?, amud = ?, learnedAt = ?, stop_point = ? WHERE date = ?',
+      ['ברכות', "דף ב'", 'missed', 0, null, '2020-01-01T00:00:00.000Z', null, '2026-01-15'],
     );
   });
 

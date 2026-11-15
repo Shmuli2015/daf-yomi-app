@@ -15,7 +15,8 @@ export function initDB() {
       daf TEXT,
       status TEXT,
       percentage INTEGER DEFAULT 0,
-      learnedAt TEXT
+      learnedAt TEXT,
+      stop_point TEXT DEFAULT NULL
     );
     CREATE TABLE IF NOT EXISTS personal_track_daf (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -23,6 +24,7 @@ export function initDB() {
       daf_num INTEGER NOT NULL,
       status TEXT NOT NULL,
       learnedAt TEXT,
+      stop_point TEXT DEFAULT NULL,
       UNIQUE(masechet, daf_num)
     );
     CREATE TABLE IF NOT EXISTS settings (

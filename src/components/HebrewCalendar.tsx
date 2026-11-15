@@ -76,6 +76,7 @@ export default function HebrewCalendar() {
     missedDaysUpToSelected,
     currentStudyStatus,
     currentPartialAmud,
+    currentStopPoint,
     handleDayPress,
     handleOpenTzuratHadaf,
     handlePrevDay,
@@ -85,6 +86,7 @@ export default function HebrewCalendar() {
     handleConfirmUnmark,
     handleMarkMenuSelectFull,
     handleMarkMenuSelectHalf,
+    handleSaveStopPoint,
     handleMarkMenuUnmark,
   } = useCalendarActions({
     currentHDate,
@@ -201,6 +203,7 @@ export default function HebrewCalendar() {
         dafInfo={selectedDafInfo}
         studyStatus={currentStudyStatus}
         partialAmud={currentPartialAmud}
+        stopPoint={currentStopPoint}
         onToggle={handleToggleStudy}
         onLongPressToggle={() => setShowMarkMenu(true)}
         onOpenTzuratHadaf={handleOpenTzuratHadaf}
@@ -224,6 +227,8 @@ export default function HebrewCalendar() {
         onSelectHalfA={() => handleMarkMenuSelectHalf('a')}
         onSelectHalfB={() => handleMarkMenuSelectHalf('b')}
         partialAmud={currentPartialAmud}
+        stopPoint={currentStopPoint}
+        onSaveStopPoint={handleSaveStopPoint}
         showUnmark={currentStudyStatus === 'partial'}
         onUnmark={handleMarkMenuUnmark}
         onCancel={() => setShowMarkMenu(false)}

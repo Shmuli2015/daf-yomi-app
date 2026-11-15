@@ -3,7 +3,7 @@ import { HDate } from '@hebcal/core';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useAppStore } from '../../store/useAppStore';
-import { getStudyStatus, getPartialAmud } from '../../utils/dafStatus';
+import { getStudyStatus, getPartialAmud, getStopPoint } from '../../utils/dafStatus';
 import { getDafDayDate } from '../../utils/dafDayBoundary';
 import { getDafByDate, getDateStr } from '../../utils/dafYomi';
 import type { RootStackParamList } from '../../navigation/types';
@@ -28,6 +28,7 @@ export function useCalendarActions({
 
   const toggleAnyDafLearned = useAppStore((s) => s.toggleAnyDafLearned);
   const setDafStudyStatus = useAppStore((s) => s.setDafStudyStatus);
+  const setDafStopPoint = useAppStore((s) => s.setDafStopPoint);
   const markPartialAmud = useAppStore((s) => s.markPartialAmud);
   const batchMarkDafim = useAppStore((s) => s.batchMarkDafim);
 
@@ -214,6 +215,23 @@ export function useCalendarActions({
     return getPartialAmud(recordByDate.get(getDateStr(selectedDate.greg())));
   }, [selectedDate, recordByDate]);
 
+  const currentStopPoint = useMemo(() => {
+    if (!selectedDate) return null;
+    return getStopPoint(recordByDate.get(getDateStr(selectedDate.greg())));
+  }, [selectedDate, recordByDate]);
+
+  const handleSaveStopPoint = useCallback((note: string | null) => {
+    if (selectedDate && selectedDafInfo) {
+      setDafStopPoint(
+        getDateStr(selectedDate.greg()),
+        selectedDafInfo.masechet,
+        selectedDafInfo.daf,
+        note,
+      );
+    }
+    setShowMarkMenu(false);
+  }, [selectedDate, selectedDafInfo, setDafStopPoint]);
+
   return {
     selectedDate,
     selectedDafInfo,
@@ -232,6 +250,7 @@ export function useCalendarActions({
     missedDaysUpToSelected,
     currentStudyStatus,
     currentPartialAmud,
+    currentStopPoint,
     handleDayPress,
     handleOpenTzuratHadaf,
     handlePrevDay,
@@ -241,6 +260,7 @@ export function useCalendarActions({
     handleConfirmUnmark,
     handleMarkMenuSelectFull,
     handleMarkMenuSelectHalf,
+    handleSaveStopPoint,
     handleMarkMenuUnmark,
   };
 }

@@ -25,6 +25,8 @@ interface HomeHeaderProps {
   onMarkPartialA?: () => void;
   onMarkPartialB?: () => void;
   partialAmud?: 'a' | 'b' | null;
+  stopPoint?: string | null;
+  onSaveStopPoint?: (note: string | null) => void;
   showHalfDafTip?: boolean;
   onDismissHalfDafTip?: () => void;
   masechetProgressPct?: number;
@@ -57,6 +59,8 @@ const HomeHeader = React.memo(function HomeHeader({
   onMarkPartialA,
   onMarkPartialB,
   partialAmud = null,
+  stopPoint = null,
+  onSaveStopPoint,
   showHalfDafTip = false,
   onDismissHalfDafTip,
   masechetProgressPct = 0,
@@ -185,6 +189,8 @@ const HomeHeader = React.memo(function HomeHeader({
         onSelectHalfA={handleSelectHalfA}
         onSelectHalfB={handleSelectHalfB}
         partialAmud={partialAmud}
+        stopPoint={stopPoint}
+        onSaveStopPoint={onSaveStopPoint}
         showUnmark={studyStatus === 'partial'}
         onUnmark={handleUnmarkFromMenu}
         onCancel={handleCancelMarkMenu}

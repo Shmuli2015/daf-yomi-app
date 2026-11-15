@@ -4,6 +4,7 @@ import {
   formatProgressCount,
   getPartialAmud,
   getRecordProgress,
+  getStopPoint,
   getStudyStatus,
   resolveAmudMark,
   statusToPercentage,
@@ -61,6 +62,18 @@ describe('dafStatus', () => {
       expect(getPartialAmud({ status: 'learned', amud: 'a' })).toBeNull();
       expect(getPartialAmud({ status: 'partial', amud: 'b' })).toBe('b');
       expect(getPartialAmud({ status: 'partial' })).toBeNull();
+    });
+  });
+
+  describe('getStopPoint', () => {
+    it('returns the stop point note only when status is partial', () => {
+      expect(getStopPoint(null)).toBeNull();
+      expect(getStopPoint(undefined)).toBeNull();
+      expect(getStopPoint({ status: 'learned', stop_point: 'שורה 15' })).toBeNull();
+      expect(getStopPoint({ status: 'missed', stop_point: 'שורה 15' })).toBeNull();
+      expect(getStopPoint({ status: 'partial', stop_point: '   ' })).toBeNull();
+      expect(getStopPoint({ status: 'partial', stop_point: 'שורה 15' })).toBe('שורה 15');
+      expect(getStopPoint({ status: 'partial', stop_point: '  סיימתי 3/4 עמוד  ' })).toBe('סיימתי 3/4 עמוד');
     });
   });
 

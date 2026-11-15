@@ -6,11 +6,17 @@ export type AmudSide = 'a' | 'b';
 export interface StatusRecordLike {
   status?: string | null;
   amud?: AmudSide | null;
+  stop_point?: string | null;
 }
 
 export function getPartialAmud(record: StatusRecordLike | null | undefined): AmudSide | null {
   if (!record || record.status !== 'partial') return null;
   return record.amud ?? null;
+}
+
+export function getStopPoint(record: StatusRecordLike | null | undefined): string | null {
+  if (!record || record.status !== 'partial') return null;
+  return record.stop_point?.trim() || null;
 }
 
 export function resolveAmudMark(

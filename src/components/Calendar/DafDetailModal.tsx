@@ -20,6 +20,7 @@ interface DafDetailModalProps {
   } | null;
   studyStatus?: 'none' | 'partial' | 'learned';
   partialAmud?: 'a' | 'b' | null;
+  stopPoint?: string | null;
   onToggle: () => void;
   onLongPressToggle?: () => void;
   onOpenTzuratHadaf?: () => void;
@@ -36,6 +37,7 @@ export default function DafDetailModal({
   dafInfo,
   studyStatus,
   partialAmud,
+  stopPoint = null,
   onToggle,
   onLongPressToggle,
   onOpenTzuratHadaf,
@@ -66,6 +68,7 @@ export default function DafDetailModal({
             dafInfo={dafInfo}
             studyStatus={studyStatus}
             partialAmud={partialAmud}
+            stopPoint={stopPoint}
             onToggle={onToggle}
             onLongPressToggle={onLongPressToggle}
             onOpenTzuratHadaf={onOpenTzuratHadaf}

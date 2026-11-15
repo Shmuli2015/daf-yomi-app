@@ -10,6 +10,9 @@ export function migrateDailyDafColumns() {
   if (!dailyDafColumns.includes('amud')) {
     db.execSync('ALTER TABLE daily_daf ADD COLUMN amud TEXT DEFAULT NULL;');
   }
+  if (!dailyDafColumns.includes('stop_point')) {
+    db.execSync('ALTER TABLE daily_daf ADD COLUMN stop_point TEXT DEFAULT NULL;');
+  }
   if (dailyDafColumns.includes('notes')) {
     db.execSync('ALTER TABLE daily_daf DROP COLUMN notes;');
   }
@@ -21,6 +24,9 @@ export function migratePersonalTrackColumns() {
 
   if (!personalDafColumns.includes('amud')) {
     db.execSync('ALTER TABLE personal_track_daf ADD COLUMN amud TEXT DEFAULT NULL;');
+  }
+  if (!personalDafColumns.includes('stop_point')) {
+    db.execSync('ALTER TABLE personal_track_daf ADD COLUMN stop_point TEXT DEFAULT NULL;');
   }
 }
 

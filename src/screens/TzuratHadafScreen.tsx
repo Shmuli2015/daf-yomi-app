@@ -12,6 +12,7 @@ import TzuratMarkTrackModal from '../components/TzuratHadaf/TzuratMarkTrackModal
 import SiyumModal from '../components/Siyum/SiyumModal';
 import ConfirmModal from '../components/ConfirmModal';
 import DafMarkMenuModal from '../components/DafMarkMenuModal';
+import TzuratStopPointModal from '../components/TzuratHadaf/TzuratStopPointModal';
 import GuideModal from '../components/Guide/GuideModalGate';
 import SupportFormModal from '../components/SupportForm/SupportFormModal';
 import QuickJumpModal from '../components/QuickJump/QuickJumpModal';
@@ -34,7 +35,7 @@ import { getReaderThemePalette } from '../utils/readerTheme';
 import { buildReaderSearchSegments } from '../utils/readerSearchSegments';
 import { useTheme } from '../theme';
 import type { RootStackParamList } from '../navigation/types';
-import { normalizeMasechetEn } from '../utils/dafNavigation';
+import { formatDafLabel, normalizeMasechetEn } from '../utils/dafNavigation';
 import { readerDisplayMasechetHe, isTamidStartDaf } from '../utils/mishnahOnlySefaria';
 import { SHAS_MASECHTOT } from '../data/shas';
 import { useDafSwipeGesture } from '../hooks/useDafSwipeGesture';
@@ -124,6 +125,7 @@ export default function TzuratHadafScreen() {
     personalStatus,
     dafYomiPartialAmud,
     personalPartialAmud,
+    currentStopPoint,
     menuPartialAmud,
     menuStudyStatus,
     canMarkLearned,
@@ -137,10 +139,13 @@ export default function TzuratHadafScreen() {
     handleSelectFull,
     handleSelectHalfA,
     handleSelectHalfB,
+    handleSaveStopPoint,
     handleConfirmUnmark,
     requestUnmarkPending,
     showTrackPicker,
     setShowTrackPicker,
+    showStopPointModal,
+    setShowStopPointModal,
     showConfirm,
     setShowConfirm,
     showSiyumModal,
@@ -223,6 +228,8 @@ export default function TzuratHadafScreen() {
             studyStatus={studyStatus}
             canMarkLearned={canMarkLearned}
             isFullscreen={isFullscreen}
+            stopPoint={currentStopPoint}
+            onOpenStopPoint={() => setShowStopPointModal(true)}
             onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
             onClose={() => navigation.goBack()}
             onToggleLearned={handleToggleLearned}
@@ -410,6 +417,11 @@ export default function TzuratHadafScreen() {
                   closeTrackPicker();
                 },
                 partialAmud: menuPartialAmud,
+                stopPoint: currentStopPoint,
+                onSaveStopPoint: (note) => {
+                  handleSaveStopPoint(note);
+                  closeTrackPicker();
+                },
                 showUnmark: menuStudyStatus === 'partial',
                 onUnmark: () => {
                   closeTrackPicker();
@@ -436,12 +448,26 @@ export default function TzuratHadafScreen() {
           setShowMarkMenu(false);
         }}
         partialAmud={menuPartialAmud}
+        stopPoint={currentStopPoint}
+        onSaveStopPoint={(note) => {
+          handleSaveStopPoint(note);
+          setShowMarkMenu(false);
+        }}
         showUnmark={menuStudyStatus === 'partial'}
         onUnmark={() => {
           setShowMarkMenu(false);
           requestUnmarkPending();
         }}
         onCancel={() => setShowMarkMenu(false)}
+      />
+
+      <TzuratStopPointModal
+        visible={showStopPointModal}
+        onClose={() => setShowStopPointModal(false)}
+        masechetName={masechetHe || reader.location.masechetEn}
+        dafLabel={formatDafLabel(reader.location.dafNum, reader.location.amud)}
+        currentStopPoint={currentStopPoint}
+        onSave={handleSaveStopPoint}
       />
 
       <ConfirmModal
