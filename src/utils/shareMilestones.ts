@@ -103,8 +103,19 @@ export function getShasMilestone(percentage: number): MilestoneInfo {
   };
 }
 
-export function getUpcomingMasechetCopy(masechetHe: string, daysLeft: number): UpcomingCopyInfo {
-  if (daysLeft === 0) {
+export function getUpcomingMasechetCopy(
+  masechetHe: string,
+  daysLeft: number,
+  status?: 'upcoming' | 'starting_today' | 'just_started',
+): UpcomingCopyInfo {
+  if (status === 'just_started') {
+    return {
+      badge: 'התחלנו מסכת חדשה!',
+      headline: `התחלנו מסכת ${masechetHe}!`,
+      callToAction: 'התחלנו את המסכת וזה הזמן המושלם להצטרף ללימוד הדף היומי',
+    };
+  }
+  if (daysLeft === 0 || status === 'starting_today') {
     return {
       badge: 'היום מתחילים!',
       headline: `היום מתחילים מסכת ${masechetHe}!`,

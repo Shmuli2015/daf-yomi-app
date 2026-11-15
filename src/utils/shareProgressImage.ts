@@ -34,6 +34,7 @@ export type UpcomingMasechetShareData = {
   daysLeft: number;
   startDateFormatted: string;
   hebrewDate: string;
+  status?: 'upcoming' | 'starting_today' | 'just_started';
 };
 
 export type ShareProgressData = StreakShareData | ShasShareData | UpcomingMasechetShareData;

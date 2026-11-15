@@ -37,7 +37,6 @@ const HomeContent = React.memo(function HomeContent({
   const styles = useMemo(() => createHomeContentStyles(theme), [theme]);
   const [shareVisible, setShareVisible] = useState(false);
   const [shareData, setShareData] = useState<ShareProgressData | null>(null);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const upcomingMasechet = useMemo(() => getUpcomingMasechetInfo(new Date(), 6), []);
 
@@ -54,12 +53,9 @@ const HomeContent = React.memo(function HomeContent({
       daysLeft: info.daysLeft,
       startDateFormatted: `${info.dayOfWeekHe}, ${info.hebrewDateStr}`,
       hebrewDate: info.hebrewDateStr,
+      status: info.status,
     });
     setShareVisible(true);
-  }, []);
-
-  const handleDismissBanner = useCallback(() => {
-    setBannerDismissed(true);
   }, []);
 
   const handleShareClose = useCallback(() => {
@@ -68,11 +64,10 @@ const HomeContent = React.memo(function HomeContent({
 
   return (
     <View style={styles.container}>
-      {upcomingMasechet && !bannerDismissed && (
+      {upcomingMasechet && (
         <HomeUpcomingMasechetBanner
           info={upcomingMasechet}
           onShare={handleUpcomingShare}
-          onDismiss={handleDismissBanner}
         />
       )}
 

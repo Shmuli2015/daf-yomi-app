@@ -45,14 +45,18 @@ const ShareProgressCard = forwardRef<ViewInstance, ShareProgressCardProps>(
       );
     }
 
+    const upcomingCategory =
+      data.status === 'just_started' ? 'התחלנו מסכת חדשה' : 'מתחילים מסכת חדשה';
+
     return (
       <View ref={ref} collapsable={false} onLayout={onLayout}>
-        <ShareFrame cardTheme={cardTheme} categoryBadge="מתחילים מסכת חדשה">
+        <ShareFrame cardTheme={cardTheme} categoryBadge={upcomingCategory}>
           <ShareUpcomingMasechetContent
             masechetHe={data.masechetHe}
             daysLeft={data.daysLeft}
             startDateFormatted={data.startDateFormatted}
             cardTheme={cardTheme}
+            status={data.status}
           />
         </ShareFrame>
       </View>

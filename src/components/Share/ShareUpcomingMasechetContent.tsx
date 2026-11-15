@@ -11,6 +11,7 @@ interface ShareUpcomingMasechetContentProps {
   daysLeft: number;
   startDateFormatted: string;
   cardTheme?: ShareCardThemeMode;
+  status?: 'upcoming' | 'starting_today' | 'just_started';
 }
 
 export default function ShareUpcomingMasechetContent({
@@ -18,6 +19,7 @@ export default function ShareUpcomingMasechetContent({
   daysLeft,
   startDateFormatted,
   cardTheme = 'dark',
+  status,
 }: ShareUpcomingMasechetContentProps) {
   const theme = useTheme();
   const isDark = cardTheme === 'dark';
@@ -26,8 +28,8 @@ export default function ShareUpcomingMasechetContent({
     [theme, isDark],
   );
   const copyInfo = useMemo(
-    () => getUpcomingMasechetCopy(masechetHe, daysLeft),
-    [masechetHe, daysLeft],
+    () => getUpcomingMasechetCopy(masechetHe, daysLeft, status),
+    [masechetHe, daysLeft, status],
   );
 
   return (

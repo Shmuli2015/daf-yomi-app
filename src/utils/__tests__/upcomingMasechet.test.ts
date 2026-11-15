@@ -8,7 +8,7 @@ describe('upcomingMasechet', () => {
 
   it('detects when a new masechet starts on the same day', () => {
     jest.spyOn(dafYomiModule, 'getDafByDate').mockImplementation((date: Date) => {
-      const isStartDay = date.getDate() === 10;
+      const isStartDay = date.getDate() >= 10;
       return {
         masechet: isStartDay ? 'שבת' : 'ברכות',
         masechetEn: isStartDay ? 'Shabbat' : 'Berakhot',
@@ -28,6 +28,57 @@ describe('upcomingMasechet', () => {
     expect(info).not.toBeNull();
     expect(info?.masechetHe).toBe('שבת');
     expect(info?.daysLeft).toBe(0);
+    expect(info?.status).toBe('starting_today');
+  });
+
+  it('detects when a new masechet started yesterday', () => {
+    jest.spyOn(dafYomiModule, 'getDafByDate').mockImplementation((date: Date) => {
+      const isAfterOrOn10 = date.getDate() >= 10;
+      return {
+        masechet: isAfterOrOn10 ? 'שבת' : 'ברכות',
+        masechetEn: isAfterOrOn10 ? 'Shabbat' : 'Berakhot',
+        daf: isAfterOrOn10 ? 'דף ג' : 'דף סד',
+        dafNumOnly: isAfterOrOn10 ? 'ג' : 'סד',
+        dafEn: isAfterOrOn10 ? '3a' : '64b',
+        dafNum: isAfterOrOn10 ? (date.getDate() === 10 ? 2 : 3) : 64,
+        amud: 'a',
+        fullText: 'text',
+        dateString: '2026-03-11',
+      };
+    });
+
+    const currentDate = new Date(2026, 2, 11, 12, 0, 0);
+    const info = getUpcomingMasechetInfo(currentDate, 6);
+
+    expect(info).not.toBeNull();
+    expect(info?.masechetHe).toBe('שבת');
+    expect(info?.status).toBe('just_started');
+    expect(info?.daysSinceStart).toBe(1);
+  });
+
+  it('detects when a new masechet started 2 days ago', () => {
+    jest.spyOn(dafYomiModule, 'getDafByDate').mockImplementation((date: Date) => {
+      const isAfterOrOn10 = date.getDate() >= 10;
+      return {
+        masechet: isAfterOrOn10 ? 'שבת' : 'ברכות',
+        masechetEn: isAfterOrOn10 ? 'Shabbat' : 'Berakhot',
+        daf: isAfterOrOn10 ? 'דף ד' : 'דף סד',
+        dafNumOnly: isAfterOrOn10 ? 'ד' : 'סד',
+        dafEn: isAfterOrOn10 ? '4a' : '64b',
+        dafNum: isAfterOrOn10 ? (date.getDate() === 10 ? 2 : 4) : 64,
+        amud: 'a',
+        fullText: 'text',
+        dateString: '2026-03-12',
+      };
+    });
+
+    const currentDate = new Date(2026, 2, 12, 12, 0, 0);
+    const info = getUpcomingMasechetInfo(currentDate, 6);
+
+    expect(info).not.toBeNull();
+    expect(info?.masechetHe).toBe('שבת');
+    expect(info?.status).toBe('just_started');
+    expect(info?.daysSinceStart).toBe(2);
   });
 
   it('detects when a new masechet starts in 3 days', () => {
@@ -52,6 +103,7 @@ describe('upcomingMasechet', () => {
     expect(info).not.toBeNull();
     expect(info?.masechetHe).toBe('עירובין');
     expect(info?.daysLeft).toBe(3);
+    expect(info?.status).toBe('upcoming');
   });
 
   it('returns null when no masechet transition occurs within window', () => {
