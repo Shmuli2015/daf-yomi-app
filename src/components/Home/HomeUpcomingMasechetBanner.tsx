@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../theme';
@@ -56,7 +56,13 @@ export default function HomeUpcomingMasechetBanner({
 
   return (
     <>
-      <View style={styles.container}>
+      <TouchableOpacity
+        style={styles.container}
+        onPress={handleShareOpen}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={`שתף הזמנה למסכת ${info.masechetHe}`}
+      >
         <LinearGradient
           colors={[theme.colors.accent + '0D', 'transparent']}
           style={StyleSheet.absoluteFill}
@@ -78,7 +84,7 @@ export default function HomeUpcomingMasechetBanner({
 
           <ShareIconButton onPress={handleShareOpen} />
         </View>
-      </View>
+      </TouchableOpacity>
 
       <SharePreviewModal
         visible={shareVisible}
