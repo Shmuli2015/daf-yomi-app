@@ -11,6 +11,7 @@ import type {
 } from '../../services/offlinePrefetch';
 import type { OfflineMasechetTarget } from '../../hooks/useOfflinePrefetch';
 import type { AutoBackupInterval } from '../../utils/autoBackupInterval';
+import type { SettingsFeedback } from '../../hooks/useSettingsFeedback';
 
 export type SettingsNotificationsProps = {
   notificationsEnabled: boolean;
@@ -111,6 +112,7 @@ export type SettingsHelpUpdatesProps = {
   onShareDownloadLink?: () => void;
   onShowWhatsNew?: () => void;
   onEmailCopied: () => void;
+  onFeedback?: (feedback: SettingsFeedback) => void;
 };
 
 export type SettingsDevProps = {

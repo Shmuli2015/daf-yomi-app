@@ -9,6 +9,7 @@ import {
   HELP_SEARCH_ITEMS,
   LICENSES_ITEM,
   PRIVACY_POLICY_ITEM,
+  RATE_APP_ITEM,
   SIYUM_NUSACH_ITEM,
   SUPPORT_ITEM,
 } from '../../../utils/settingsSearchCatalog';
@@ -18,6 +19,7 @@ type SettingsHelpSectionProps = SettingsSectionChrome & {
   onGuideModalOpen: () => void;
   onSupportPress: () => void;
   onSupportLongPress: () => void;
+  onRateAppPress: () => void;
   onPrivacyPolicyPress: () => void;
   onSiyumNusachPress: () => void;
   onLicensesPress: () => void;
@@ -27,6 +29,7 @@ export {
   HELP_SEARCH_ITEMS,
   GUIDE_ITEM,
   SUPPORT_ITEM,
+  RATE_APP_ITEM,
   PRIVACY_POLICY_ITEM,
   SIYUM_NUSACH_ITEM,
   LICENSES_ITEM,
@@ -41,16 +44,18 @@ export default function SettingsHelpSection({
   onGuideModalOpen,
   onSupportPress,
   onSupportLongPress,
+  onRateAppPress,
   onPrivacyPolicyPress,
   onSiyumNusachPress,
   onLicensesPress,
 }: SettingsHelpSectionProps) {
   const showGuide = matchesSetting(searchQuery, GUIDE_ITEM);
   const showSupport = matchesSetting(searchQuery, SUPPORT_ITEM);
+  const showRateApp = matchesSetting(searchQuery, RATE_APP_ITEM);
   const showPrivacy = matchesSetting(searchQuery, PRIVACY_POLICY_ITEM);
   const showSiyumNusach = matchesSetting(searchQuery, SIYUM_NUSACH_ITEM);
   const showLicenses = matchesSetting(searchQuery, LICENSES_ITEM);
-  const flags = [showGuide, showSupport, showPrivacy, showSiyumNusach, showLicenses];
+  const flags = [showGuide, showSupport, showRateApp, showPrivacy, showSiyumNusach, showLicenses];
   if (!flags.some(Boolean)) return null;
 
   return (
@@ -80,13 +85,23 @@ export default function SettingsHelpSection({
             highlightText={searchQuery}
           />
         ) : null}
+        {showRateApp ? (
+          <SettingItem
+            icon="star-outline"
+            title={RATE_APP_ITEM.title}
+            description={RATE_APP_ITEM.description}
+            onPress={onRateAppPress}
+            isLast={isLastVisible(flags, 2)}
+            highlightText={searchQuery}
+          />
+        ) : null}
         {showPrivacy ? (
           <SettingItem
             icon="document-text-outline"
             title={PRIVACY_POLICY_ITEM.title}
             description={PRIVACY_POLICY_ITEM.description}
             onPress={onPrivacyPolicyPress}
-            isLast={isLastVisible(flags, 2)}
+            isLast={isLastVisible(flags, 3)}
             highlightText={searchQuery}
           />
         ) : null}
@@ -96,7 +111,7 @@ export default function SettingsHelpSection({
             title={SIYUM_NUSACH_ITEM.title}
             description={SIYUM_NUSACH_ITEM.description}
             onPress={onSiyumNusachPress}
-            isLast={isLastVisible(flags, 3)}
+            isLast={isLastVisible(flags, 4)}
             highlightText={searchQuery}
           />
         ) : null}
@@ -106,7 +121,7 @@ export default function SettingsHelpSection({
             title={LICENSES_ITEM.title}
             description={LICENSES_ITEM.description}
             onPress={onLicensesPress}
-            isLast={isLastVisible(flags, 4)}
+            isLast={isLastVisible(flags, 5)}
             highlightText={searchQuery}
           />
         ) : null}

@@ -382,6 +382,7 @@ export default function SettingsScreen() {
                   toast: true,
                   autoCloseMs: 2500,
                 }),
+              onFeedback: showFeedback,
             }}
             dev={{
               showDevSection: __DEV__,
