@@ -8,6 +8,7 @@ import {
   AUTO_UPDATE_ITEM,
   CHECK_UPDATE_ITEM,
   SHARE_APP_ITEM,
+  STORE_MIGRATION_ITEM,
   UPDATES_SEARCH_ITEMS,
   WHATS_NEW_ITEM,
 } from '../../../utils/settingsSearchCatalog';
@@ -18,6 +19,7 @@ type SettingsUpdatesSectionProps = SettingsSectionChrome & {
   onCheckAppUpdate?: () => void;
   onShowWhatsNew?: () => void;
   onShareDownloadLink?: () => void;
+  onOpenStoreMigration?: () => void;
 };
 
 export { UPDATES_SEARCH_ITEMS };
@@ -32,6 +34,7 @@ export default function SettingsUpdatesSection({
   onCheckAppUpdate,
   onShowWhatsNew,
   onShareDownloadLink,
+  onOpenStoreMigration,
 }: SettingsUpdatesSectionProps) {
   const showAuto =
     updateAutoPromptEnabled != null &&
@@ -40,7 +43,9 @@ export default function SettingsUpdatesSection({
   const showCheck = onCheckAppUpdate != null && matchesSetting(searchQuery, CHECK_UPDATE_ITEM);
   const showWhatsNew = onShowWhatsNew != null && matchesSetting(searchQuery, WHATS_NEW_ITEM);
   const showShare = onShareDownloadLink != null && matchesSetting(searchQuery, SHARE_APP_ITEM);
-  const flags = [showAuto, showCheck, showWhatsNew, showShare];
+  const showStoreMigration =
+    onOpenStoreMigration != null && matchesSetting(searchQuery, STORE_MIGRATION_ITEM);
+  const flags = [showAuto, showCheck, showWhatsNew, showShare, showStoreMigration];
   if (!flags.some(Boolean)) return null;
 
   return (
@@ -88,6 +93,16 @@ export default function SettingsUpdatesSection({
             description={SHARE_APP_ITEM.description}
             onPress={onShareDownloadLink}
             isLast={isLastVisible(flags, 3)}
+            highlightText={searchQuery}
+          />
+        ) : null}
+        {showStoreMigration ? (
+          <SettingItem
+            icon="logo-google-playstore"
+            title={STORE_MIGRATION_ITEM.title}
+            description={STORE_MIGRATION_ITEM.description}
+            onPress={onOpenStoreMigration}
+            isLast={isLastVisible(flags, 4)}
             highlightText={searchQuery}
           />
         ) : null}

@@ -64,6 +64,7 @@ function settingsInput(overrides: Partial<SettingsInput> = {}): SettingsInput {
     show_personal_track_banner: 1,
     reader_font_size: 18,
     seen_app_version: null,
+    store_migration_snooze_until: null,
     reader_view_mode: 'classic',
     show_chavruta_notes: 1,
     gemara_nikud: 1,

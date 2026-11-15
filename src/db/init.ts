@@ -92,6 +92,9 @@ export function initDB() {
   if (!columns.includes('seen_app_version')) {
     db.execSync('ALTER TABLE settings ADD COLUMN seen_app_version TEXT DEFAULT NULL;');
   }
+  if (!columns.includes('store_migration_snooze_until')) {
+    db.execSync('ALTER TABLE settings ADD COLUMN store_migration_snooze_until TEXT DEFAULT NULL;');
+  }
   if (!columns.includes('reader_view_mode')) {
     db.execSync(`ALTER TABLE settings ADD COLUMN reader_view_mode TEXT DEFAULT '${READER_VIEW_MODE_DEFAULT}';`);
   }

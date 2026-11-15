@@ -305,11 +305,18 @@ export const SHARE_APP_ITEM: SearchableSetting = {
   synonyms: ['שיתוף', 'הורדה', 'חברים'],
 };
 
+export const STORE_MIGRATION_ITEM: SearchableSetting = {
+  title: 'עבור לגרסת החנות',
+  description: 'גיבוי, הסרה, התקנה מ-Google Play ושחזור הלימוד',
+  synonyms: ['חנות', 'גוגל פליי', 'פליי', 'גיבוי', 'שחזור'],
+};
+
 export const UPDATES_SEARCH_ITEMS: SearchableSetting[] = [
   AUTO_UPDATE_ITEM,
   CHECK_UPDATE_ITEM,
   WHATS_NEW_ITEM,
   SHARE_APP_ITEM,
+  STORE_MIGRATION_ITEM,
 ];
 
 export const TEST_ITEM: SearchableSetting = {

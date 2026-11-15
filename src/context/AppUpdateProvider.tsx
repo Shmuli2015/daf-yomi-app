@@ -3,7 +3,9 @@ import { AppUpdateModal } from '../components/AppUpdateModal';
 import Toast, { type ToastIconName } from '../components/Toast';
 import WhatsNewModal from '../components/WhatsNewModal';
 import GuideModal from '../components/Guide/GuideModalGate';
+import StoreMigrationModal from '../components/StoreMigrationModal';
 import { useAppUpdateCheck } from '../hooks/useAppUpdateCheck';
+import { useStoreMigrationPrompt } from '../hooks/useStoreMigrationPrompt';
 import { useWhatsNewOnLaunch } from '../hooks/useWhatsNewOnLaunch';
 import { probeLatestReleaseForDev } from '../services/appUpdate';
 
@@ -12,6 +14,7 @@ export type AppUpdateContextValue = {
   probeGithubRelease: () => Promise<void>;
   openWhatsNew: () => boolean;
   hasWhatsNew: boolean;
+  openStoreMigration: () => boolean;
 };
 
 const AppUpdateContext = createContext<AppUpdateContextValue | null>(null);
@@ -42,13 +45,15 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
     openFromSettings,
   } = useWhatsNewOnLaunch();
 
+  const storeMigration = useStoreMigrationPrompt({ blocked: whatsNewVisible });
+
   const {
     visible,
     offer,
     installedVersion,
     onDismissLater,
     checkManualAsync,
-  } = useAppUpdateCheck({ pauseAutoCheck: whatsNewVisible });
+  } = useAppUpdateCheck({ pauseAutoCheck: whatsNewVisible || storeMigration.visible });
 
   const [githubProbeToast, setGithubProbeToast] = useState<GithubProbeToastPayload | null>(null);
 
@@ -92,13 +97,20 @@ export function AppUpdateProvider({ children }: { children: React.ReactNode }) {
       probeGithubRelease,
       openWhatsNew: openFromSettings,
       hasWhatsNew: hasHighlights,
+      openStoreMigration: storeMigration.openFromSettings,
     }),
-    [checkManualAsync, probeGithubRelease, openFromSettings, hasHighlights],
+    [checkManualAsync, probeGithubRelease, openFromSettings, hasHighlights, storeMigration.openFromSettings],
   );
 
   return (
     <AppUpdateContext.Provider value={value}>
       {children}
+      <StoreMigrationModal
+        visible={storeMigration.visible}
+        onClose={storeMigration.onSnooze}
+        onOpenBackup={storeMigration.onOpenBackup}
+        onOpenPlayStore={storeMigration.onOpenPlayStore}
+      />
       <WhatsNewModal
         visible={whatsNewVisible}
         version={whatsNewVersion}

@@ -1,0 +1,133 @@
+import { Platform, StyleSheet } from 'react-native';
+import type { Theme } from '../theme';
+
+const hebrewAlign = Platform.OS === 'web' ? 'right' : 'left';
+
+export function createStoreMigrationModalStyles(theme: Theme) {
+  return StyleSheet.create({
+    card: {
+      width: '100%',
+      alignItems: 'stretch',
+      direction: 'rtl',
+      paddingTop: 8,
+      paddingBottom: 8,
+    },
+    closeRow: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      direction: 'ltr',
+      zIndex: 2,
+    },
+    closeBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: theme.radius.full,
+      backgroundColor: theme.colors.background,
+      borderWidth: 1,
+      borderColor: theme.colors.border,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    header: {
+      alignItems: 'center',
+      marginBottom: 12,
+      paddingTop: 4,
+    },
+    iconWrap: {
+      width: 56,
+      height: 56,
+      borderRadius: theme.radius.md,
+      backgroundColor: theme.colors.accentLight,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: 10,
+    },
+    title: {
+      fontSize: 22,
+      fontWeight: '900',
+      color: theme.colors.accent,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      width: '100%',
+    },
+    lead: {
+      fontSize: 15,
+      lineHeight: 22,
+      fontWeight: '700',
+      color: theme.colors.textPrimary,
+      textAlign: hebrewAlign,
+      writingDirection: 'rtl',
+      width: '100%',
+      alignSelf: 'stretch',
+      marginBottom: 8,
+    },
+    warning: {
+      fontSize: 14,
+      lineHeight: 21,
+      fontWeight: '600',
+      color: theme.colors.textSecondary,
+      textAlign: hebrewAlign,
+      writingDirection: 'rtl',
+      width: '100%',
+      alignSelf: 'stretch',
+      marginBottom: 14,
+    },
+    steps: {
+      width: '100%',
+      alignSelf: 'stretch',
+      gap: 8,
+      marginBottom: 16,
+    },
+    stepRow: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      direction: 'rtl',
+      gap: 8,
+      width: '100%',
+    },
+    stepIndex: {
+      width: 22,
+      fontSize: 14,
+      lineHeight: 21,
+      fontWeight: '800',
+      color: theme.colors.accent,
+      textAlign: 'center',
+    },
+    stepText: {
+      flex: 1,
+      fontSize: 14,
+      lineHeight: 21,
+      fontWeight: '600',
+      color: theme.colors.textPrimary,
+      textAlign: hebrewAlign,
+      writingDirection: 'rtl',
+    },
+    primaryBtn: {
+      backgroundColor: theme.colors.accent,
+      borderRadius: theme.radius.sm,
+      paddingVertical: 14,
+      alignItems: 'center',
+      marginBottom: 8,
+    },
+    primaryLabel: {
+      color: theme.colors.white,
+      fontWeight: '900',
+      fontSize: 16,
+      writingDirection: 'rtl',
+    },
+    secondaryBtn: {
+      paddingVertical: 10,
+      alignItems: 'center',
+    },
+    secondaryLabel: {
+      color: theme.colors.accent,
+      fontWeight: '800',
+      fontSize: 15,
+      writingDirection: 'rtl',
+    },
+  });
+}

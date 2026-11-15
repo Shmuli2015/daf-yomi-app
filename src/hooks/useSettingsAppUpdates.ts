@@ -5,6 +5,7 @@ import { useAppUpdateControls } from '../context/AppUpdateProvider';
 import { isUpdateCheckConfigured } from '../services/appUpdate';
 import { getDownloadPageUrl } from '../services/apkInstall';
 import { isPlayStoreBuild } from '../services/playTrack';
+import { getStoreMigrationMode } from '../services/storeMigration';
 import { buildDownloadShareContent, PLAY_STORE_APP_URL } from '../utils/shareDownloadLink';
 import type { SettingsFeedback } from './useSettingsFeedback';
 
@@ -80,5 +81,7 @@ export function useSettingsAppUpdates({
     handleCheckAppUpdates,
     handleShareDownloadLink,
     handleShowWhatsNew: updateCtl.hasWhatsNew ? updateCtl.openWhatsNew : undefined,
+    handleOpenStoreMigration:
+      getStoreMigrationMode() === 'replace' ? updateCtl.openStoreMigration : undefined,
   };
 }

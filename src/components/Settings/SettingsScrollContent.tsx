@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +28,7 @@ import {
   CHECK_UPDATE_ITEM,
   RESET_ITEM,
   SHARE_APP_ITEM,
+  STORE_MIGRATION_ITEM,
   WHATS_NEW_ITEM,
 } from '../../utils/settingsSearchCatalog';
 import {
@@ -62,6 +63,8 @@ export default function SettingsScrollContent({
   backupData,
   helpUpdates,
   dev,
+  requestedSection = null,
+  onRequestedSectionHandled,
 }: SettingsScrollContentProps) {
   const theme = useTheme();
   const todayMasechet = useAppStore((state) => state.todayMasechet);
@@ -91,6 +94,7 @@ export default function SettingsScrollContent({
   });
 
   const { openSection, toggleSection, openSectionByName } = useSettingsAccordion(null);
+  const appliedSectionRef = useRef<SettingsSectionKey | null>(null);
 
   const searchContext: VisibleSettingsSearchContext = {
     notificationsEnabled: notifications.notificationsEnabled,
@@ -115,6 +119,7 @@ export default function SettingsScrollContent({
     hasCheckUpdate: helpUpdates.onCheckAppUpdate != null,
     hasWhatsNew: helpUpdates.onShowWhatsNew != null,
     hasShareDownload: helpUpdates.onShareDownloadLink != null,
+    hasStoreMigration: helpUpdates.onOpenStoreMigration != null,
     showDevSection: dev.showDevSection,
   };
 
@@ -125,6 +130,24 @@ export default function SettingsScrollContent({
     isSearching,
     offlineStaysOpen: offline.isPrefetching,
   });
+
+  useEffect(() => {
+    if (!requestedSection) {
+      appliedSectionRef.current = null;
+      return;
+    }
+    if (appliedSectionRef.current === requestedSection) return;
+    appliedSectionRef.current = requestedSection;
+    prepareSectionChange(openSection, requestedSection);
+    openSectionByName(requestedSection);
+    onRequestedSectionHandled?.();
+  }, [
+    onRequestedSectionHandled,
+    openSection,
+    openSectionByName,
+    prepareSectionChange,
+    requestedSection,
+  ]);
 
   const storageSizeFormatted = offline.storageSizeFormatted ?? '0 B';
   const notifSummary = buildNotificationsSummary(
@@ -164,7 +187,8 @@ export default function SettingsScrollContent({
     (searchContext.hasAutoUpdate && matchesSetting(searchQuery, AUTO_UPDATE_ITEM)) ||
     (searchContext.hasCheckUpdate && matchesSetting(searchQuery, CHECK_UPDATE_ITEM)) ||
     (searchContext.hasWhatsNew && matchesSetting(searchQuery, WHATS_NEW_ITEM)) ||
-    (searchContext.hasShareDownload && matchesSetting(searchQuery, SHARE_APP_ITEM));
+    (searchContext.hasShareDownload && matchesSetting(searchQuery, SHARE_APP_ITEM)) ||
+    (searchContext.hasStoreMigration && matchesSetting(searchQuery, STORE_MIGRATION_ITEM));
 
   return (
     <>
@@ -474,6 +498,7 @@ export default function SettingsScrollContent({
                     onCheckAppUpdate={helpUpdates.onCheckAppUpdate}
                     onShowWhatsNew={helpUpdates.onShowWhatsNew}
                     onShareDownloadLink={helpUpdates.onShareDownloadLink}
+                    onOpenStoreMigration={helpUpdates.onOpenStoreMigration}
                   />
                 </SettingsCollapsibleCard>
               ) : null}

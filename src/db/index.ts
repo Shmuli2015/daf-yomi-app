@@ -49,6 +49,7 @@ export {
   setNotificationSoundEnabled,
   setReaderViewMode,
   setSeenAppVersion,
+  setStoreMigrationSnoozeUntil,
   setShowCalendarDaf,
   setShowChavrutaNotes,
   setShowConfetti,

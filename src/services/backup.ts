@@ -179,6 +179,7 @@ function validateBackupSettings(raw: unknown): BackupSettings | null {
     show_personal_track_banner: num('show_personal_track_banner', 1),
     reader_font_size: clampReaderFontSize(num('reader_font_size', READER_FONT_SIZE_DEFAULT)),
     seen_app_version: nullableStr('seen_app_version'),
+    store_migration_snooze_until: nullableStr('store_migration_snooze_until'),
     reader_view_mode: str('reader_view_mode', 'classic'),
     show_chavruta_notes: num('show_chavruta_notes', 1),
     gemara_nikud: num('gemara_nikud', 1),

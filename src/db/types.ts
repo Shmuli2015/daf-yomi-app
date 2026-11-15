@@ -39,6 +39,7 @@ export interface SettingsRecord {
   show_personal_track_banner: number;
   reader_font_size: number;
   seen_app_version: string | null;
+  store_migration_snooze_until: string | null;
   reader_view_mode: string;
   show_chavruta_notes: number;
   gemara_nikud: number;
