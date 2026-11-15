@@ -289,7 +289,8 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       daf_day_start_schedules = ?,
       last_store_review_prompt_at = ?,
       store_review_streak7_prompted = ?,
-      reader_theme = ?
+      reader_theme = ?,
+      store_migration_snooze_until = ?
     WHERE id = 1`,
     [
       settings.notification_hour,
@@ -331,6 +332,7 @@ export function importSettingsFromBackup(settings: SettingsInput) {
       settings.last_store_review_prompt_at ?? null,
       settings.store_review_streak7_prompted === 1 ? 1 : 0,
       settings.reader_theme || 'system',
+      settings.store_migration_snooze_until ?? null,
     ]
   );
 }

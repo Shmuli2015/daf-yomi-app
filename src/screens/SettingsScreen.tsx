@@ -1,5 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { Platform, View } from 'react-native';
+import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAppStore } from '../store/useAppStore';
 import { useShallow } from 'zustand/react/shallow';
@@ -21,10 +23,28 @@ import { useStorageCache } from '../hooks/useStorageCache';
 import { useOfflinePrefetch } from '../hooks/useOfflinePrefetch';
 import { useSettingsReaderPrefs } from '../hooks/useSettingsReaderPrefs';
 import { useReaderFontSize } from '../hooks/useReaderFontSize';
+import type { SettingsSectionKey } from '../hooks/useSettingsAccordion';
+import type { MainTabParamList } from '../navigation/types';
 
 export default function SettingsScreen() {
   const theme = useTheme();
   const styles = useMemo(() => createSettingsScreenStyles(theme), [theme]);
+  const route = useRoute<RouteProp<MainTabParamList, 'Settings'>>();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList, 'Settings'>>();
+  const [requestedSection, setRequestedSection] = useState<SettingsSectionKey | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const section = route.params?.openSection;
+      if (!section) return;
+      setRequestedSection(section);
+      navigation.setParams({ openSection: undefined });
+    }, [navigation, route.params?.openSection]),
+  );
+
+  const handleRequestedSectionHandled = useCallback(() => {
+    setRequestedSection(null);
+  }, []);
 
   const {
     settings,
@@ -197,6 +217,7 @@ export default function SettingsScreen() {
     handleCheckAppUpdates,
     handleShareDownloadLink,
     handleShowWhatsNew,
+    handleOpenStoreMigration,
   } = useSettingsAppUpdates({
     onFeedback: showFeedback,
     setUpdateAutoPromptEnabled,
@@ -275,6 +296,8 @@ export default function SettingsScreen() {
         <View style={styles.screenRoot}>
           <SettingsScrollContent
             styles={styles}
+            requestedSection={requestedSection}
+            onRequestedSectionHandled={handleRequestedSectionHandled}
             notifications={{
               notificationsEnabled,
               onNotificationsToggle: handleNotificationsToggle,
@@ -374,6 +397,7 @@ export default function SettingsScreen() {
               onCheckAppUpdate: updatesConfigured ? handleCheckAppUpdates : undefined,
               onShareDownloadLink: handleShareDownloadLink,
               onShowWhatsNew: handleShowWhatsNew,
+              onOpenStoreMigration: handleOpenStoreMigration,
               onEmailCopied: () =>
                 showFeedback({
                   title: 'הכתובת הועתקה',

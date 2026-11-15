@@ -31,6 +31,7 @@ import {
   THEME_ITEM,
   TIME_ITEM,
   TRACK_ITEM,
+  STORE_MIGRATION_ITEM,
   WHATS_NEW_ITEM,
 } from './settingsSearchCatalog';
 
@@ -62,6 +63,7 @@ export type VisibleSettingsSearchContext = {
   hasCheckUpdate: boolean;
   hasWhatsNew: boolean;
   hasShareDownload: boolean;
+  hasStoreMigration: boolean;
   showDevSection: boolean;
 };
 
@@ -127,6 +129,7 @@ function getHelpUpdatesSearchItems(ctx: VisibleSettingsSearchContext): Searchabl
   if (ctx.hasCheckUpdate) items.push(CHECK_UPDATE_ITEM);
   if (ctx.hasWhatsNew) items.push(WHATS_NEW_ITEM);
   if (ctx.hasShareDownload) items.push(SHARE_APP_ITEM);
+  if (ctx.hasStoreMigration) items.push(STORE_MIGRATION_ITEM);
   return items;
 }
 

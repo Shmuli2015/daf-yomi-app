@@ -58,6 +58,7 @@ export function createDefaultSettingsRecord(): SettingsRecord {
     show_personal_track_banner: 1,
     reader_font_size: READER_FONT_SIZE_DEFAULT,
     seen_app_version: null,
+    store_migration_snooze_until: null,
     reader_view_mode: READER_VIEW_MODE_DEFAULT,
     show_chavruta_notes: 1,
     gemara_nikud: 1,
@@ -173,6 +174,10 @@ export function setDismissedUpdateVersion(version: string | null) {
 
 export function setSeenAppVersion(version: string) {
   db.runSync('UPDATE settings SET seen_app_version = ? WHERE id = 1', [version]);
+}
+
+export function setStoreMigrationSnoozeUntil(iso: string | null) {
+  db.runSync('UPDATE settings SET store_migration_snooze_until = ? WHERE id = 1', [iso]);
 }
 
 export function setUpdateAutoPromptEnabled(enabled: boolean) {

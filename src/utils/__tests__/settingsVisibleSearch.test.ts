@@ -25,6 +25,7 @@ const baseCtx: VisibleSettingsSearchContext = {
   hasCheckUpdate: true,
   hasWhatsNew: true,
   hasShareDownload: true,
+  hasStoreMigration: false,
   showDevSection: false,
 };
 

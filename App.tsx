@@ -15,6 +15,7 @@ import { useColorScheme } from 'react-native';
 import SystemChromeThemeSync from './src/components/SystemChromeThemeSync';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { AppUpdateProvider } from './src/context/AppUpdateProvider';
+import { navigationRef } from './src/navigation/navigationRef';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
 import { initSentry, Sentry, captureException } from './src/services/sentry';
 
@@ -68,6 +69,7 @@ function App() {
           <SystemChromeThemeSync themeMode={themeMode} />
           <AppUpdateProvider>
             <NavigationContainer
+              ref={navigationRef}
               theme={{
                 ...navigationTheme,
                 dark: isDark,

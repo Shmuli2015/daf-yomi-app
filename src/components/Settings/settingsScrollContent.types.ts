@@ -4,6 +4,7 @@ import type { DafDayStartDaySchedule, DafDayStartMode } from '../../utils/dafDay
 import type { DaySchedule } from './Schedule/DayScheduleList';
 import type { ExactAlarmStatus } from '../../utils/exactAlarm';
 import type { NotificationPermissionStatus } from '../../utils/notificationPermission';
+import type { SettingsSectionKey } from '../../hooks/useSettingsAccordion';
 import type { SettingsScreenStyles } from './settingsScreenStyles';
 import type {
   OfflinePrefetchProgress,
@@ -111,6 +112,7 @@ export type SettingsHelpUpdatesProps = {
   onCheckAppUpdate?: () => void;
   onShareDownloadLink?: () => void;
   onShowWhatsNew?: () => void;
+  onOpenStoreMigration?: () => void;
   onEmailCopied: () => void;
   onFeedback?: (feedback: SettingsFeedback) => void;
 };
@@ -125,6 +127,8 @@ export type SettingsDevProps = {
 
 export type SettingsScrollContentProps = {
   styles: SettingsScreenStyles;
+  requestedSection?: SettingsSectionKey | null;
+  onRequestedSectionHandled?: () => void;
   notifications: SettingsNotificationsProps;
   reader: SettingsReaderProps;
   display: SettingsDisplayProps;
