@@ -4,11 +4,9 @@ import { useTheme } from '../theme';
 import SharePreviewModal from './Share/SharePreviewModal';
 import HomeShasCard from './Home/HomeShasCard';
 import HomeStreakCard from './Home/HomeStreakCard';
-import HomeUpcomingMasechetBanner from './Home/HomeUpcomingMasechetBanner';
 import { createHomeContentStyles } from './Home/HomeContent.styles';
-import type { ShareProgressData } from '../utils/shareProgressImage';
+import type { StreakShareData } from '../utils/shareProgressImage';
 import type { Last7DayRecord } from '../utils/last7Days';
-import { getUpcomingMasechetInfo, type UpcomingMasechetInfo } from '../utils/upcomingMasechet';
 
 interface HomeContentProps {
   streak: number;
@@ -36,9 +34,7 @@ const HomeContent = React.memo(function HomeContent({
   const theme = useTheme();
   const styles = useMemo(() => createHomeContentStyles(theme), [theme]);
   const [shareVisible, setShareVisible] = useState(false);
-  const [shareData, setShareData] = useState<ShareProgressData | null>(null);
-
-  const upcomingMasechet = useMemo(() => getUpcomingMasechetInfo(new Date(), 6), []);
+  const [shareData, setShareData] = useState<StreakShareData | null>(null);
 
   const handleSharePress = useCallback(() => {
     const cleanHebrewDate = hebrewDateStr.replace(/[\u0591-\u05C7]/g, '');
@@ -46,31 +42,12 @@ const HomeContent = React.memo(function HomeContent({
     setShareVisible(true);
   }, [hebrewDateStr, streak]);
 
-  const handleUpcomingShare = useCallback((info: UpcomingMasechetInfo) => {
-    setShareData({
-      variant: 'upcoming_masechet',
-      masechetHe: info.masechetHe,
-      daysLeft: info.daysLeft,
-      startDateFormatted: `${info.dayOfWeekHe}, ${info.hebrewDateStr}`,
-      hebrewDate: info.hebrewDateStr,
-      status: info.status,
-    });
-    setShareVisible(true);
-  }, []);
-
   const handleShareClose = useCallback(() => {
     setShareVisible(false);
   }, []);
 
   return (
     <View style={styles.container}>
-      {upcomingMasechet && (
-        <HomeUpcomingMasechetBanner
-          info={upcomingMasechet}
-          onShare={handleUpcomingShare}
-        />
-      )}
-
       <HomeShasCard
         shasLearnedCount={shasLearnedCount}
         shasTotalPages={shasTotalPages}

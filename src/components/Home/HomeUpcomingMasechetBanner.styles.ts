@@ -4,10 +4,12 @@ import type { Theme } from '../../theme';
 export function createHomeUpcomingMasechetBannerStyles(theme: Theme) {
   return StyleSheet.create({
     container: {
+      marginTop: 16,
+      marginHorizontal: 20,
       borderRadius: 28,
       backgroundColor: theme.colors.surface,
       borderWidth: 1,
-      borderColor: theme.colors.border,
+      borderColor: theme.colors.accentBorder,
       padding: 18,
       overflow: 'hidden',
       position: 'relative',
@@ -26,9 +28,9 @@ export function createHomeUpcomingMasechetBannerStyles(theme: Theme) {
       flex: 1,
     },
     iconBox: {
-      width: 48,
-      height: 48,
-      borderRadius: 18,
+      width: 36,
+      height: 36,
+      borderRadius: 12,
       backgroundColor: theme.colors.accentLight,
       justifyContent: 'center',
       alignItems: 'center',
