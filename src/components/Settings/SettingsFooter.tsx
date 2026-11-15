@@ -48,6 +48,10 @@ export function SettingsFooter() {
             <Ionicons name="code-slash-outline" size={14} color={theme.colors.accent} />
             <Text style={styles.authorText}>פיתוח: שמואל רוזנברג</Text>
           </View>
+
+          <Text style={styles.dedicationText}>
+            {'לע״נ הרב אליהו מרדכי בן חנוך זצ״ל\nוהילד הטהור אוריאל בן יוסף חיים ז״ל'}
+          </Text>
         </View>
       </View>
     </View>

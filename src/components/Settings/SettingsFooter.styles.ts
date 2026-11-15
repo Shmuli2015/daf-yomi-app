@@ -84,6 +84,15 @@ export function createSettingsFooterStyles(theme: Theme) {
       fontSize: 12.5,
       fontWeight: '600',
     },
+    dedicationText: {
+      color: theme.colors.textMuted,
+      fontSize: 12,
+      fontWeight: '500',
+      lineHeight: 18,
+      textAlign: 'center',
+      writingDirection: 'rtl',
+      width: '100%',
+    },
     versionBadge: {
       flexDirection: 'row',
       alignItems: 'center',
