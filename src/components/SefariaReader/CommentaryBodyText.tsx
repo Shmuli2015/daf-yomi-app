@@ -3,8 +3,8 @@ import { Text, StyleSheet, type StyleProp, type TextStyle } from 'react-native';
 import {
   emphasizeRashiDibur,
   parseCommentaryRuns,
+  prepareSteinsaltzPlainText,
   stripEmDash,
-  stripSteinsaltzSectionLetters,
 } from '../../utils/commentaryEmphasis';
 import { buildHighlightSpans } from '../../utils/textSearch';
 import { rtlBodyTextProps, rtlNestedRunStyle } from '../../utils/rtlBodyText';
@@ -19,6 +19,7 @@ interface CommentaryBodyTextProps {
   accentColor: string;
   searchQuery?: string;
   activeOccurrenceIndex?: number | null;
+  gemaraMatchTexts?: ReadonlyArray<string>;
 }
 
 export default function CommentaryBodyText({
@@ -28,6 +29,7 @@ export default function CommentaryBodyText({
   accentColor,
   searchQuery = '',
   activeOccurrenceIndex = null,
+  gemaraMatchTexts,
 }: CommentaryBodyTextProps) {
   const theme = useTheme();
   const highlightStyles = useMemo(() => createSearchHighlightTextStyles(theme), [theme]);
@@ -35,12 +37,12 @@ export default function CommentaryBodyText({
     const sanitized = stripEmDash(text);
     const prepared =
       commentator === 'steinsaltz'
-        ? stripSteinsaltzSectionLetters(sanitized)
+        ? prepareSteinsaltzPlainText(sanitized, gemaraMatchTexts)
         : commentator
           ? emphasizeRashiDibur(sanitized)
           : sanitized;
     return parseCommentaryRuns(prepared);
-  }, [commentator, text]);
+  }, [commentator, gemaraMatchTexts, text]);
   const hasSearchQuery = searchQuery.trim().length > 0;
   let occurrenceCursor = -1;
 

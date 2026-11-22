@@ -1,4 +1,5 @@
 import type { SefariaCommentatorKey } from './sefariaCommentators';
+import { emphasizeSteinsaltzFromGemara } from './steinsaltzGemaraEmphasis';
 
 export type CommentaryRun = {
   text: string;
@@ -236,13 +237,30 @@ export function stripSteinsaltzSectionLetters(text: string): string {
     .join('\n\n');
 }
 
+export function fixHebrewDigitArtifacts(text: string): string {
+  if (!text) return '';
+  return text.replace(/([\u05D0-\u05EA])\d+([\u05D0-\u05EA])/g, '$1$2');
+}
+
+export function prepareSteinsaltzPlainText(
+  text: string,
+  gemaraTexts?: ReadonlyArray<string>,
+): string {
+  const prepared = fixHebrewDigitArtifacts(stripSteinsaltzSectionLetters(text || ''));
+  if (!gemaraTexts || gemaraTexts.length === 0) {
+    return prepared;
+  }
+  return emphasizeSteinsaltzFromGemara(prepared, gemaraTexts);
+}
+
 export function prepareCommentaryText(
   html: string,
   commentator: SefariaCommentatorKey,
+  gemaraTexts?: ReadonlyArray<string>,
 ): string {
   const cleaned = cleanCommentaryHtml(html);
   if (commentator === 'steinsaltz') {
-    return stripSteinsaltzSectionLetters(cleaned);
+    return prepareSteinsaltzPlainText(cleaned, gemaraTexts);
   }
   return emphasizeRashiDibur(cleaned);
 }
