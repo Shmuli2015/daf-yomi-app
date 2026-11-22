@@ -297,7 +297,7 @@ describe('study marking store actions', () => {
     expect(state.recentHistoryKey).not.toBe(buildRecentHistoryKey([]));
   });
 
-  it('refreshHistory patches up to 40 dates when a cache exists', () => {
+  it('refreshHistory patches dates in memory when a cache exists', () => {
     const patched = seedHistory[0];
     mockGetDailyRecord.mockReturnValue(patched);
 
@@ -307,12 +307,26 @@ describe('study marking store actions', () => {
     expect(mockGetAllRecords).not.toHaveBeenCalled();
   });
 
-  it('refreshHistory reloads all records when the patch list is over 40 or cache is missing', () => {
-    const dates = Array.from({ length: 41 }, (_, i) => `2026-01-${String(i + 1).padStart(2, '0')}`);
-    useAppStore.getState().refreshHistory(undefined, dates);
-    expect(mockGetAllRecords).toHaveBeenCalledTimes(1);
+  it('refreshHistory patches large bulk date lists without reloading all records', () => {
+    const dates = Array.from({ length: 120 }, (_, i) => {
+      const day = (i % 28) + 1;
+      const month = Math.floor(i / 28) + 1;
+      return `2026-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    });
+    mockGetDailyRecord.mockImplementation((dateStr: string) => ({
+      ...seedHistory[0],
+      date: dateStr,
+      status: 'learned' as const,
+    }));
 
-    mockGetAllRecords.mockClear();
+    useAppStore.getState().refreshHistory('ברכות', dates);
+
+    expect(mockGetAllRecords).not.toHaveBeenCalled();
+    expect(mockGetDailyRecord).toHaveBeenCalledTimes(120);
+    expect(useAppStore.getState().recordByDate.get(dates[0])?.status).toBe('learned');
+  });
+
+  it('refreshHistory reloads all records when cache is missing', () => {
     seedStore({ progressCache: null });
     useAppStore.getState().refreshHistory('ברכות', ['2026-01-14']);
     expect(mockGetAllRecords).toHaveBeenCalledTimes(1);

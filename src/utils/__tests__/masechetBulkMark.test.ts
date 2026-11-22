@@ -38,6 +38,19 @@ describe('masechetBulkMark', () => {
     expect(map.size).toBe(1);
   });
 
+  it('looks up only masechet dates when given a recordByDate map', () => {
+    const source = new Map<string, DailyRecord>([
+      [daf2Date as string, record(daf2Date as string, 'learned')],
+      ['1999-01-01', record('1999-01-01', 'learned')],
+    ]);
+
+    const map = buildMasechetRecordByDate(source, 'ברכות', [2, 64]);
+
+    expect(map.get(daf2Date as string)?.status).toBe('learned');
+    expect(map.has('1999-01-01')).toBe(false);
+    expect(map.size).toBe(1);
+  });
+
   it('skips already learned dapim when building mark-all updates', () => {
     expect(daf2Date).toBeTruthy();
     expect(daf64Date).toBeTruthy();

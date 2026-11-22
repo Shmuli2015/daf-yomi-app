@@ -46,8 +46,8 @@ export default function SettingsScreen() {
     setRequestedSection(null);
   }, []);
 
+  const settings = useAppStore((s) => s.settings);
   const {
-    settings,
     updateNotificationSettings,
     updateThemeMode,
     setUpdateAutoPromptEnabled,
@@ -67,8 +67,7 @@ export default function SettingsScreen() {
     clearReaderPositionsState,
     resetAllState,
   } = useAppStore(
-    useShallow(s => ({
-      settings: s.settings,
+    useShallow((s) => ({
       updateNotificationSettings: s.updateNotificationSettings,
       updateThemeMode: s.updateThemeMode,
       setUpdateAutoPromptEnabled: s.setUpdateAutoPromptEnabled,

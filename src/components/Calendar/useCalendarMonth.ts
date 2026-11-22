@@ -135,30 +135,24 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
     })
   ).current;
 
-  const calendarData = useMemo(() => {
+  const monthScaffold = useMemo(() => {
     const year = currentHDate.getFullYear();
     const month = currentHDate.getMonth();
     const firstDayOfMonth = new HDate(1, month, year);
     const dayOfWeek = firstDayOfMonth.getDay();
-    const days: DayData[] = [];
+    const days: Omit<DayData, 'learned' | 'partial' | 'partialAmud'>[] = [];
 
     const todayHd = resolveDafTodayHDate();
     const prevMonth = firstDayOfMonth.prev();
     for (let i = dayOfWeek - 1; i >= 0; i--) {
       const d = new HDate(prevMonth.getDate() - i, prevMonth.getMonth(), prevMonth.getFullYear());
       const greg = d.greg();
-      const dateKey = getDateStr(greg);
-      const record = recordByDate.get(dateKey);
-      const studyStatus = getStudyStatus(record);
       const evt = getHebrewDayEventInfo(d);
       days.push({
         hdate: d,
         isCurrentMonth: false,
-        learned: studyStatus === 'learned',
-        partial: studyStatus === 'partial',
-        partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, todayHd),
-        dateKey,
+        dateKey: getDateStr(greg),
         dafLabel: showCalendarDaf ? getDafByDate(greg).dafNumOnly || undefined : undefined,
         hasSpecialEvent: evt.isShabbat || evt.isRoshChodesh || evt.isHoliday,
         gematriya: d.renderGematriya().split(' ')[0],
@@ -169,18 +163,12 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
     let d = firstDayOfMonth;
     while (d.getMonth() === month) {
       const greg = d.greg();
-      const dateKey = getDateStr(greg);
-      const record = recordByDate.get(dateKey);
-      const studyStatus = getStudyStatus(record);
       const evt = getHebrewDayEventInfo(d);
       days.push({
         hdate: d,
         isCurrentMonth: true,
-        learned: studyStatus === 'learned',
-        partial: studyStatus === 'partial',
-        partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, todayHd),
-        dateKey,
+        dateKey: getDateStr(greg),
         dafLabel: showCalendarDaf ? getDafByDate(greg).dafNumOnly || undefined : undefined,
         hasSpecialEvent: evt.isShabbat || evt.isRoshChodesh || evt.isHoliday,
         gematriya: d.renderGematriya().split(' ')[0],
@@ -192,18 +180,12 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
     const remaining = 42 - days.length;
     for (let i = 1; i <= remaining; i++) {
       const greg = d.greg();
-      const dateKey = getDateStr(greg);
-      const record = recordByDate.get(dateKey);
-      const studyStatus = getStudyStatus(record);
       const evt = getHebrewDayEventInfo(d);
       days.push({
         hdate: d,
         isCurrentMonth: false,
-        learned: studyStatus === 'learned',
-        partial: studyStatus === 'partial',
-        partialAmud: getPartialAmud(record),
         isToday: isSameDay(d, todayHd),
-        dateKey,
+        dateKey: getDateStr(greg),
         dafLabel: showCalendarDaf ? getDafByDate(greg).dafNumOnly || undefined : undefined,
         hasSpecialEvent: evt.isShabbat || evt.isRoshChodesh || evt.isHoliday,
         gematriya: d.renderGematriya().split(' ')[0],
@@ -212,7 +194,45 @@ export function useCalendarMonth({ recordByDate, showCalendarDaf }: UseCalendarM
       d = d.next();
     }
     return days;
-  }, [currentHDate, recordByDate, showCalendarDaf, dafDayStartMode, dafDayStartHour, dafDayStartMinute, dafDayStartSchedules]);
+  }, [currentHDate, showCalendarDaf, dafDayStartMode, dafDayStartHour, dafDayStartMinute, dafDayStartSchedules]);
+
+  const previousCalendarDataRef = useRef<DayData[]>([]);
+
+  const calendarData = useMemo(() => {
+    const previous = previousCalendarDataRef.current;
+    const next = monthScaffold.map((day, index) => {
+      const record = recordByDate.get(day.dateKey);
+      const studyStatus = getStudyStatus(record);
+      const learned = studyStatus === 'learned';
+      const partial = studyStatus === 'partial';
+      const partialAmud = getPartialAmud(record);
+      const prevDay = previous[index];
+      if (
+        prevDay &&
+        prevDay.dateKey === day.dateKey &&
+        prevDay.hdate === day.hdate &&
+        prevDay.isCurrentMonth === day.isCurrentMonth &&
+        prevDay.isToday === day.isToday &&
+        prevDay.dafLabel === day.dafLabel &&
+        prevDay.hasSpecialEvent === day.hasSpecialEvent &&
+        prevDay.gematriya === day.gematriya &&
+        prevDay.gregDay === day.gregDay &&
+        prevDay.learned === learned &&
+        prevDay.partial === partial &&
+        prevDay.partialAmud === partialAmud
+      ) {
+        return prevDay;
+      }
+      return {
+        ...day,
+        learned,
+        partial,
+        partialAmud,
+      };
+    });
+    previousCalendarDataRef.current = next;
+    return next;
+  }, [monthScaffold, recordByDate]);
 
   const monthName = useMemo(() => {
     return Locale.gettext(HDate.getMonthName(currentHDate.getMonth(), currentHDate.getFullYear()), 'he').replace(/[\u0591-\u05C7]/g, '');

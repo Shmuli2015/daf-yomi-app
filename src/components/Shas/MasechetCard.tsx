@@ -89,7 +89,11 @@ const MasechetCard = React.memo(function MasechetCard({
       </TouchableOpacity>
     </View>
   );
-});
+}, (prev, next) => (
+  prev.data === next.data &&
+  prev.onPress === next.onPress &&
+  prev.onLongPress === next.onLongPress
+));
 
 export default MasechetCard;
 

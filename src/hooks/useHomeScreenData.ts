@@ -10,7 +10,6 @@ import { dafYomiDisplayMasechetHe, kinnimTamidCalendarDisplay } from '../utils/m
 import { getMasechetDafim } from '../utils/shas';
 import { formatMasechetEndCountdown, getDaysUntilMasechetEnd } from '../utils/masechetEndCountdown';
 import { getStudyStatus, getPartialAmud, getStopPoint } from '../utils/dafStatus';
-import { getMasechetProgressFromCache } from '../utils/progressCache';
 import { isPersonalTrackEnabled } from '../utils/personalTrack';
 import { shouldShowYesterdayNudge } from '../utils/yesterdayNudge';
 import { getHebrewDayEventInfo } from '../utils/hebrewCalendarEvents';
@@ -30,7 +29,6 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
     showSecularDate,
     dismissedHalfDafTip,
     personalTrackEnabled,
-    progressCache,
     isAppReady,
     dismissHalfDafTip,
     activePersonalMasechet,
@@ -54,7 +52,6 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
       showSecularDate: s.settings?.show_secular_date === 1,
       dismissedHalfDafTip: s.settings?.dismissed_half_daf_tip,
       personalTrackEnabled: isPersonalTrackEnabled(s.settings),
-      progressCache: s.progressCache,
       isAppReady: s.isAppReady,
       dismissHalfDafTip: s.dismissHalfDafTip,
       activePersonalMasechet: s.activePersonalMasechet,
@@ -66,6 +63,19 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
       unpinPersonalMasechet: s.unpinPersonalMasechet,
       togglePersonalDafLearned: s.togglePersonalDafLearned,
     })),
+  );
+
+  const masechetLearned = useAppStore(
+    (s) => s.progressCache?.masechetProgress.get(s.todayMasechet)?.learned ?? 0,
+  );
+  const shasLearnedCount = useAppStore(
+    (s) => s.progressCache?.totalShasProgress.learnedCount ?? 0,
+  );
+  const shasTotalPages = useAppStore(
+    (s) => s.progressCache?.totalShasProgress.totalPages ?? 2711,
+  );
+  const shasPercentage = useAppStore(
+    (s) => s.progressCache?.totalShasProgress.percentage ?? 0,
   );
 
   const {
@@ -85,11 +95,9 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
 
   const masechetStats = useMemo(() => {
     const total = getMasechetDafim(todayMasechet).length;
-    if (!progressCache) return { pct: 0, learned: 0, total };
-    const progress = getMasechetProgressFromCache(progressCache, todayMasechet);
-    const pct = total > 0 ? Math.round((progress.learned / total) * 100) : 0;
-    return { pct, learned: progress.learned, total };
-  }, [todayMasechet, progressCache]);
+    const pct = total > 0 ? Math.round((masechetLearned / total) * 100) : 0;
+    return { pct, learned: masechetLearned, total };
+  }, [todayMasechet, masechetLearned]);
 
   const masechetEndLabel = useMemo(() => {
     const daysLeft = getDaysUntilMasechetEnd(todayMasechet, todayDafNumValue);
@@ -116,9 +124,14 @@ export function useHomeScreenData(nudgeDismissedFor: string | null) {
   );
   const eventName = useMemo(() => getHebrewDayEventInfo(hDate).eventName, [hDate]);
 
-  const shasProgress = useMemo(() => {
-    return progressCache?.totalShasProgress || { learnedCount: 0, totalPages: 2711, percentage: 0 };
-  }, [progressCache]);
+  const shasProgress = useMemo(
+    () => ({
+      learnedCount: shasLearnedCount,
+      totalPages: shasTotalPages,
+      percentage: shasPercentage,
+    }),
+    [shasLearnedCount, shasTotalPages, shasPercentage],
+  );
 
   const last7Days = useMemo(() => {
     const settings = useAppStore.getState().settings ?? {};

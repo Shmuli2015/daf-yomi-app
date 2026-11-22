@@ -19,7 +19,7 @@ export function useMasechetCardBulk() {
   const [isLoading, setIsLoading] = useState(false);
 
   const {
-    history,
+    storeRecordByDate,
     progressCache,
     personalTrackRecords,
     settings,
@@ -29,7 +29,7 @@ export function useMasechetCardBulk() {
     batchUnmarkPersonalDafim,
   } = useAppStore(
     useShallow((s) => ({
-      history: s.history,
+      storeRecordByDate: s.recordByDate,
       progressCache: s.progressCache,
       personalTrackRecords: s.personalTrackRecords,
       settings: s.settings,
@@ -124,11 +124,11 @@ export function useMasechetCardBulk() {
     setTimeout(() => {
       try {
         if (action === 'markAll') {
-          const recordByDate = buildMasechetRecordByDate(history, masechetHe, dafim);
+          const recordByDate = buildMasechetRecordByDate(storeRecordByDate, masechetHe, dafim);
           const updates = buildMasechetMarkAllUpdates(masechetHe, dafim, recordByDate);
           if (updates.length > 0) batchMarkDafim(updates);
         } else if (action === 'unmarkAll') {
-          const recordByDate = buildMasechetRecordByDate(history, masechetHe, dafim);
+          const recordByDate = buildMasechetRecordByDate(storeRecordByDate, masechetHe, dafim);
           const updates = buildMasechetUnmarkAllUpdates(masechetHe, dafim, recordByDate);
           if (updates.length > 0) batchUnmarkDafim(updates);
         } else if (action === 'markAllPersonal') {
@@ -151,7 +151,7 @@ export function useMasechetCardBulk() {
     pendingAction,
     dafimArray,
     personalLearnedSet,
-    history,
+    storeRecordByDate,
     batchMarkDafim,
     batchUnmarkDafim,
     batchMarkPersonalDafim,
