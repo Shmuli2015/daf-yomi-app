@@ -10,19 +10,29 @@ export interface MasechetBulkDafUpdate {
 }
 
 export function buildMasechetRecordByDate(
-  history: DailyRecord[],
+  source: DailyRecord[] | Map<string, DailyRecord>,
   masechetHe: string,
   dafim: number[],
 ): Map<string, DailyRecord> {
-  const dates = new Set<string>();
+  const dates: string[] = [];
   for (const dafNum of dafim) {
     const dateStr = getDafDateStr(masechetHe, dafNum);
-    if (dateStr) dates.add(dateStr);
+    if (dateStr) dates.push(dateStr);
   }
 
   const map = new Map<string, DailyRecord>();
-  for (const record of history) {
-    if (dates.has(record.date)) {
+  if (source instanceof Map) {
+    for (let i = 0; i < dates.length; i += 1) {
+      const dateStr = dates[i];
+      const record = source.get(dateStr);
+      if (record) map.set(dateStr, record);
+    }
+    return map;
+  }
+
+  const dateSet = new Set(dates);
+  for (const record of source) {
+    if (dateSet.has(record.date)) {
       map.set(record.date, record);
     }
   }

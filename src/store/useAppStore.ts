@@ -49,19 +49,6 @@ function upsertHistoryRecord(history: DailyRecord[], record: DailyRecord): Daily
   return next;
 }
 
-function patchHistoryByDates(history: DailyRecord[], dates: string[]): DailyRecord[] {
-  let next = history;
-  for (const dateStr of dates) {
-    const record = getDailyRecord(dateStr);
-    if (record) {
-      next = upsertHistoryRecord(next, record);
-    } else {
-      next = next.filter((r) => r.date !== dateStr);
-    }
-  }
-  return next;
-}
-
 function historySlice(history: DailyRecord[]) {
   const recordByDate = new Map<string, DailyRecord>();
   for (let i = 0; i < history.length; i += 1) {
@@ -71,6 +58,32 @@ function historySlice(history: DailyRecord[]) {
     history,
     recentHistoryKey: buildRecentHistoryKey(history),
     recordByDate,
+  };
+}
+
+function patchHistoryState(
+  history: DailyRecord[],
+  recordByDate: Map<string, DailyRecord>,
+  dates: string[],
+) {
+  let nextHistory = history;
+  const nextRecordByDate = new Map(recordByDate);
+  for (const dateStr of dates) {
+    const record = getDailyRecord(dateStr);
+    if (record) {
+      nextHistory = upsertHistoryRecord(nextHistory, record);
+      nextRecordByDate.set(dateStr, record);
+    } else {
+      if (nextRecordByDate.has(dateStr) || nextHistory.some((r) => r.date === dateStr)) {
+        nextHistory = nextHistory.filter((r) => r.date !== dateStr);
+        nextRecordByDate.delete(dateStr);
+      }
+    }
+  }
+  return {
+    history: nextHistory,
+    recentHistoryKey: buildRecentHistoryKey(nextHistory),
+    recordByDate: nextRecordByDate,
   };
 }
 
@@ -270,25 +283,36 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   refreshHistory: (masechetIdentifier?: string, patchedDates?: string[]) => {
-    const { currentDate, personalTrackRecords, settings, progressCache, history } = get();
+    const {
+      currentDate,
+      personalTrackRecords,
+      settings,
+      progressCache,
+      history,
+      recordByDate,
+    } = get();
     const canPatch =
       Boolean(patchedDates) &&
       (patchedDates?.length ?? 0) > 0 &&
-      (patchedDates?.length ?? 0) <= 40 &&
       history.length > 0 &&
       progressCache != null;
-    const nextHistory = canPatch && patchedDates
-      ? patchHistoryByDates(history, patchedDates)
-      : getAllRecords();
+    const historyState = canPatch && patchedDates
+      ? patchHistoryState(history, recordByDate, patchedDates)
+      : historySlice(getAllRecords());
     const personalRecords = isPersonalTrackEnabled(settings) ? personalTrackRecords : [];
     const cache = masechetIdentifier && progressCache
-      ? updateMasechetProgressInCache(progressCache, masechetIdentifier, nextHistory, personalRecords)
-      : buildProgressCache(nextHistory, personalRecords);
+      ? updateMasechetProgressInCache(
+          progressCache,
+          masechetIdentifier,
+          historyState.history,
+          personalRecords,
+        )
+      : buildProgressCache(historyState.history, personalRecords);
     const dateStr = getDateStr(currentDate);
-    const record = nextHistory.find(r => r.date === dateStr) || null;
+    const record = historyState.recordByDate.get(dateStr) || null;
 
     set({
-      ...historySlice(nextHistory),
+      ...historyState,
       progressCache: cache,
       todayRecord: record,
       streak: cache.streak

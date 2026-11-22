@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useDebouncedValue } from './useDebouncedValue';
 import { SHAS_MASECHTOT, SEDARIM, type Seder } from '../data/shas';
 import { getMasechetProgressFromCache, type ProgressCache } from '../utils/progressCache';
@@ -10,9 +10,12 @@ export function useShasFilter(progressCache: ProgressCache | null) {
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedQuery = useDebouncedValue(searchQuery, 150);
+  const previousByEnRef = useRef<Map<string, MasechetData>>(new Map());
 
   const allMasechetData = useMemo(() => {
     const dataMap = new Map<Seder, MasechetData[]>();
+    const nextByEn = new Map<string, MasechetData>();
+    const previousByEn = previousByEnRef.current;
 
     SEDARIM.forEach((seder) => {
       const sederMasechtot = SHAS_MASECHTOT.filter((m) => m.seder === seder.id);
@@ -25,19 +28,34 @@ export function useShasFilter(progressCache: ProgressCache | null) {
             progress.total > 0
               ? Math.round((progress.learned / progress.total) * 100)
               : 0;
-          return {
+          const isCompleted = progress.total > 0 && progress.learned >= progress.total;
+          const previous = previousByEn.get(m.en);
+          if (
+            previous &&
+            previous.total === progress.total &&
+            previous.learned === progress.learned &&
+            previous.percent === percent &&
+            previous.isCompleted === isCompleted
+          ) {
+            nextByEn.set(m.en, previous);
+            return previous;
+          }
+          const next: MasechetData = {
             m,
             total: progress.total,
             learned: progress.learned,
             percent,
-            isCompleted: progress.total > 0 && progress.learned >= progress.total,
+            isCompleted,
           };
+          nextByEn.set(m.en, next);
+          return next;
         })
         .filter((d) => d.total > 0);
 
       dataMap.set(seder.id, data);
     });
 
+    previousByEnRef.current = nextByEn;
     return dataMap;
   }, [progressCache]);
 

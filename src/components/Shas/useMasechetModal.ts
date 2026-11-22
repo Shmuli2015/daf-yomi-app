@@ -5,7 +5,6 @@ import { maybeRequestStoreReview, maybeRequestStoreReviewForStreak } from '../..
 import { SHAS_MASECHTOT, numberToGematria } from '../../data/shas';
 import { getDafDateStr, getMasechetDafim } from '../../utils/shas';
 import { getStudyStatus, getPartialAmud, getStopPoint, type AmudSide } from '../../utils/dafStatus';
-import { getMasechetProgressFromCache } from '../../utils/progressCache';
 import {
   buildMasechetMarkAllUpdates,
   buildMasechetRecordByDate,
@@ -52,19 +51,20 @@ export function useMasechetModal({
   const unpinPersonalMasechet = useAppStore((s) => s.unpinPersonalMasechet);
 
   const {
-    history,
-    progressCache,
+    storeRecordByDate,
     personalTrackRecords,
     pinnedPersonalMasechtot,
     settings,
   } = useAppStore(
     useShallow((s) => ({
-      history: s.history,
-      progressCache: s.progressCache,
+      storeRecordByDate: s.recordByDate,
       personalTrackRecords: s.personalTrackRecords,
       pinnedPersonalMasechtot: s.pinnedPersonalMasechtot,
       settings: s.settings,
     })),
+  );
+  const masechetProgress = useAppStore(
+    (s) => s.progressCache?.masechetProgress.get(masechet.he) ?? null,
   );
 
   const dafimArray = useMemo(() => getMasechetDafim(masechet.he), [masechet.he]);
@@ -75,8 +75,8 @@ export function useMasechetModal({
   }, [windowWidth]);
 
   const recordByDate = useMemo(
-    () => buildMasechetRecordByDate(history, masechet.he, dafimArray),
-    [history, masechet.he, dafimArray],
+    () => buildMasechetRecordByDate(storeRecordByDate, masechet.he, dafimArray),
+    [storeRecordByDate, masechet.he, dafimArray],
   );
 
   const masechetPersonalRecords = useMemo(() => {
@@ -100,11 +100,11 @@ export function useMasechetModal({
   }, [masechetPersonalRecords]);
 
   const masechetStats = useMemo(() => {
-    if (!progressCache) {
+    if (!masechetProgress) {
       return { learned: 0, total: masechet.pages, dafYomiLearned: 0, personalLearned: 0 };
     }
-    return getMasechetProgressFromCache(progressCache, masechet.he);
-  }, [progressCache, masechet.he, masechet.pages]);
+    return masechetProgress;
+  }, [masechetProgress, masechet.pages]);
 
   const pct = masechetStats.total > 0
     ? Math.round((masechetStats.learned / masechetStats.total) * 100)
@@ -152,9 +152,7 @@ export function useMasechetModal({
 
     void triggerImpact('light');
     const currentStatus = getStudyStatus(recordByDate.get(dateStr));
-    const learnedBefore = progressCache
-      ? getMasechetProgressFromCache(progressCache, masechet.he).learned
-      : 0;
+    const learnedBefore = masechetStats.learned;
     const dafHeStr = `דף ${numberToGematria(dafNum)}`;
 
     if (currentStatus === 'partial') {
@@ -173,7 +171,7 @@ export function useMasechetModal({
         }
       }
     }
-  }, [effectiveMode, masechet.en, masechet.he, togglePersonalDafLearned, personalLearnedSet, recordByDate, progressCache, dafimArray.length, toggleAnyDafLearned, setDafStudyStatus, settings]);
+  }, [effectiveMode, masechet.en, masechet.he, togglePersonalDafLearned, personalLearnedSet, recordByDate, masechetStats.learned, dafimArray.length, toggleAnyDafLearned, setDafStudyStatus, settings]);
 
   const handleToggleDafRef = useRef(handleToggleDaf);
   handleToggleDafRef.current = handleToggleDaf;
