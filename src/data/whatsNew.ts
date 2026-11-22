@@ -8,6 +8,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    version: '1.2.12',
+    highlights: [
+      'סימון לימוד מהיר ויציב יותר',
+      'תיקון ספרות עבריות והדגשת גמרא בשטיינזלץ',
+    ],
+  },
+  {
     version: '1.2.11',
     highlights: [
       'נקודת עצירה בלימוד: שמירה, בחירה מהירה, תצוגה בבית ובמסלול האישי, ותזכורת בקורא',
