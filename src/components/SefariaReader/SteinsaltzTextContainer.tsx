@@ -112,6 +112,10 @@ export default function SteinsaltzTextContainer({
     () => (data ? collectCommentariesWithIndex(data.commentaries, 'steinsaltz') : []),
     [data],
   );
+  const gemaraMatchTexts = useMemo(
+    () => (data ? data.segments.map((segment) => segment.he) : []),
+    [data],
+  );
   const blocks = useMemo(
     () => insertChapterBoundaries(paragraphs, data?.chapterEvents ?? []),
     [paragraphs, data?.chapterEvents],
@@ -220,6 +224,7 @@ export default function SteinsaltzTextContainer({
             accentColor={palette.accentColor}
             searchQuery={searchQuery}
             activeOccurrenceIndex={isActiveSearchMatch ? activeSearchOccurrenceIndex : null}
+            gemaraMatchTexts={gemaraMatchTexts}
           />
         </View>
       );
@@ -228,6 +233,7 @@ export default function SteinsaltzTextContainer({
       activeSearchOccurrenceIndex,
       activeSearchSegmentId,
       fontSize,
+      gemaraMatchTexts,
       mishnahJoinStyles,
       mishnahJoins,
       palette,

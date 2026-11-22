@@ -1,7 +1,7 @@
 import {
   parseCommentaryRuns,
+  prepareSteinsaltzPlainText,
   stripEmDash,
-  stripSteinsaltzSectionLetters,
 } from './commentaryEmphasis';
 import { parseChavrutaBodyParts } from './parseChavrutaHtml';
 
@@ -12,7 +12,7 @@ export function plainClassicSearchText(text: string): string {
 }
 
 export function plainSteinsaltzSearchText(text: string): string {
-  return parseCommentaryRuns(stripSteinsaltzSectionLetters(stripEmDash(text)))
+  return parseCommentaryRuns(prepareSteinsaltzPlainText(stripEmDash(text)))
     .map((run) => run.text)
     .join('');
 }

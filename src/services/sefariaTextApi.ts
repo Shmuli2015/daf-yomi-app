@@ -302,9 +302,12 @@ async function fetchFromNetwork(
                 }),
               );
 
+    const gemaraTexts =
+      comm.key === 'steinsaltz' ? segments.map((segment) => segment.he) : undefined;
+
     commentarySegments.forEach(({ segIdx, texts }) => {
       const prepared = texts
-        .map((segText) => prepareCommentaryText(segText, comm.key))
+        .map((segText) => prepareCommentaryText(segText, comm.key, gemaraTexts))
         .filter(Boolean);
       if (prepared.length === 0) return;
 

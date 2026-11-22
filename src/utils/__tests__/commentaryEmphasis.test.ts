@@ -2,10 +2,12 @@ import {
   cleanCommentaryHtml,
   emphasizeGemaraSectionLabels,
   emphasizeRashiDibur,
+  fixHebrewDigitArtifacts,
   mishnahSpanFlags,
   parseCommentaryRuns,
   prepareCommentaryText,
   prepareGemaraText,
+  prepareSteinsaltzPlainText,
   stripEmDash,
   stripSteinsaltzSectionLetters,
 } from '../commentaryEmphasis';
@@ -186,6 +188,16 @@ describe('prepareCommentaryText', () => {
     );
     expect(prepareCommentaryText('<big>א</big> שנינו במשנה', 'steinsaltz')).toBe('שנינו במשנה');
   });
+
+  it('fixes embedded hebrew digit typos for steinsaltz', () => {
+    expect(
+      prepareCommentaryText('<b>איכא נמי</b> <small>[יש גם כ8ן]</small> ערך', 'steinsaltz'),
+    ).toBe('**איכא נמי** [יש גם כן] ערך');
+  });
+
+  it('does not apply steinsaltz digit fixes on rashi path', () => {
+    expect(prepareCommentaryText('דיבור – יש גם כ8ן', 'rashi')).toBe('**דיבור** – יש גם כ8ן');
+  });
 });
 
 describe('stripSteinsaltzSectionLetters', () => {
@@ -200,6 +212,25 @@ describe('stripSteinsaltzSectionLetters', () => {
 
   it('does not strip a letter that is part of the commentary', () => {
     expect(stripSteinsaltzSectionLetters('אמר רב חננאל')).toBe('אמר רב חננאל');
+  });
+});
+
+describe('fixHebrewDigitArtifacts', () => {
+  it('removes digits embedded between hebrew letters', () => {
+    expect(fixHebrewDigitArtifacts('יש גם כ8ן')).toBe('יש גם כן');
+    expect(fixHebrewDigitArtifacts('אב12גד')).toBe('אבגד');
+  });
+
+  it('leaves spaced digits and plain text unchanged', () => {
+    expect(fixHebrewDigitArtifacts('דף 5 עמוד א')).toBe('דף 5 עמוד א');
+    expect(fixHebrewDigitArtifacts('יש גם כן')).toBe('יש גם כן');
+    expect(fixHebrewDigitArtifacts('')).toBe('');
+  });
+});
+
+describe('prepareSteinsaltzPlainText', () => {
+  it('strips section letters and fixes embedded digit typos', () => {
+    expect(prepareSteinsaltzPlainText('**א** יש גם כ8ן')).toBe('יש גם כן');
   });
 });
 
